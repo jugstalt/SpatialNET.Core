@@ -1,0 +1,357 @@
+<!doctype html>
+<!--
+  PROTOTYPE – Wegwerfcode (Ticket #9).
+  Drei strukturell verschiedene Varianten des SpatialNET-Playgrounds, umschaltbar über ?variant=A|B|C
+  (Leiste unten bzw. Pfeiltasten ← →).
+  Berechnungen sind eine ATTRAPPE mit Turf.js – es geht um UX und um die Registry-Form, nicht um Ergebnisse.
+  Die gesamte UI wird aus REGISTRY + FIXTURES generiert (Mock von GET /api/algorithms und GET /api/fixtures).
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpatialNET Playground – Prototyp</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.17.0/dist/leaflet-geoman.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.17.0/dist/leaflet-geoman.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<style>
+  :root { --a:#2563eb; --b:#ea580c; --r:#16a34a; --bg:#f8fafc; --line:#e2e8f0; --ink:#0f172a; --mut:#64748b; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; font:14px/1.4 system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+  #app { height:100%; }
+  button { font:inherit; cursor:pointer; border:1px solid var(--line); background:#fff; border-radius:6px; padding:4px 10px; }
+  button.primary { background:var(--ink); color:#fff; border-color:var(--ink); }
+  button.on { background:#e0e7ff; border-color:#6366f1; }
+  input, select, textarea { font:inherit; border:1px solid var(--line); border-radius:6px; padding:3px 6px; background:#fff; }
+  .tag { display:inline-block; font-size:11px; padding:0 6px; border-radius:9px; background:#eef2ff; color:#3730a3; margin:1px 2px 1px 0; }
+  .tag.pg { background:#dcfce7; color:#166534; }
+  .muted { color:var(--mut); font-size:12px; }
+  .warn { color:#b45309; font-size:12px; }
+  .lg-a { color:var(--a); font-weight:600; } .lg-b { color:var(--b); font-weight:600; } .lg-r { color:var(--r); font-weight:600; }
+  .field { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:4px 0; }
+  .field input, .field select { width:120px; }
+  h3 { margin:12px 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--mut); }
+
+  /* ---------- Variante A: Werkbank ---------- */
+  .A { display:grid; grid-template-columns:220px 1fr 320px; height:100%; }
+  .A aside { overflow:auto; padding:10px; background:#fff; }
+  .A aside.left { border-right:1px solid var(--line); }
+  .A aside.right { border-left:1px solid var(--line); }
+  .A .alg { display:block; width:100%; text-align:left; border:none; padding:5px 8px; margin:1px 0; }
+  .A .alg.sel { background:#e0e7ff; }
+  .A .fx { padding:6px; border:1px solid var(--line); border-radius:6px; margin:4px 0; cursor:pointer; }
+  .A .fx.sel { border-color:#6366f1; background:#eef2ff; }
+  .A .map { height:100%; }
+  .A .inputs .row { display:flex; align-items:center; gap:4px; margin:4px 0; flex-wrap:wrap; }
+
+  /* ---------- Variante B: Karte zuerst ---------- */
+  .B { position:relative; height:100%; }
+  .B .map { position:absolute; inset:0; }
+  .B .palette { position:absolute; top:12px; left:56px; width:340px; z-index:1000; background:#fff; border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.18); }
+  .B .palette input.search { width:100%; border:none; border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; padding:10px 12px; font-size:15px; }
+  .B .palette .list { max-height:220px; overflow:auto; }
+  .B .palette .item { padding:6px 12px; cursor:pointer; display:flex; justify-content:space-between; }
+  .B .palette .item:hover, .B .palette .item.sel { background:#eef2ff; }
+  .B .palette .params { padding:8px 12px; border-top:1px solid var(--line); }
+  .B .chips { position:absolute; top:12px; right:12px; z-index:1000; display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+  .B .chip { background:#fff; border-radius:16px; padding:4px 10px; box-shadow:0 2px 8px rgba(0,0,0,.15); font-size:12px; }
+  .B .strip { position:absolute; left:0; right:0; bottom:64px; z-index:1000; display:flex; gap:8px; padding:0 12px; overflow-x:auto; }
+  .B .card { flex:0 0 200px; background:#fff; border-radius:10px; padding:8px; box-shadow:0 2px 10px rgba(0,0,0,.15); cursor:pointer; border:2px solid transparent; }
+  .B .card.sel { border-color:#6366f1; }
+  .B .card svg { width:100%; height:70px; background:var(--bg); border-radius:6px; }
+
+  /* ---------- Variante C: Katalog ---------- */
+  .C { display:grid; grid-template-rows:auto 1fr; height:100%; }
+  .C .tabs { display:flex; gap:2px; padding:6px 8px 0; background:#fff; border-bottom:1px solid var(--line); overflow-x:auto; }
+  .C .tabs button { border-radius:6px 6px 0 0; border-bottom:none; }
+  .C .tabs button.sel { background:var(--ink); color:#fff; }
+  .C .body { display:grid; grid-template-columns:minmax(380px, 45%) 1fr; min-height:0; }
+  .C table { width:100%; border-collapse:collapse; background:#fff; }
+  .C td, .C th { border-bottom:1px solid var(--line); padding:6px; vertical-align:top; text-align:left; }
+  .C th { font-size:11px; text-transform:uppercase; color:var(--mut); position:sticky; top:0; background:#fff; }
+  .C tr.sel { background:#eef2ff; } .C tbody tr { cursor:pointer; }
+  .C svg.thumb { width:110px; height:72px; background:var(--bg); border-radius:4px; }
+  .C .detail { display:grid; grid-template-rows:1fr auto; min-height:0; border-left:1px solid var(--line); }
+  .C .detail .map { min-height:0; }
+  .C .text { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px; background:#fff; border-top:1px solid var(--line); }
+  .C .text textarea { width:100%; height:120px; font:11px/1.3 ui-monospace, monospace; }
+
+  /* ---------- Prototyp-Umschalter (gehört NICHT zum Design) ---------- */
+  #switcher { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:5000; display:flex; align-items:center; gap:8px;
+              background:#111; color:#fff; border-radius:999px; padding:6px 10px; box-shadow:0 6px 20px rgba(0,0,0,.35); font-size:13px; }
+  #switcher button { background:#333; color:#fff; border:none; border-radius:999px; width:28px; height:28px; padding:0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="switcher"><button id="prev">←</button><span id="vlabel"></span><button id="next">→</button></div>
+<script>
+// =====================================================================================
+// MOCK-SERVER: so könnten GET /api/algorithms und GET /api/fixtures aussehen.
+// Die UI kennt KEINEN Algorithmus fest – alles kommt aus diesem Deskriptor.
+// =====================================================================================
+const REGISTRY = [
+  { id:'buffer', name:'Buffer', group:'Konstruktion', inputs:[{key:'a', label:'Eingabe', types:['Point','LineString','Polygon']}], output:'Polygon',
+    params:[ {key:'distance', label:'Distanz', type:'number', default:30, unit:'kbs'},
+             {key:'join', label:'Join', type:'enum', values:['Round','Mitre','Bevel'], default:'Round'},
+             {key:'cap', label:'Cap', type:'enum', values:['Round','Flat','Square'], default:'Round'},
+             {key:'quadrantSegments', label:'Quadrant-Segmente', type:'int', default:8} ] },
+  { id:'offset', name:'OffsetCurve', group:'Konstruktion', inputs:[{key:'a', label:'Linie/Polygon', types:['LineString','Polygon']}], output:'LineString',
+    params:[ {key:'distance', label:'Distanz (+ links / außen)', type:'number', default:15, unit:'kbs'},
+             {key:'join', label:'Join', type:'enum', values:['Round','Mitre','Bevel'], default:'Round'} ] },
+  { id:'intersection', name:'Intersection', group:'Overlay', inputs:[{key:'a', label:'A', types:['Polygon','LineString']},{key:'b', label:'B', types:['Polygon']}], output:'Polygon',
+    params:[ {key:'fillRule', label:'Füllregel', type:'enum', values:['EvenOdd','NonZero','Positive','Negative'], default:'EvenOdd'},
+             {key:'gridSize', label:'Gitterweite (leer = auto)', type:'number', default:null, unit:'kbs'} ] },
+  { id:'union', name:'Union', group:'Overlay', inputs:[{key:'a', label:'A', types:['Polygon']},{key:'b', label:'B', types:['Polygon']}], output:'Polygon',
+    params:[ {key:'fillRule', label:'Füllregel', type:'enum', values:['EvenOdd','NonZero','Positive','Negative'], default:'EvenOdd'},
+             {key:'gridSize', label:'Gitterweite (leer = auto)', type:'number', default:null, unit:'kbs'} ] },
+  { id:'difference', name:'Difference', group:'Overlay', inputs:[{key:'a', label:'A', types:['Polygon']},{key:'b', label:'B', types:['Polygon']}], output:'Polygon',
+    params:[ {key:'fillRule', label:'Füllregel', type:'enum', values:['EvenOdd','NonZero','Positive','Negative'], default:'EvenOdd'} ] },
+  { id:'cut', name:'Cut', group:'Overlay', inputs:[{key:'a', label:'Polygon/Linie', types:['Polygon','LineString']},{key:'b', label:'Schnittlinie', types:['LineString']}], output:'Polygon[]', params:[] },
+  { id:'simplify', name:'Simplify', group:'Vereinfachen', inputs:[{key:'a', label:'Eingabe', types:['LineString','Polygon']}], output:'same',
+    params:[ {key:'tolerance', label:'Toleranz', type:'number', default:8, unit:'kbs'} ] },
+  { id:'convexHull', name:'ConvexHull', group:'Vereinfachen', inputs:[{key:'a', label:'Eingabe', types:['MultiPoint','LineString','Polygon']}], output:'Polygon', params:[] },
+];
+
+// Fixtures: in echt JSON-Dateien unter samples/<algorithmus>/ mit WKT; hier vorab nach GeoJSON gewandelt.
+// crs:null = lokal planar (L.CRS.Simple), sonst sind die Koordinaten zur Anzeige bereits WGS84.
+const G = [15.4395, 47.0707]; // Graz
+function sq(cx, cy, s){ return [[cx-s,cy-s],[cx+s,cy-s],[cx+s,cy+s],[cx-s,cy+s],[cx-s,cy-s]]; }
+function geoSq(dxm, dym, sm){ const k=111320, lat=G[1]+dym/k, lon=G[0]+dxm/(k*Math.cos(G[1]*Math.PI/180)); const dl=sm/k, dn=sm/(k*Math.cos(G[1]*Math.PI/180)); return [[lon-dn,lat-dl],[lon+dn,lat-dl],[lon+dn,lat+dl],[lon-dn,lat+dl],[lon-dn,lat-dl]]; }
+function geoPt(dxm, dym){ const k=111320; return [G[0]+dxm/(k*Math.cos(G[1]*Math.PI/180)), G[1]+dym/k]; }
+const F = (type, coordinates) => ({ type:'Feature', properties:{}, geometry:{ type, coordinates } });
+const FIXTURES = [
+  { id:'buffer/point-50m', algorithm:'buffer', name:'Punkt-Buffer', description:'Einzelpunkt, runde Kappe.', tags:['playground'], crs:'EPSG:31256', a:F('Point', geoPt(0,0)), params:{distance:50} },
+  { id:'buffer/line-mitre', algorithm:'buffer', name:'Linie mit Mitre-Join', description:'Spitzer Winkel, Mitre-Limit greift.', tags:['playground','vertex-touch'], crs:null, a:F('LineString', [[0,0],[6,0],[2,3]]), params:{distance:0.6, join:'Mitre'} },
+  { id:'buffer/polygon-inner', algorithm:'buffer', name:'Polygon nach innen (−20 m)', description:'Negative Distanz verkleinert das Polygon.', tags:['playground'], crs:'EPSG:25833', a:F('Polygon',[geoSq(80,0,60)]), params:{distance:-20} },
+  { id:'intersection/squares', algorithm:'intersection', name:'Zwei Quadrate', description:'Standardfall.', tags:['playground'], crs:null, a:F('Polygon',[sq(3,3,2)]), b:F('Polygon',[sq(4.5,4,2)]), params:{} },
+  { id:'intersection/touch', algorithm:'intersection', name:'Berührende Kante → leer', description:'Strict-Semantik: keine Berührungslinie.', tags:['playground','vertex-touch','empty'], crs:null, a:F('Polygon',[sq(2,2,1)]), b:F('Polygon',[sq(4,2,1)]), params:{} },
+  { id:'intersection/parcels', algorithm:'intersection', name:'Parzellen (UTM)', description:'Reale Größenordnung, Auto-UTM.', tags:['playground','large-coords'], crs:null, a:F('Polygon',[geoSq(0,0,40)]), b:F('Polygon',[geoSq(30,20,35)]), params:{}, geo:true },
+  { id:'union/overlap', algorithm:'union', name:'Überlappende Außenringe', description:'Mit NonZero verschmelzen statt Loch.', tags:['playground','self-crossing'], crs:null, a:F('Polygon',[sq(3,3,2)]), b:F('Polygon',[sq(5,3,2)]), params:{fillRule:'NonZero'} },
+  { id:'difference/hole', algorithm:'difference', name:'Loch stanzen', description:'B liegt komplett in A.', tags:['playground','nested'], crs:null, a:F('Polygon',[sq(4,4,3)]), b:F('Polygon',[sq(4,4,1)]), params:{} },
+  { id:'offset/axis', algorithm:'offset', name:'Achse links 15 m', description:'Positive Distanz = links.', tags:['playground','z'], crs:'EPSG:31256', a:F('LineString',[geoPt(-60,-30),geoPt(0,10),geoPt(60,-10),geoPt(100,40)]), params:{distance:15} },
+  { id:'cut/polygon', algorithm:'cut', name:'Polygon durchschneiden', description:'Zwei Teile, Unberührtes bleibt zusammen.', tags:['playground','multi'], crs:null, a:F('Polygon',[sq(3,3,2)]), b:F('LineString',[[0.5,1.5],[5.5,4.5]]), params:{} },
+  { id:'simplify/zigzag', algorithm:'simplify', name:'Zackige Linie', description:'Douglas-Peucker.', tags:['playground'], crs:null, a:F('LineString',[[0,0],[1,0.3],[2,-0.2],[3,0.4],[4,0],[5,2],[6,2.2],[7,1.9]]), params:{tolerance:0.5} },
+  { id:'convexHull/cloud', algorithm:'convexHull', name:'Punktwolke', description:'Hülle um Streupunkte.', tags:['playground','multi'], crs:null, a:F('MultiPoint',[[1,1],[2,4],[4,2],[5,5],[3,3],[6,1],[2,2]]), params:{} },
+];
+
+// Mock von POST /api/run: projizieren (hier nur KBS-Label), rechnen (Turf-Attrappe), zurück.
+function run(alg, st){
+  const local = st.local, units = local ? 'degrees' : 'meters', p = st.params, a = st.a, b = st.b, out = { result:null, warnings:[] };
+  const toLocalDeg = v => v; // lokal: Koordinaten werden 1:1 als „Grad“ an Turf gegeben (nur Attrappe)
+  try {
+    switch(alg.id){
+      case 'buffer': out.result = turf.buffer(a, toLocalDeg(+p.distance), {units, steps:+p.quadrantSegments||8}); break;
+      case 'offset': out.result = a.geometry.type==='LineString' ? turf.lineOffset(a, +p.distance, {units}) : turf.polygonToLine(turf.buffer(a, +p.distance, {units})); break;
+      case 'intersection': out.result = turf.intersect(a, b); if(!out.result) out.warnings.push('Ergebnis leer (Strict: Berührungen fallen weg)'); break;
+      case 'union': out.result = turf.union(a, b); break;
+      case 'difference': out.result = turf.difference(a, b); break;
+      case 'simplify': out.result = turf.simplify(a, {tolerance: local ? +p.tolerance : +p.tolerance/111320, highQuality:true}); break;
+      case 'convexHull': out.result = turf.convex(a); break;
+      case 'cut': out.warnings.push('Cut ist in der Attrappe nicht berechnet – echte Antwort: Liste von Teilen'); break;
+    }
+  } catch(e){ out.warnings.push('Attrappe: '+e.message); }
+  out.stats = stats(out.result, local);
+  out.kbs = kbsLabel(st);
+  if (!local && st.kbs==='EPSG:3857') { const lat = center(a)[1]; out.warnings.push(`EPSG:3857: 1 Einheit ≈ ${(Math.cos(lat*Math.PI/180)).toFixed(2)} m am Ort`); }
+  return out;
+}
+function center(f){ return f ? turf.center(f).geometry.coordinates : G; }
+function kbsLabel(st){
+  if (st.local) return 'lokal planar (L.CRS.Simple)';
+  if (st.fixtureCrs) return st.fixtureCrs + ' (aus Fixture, gesperrt)';
+  if (st.kbs==='auto'){ const lon = center(st.a)[0]; return `EPSG:326${String(Math.floor((lon+180)/6)+1).padStart(2,'0')} (auto)`; }
+  return st.kbs;
+}
+function stats(r, local){
+  if (!r) return { Vertices:0 };
+  const s = { Vertices: turf.coordAll(r).length };
+  const t = r.geometry.type;
+  if (t.includes('Polygon')) s['Fläche'] = local ? shoelace(r).toFixed(3) : turf.area(r).toFixed(1)+' m²';
+  if (t.includes('Line')) s['Länge'] = local ? '–' : turf.length(r,{units:'meters'}).toFixed(1)+' m';
+  return s;
+}
+function shoelace(f){ let A=0; turf.geomEach(f, g => { const rings = g.type==='Polygon' ? g.coordinates : g.coordinates.flat(); rings.forEach((r,i)=>{ let s=0; for(let k=0;k<r.length-1;k++) s+=r[k][0]*r[k+1][1]-r[k+1][0]*r[k][1]; A += (i===0?1:-1)*Math.abs(s/2); }); }); return A; }
+
+// =====================================================================================
+// Gemeinsamer Zustand + Karten-Helfer (kein gemeinsames Layout!)
+// =====================================================================================
+const S = { algId:'buffer', fixtureId:null, a:null, b:null, params:{}, kbs:'auto', local:false, fixtureCrs:null, last:null, drawTarget:'a', show:{a:true,b:true,r:true} };
+const alg = () => REGISTRY.find(x => x.id===S.algId);
+const fixturesOf = id => FIXTURES.filter(f => f.algorithm===id);
+function defaults(a){ const p={}; a.params.forEach(x => p[x.key]=x.default); return p; }
+function selectAlg(id){ S.algId=id; const fx = fixturesOf(id)[0]; fx ? loadFixture(fx.id) : (S.a=S.b=null, S.params=defaults(alg()), S.fixtureId=null, S.last=null); }
+function loadFixture(id){ const f = FIXTURES.find(x=>x.id===id); S.fixtureId=id; S.algId=f.algorithm; S.a=f.a; S.b=f.b||null;
+  S.params = Object.assign(defaults(alg()), f.params); S.local = f.crs===null && !f.geo; S.fixtureCrs=f.crs; S.last = run(alg(), S); }
+function rerun(){ S.last = run(alg(), S); }
+
+let MAP = null, LAYERS = null;
+function makeMap(el){
+  if (MAP) { MAP.remove(); MAP=null; }
+  MAP = L.map(el, S.local ? { crs:L.CRS.Simple, minZoom:-2, zoomSnap:0.25 } : {});
+  if (!S.local) L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:20, attribution:'© OpenStreetMap' }).addTo(MAP);
+  MAP.pm.addControls({ position:'topleft', drawCircle:false, drawCircleMarker:false, drawText:false, drawRectangle:true, cutPolygon:false, rotateMode:false, editMode:false, dragMode:false, removalMode:false });
+  MAP.on('pm:create', e => { const gj = e.layer.toGeoJSON(); e.layer.remove(); S[S.drawTarget]=gj; S.fixtureId=null; rerun(); refresh(); });
+  LAYERS = L.layerGroup().addTo(MAP); drawLayers(true);
+  setTimeout(() => MAP && MAP.invalidateSize(), 0);
+}
+function drawLayers(fit){
+  if (!LAYERS) return; LAYERS.clearLayers(); const all=[];
+  const add = (f, color, fill) => { if(!f) return; const l = L.geoJSON(f, { style:{color, weight:2, fillOpacity:fill}, pointToLayer:(_,ll)=>L.circleMarker(ll,{radius:5,color}) }).addTo(LAYERS); all.push(l); };
+  if (S.show.r) add(S.last && S.last.result, '#16a34a', .35);
+  if (S.show.a) add(S.a, '#2563eb', .08);
+  if (S.show.b) add(S.b, '#ea580c', .08);
+  if (fit && all.length) { const bb = L.featureGroup(all).getBounds(); if (bb.isValid()) MAP.fitBounds(bb.pad(0.3)); }
+}
+function unit(p){ return p.unit==='kbs' ? (S.local ? 'Einheiten' : 'm') : ''; }
+function paramForm(container, onChange){
+  container.innerHTML='';
+  alg().params.forEach(p => {
+    const row = document.createElement('div'); row.className='field';
+    row.innerHTML = `<label>${p.label} <span class="muted">${unit(p)}</span></label>`;
+    let inp;
+    if (p.type==='enum'){ inp=document.createElement('select'); p.values.forEach(v=>inp.add(new Option(v,v))); }
+    else { inp=document.createElement('input'); inp.type='number'; inp.step = p.type==='int' ? 1 : 'any'; }
+    inp.value = S.params[p.key] ?? '';
+    inp.onchange = () => { S.params[p.key] = inp.value===''? null : (p.type==='enum'? inp.value : +inp.value); rerun(); onChange(); };
+    row.appendChild(inp); container.appendChild(row);
+  });
+  if (!alg().params.length) container.innerHTML = '<div class="muted">keine Parameter</div>';
+}
+function kbsSelect(){
+  const s = document.createElement('select');
+  ['auto','EPSG:3857','EPSG:25832','EPSG:25833','EPSG:31256'].forEach(v => s.add(new Option(v==='auto'?'Auto-UTM':v, v)));
+  s.value=S.kbs; s.disabled = S.local || !!S.fixtureCrs; s.title = s.disabled ? 'durch Fixture festgelegt' : '';
+  s.onchange = () => { S.kbs=s.value; rerun(); refresh(); }; return s;
+}
+function upload(target){
+  const i=document.createElement('input'); i.type='file'; i.accept='.json,.geojson';
+  i.onchange = async () => { const gj = JSON.parse(await i.files[0].text()); const f = gj.type==='FeatureCollection' ? gj.features[0] : gj.type==='Feature' ? gj : {type:'Feature',properties:{},geometry:gj};
+    S[target]=f; S.fixtureId=null; S.local=false; S.fixtureCrs=null; rerun(); render(); }; i.click();
+}
+function drawFor(target, type){ S.drawTarget=target; MAP.pm.enableDraw(type==='Point'?'Marker':type==='LineString'?'Line':'Polygon'); }
+function thumb(fx, cls){
+  const r = run(REGISTRY.find(x=>x.id===fx.algorithm), { a:fx.a, b:fx.b, params:Object.assign(defaults(REGISTRY.find(x=>x.id===fx.algorithm)), fx.params), local: fx.crs===null && !fx.geo, kbs:'auto' });
+  const feats = [fx.a, fx.b, r.result].filter(Boolean); const bb = turf.bbox(turf.featureCollection(feats));
+  const w=110,h=72,pad=6, sx=(w-2*pad)/((bb[2]-bb[0])||1), sy=(h-2*pad)/((bb[3]-bb[1])||1), s=Math.min(sx,sy);
+  const P = c => `${pad+(c[0]-bb[0])*s},${h-pad-(c[1]-bb[1])*s}`;
+  const path = (f,color,fill) => { if(!f) return ''; let d=''; turf.geomEach(f, g => {
+      if (g.type==='Point') d+=`<circle cx="${P(g.coordinates).split(',')[0]}" cy="${P(g.coordinates).split(',')[1]}" r="2.5" fill="${color}"/>`;
+      else if (g.type==='MultiPoint') g.coordinates.forEach(c=>{ const [x,y]=P(c).split(','); d+=`<circle cx="${x}" cy="${y}" r="2" fill="${color}"/>`; });
+      else { const lines = g.type==='LineString'?[g.coordinates]: g.type==='Polygon'? g.coordinates : g.type==='MultiPolygon'? g.coordinates.flat() : g.coordinates;
+        lines.forEach(l => d+=`<polyline points="${l.map(P).join(' ')}" fill="${fill?color:'none'}" fill-opacity="${fill?0.3:0}" stroke="${color}" stroke-width="1.2"/>`); } }); return d; };
+  return `<svg class="${cls||''}" viewBox="0 0 ${w} ${h}">${path(r.result,'#16a34a',true)}${path(fx.a,'#2563eb',false)}${path(fx.b,'#ea580c',false)}</svg>`;
+}
+const tags = f => f.tags.map(t=>`<span class="tag ${t==='playground'?'pg':''}">${t}</span>`).join('');
+const statsHtml = () => S.last ? Object.entries(S.last.stats).map(([k,v])=>`<div class="field"><span>${k}</span><b>${v}</b></div>`).join('') + S.last.warnings.map(w=>`<div class="warn">⚠ ${w}</div>`).join('') : '';
+
+// =====================================================================================
+// Variante A – „Werkbank“: klassisches 3-Spalten-GIS-Layout
+// =====================================================================================
+function VariantA(app){
+  const groups = [...new Set(REGISTRY.map(a=>a.group))];
+  app.innerHTML = `<div class="A">
+    <aside class="left">${groups.map(g=>`<h3>${g}</h3>`+REGISTRY.filter(a=>a.group===g).map(a=>`<button class="alg ${a.id===S.algId?'sel':''}" data-alg="${a.id}">${a.name}</button>`).join('')).join('')}</aside>
+    <div class="map" id="map"></div>
+    <aside class="right">
+      <h3>${alg().name}</h3>
+      <div class="inputs">${alg().inputs.map(i=>`<div class="row"><span class="lg-${i.key}">■ ${i.label}</span>
+         ${i.types.map(t=>`<button data-draw="${i.key}:${t}">✎ ${t}</button>`).join('')}<button data-up="${i.key}">⇪ GeoJSON</button></div>`).join('')}</div>
+      <h3>Parameter</h3><div id="params"></div>
+      <h3>Rechen-KBS</h3><div class="field"><span id="kbslabel" class="muted"></span><span id="kbs"></span></div>
+      <h3>Ergebnis <span class="lg-r">■</span></h3><div id="stats"></div>
+      <h3>Beispiele</h3><div>${fixturesOf(S.algId).map(f=>`<div class="fx ${f.id===S.fixtureId?'sel':''}" data-fx="${f.id}"><b>${f.name}</b> <span class="muted">${f.crs||(f.geo?'Auto-UTM':'lokal')}</span><br><span class="muted">${f.description}</span><br>${tags(f)}</div>`).join('')||'<div class="muted">keine</div>'}</div>
+    </aside></div>`;
+  app.querySelectorAll('[data-alg]').forEach(b => b.onclick = () => { selectAlg(b.dataset.alg); render(); });
+  app.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { loadFixture(b.dataset.fx); render(); });
+  app.querySelectorAll('[data-draw]').forEach(b => b.onclick = () => { const [k,t]=b.dataset.draw.split(':'); drawFor(k,t); });
+  app.querySelectorAll('[data-up]').forEach(b => b.onclick = () => upload(b.dataset.up));
+  makeMap(document.getElementById('map'));
+  const upd = () => { document.getElementById('stats').innerHTML=statsHtml(); document.getElementById('kbslabel').textContent=S.last?S.last.kbs:''; drawLayers(false); };
+  paramForm(document.getElementById('params'), upd);
+  document.getElementById('kbs').appendChild(kbsSelect()); upd();
+  return upd;
+}
+
+// =====================================================================================
+// Variante B – „Karte zuerst“: Vollbild-Karte, Befehlspalette, Beispiel-Leiste zum Durchblättern
+// =====================================================================================
+function VariantB(app){
+  app.innerHTML = `<div class="B"><div class="map" id="map"></div>
+    <div class="palette"><input class="search" placeholder="Algorithmus suchen …  (Strg+K)" id="q">
+      <div class="list" id="list"></div><div class="params"><div id="params"></div>
+      <div class="muted" style="margin-top:6px">Zeichnen nach: ${alg().inputs.map(i=>`<button data-target="${i.key}" class="${S.drawTarget===i.key?'on':''}"><span class="lg-${i.key}">■</span> ${i.label}</button>`).join(' ')}
+      <button data-up="1">⇪</button></div></div></div>
+    <div class="chips"><div class="chip" id="kbschip"></div><div class="chip" id="kbs"></div>
+      ${['a','b','r'].map(k=>`<label class="chip"><input type="checkbox" data-show="${k}" ${S.show[k]?'checked':''}> <span class="lg-${k}">■</span> ${k==='r'?'Ergebnis':k.toUpperCase()}</label>`).join('')}
+      <div class="chip" id="stats" style="min-width:160px"></div></div>
+    <div class="strip">${fixturesOf(S.algId).map(f=>`<div class="card ${f.id===S.fixtureId?'sel':''}" data-fx="${f.id}">${thumb(f)}<b>${f.name}</b><br><span class="muted">${f.description}</span></div>`).join('')}</div></div>`;
+  const list = document.getElementById('list'), q = document.getElementById('q');
+  const fill = () => { const t=q.value.toLowerCase(); list.innerHTML = REGISTRY.filter(a=>!t||a.name.toLowerCase().includes(t)||a.group.toLowerCase().includes(t))
+      .map(a=>`<div class="item ${a.id===S.algId?'sel':''}" data-alg="${a.id}"><span>${a.name}</span><span class="muted">${a.group}</span></div>`).join('');
+    list.querySelectorAll('[data-alg]').forEach(b => b.onclick = () => { selectAlg(b.dataset.alg); render(); }); };
+  q.oninput = fill; fill(); list.style.display = 'none'; q.onfocus = () => list.style.display=''; q.onblur = () => setTimeout(()=>list.style.display='none', 150);
+  q.onkeydown = e => { if (e.key==='Enter'){ const f=list.querySelector('[data-alg]'); if(f){ selectAlg(f.dataset.alg); render(); } } };
+  app.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { loadFixture(b.dataset.fx); render(); });
+  app.querySelectorAll('[data-target]').forEach(b => b.onclick = () => { S.drawTarget=b.dataset.target; render(); });
+  app.querySelectorAll('[data-show]').forEach(c => c.onchange = () => { S.show[c.dataset.show]=c.checked; drawLayers(false); });
+  app.querySelector('[data-up]').onclick = () => upload(S.drawTarget);
+  makeMap(document.getElementById('map'));
+  const upd = () => { document.getElementById('stats').innerHTML = statsHtml(); document.getElementById('kbschip').textContent = S.last ? S.last.kbs : ''; drawLayers(false); };
+  paramForm(document.getElementById('params'), upd);
+  document.getElementById('kbs').appendChild(kbsSelect()); upd();
+  return upd;
+}
+
+// =====================================================================================
+// Variante C – „Katalog“: Fixtures als Tabelle mit Vorschaubildern, Detail = Karte + Text
+// =====================================================================================
+function VariantC(app){
+  const fxs = fixturesOf(S.algId);
+  app.innerHTML = `<div class="C">
+    <div class="tabs">${REGISTRY.map(a=>`<button class="${a.id===S.algId?'sel':''}" data-alg="${a.id}">${a.name} <span class="muted">${fixturesOf(a.id).length}</span></button>`).join('')}</div>
+    <div class="body"><div style="overflow:auto"><table><thead><tr><th>Vorschau</th><th>Fixture</th><th>Ergebnis</th></tr></thead><tbody>
+      ${fxs.map(f=>{ const r=run(alg(), {a:f.a,b:f.b,params:Object.assign(defaults(alg()),f.params),local:f.crs===null&&!f.geo,kbs:'auto'});
+         return `<tr class="${f.id===S.fixtureId?'sel':''}" data-fx="${f.id}"><td>${thumb(f,'thumb')}</td>
+         <td><b>${f.name}</b><br><span class="muted">${f.id} · ${f.crs||(f.geo?'Auto-UTM':'lokal')}</span><br>${f.description}<br>${tags(f)}<br><span class="muted">params: ${JSON.stringify(f.params)}</span></td>
+         <td>${Object.entries(r.stats).map(([k,v])=>`${k}: <b>${v}</b>`).join('<br>')}${r.warnings.map(w=>`<div class="warn">⚠ ${w}</div>`).join('')}</td></tr>`; }).join('')}
+      <tr><td colspan="3"><button data-new="1">＋ Eigener Fall (zeichnen / hochladen)</button></td></tr></tbody></table></div>
+      <div class="detail"><div class="map" id="map"></div>
+        <div class="text"><div><div class="field"><b>Eingabe A</b> <span><button data-draw="a">✎</button><button data-up="a">⇪</button></span></div><textarea id="ta"></textarea></div>
+          <div><div class="field"><b>Ergebnis</b> <span class="muted" id="kbslabel"></span></div><textarea id="tr" readonly></textarea></div>
+          <div id="params"></div><div><span id="kbs"></span> <button class="primary" id="apply">Text anwenden ▶</button><div id="stats"></div></div></div></div></div></div>`;
+  app.querySelectorAll('[data-alg]').forEach(b => b.onclick = () => { selectAlg(b.dataset.alg); render(); });
+  app.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { loadFixture(b.dataset.fx); render(); });
+  app.querySelector('[data-new]').onclick = () => { S.fixtureId=null; S.a=S.b=null; S.local=false; S.fixtureCrs=null; S.last=null; render(); };
+  app.querySelector('[data-draw]').onclick = () => drawFor('a', alg().inputs[0].types.includes('Polygon')?'Polygon':alg().inputs[0].types[0]);
+  app.querySelector('[data-up]').onclick = () => upload('a');
+  makeMap(document.getElementById('map'));
+  const upd = () => { document.getElementById('ta').value = S.a ? JSON.stringify(S.a.geometry) : '';
+    document.getElementById('tr').value = S.last && S.last.result ? JSON.stringify(S.last.result.geometry) : '';
+    document.getElementById('stats').innerHTML = statsHtml(); document.getElementById('kbslabel').textContent = S.last ? S.last.kbs : ''; drawLayers(false); };
+  document.getElementById('apply').onclick = () => { try { S.a = {type:'Feature',properties:{},geometry:JSON.parse(document.getElementById('ta').value)}; S.fixtureId=null; rerun(); upd(); drawLayers(true); } catch(e){ alert(e.message); } };
+  paramForm(document.getElementById('params'), upd);
+  document.getElementById('kbs').appendChild(kbsSelect()); upd();
+  return upd;
+}
+
+// =====================================================================================
+// Umschalter (Prototyp-Infrastruktur)
+// =====================================================================================
+const VARIANTS = { A:['Werkbank', VariantA], B:['Karte zuerst', VariantB], C:['Katalog', VariantC] };
+const KEYS = Object.keys(VARIANTS);
+let current = new URLSearchParams(location.search).get('variant') || 'A'; if (!VARIANTS[current]) current='A';
+let refreshFn = () => {};
+function render(){ document.getElementById('vlabel').textContent = `${current} (${VARIANTS[current][0]})`; refreshFn = VARIANTS[current][1](document.getElementById('app')) || (()=>{}); }
+function refresh(){ refreshFn(); }
+function go(d){ current = KEYS[(KEYS.indexOf(current)+d+KEYS.length)%KEYS.length]; const u=new URL(location); u.searchParams.set('variant',current); history.replaceState(null,'',u); render(); }
+document.getElementById('prev').onclick = () => go(-1); document.getElementById('next').onclick = () => go(1);
+addEventListener('keydown', e => { const t=e.target; if (t.closest && t.closest('input,textarea,select,[contenteditable]')) return;
+  if (e.key==='ArrowLeft') go(-1); if (e.key==='ArrowRight') go(1);
+  if (e.key==='k' && e.ctrlKey && current==='B'){ e.preventDefault(); document.getElementById('q').focus(); } });
+selectAlg('buffer'); render();
+</script>
+</body>
+</html>
