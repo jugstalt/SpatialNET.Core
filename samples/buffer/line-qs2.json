@@ -1,0 +1,11 @@
+{
+  "name": "Grob: 2 Segmente je Viertelkreis",
+  "tags": [
+    "normal"
+  ],
+  "a": "LINESTRING (0 0, 10 0)",
+  "params": {
+    "distance": 3,
+    "quadrantSegments": 2
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Spitzer Winkel, Mitre-Limit greift",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 2 3)",
+  "params": {
+    "distance": 1,
+    "join": "Mitre"
+  }
+}

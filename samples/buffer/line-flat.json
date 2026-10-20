@@ -1,0 +1,11 @@
+{
+  "name": "Flache Enden",
+  "tags": [
+    "normal"
+  ],
+  "a": "LINESTRING (0 0, 10 0)",
+  "params": {
+    "distance": 2,
+    "cap": "Flat"
+  }
+}

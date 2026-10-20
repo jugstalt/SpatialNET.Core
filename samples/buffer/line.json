@@ -1,0 +1,11 @@
+{
+  "name": "Linie mit runden Enden",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "params": {
+    "distance": 2
+  }
+}

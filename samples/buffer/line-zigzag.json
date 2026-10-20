@@ -1,0 +1,14 @@
+{
+  "name": "Zackige Linie (Vereinfachung, Engstellen)",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "LINESTRING (0 0, 1 0.01, 2 0, 3 0.01, 4 0, 5 3, 6 0)",
+  "params": {
+    "distance": 1
+  },
+  "tolerance": {
+    "symdiff": 0.0001
+  },
+  "description": "Winzige Zacken nahe an Engstellen: NTS rechnet hier mit reduzierter Präzision; Abweichung ≈ 1e-5 der Fläche."
+}

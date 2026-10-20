@@ -1,0 +1,11 @@
+{
+  "name": "Punkt-Buffer",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "POINT (0 0)",
+  "params": {
+    "distance": 5
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Mit Höhen (Ergebnis 2D)",
+  "tags": [
+    "z"
+  ],
+  "a": "LINESTRING Z (0 0 5, 10 0 10)",
+  "params": {
+    "distance": 2
+  }
+}

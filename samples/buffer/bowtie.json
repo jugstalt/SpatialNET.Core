@@ -1,0 +1,10 @@
+{
+  "name": "Sich kreuzender Ring",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "POLYGON ((0 0, 10 10, 10 0, 0 10, 0 0))",
+  "params": {
+    "distance": 1
+  }
+}
