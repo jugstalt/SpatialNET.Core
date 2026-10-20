@@ -1,0 +1,13 @@
+{
+  "name": "AA - intersecting slivers, dimensional collapse",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 17",
+  "a": "POLYGON( (83 33, 62 402, 68 402, 83 33))",
+  "b": "POLYGON( (78 39, 574 76, 576 60, 78 39))",
+  "params": {
+    "gridSize": 1
+  }
+}

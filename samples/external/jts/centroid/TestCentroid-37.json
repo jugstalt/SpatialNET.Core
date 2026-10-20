@@ -1,0 +1,9 @@
+{
+  "name": "A - almost degenerate triangle",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 37",
+  "a": "POLYGON(( 56.528666666700 25.2101666667, 56.529000000000 25.2105000000, 56.528833333300 25.2103333333, 56.528666666700 25.2101666667))"
+}

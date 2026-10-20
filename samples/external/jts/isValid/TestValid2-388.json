@@ -1,0 +1,9 @@
+{
+  "name": "Test 389",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid2.xml, case 388",
+  "a": "POINT (70 170)"
+}

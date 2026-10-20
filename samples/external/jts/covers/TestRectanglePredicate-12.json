@@ -1,0 +1,10 @@
+{
+  "name": "L line intersection",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 12",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "LINESTRING( 10 10, -10 -20 )"
+}

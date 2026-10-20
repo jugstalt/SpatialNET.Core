@@ -1,0 +1,13 @@
+{
+  "name": "A - polygon collapse for DP",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 12",
+  "a": "POLYGON ((5 2, 9 1, 1 1, 5 2))",
+  "params": {
+    "tolerance": 1,
+    "preserveTopology": true
+  }
+}

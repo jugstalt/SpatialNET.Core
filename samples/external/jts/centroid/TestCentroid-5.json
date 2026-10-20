@@ -1,0 +1,9 @@
+{
+  "name": "mP - repeated points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 5",
+  "a": "MULTIPOINT((10 10), (10 10), (10 10), (18 18))"
+}

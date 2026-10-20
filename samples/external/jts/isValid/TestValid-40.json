@@ -1,0 +1,9 @@
+{
+  "name": "L - NaN ordinate",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 40",
+  "a": "LINESTRING (40 180, 120 120, 140 200, 200 140, NaN 200)"
+}

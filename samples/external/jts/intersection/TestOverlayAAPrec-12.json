@@ -1,0 +1,13 @@
+{
+  "name": "AA - sliver triangles, at angle to each other",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 12",
+  "a": "POLYGON( (0 0, 140 10, 0 20, 0 0))",
+  "b": "POLYGON( (280 0, 139 10, 280 1, 280 0))",
+  "params": {
+    "gridSize": 1
+  }
+}

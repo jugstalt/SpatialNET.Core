@@ -1,0 +1,10 @@
+{
+  "name": "mPmP - all points same",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayP.xml, case 4",
+  "a": "MULTIPOINT ((10 10), (10 20))",
+  "b": "MULTIPOINT ((10 10), (10 20))"
+}

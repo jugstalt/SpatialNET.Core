@@ -1,0 +1,9 @@
+{
+  "name": "A - degenerate box",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 35",
+  "a": "POLYGON ((40 160, 160 160, 160 160, 40 160, 40 160))"
+}

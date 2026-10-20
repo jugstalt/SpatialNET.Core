@@ -1,0 +1,9 @@
+{
+  "name": "A - hole touches shell twice (interior disconnected)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 74",
+  "a": "POLYGON ((0 60, 0 0, 60 0, 60 60, 0 60), (0 40, 20 20, 60 20, 0 40))"
+}

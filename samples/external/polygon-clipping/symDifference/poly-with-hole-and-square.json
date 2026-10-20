@@ -1,0 +1,10 @@
+{
+  "name": "poly with hole and square",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/poly-with-hole-and-square",
+  "a": "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0), (0.2 0.2, 0.2 0.4, 0.4 0.4, 0.4 0.2, 0.2 0.2))",
+  "b": "POLYGON ((0.25 0.25, 2.75 0.25, 2.75 2.75, 0.25 2.75, 0.25 0.25))"
+}

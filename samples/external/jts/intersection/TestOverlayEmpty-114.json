@@ -1,0 +1,10 @@
+{
+  "name": "Fall 114",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayEmpty.xml, case 114",
+  "a": "MULTIPOINT ((2 2), (3 3))",
+  "b": "POLYGON ((20 20, 20 30, 30 30, 30 20, 20 20))"
+}

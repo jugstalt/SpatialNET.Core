@@ -1,0 +1,10 @@
+{
+  "name": "Line vs line - pointwise equal",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 5",
+  "a": "LINESTRING(20 20, 80 80)",
+  "b": "LINESTRING(20 20, 80 80)"
+}

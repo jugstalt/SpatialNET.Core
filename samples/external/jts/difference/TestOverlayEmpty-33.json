@@ -1,0 +1,10 @@
+{
+  "name": "Fall 33",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayEmpty.xml, case 33",
+  "a": "POLYGON EMPTY",
+  "b": "MULTIPOLYGON EMPTY"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PL - disjoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayP.xml, case 7",
+  "a": "POINT (10 10)",
+  "b": "LINESTRING (10 20, 20 20)"
+}

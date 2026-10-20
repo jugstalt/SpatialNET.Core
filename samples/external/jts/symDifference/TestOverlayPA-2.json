@@ -1,0 +1,10 @@
+{
+  "name": "mPmA - points on I, B and E of touching triangles",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPA.xml, case 2",
+  "a": "MULTIPOLYGON( ( (120 320, 180 200, 240 320, 120 320)), ( (180 200, 240 80, 300 200, 180 200)))",
+  "b": "MULTIPOINT((120 320), (180 260), (180 320), (180 200), (300 200), (200 220))"
+}

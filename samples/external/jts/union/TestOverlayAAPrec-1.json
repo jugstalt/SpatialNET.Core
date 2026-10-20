@@ -1,0 +1,13 @@
+{
+  "name": "AA - sliver triangle, cut by polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 1",
+  "a": "POLYGON( (10 10, 100 10, 10 11, 10 10))",
+  "b": "POLYGON( (90 0, 200 0, 200 200, 90 200, 90 0))",
+  "params": {
+    "gridSize": 1
+  }
+}

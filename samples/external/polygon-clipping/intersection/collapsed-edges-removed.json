@@ -1,0 +1,10 @@
+{
+  "name": "collapsed edges removed",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/collapsed-edges-removed",
+  "a": "POLYGON ((35 13, 42 20, 38 23, 35 20, 33 23, 33 23, 29 19, 35 13))",
+  "b": "POLYGON ((35 13, 42 20, 38 23, 35 20, 33 23, 33 23, 29 19, 35 13))"
+}

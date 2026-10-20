@@ -1,0 +1,13 @@
+{
+  "name": "AA - B sliver crossing A triangle in line segment with length < 1",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 11",
+  "a": "POLYGON( (0 0, 200 0, 0 198, 0 0))",
+  "b": "POLYGON( (280 60, 139 60, 280 70, 280 60))",
+  "params": {
+    "gridSize": 1
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "AA equal but opposite orientation",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateAA.xml, case 2",
+  "a": "POLYGON( (0 0, 140 0, 140 140, 0 140, 0 0))",
+  "b": "POLYGON( (140 0, 0 0, 0 140, 140 140, 140 0))"
+}

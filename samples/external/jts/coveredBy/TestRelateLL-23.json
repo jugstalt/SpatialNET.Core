@@ -1,0 +1,10 @@
+{
+  "name": "LL - test intersection node computation (see https://github.com/libgeos/geos/issues/933)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 23",
+  "a": "MULTILINESTRING ((0 0, 1 1), (0.5 0.5, 1 0.1, -1 0.1))",
+  "b": "LINESTRING (0 0, 1 1)"
+}

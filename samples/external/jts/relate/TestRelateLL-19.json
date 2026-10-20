@@ -1,0 +1,10 @@
+{
+  "name": "LL - A-spiral, B-contained",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 19",
+  "a": "LINESTRING(40 60, 180 60, 180 140, 100 140, 100 60, 220 60, 220 180, 80 180, 80 60, 280 60)",
+  "b": "LINESTRING(140 60, 180 60, 220 60, 260 60)"
+}

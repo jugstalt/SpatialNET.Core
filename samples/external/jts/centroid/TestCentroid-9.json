@@ -1,0 +1,9 @@
+{
+  "name": "L - two segments",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 9",
+  "a": "LINESTRING (60 180, 120 100, 180 180)"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "A - chain of holes surrounds area (interior disconnected)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 75",
+  "a": "POLYGON ((40 300, 40 20, 280 20, 280 300, 40 300), (120 240, 80 180, 160 220, 120 240), (220 240, 160 220, 220 160, 220 240), (160 100, 80 180, 100 80, 160 100), (160 100, 220 160, 240 100, 160 100))"
+}

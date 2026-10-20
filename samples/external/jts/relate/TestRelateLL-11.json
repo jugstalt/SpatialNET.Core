@@ -1,0 +1,10 @@
+{
+  "name": "LL - A-IntNV = B-IntNV",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 11",
+  "a": "LINESTRING(80 100, 180 200)",
+  "b": "LINESTRING(80 180, 180 120)"
+}

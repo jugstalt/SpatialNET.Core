@@ -1,0 +1,9 @@
+{
+  "name": "A - zero-area polygon with multiple points (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 47",
+  "a": "POLYGON ((0 0, 10 0, 20 0, 0 0, 0 0))"
+}

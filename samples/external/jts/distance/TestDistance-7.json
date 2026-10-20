@@ -1,0 +1,10 @@
+{
+  "name": "LL - line to multiline",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 7",
+  "a": "LINESTRING (0 0, 0 10)",
+  "b": "MULTILINESTRING ((10 0, 10 10), (50 50, 60 60))"
+}

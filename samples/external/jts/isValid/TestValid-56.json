@@ -1,0 +1,9 @@
+{
+  "name": "A - shell self-crosses at vertex/non-vertex (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 56",
+  "a": "POLYGON ((0 40, 20 20, 40 0, 40 40, 0 0, 0 40))"
+}

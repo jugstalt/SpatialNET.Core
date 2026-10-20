@@ -1,0 +1,9 @@
+{
+  "name": "mP - two points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 3",
+  "a": "MULTIPOINT((10 10), (20 20) )"
+}

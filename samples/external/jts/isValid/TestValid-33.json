@@ -1,0 +1,9 @@
+{
+  "name": "mA - shells touch at one point (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 33",
+  "a": "MULTIPOLYGON (((110 110, 70 200, 150 200, 110 110)), ((110 110, 150 20, 70 20, 110 110)))"
+}

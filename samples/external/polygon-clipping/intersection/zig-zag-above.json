@@ -1,0 +1,10 @@
+{
+  "name": "zig zag above",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/zig-zag-above",
+  "a": "POLYGON ((0 0, 5 0, 5 5, 0 0))",
+  "b": "POLYGON ((0 3, 2.5 3, 2 4, 6 4, 6 6, 0 6, 0 3))"
+}

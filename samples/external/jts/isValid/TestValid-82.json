@@ -1,0 +1,9 @@
+{
+  "name": "mA - shells adjacent, different vertices (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 82",
+  "a": "MULTIPOLYGON (((40 120, 140 120, 140 40, 40 40, 40 120)), ((160 120, 60 120, 40 200, 140 200, 160 120)))"
+}

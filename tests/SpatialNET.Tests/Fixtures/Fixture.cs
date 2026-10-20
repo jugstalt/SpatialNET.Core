@@ -13,6 +13,7 @@ public sealed record Fixture
 
     public string Name { get; init; } = "";
     public string? Description { get; init; }
+    public string? Source { get; init; }
     public string[] Tags { get; init; } = [];
     public string A { get; init; } = "";
     public string? B { get; init; }
@@ -100,7 +101,9 @@ public static class FixtureCatalog
             }
 
             var relative = Path.GetRelativePath(Root, file).Replace('\\', '/');
-            var algorithm = relative[..relative.IndexOf('/')];
+            var segments = relative.Split('/');
+            // samples/<algorithmus>/… bzw. samples/external/<quelle>/<algorithmus>/…
+            var algorithm = segments[0] == "external" ? segments[2] : segments[0];
             var id = relative[..^".json".Length];
             var fixture = JsonSerializer.Deserialize<Fixture>(File.ReadAllText(file), Json)! with { Algorithm = algorithm, Id = id };
             if (fixture.Expected is not null && string.IsNullOrWhiteSpace(fixture.Divergence) && !fixture.Tags.Contains("external"))

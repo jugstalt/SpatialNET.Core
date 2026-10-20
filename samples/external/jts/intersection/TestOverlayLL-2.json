@@ -1,0 +1,10 @@
+{
+  "name": "LL - A shares one segment with B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLL.xml, case 2",
+  "a": "LINESTRING(0 0, 100 100, 200 0)",
+  "b": "LINESTRING(0 0, 100 100, 200 200)"
+}

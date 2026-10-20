@@ -1,0 +1,10 @@
+{
+  "name": "LL - closed multiline / empty line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 21",
+  "a": "MULTILINESTRING ((0 0, 0 1), (0 1, 1 1, 1 0, 0 0))",
+  "b": "LINESTRING EMPTY"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Line vs line - topologically equal",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 7",
+  "a": "LINESTRING(40 40, 200 40)",
+  "b": "LINESTRING(200 40, 140 40, 40 40)"
+}

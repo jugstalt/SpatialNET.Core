@@ -1,0 +1,10 @@
+{
+  "name": "intersect in Int NV",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 12",
+  "a": "LINESTRING(40 40, 100 100, 160 160)",
+  "b": "LINESTRING(160 60, 100 100, 60 140)"
+}

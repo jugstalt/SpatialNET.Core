@@ -1,0 +1,10 @@
+{
+  "name": "mPA - points in B: B, I",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePA.xml, case 4",
+  "a": "MULTIPOINT((20 20), (40 20))",
+  "b": "POLYGON((20 40, 20 0, 60 0, 60 40, 20 40))"
+}

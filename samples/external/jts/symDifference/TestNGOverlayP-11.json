@@ -1,0 +1,10 @@
+{
+  "name": "PA - overlapping in interior",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayP.xml, case 11",
+  "a": "POINT (10 10)",
+  "b": "POLYGON ((5 15, 15 15, 15 5, 5 5, 5 15))"
+}

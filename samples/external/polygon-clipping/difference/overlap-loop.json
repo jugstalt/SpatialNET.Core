@@ -1,0 +1,10 @@
+{
+  "name": "overlap loop",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/overlap-loop",
+  "a": "POLYGON ((57.8 -37.1, 57.8 -49.1, 177.8 -49.1, 177.8 -37.1, 57.8 -37.1))",
+  "b": "POLYGON ((57.8 -97.1, 196.4 -97.1, 196.4 -11.5, 57.8 -11.5, 57.8 -97.1))"
+}

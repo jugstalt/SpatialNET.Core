@@ -1,0 +1,10 @@
+{
+  "name": "mAA - empty area component",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayEmpty.xml, case 3",
+  "a": "MULTIPOLYGON (((10 10, 10 30, 30 30, 30 10, 10 10)), EMPTY)",
+  "b": "POLYGON ((20 20, 20 40, 40 40, 40 20, 20 20))"
+}

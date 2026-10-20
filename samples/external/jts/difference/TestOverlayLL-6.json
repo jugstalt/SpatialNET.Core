@@ -1,0 +1,10 @@
+{
+  "name": "LL - intersecting rings",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLL.xml, case 6",
+  "a": "LINESTRING(180 200, 100 280, 20 200, 100 120, 180 200)",
+  "b": "LINESTRING(100 200, 220 200, 220 80, 100 80, 100 200)"
+}

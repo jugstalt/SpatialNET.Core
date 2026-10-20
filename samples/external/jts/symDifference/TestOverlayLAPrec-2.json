@@ -1,0 +1,13 @@
+{
+  "name": "LA - A and B simple",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLAPrec.xml, case 2",
+  "a": "LINESTRING(240 190, 120 120)",
+  "b": "POLYGON( (110 240, 50 80, 240 70, 110 240))",
+  "params": {
+    "gridSize": 1
+  }
+}

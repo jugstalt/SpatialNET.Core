@@ -1,0 +1,9 @@
+{
+  "name": "A - box with hole",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 16",
+  "a": "POLYGON ((0 200, 200 200, 200 0, 0 0, 0 200), (20 180, 80 180, 80 20, 20 20, 20 180))"
+}

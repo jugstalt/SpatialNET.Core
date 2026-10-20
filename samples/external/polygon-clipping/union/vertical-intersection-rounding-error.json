@@ -1,0 +1,10 @@
+{
+  "name": "vertical intersection rounding error",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/vertical-intersection-rounding-error",
+  "a": "MULTIPOLYGON (((-0.1 49, 0.1 49, -0.1 50, -0.1 49)))",
+  "b": "POLYGON ((-1.1741342 50.6250111, 0.0001 49.32584697546245, 0.0001 50.6251, -1.1741342 50.6250111))"
+}

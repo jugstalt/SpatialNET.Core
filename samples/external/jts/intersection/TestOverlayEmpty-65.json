@@ -1,0 +1,10 @@
+{
+  "name": "Fall 65",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayEmpty.xml, case 65",
+  "a": "POLYGON ((20 20, 20 30, 30 30, 30 20, 20 20))",
+  "b": "LINESTRING (5 5, 6 6)"
+}

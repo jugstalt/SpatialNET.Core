@@ -1,0 +1,10 @@
+{
+  "name": "PP - point to multipoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 3",
+  "a": "POINT(10 10)",
+  "b": "MULTIPOINT ((10 0), (30 30))"
+}

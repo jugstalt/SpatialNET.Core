@@ -1,0 +1,9 @@
+{
+  "name": "A - hole touches shell at non-vertex (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 19",
+  "a": "POLYGON ((240 260, 40 260, 40 80, 240 80, 240 260), (140 180, 40 180, 140 240, 140 180))"
+}

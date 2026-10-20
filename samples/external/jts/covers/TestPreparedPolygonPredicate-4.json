@@ -1,0 +1,10 @@
+{
+  "name": "A/mP - both points equal to polygon vertices",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 4",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "MULTIPOINT ((10 10), (60 100))"
+}

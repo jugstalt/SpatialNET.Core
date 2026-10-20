@@ -1,0 +1,10 @@
+{
+  "name": "P in polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 20",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "POINT(60 60)"
+}

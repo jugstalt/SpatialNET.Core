@@ -1,0 +1,9 @@
+{
+  "name": "A - hole outside, disjoint (hole outside shell)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 66",
+  "a": "POLYGON ((20 180, 20 20, 140 20, 140 180, 20 180), (160 120, 180 100, 160 80, 160 120))"
+}

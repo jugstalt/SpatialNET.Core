@@ -1,0 +1,10 @@
+{
+  "name": "mPmP - points in A only, B only, and in both",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPP.xml, case 4",
+  "a": "MULTIPOINT((100 100), (200 200), (300 300), (500 500))",
+  "b": "MULTIPOINT((100 100), (200 200), (400 400), (600 600))"
+}

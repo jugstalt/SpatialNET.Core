@@ -1,0 +1,12 @@
+{
+  "name": "Degenerate Polygon with too few points in ring",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestBuffer.xml, case 11",
+  "a": "POLYGON ((0 0, 10 10, 0 0))",
+  "params": {
+    "distance": 10
+  }
+}

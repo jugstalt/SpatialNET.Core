@@ -1,0 +1,10 @@
+{
+  "name": "overlap y",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/overlap-y",
+  "a": "POLYGON ((-1883 -3, -1883 -8.5, -1783 -8.5, -1783 -3, -1883 -3))",
+  "b": "POLYGON ((-1883 -25, -1783 -25, -1783 75, -1883 75, -1883 -25))"
+}

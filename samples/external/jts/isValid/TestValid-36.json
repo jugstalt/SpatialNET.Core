@@ -1,0 +1,9 @@
+{
+  "name": "mA - non-empty and empty polygon (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 36",
+  "a": "MULTIPOLYGON (((30 10, 40 40, 20 40, 10 20, 30 10)), EMPTY)"
+}

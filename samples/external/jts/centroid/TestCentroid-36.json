@@ -1,0 +1,9 @@
+{
+  "name": "A - degenerate triangle",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 36",
+  "a": "POLYGON ((10 10, 100 100, 100 100, 10 10))"
+}

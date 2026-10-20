@@ -1,0 +1,10 @@
+{
+  "name": "LP - empty point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayEmpty.xml, case 8",
+  "a": "LINESTRING (10 10, 20 20)",
+  "b": "POINT EMPTY"
+}

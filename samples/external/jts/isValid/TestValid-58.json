@@ -1,0 +1,9 @@
+{
+  "name": "A - hole self-crosses at vertex (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 58",
+  "a": "POLYGON ((-10 50, 50 50, 50 -10, -10 -10, -10 50), (0 40, 20 20, 40 0, 40 40, 20 20, 0 0, 0 40))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "A/L - line in bdy - covered but not contained",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 17",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "LINESTRING (30 10, 90 10)"
+}

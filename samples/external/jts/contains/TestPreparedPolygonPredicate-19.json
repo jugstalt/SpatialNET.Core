@@ -1,0 +1,10 @@
+{
+  "name": "A/L - line with repeated points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 19",
+  "a": "POLYGON((20 20, 20 100, 120 100, 140 20, 20 20))",
+  "b": "LINESTRING (10 60, 50 60, 60 30, 60 30, 90 80, 90 80, 160 70)"
+}

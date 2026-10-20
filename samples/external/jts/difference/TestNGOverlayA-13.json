@@ -1,0 +1,10 @@
+{
+  "name": "AA - simple polygons #2",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayA.xml, case 13",
+  "a": "POLYGON( (20 340, 330 380, 50 40, 20 340))",
+  "b": "POLYGON( (210 320, 140 270, 0 270, 140 220, 210 320))"
+}

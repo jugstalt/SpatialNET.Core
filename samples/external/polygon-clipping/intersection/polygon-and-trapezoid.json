@@ -1,0 +1,10 @@
+{
+  "name": "polygon and trapezoid",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/polygon-and-trapezoid",
+  "a": "POLYGON ((0 3.5, 0 0, 21 0, 21 3.5, 0 3.5))",
+  "b": "POLYGON ((21 7, 0 7, 7 0, 14 0, 21 7))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PmA - empty MultiPolygon element",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePA.xml, case 11",
+  "a": "POINT(0 0)",
+  "b": "MULTIPOLYGON (EMPTY, ((1 0,0 1,-1 0,0 -1, 1 0)))"
+}

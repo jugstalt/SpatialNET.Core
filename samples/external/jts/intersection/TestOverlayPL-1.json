@@ -1,0 +1,10 @@
+{
+  "name": "mPL - points in I and E of line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPL.xml, case 1",
+  "a": "MULTIPOINT((40 90), (20 20), (70 70))",
+  "b": "LINESTRING(20 20, 100 100)"
+}

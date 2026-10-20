@@ -1,0 +1,10 @@
+{
+  "name": "AA - simple overlapping",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayA.xml, case 1",
+  "a": "POLYGON ((10 10, 10 30, 30 30, 30 10, 10 10))",
+  "b": "POLYGON ((20 20, 20 40, 40 40, 40 20, 20 20))"
+}

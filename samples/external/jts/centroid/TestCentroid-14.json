@@ -1,0 +1,9 @@
+{
+  "name": "A - empty",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 14",
+  "a": "POLYGON EMPTY"
+}

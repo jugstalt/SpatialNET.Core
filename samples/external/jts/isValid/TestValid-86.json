@@ -1,0 +1,9 @@
+{
+  "name": "mA - shell inside shell, hole overlapped, all vertices touch hole (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 86",
+  "a": "MULTIPOLYGON (((20 380, 420 380, 420 20, 20 20, 20 380), (220 340, 180 240, 60 200, 140 100, 340 60, 300 240, 220 340)), ((60 200, 340 60, 220 340, 60 200)))"
+}

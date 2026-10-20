@@ -1,0 +1,9 @@
+{
+  "name": "Almost collinear points, which caused robustness failure in JTS 1.12",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestConvexHull.xml, case 13",
+  "a": "LINESTRING (0 0, -140.8859438214298 140.88594382142983, -57.309236848216706 57.30923684821671, -190.9188309203678 190.91883092036784, -60 300)"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mL - zero length lines",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 8",
+  "a": "MULTILINESTRING ((10 10, 10 10), (20 20, 20 20))"
+}

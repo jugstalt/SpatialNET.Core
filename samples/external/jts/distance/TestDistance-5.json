@@ -1,0 +1,10 @@
+{
+  "name": "LL - line to empty line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 5",
+  "a": "LINESTRING (0 0, 0 10)",
+  "b": "LINESTRING EMPTY"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mL - two single-segment lines",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 11",
+  "a": "MULTILINESTRING ((0 0, 0 100), (100 0, 100 100))"
+}

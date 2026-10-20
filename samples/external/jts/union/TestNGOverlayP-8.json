@@ -1,0 +1,10 @@
+{
+  "name": "mPL - partially overlapping",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayP.xml, case 8",
+  "a": "MULTIPOINT ((10 10), (10 20))",
+  "b": "LINESTRING (10 10, 20 20)"
+}

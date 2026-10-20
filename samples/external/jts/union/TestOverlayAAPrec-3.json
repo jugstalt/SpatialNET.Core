@@ -1,0 +1,13 @@
+{
+  "name": "AA - narrow wedge in polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 3",
+  "a": "POLYGON((10 10, 50 10, 50 50, 10 50, 10 31, 49 30, 10 30, 10 10))",
+  "b": "POLYGON((60 40, 40 40, 40 20, 60 20, 60 40))",
+  "params": {
+    "gridSize": 1
+  }
+}

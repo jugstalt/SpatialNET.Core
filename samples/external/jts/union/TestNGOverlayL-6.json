@@ -1,0 +1,10 @@
+{
+  "name": "LL - overlapping at vertex and interior",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 6",
+  "a": "LINESTRING (0 10, 10 10, 30 30, 40 30)",
+  "b": "LINESTRING (20 0, 20 20, 30 30, 30 40)"
+}

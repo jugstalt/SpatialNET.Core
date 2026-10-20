@@ -1,0 +1,13 @@
+{
+  "name": "mL - lines with constrained topology",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 6",
+  "a": "MULTILINESTRING ((10 60, 39 50, 70 60, 90 50), (35 55, 46 55), (65 55, 75 55), (10 40, 40 30, 70 40, 90 30))",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "LmL - equal with boundary intersection",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 25",
+  "a": "LINESTRING(0 0, 60 0, 60 60, 60 0, 120 0)",
+  "b": "MULTILINESTRING((0 0, 60 0), (60 0, 120 0), (60 0, 60 60))"
+}

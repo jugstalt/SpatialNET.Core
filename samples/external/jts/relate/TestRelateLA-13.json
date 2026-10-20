@@ -1,0 +1,10 @@
+{
+  "name": "LA - closed multiline / empty polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 13",
+  "a": "MULTILINESTRING ((0 0, 0 1), (0 1, 1 1, 1 0, 0 0))",
+  "b": "POLYGON EMPTY"
+}

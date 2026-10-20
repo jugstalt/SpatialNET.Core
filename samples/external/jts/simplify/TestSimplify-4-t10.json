@@ -1,0 +1,13 @@
+{
+  "name": "L - line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 4",
+  "a": "LINESTRING (10 10, 20 21, 30 30)",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

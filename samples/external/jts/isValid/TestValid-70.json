@@ -1,0 +1,9 @@
+{
+  "name": "A - hole inside hole, disjoint (nested holes)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 70",
+  "a": "POLYGON ((0 140, 0 0, 180 0, 180 140, 0 140), (20 20, 160 20, 160 120, 20 120, 20 20), (40 100, 40 40, 140 40, 140 100, 40 100))"
+}

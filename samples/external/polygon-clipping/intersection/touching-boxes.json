@@ -1,0 +1,10 @@
+{
+  "name": "touching boxes",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/touching-boxes",
+  "a": "POLYGON ((0 0, 3 0, 3 3, 0 3, 0 0))",
+  "b": "POLYGON ((3 1, 4 1, 4 2, 3 2, 3 1))"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mL - complicated symmetrical collection of lines",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 13",
+  "a": "MULTILINESTRING ((20 20, 60 60), (20 -20, 60 -60), (-20 -20, -60 -60), (-20 20, -60 60), (-80 0, 0 80, 80 0, 0 -80, -80 0), (-40 20, -40 -20), (-20 40, 20 40), (40 20, 40 -20), (20 -40, -20 -40))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "A/mP - both points in polygon interior",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 5",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "MULTIPOINT ((20 20), (21 21))"
+}

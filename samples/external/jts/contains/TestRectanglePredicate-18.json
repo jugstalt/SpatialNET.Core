@@ -1,0 +1,10 @@
+{
+  "name": "P in polygon boundary (Y axis)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 18",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "POINT(100 50)"
+}

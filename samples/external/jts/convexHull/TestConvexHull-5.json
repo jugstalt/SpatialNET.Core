@@ -1,0 +1,9 @@
+{
+  "name": "Horizontal Line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestConvexHull.xml, case 5",
+  "a": "LINESTRING(30 220, 240 220, 240 220)"
+}

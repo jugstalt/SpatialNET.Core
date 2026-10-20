@@ -1,0 +1,10 @@
+{
+  "name": "LL - A and B touch ends",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLL.xml, case 5",
+  "a": "LINESTRING(60 200, 60 260, 140 200)",
+  "b": "LINESTRING(60 200, 60 140, 140 200)"
+}

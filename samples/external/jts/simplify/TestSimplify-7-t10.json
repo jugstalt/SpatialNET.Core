@@ -1,0 +1,13 @@
+{
+  "name": "mL - lines with EMPTY",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 7",
+  "a": "MULTILINESTRING(EMPTY, (10 10, 20 21, 30 30), (10 10, 10 30, 30 30))",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

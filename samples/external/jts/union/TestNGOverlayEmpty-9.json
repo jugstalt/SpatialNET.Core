@@ -1,0 +1,10 @@
+{
+  "name": "mLP - empty line component, empty point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayEmpty.xml, case 9",
+  "a": "MULTILINESTRING ((10 10, 20 20), EMPTY)",
+  "b": "POINT EMPTY"
+}

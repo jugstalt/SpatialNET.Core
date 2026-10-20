@@ -1,0 +1,9 @@
+{
+  "name": "A - hole touches shell at repeated shell point (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 24",
+  "a": "POLYGON ((90 10, 10 10, 50 90, 50 90, 90 10), (50 90, 60 30, 40 30, 50 90))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PA - disjoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePA.xml, case 1",
+  "a": "POINT(20 20)",
+  "b": "POLYGON( (60 120, 60 40, 160 40, 160 120, 60 120))"
+}

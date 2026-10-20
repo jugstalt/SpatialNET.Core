@@ -1,0 +1,10 @@
+{
+  "name": "PP - point contained in both A and B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPP.xml, case 5",
+  "a": "POINT(80 200)",
+  "b": "POINT(80 200)"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PL - overlapping",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayP.xml, case 6",
+  "a": "POINT (10 10)",
+  "b": "LINESTRING (10 10, 20 20)"
+}

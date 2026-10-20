@@ -1,0 +1,10 @@
+{
+  "name": "LL - disjoint, overlapping envelopes",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 2",
+  "a": "LINESTRING(60 0, 20 80, 100 80, 80 120, 40 140)",
+  "b": "LINESTRING(60 40, 140 40, 140 160, 0 160)"
+}

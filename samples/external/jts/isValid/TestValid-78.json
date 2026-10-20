@@ -1,0 +1,9 @@
+{
+  "name": "A - hole touches hole at all vertices (interior disconnected)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 78",
+  "a": "POLYGON( (0 0, 0 5, 6 5, 6 0, 0 0), (2 1, 4 1, 3 2, 2 1), (2 1, 1 4, 5 4, 4 1, 4 3, 3 2, 2 3, 2 1) )"
+}

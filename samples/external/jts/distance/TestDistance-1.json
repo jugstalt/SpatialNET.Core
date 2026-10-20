@@ -1,0 +1,10 @@
+{
+  "name": "PeP - point to an empty point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 1",
+  "a": "POINT(10 10)",
+  "b": "POINT EMPTY"
+}

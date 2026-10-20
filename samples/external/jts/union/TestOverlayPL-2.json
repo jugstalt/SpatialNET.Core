@@ -1,0 +1,10 @@
+{
+  "name": "mPL - points in I and E of line, line self-intersecting",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPL.xml, case 2",
+  "a": "MULTIPOINT((40 90), (20 20), (70 70))",
+  "b": "LINESTRING(20 20, 110 110, 170 50, 130 10, 70 70)"
+}

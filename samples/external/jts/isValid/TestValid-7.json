@@ -1,0 +1,9 @@
+{
+  "name": "L - repeated points (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 7",
+  "a": "LINESTRING (40 180, 120 120, 140 200, 140 200, 200 140, 240 200)"
+}

@@ -77,9 +77,10 @@ public class MeasuresFixtureTests
     {
         var fixture = FixtureCatalog.Get(id);
         var factory = Nts.Factory(implementation);
-        double expected = fixture.Expected is not null
-            ? fixture.ExpectedNumber()
-            : DistanceOp.Distance(Nts.Read(fixture.A), Nts.Read(fixture.B!));
+        var (a, b) = (Nts.Read(fixture.A), Nts.Read(fixture.B!));
+        double expected = fixture.Expected is not null ? fixture.ExpectedNumber()
+            : a.IsEmpty || b.IsEmpty ? double.NaN // bewusste Abweichung: NTS liefert 0 (ADR 0012)
+            : DistanceOp.Distance(a, b);
 
         OracleAssert.Close(expected, fixture.ReadA(factory).Distance(fixture.ReadB(factory)), fixture, "distance");
         OracleAssert.Close(expected, fixture.ReadB(factory).Distance(fixture.ReadA(factory)), fixture, "distance");

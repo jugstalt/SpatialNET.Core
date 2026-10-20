@@ -1,0 +1,10 @@
+{
+  "name": "same points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePP.xml, case 4",
+  "a": "MULTIPOINT((40 40), (80 60), (120 100))",
+  "b": "MULTIPOINT((40 40), (80 60), (120 100))"
+}

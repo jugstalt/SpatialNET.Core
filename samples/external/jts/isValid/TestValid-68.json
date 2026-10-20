@@ -1,0 +1,9 @@
+{
+  "name": "A - hole identical to shell (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 68",
+  "a": "POLYGON ((20 180, 20 20, 140 20, 140 180, 20 180), (20 180, 20 20, 140 20, 140 180, 20 180))"
+}

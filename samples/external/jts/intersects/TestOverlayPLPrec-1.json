@@ -1,0 +1,10 @@
+{
+  "name": "PP - Point just off line. Causes non-robust algorithms to fail.",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPLPrec.xml, case 1",
+  "a": "LINESTRING(-123456789 -40, 381039468754763 123456789)",
+  "b": "POINT(0 0)"
+}

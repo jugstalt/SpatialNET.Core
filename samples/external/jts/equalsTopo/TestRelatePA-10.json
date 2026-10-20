@@ -1,0 +1,10 @@
+{
+  "name": "mPA - empty MultiPoint element for B, on boundary of A",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePA.xml, case 10",
+  "a": "POLYGON ((1 0,0 1,-1 0,0 -1, 1 0))",
+  "b": "MULTIPOINT(EMPTY,(1 0))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PP - A different from B, same y",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPP.xml, case 7",
+  "a": "POINT(60 260)",
+  "b": "POINT(120 260)"
+}

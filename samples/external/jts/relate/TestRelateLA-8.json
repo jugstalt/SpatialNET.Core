@@ -1,0 +1,10 @@
+{
+  "name": "LA - Line with endpoints in interior but crossing exterior of multipolygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 8",
+  "a": "LINESTRING(160 70, 320 230)",
+  "b": "MULTIPOLYGON( ( (140 110, 260 110, 170 20, 50 20, 140 110)), ( (300 270, 420 270, 340 190, 220 190, 300 270)))"
+}

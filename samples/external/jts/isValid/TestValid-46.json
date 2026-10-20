@@ -1,0 +1,9 @@
+{
+  "name": "A - zero-area polygon (too few distinct points)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 46",
+  "a": "POLYGON ((0 0, 0 0, 0 0, 0 0, 0 0))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "issue 60 7",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/issue-60-7",
+  "a": "POLYGON ((-9 -9, -10.000000000000004 -8.79, -10.000000000000018 -9.17, -9 -9))",
+  "b": "POLYGON ((-9 1.5, -10.00000000000001 1.75, -10.000000000000016 1.44, -9 1.5))"
+}

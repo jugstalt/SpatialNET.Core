@@ -1,0 +1,10 @@
+{
+  "name": "subtract same shape multiple times",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/subtract-same-shape-multiple-times",
+  "a": "POLYGON ((900 0, 950 85, 1000 0, 1000 100, 900 100, 900 0))",
+  "b": "MULTIPOLYGON (((945 83, 959 80, 950 90, 945 83)), ((945 83, 959 80, 950 90, 945 83)))"
+}

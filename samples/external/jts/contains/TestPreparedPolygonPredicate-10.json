@@ -1,0 +1,10 @@
+{
+  "name": "mA/L A has 2 shells touching at one vertex and one non-vertex. B passes between the shells, but is wholely contained",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 10",
+  "a": "MULTIPOLYGON (((100 30, 30 110, 150 110, 100 30)), ((90 110, 30 170, 140 170, 90 110)))",
+  "b": "LINESTRING (90 80, 90 150)"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mP - repeated points (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 4",
+  "a": "MULTIPOINT((10 10), (20 20), (30 30), (10 10))"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Convex hull",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestConvexHull.xml, case 3",
+  "a": "POLYGON( (10 10, 100 10, 100 100, 10 100, 10 10))"
+}

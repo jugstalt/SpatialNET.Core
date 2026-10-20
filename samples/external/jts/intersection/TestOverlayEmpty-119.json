@@ -1,0 +1,10 @@
+{
+  "name": "Fall 119",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayEmpty.xml, case 119",
+  "a": "MULTIPOINT ((2 2), (3 3))",
+  "b": "MULTILINESTRING ((7 7, 8 8), (9 9, 10 10))"
+}

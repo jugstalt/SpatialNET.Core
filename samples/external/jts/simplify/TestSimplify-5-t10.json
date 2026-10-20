@@ -1,0 +1,13 @@
+{
+  "name": "L - short line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 5",
+  "a": "LINESTRING (0 5, 1 5, 2 5, 5 5)",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

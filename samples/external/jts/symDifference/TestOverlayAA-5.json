@@ -1,0 +1,10 @@
+{
+  "name": "AA - simple polygons with two touching holes in their symDifference",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAA.xml, case 5",
+  "a": "POLYGON( (0 0, 120 0, 120 50, 50 50, 120 100, 50 150, 120 150, 120 190, 0 190, 0 0))",
+  "b": "POLYGON( (230 0, 120 0, 120 50, 190 50, 120 100, 190 150, 120 150, 120 190, 230 190, 230 0))"
+}

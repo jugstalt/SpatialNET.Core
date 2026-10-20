@@ -1,0 +1,10 @@
+{
+  "name": "A/mP - one point interior, one point equal to a polygon vertex",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 6",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "MULTIPOINT ((60 100), (21 21))"
+}

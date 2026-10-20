@@ -1,0 +1,10 @@
+{
+  "name": "LmA - intersection at NV, L contained in A",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 3",
+  "a": "LINESTRING(70 50, 70 150)",
+  "b": "MULTIPOLYGON( ( (0 0, 0 100, 140 100, 140 0, 0 0)), ( (20 170, 70 100, 130 170, 20 170)))"
+}

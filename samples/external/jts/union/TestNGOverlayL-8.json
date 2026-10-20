@@ -1,0 +1,10 @@
+{
+  "name": "LL - Line with repeated points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 8",
+  "a": "LINESTRING (100 100, 200 200, 200 200, 200 200, 200 200, 300 300, 400 200)",
+  "b": "LINESTRING (190 110, 120 180)"
+}
