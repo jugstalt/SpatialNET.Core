@@ -1,0 +1,10 @@
+{
+  "name": "Mit Höhen bleiben Höhen erhalten",
+  "tags": [
+    "z"
+  ],
+  "a": "LINESTRING Z (0 0 1, 1 0.1 2, 2 0 3, 3 5 4)",
+  "params": {
+    "tolerance": 0.5
+  }
+}

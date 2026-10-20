@@ -1,0 +1,10 @@
+{
+  "name": "Zwei Pfade",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTILINESTRING ((0 0, 1 0.1, 2 0), (5 5, 6 7, 7 5))",
+  "params": {
+    "tolerance": 0.5
+  }
+}

@@ -47,7 +47,8 @@ public static class OracleAssert
             return;
         }
 
-        Assert.True(result.IsValid, $"Ergebnis ist ungültig: {result.AsText()}");
+        // Ist schon das Orakel-Ergebnis ungültig (z. B. Linie ohne Länge), wird die Gültigkeit nicht gefordert.
+        Assert.True(result.IsValid || !expected.IsValid, $"Ergebnis ist ungültig: {result.AsText()}\nSoll: {expected.AsText()}");
         Assert.Equal(expected.Dimension, result.Dimension);
         Assert.Equal(Parts(expected), Parts(result));
 

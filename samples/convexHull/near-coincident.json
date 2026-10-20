@@ -1,0 +1,7 @@
+{
+  "name": "Fast kollinear",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "MULTIPOINT ((0 0), (5 0.0000000000001), (10 0), (5 5))"
+}

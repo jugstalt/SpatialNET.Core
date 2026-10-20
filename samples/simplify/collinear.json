@@ -1,0 +1,10 @@
+{
+  "name": "Kollineare Zwischenpunkte entfallen",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "LINESTRING (0 0, 1 0, 2 0, 3 0, 10 0)",
+  "params": {
+    "tolerance": 0
+  }
+}
