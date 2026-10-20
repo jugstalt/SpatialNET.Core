@@ -1,0 +1,11 @@
+{
+  "name": "Topologieerhaltend: Loch bleibt",
+  "tags": [
+    "nested"
+  ],
+  "a": "POLYGON ((0 0, 20 0, 20 20, 0 20, 0 0), (9 9, 11 9, 11 11, 9 11, 9 9))",
+  "params": {
+    "tolerance": 5,
+    "preserveTopology": true
+  }
+}
