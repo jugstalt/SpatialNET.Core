@@ -1,4 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using SpatialNET.Imp;
+using SpatialNET.IO;
 using SpatialNET.Playground.Algorithms;
 using SpatialNET.Playground.Services;
 
@@ -33,6 +36,22 @@ app.MapPost("/api/run", (RunRequest request, RunService service) =>
     catch (Exception e)
     {
         // Das Playground zeigt jeden Fehler des Algorithmus bzw. der Projektion als Meldung an (ADR 0011).
+        return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
+    }
+});
+
+// GeoJSON-Upload: der Client schickt die Datei, gelesen wird mit GeoJson.ReadAll (ADR 0009/0011).
+app.MapPost("/api/import", async (HttpRequest request) =>
+{
+    using var body = new MemoryStream();
+    await request.Body.CopyToAsync(body);
+    try
+    {
+        var geometries = GeoJson.ReadAll(body.ToArray(), ImpGeometryFactory.Instance);
+        return Results.Json(new { geometries = geometries.Select(g => JsonNode.Parse(g.ToGeoJson())).ToList() });
+    }
+    catch (Exception e) when (e is FormatException or NotSupportedException or JsonException)
+    {
         return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
     }
 });
