@@ -1,0 +1,8 @@
+{
+  "name": "Loch berührt Rand",
+  "tags": [
+    "hole-touch"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (0 5, 5 2, 5 8, 0 5))",
+  "b": "LINESTRING (7 -1, 7 11)"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Entlang des Randes",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "LINESTRING (-1 0, 11 0)"
+}

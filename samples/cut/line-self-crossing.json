@@ -1,0 +1,8 @@
+{
+  "name": "Pfad kreuzt sich selbst (kein Schnitt)",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "LINESTRING (0 0, 10 10, 10 0, 0 10)",
+  "b": "LINESTRING (20 -5, 20 5)"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Zickzack-Schnitt",
+  "tags": [
+    "normal"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "LINESTRING (-1 2, 11 4, -1 6, 11 8)"
+}
