@@ -1,0 +1,11 @@
+{
+  "name": "Engstelle: mehrere Teile",
+  "tags": [
+    "multi",
+    "playground"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 1, 0 1)",
+  "params": {
+    "distance": 2
+  }
+}

@@ -83,6 +83,20 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
     }
 
     /// <summary>
+    /// Roh-Offset eines Pfads auf einer Seite (positiv links, negativ rechts) mit Ecken, wie JTS OffsetCurveBuilder.
+    /// </summary>
+    public Coordinate[] RawOffset(Coordinate[] path)
+    {
+        path = Distinct(path);
+        if (path.Length < 2) return [];
+        double tol = _radius * options.SimplifyFactor;
+        var simplified = Simplifier.Simplify(path, _sign > 0 ? tol : -tol);
+        var output = new List<Coordinate>();
+        Side(output, simplified, _sign > 0 ? -_radius : _radius, closed: false); // negativ = links
+        return output.ToArray();
+    }
+
+    /// <summary>
     /// Offset eines geschlossenen Rings nach rechts (positive Distanz; Innen links bei normalisierter Orientierung),
     /// nach links bei negativer Distanz.
     /// </summary>

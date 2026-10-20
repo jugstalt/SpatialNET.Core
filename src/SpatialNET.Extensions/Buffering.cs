@@ -85,22 +85,28 @@ public static class Buffering
         options ??= BufferOptions.Default;
         Validate(distance, options);
         var f = GeometryFactory.Resolve(factory);
-        var grid = GridModel.Resolve(gridSize, geometry);
+        var parts = Parts(geometry, distance, options, GridModel.Resolve(gridSize, geometry));
+        return f.CreatePolygon(parts.Select(Flat).ToArray(), geometry);
+    }
 
+    /// <summary>Die Teilflächen des Buffers (außen gegen den Uhrzeigersinn) – auch für OffsetCurve.</summary>
+    internal static List<PolygonPart> Parts(IGeometry2D geometry, double distance, BufferOptions options, GridModel grid)
+    {
         if (GeometryAccess.IsEmpty(geometry))
         {
-            return f.CreatePolygon([], geometry);
+            return [];
         }
 
         if (geometry is IPolygon2D polygon && distance == 0)
         {
-            return Build(f, geometry, new OverlayEngine(polygon, null, grid), engine => h => engine.InsideLeft(h, 0));
+            var normalized = new OverlayEngine(polygon, null, grid);
+            return normalized.Areas(h => normalized.InsideLeft(h, 0));
         }
 
         bool singleSided = options.SingleSided && geometry is IPolyline2D;
         if (geometry is not IPolygon2D && (singleSided ? distance == 0 : distance <= 0))
         {
-            return f.CreatePolygon([], geometry);
+            return [];
         }
 
         var builder = new OffsetBuilder(options, distance);
@@ -138,19 +144,13 @@ public static class Buffering
         }
 
         var lines = raw.Select(ring => (ring, 0, true)).ToList();
-        var engineRaw = new OverlayEngine([null, null], grid, [FillRule.Positive, FillRule.Positive], lines);
-        return Build(f, geometry, engineRaw, engine => h => engine.InsideLeft(h, 0));
+        var engine = new OverlayEngine([null, null], grid, [FillRule.Positive, FillRule.Positive], lines);
+        return engine.Areas(h => engine.InsideLeft(h, 0));
 
         void Add(Coordinate[]? ring)
         {
             if (ring is { Length: >= 4 }) raw.Add(ring);
         }
-    }
-
-    private static IPolygon2D Build(IGeometryFactory f, IGeometry2D source, OverlayEngine engine, Func<OverlayEngine, Func<int, bool>> select)
-    {
-        var parts = engine.Areas(select(engine)).Select(Flat).ToArray();
-        return f.CreatePolygon(parts, source);
     }
 
     /// <summary>Ob ein Ring bei Abstand <paramref name="r"/> vollständig erodiert (Envelope schmaler als 2r, wie JTS).</summary>
@@ -164,7 +164,7 @@ public static class Buffering
         new(part.Shell.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray(),
             part.Holes.ToArray().Select(h => (ReadOnlyMemory<Coordinate>)h.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray()).ToArray());
 
-    private static void Validate(double distance, BufferOptions options)
+    internal static void Validate(double distance, BufferOptions options)
     {
         if (!double.IsFinite(distance))
             throw new ArgumentOutOfRangeException(nameof(distance), distance, "Die Distanz muss endlich sein.");
