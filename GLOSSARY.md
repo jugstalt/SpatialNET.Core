@@ -26,8 +26,12 @@ Ein geschlossener Pfad, der eine Fläche umrandet; ob er Außenring oder Loch is
 _Avoid_: Kontur, Shell
 
 **Loch**:
-Ein Ring, der innerhalb eines anderen Rings desselben Polygons liegt und dessen Fläche ausspart.
+Ein Ring, der innerhalb einer ungeraden Zahl anderer Ringe desselben Polygons liegt und deren Fläche ausspart.
 _Avoid_: Hole, Innenring
+
+**Teilfläche**:
+Ein Außenring eines Polygons zusammen mit den Löchern, die direkt in ihm liegen; eine Insel in einem Loch ist eine eigene Teilfläche.
+_Avoid_: Part, Polygonteil, Einzelpolygon
 
 **Polylinie**:
 Eine Geometrie aus einem oder mehreren Pfaden.
