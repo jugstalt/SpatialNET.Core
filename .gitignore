@@ -1,0 +1,20 @@
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.nupkg
+*.snupkg
+
+# Node (Playground-Frontend)
+node_modules/
+
+# OS
+Thumbs.db
+.DS_Store
