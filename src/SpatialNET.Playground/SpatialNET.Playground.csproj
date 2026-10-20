@@ -11,4 +11,9 @@
     <ProjectReference Include="..\SpatialNET.IO\SpatialNET.IO.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Fixtures als Beispielgeometrien (ADR 0008/0011); externe Korpora nur in den Tests. -->
+    <None Include="..\..\samples\**\*.json" Exclude="..\..\samples\external\**" LinkBase="samples" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
