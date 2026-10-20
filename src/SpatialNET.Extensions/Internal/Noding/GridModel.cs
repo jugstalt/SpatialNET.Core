@@ -3,8 +3,12 @@ using System.Numerics;
 namespace SpatialNET.Internal.Noding;
 
 /// <summary>Ein Punkt auf dem Gitter in ganzzahligen Gittereinheiten; Orientierung darauf ist exakt (Int128).</summary>
-internal readonly record struct GridPoint(long X, long Y) : IComparable<GridPoint>
+internal readonly record struct GridPoint(long X, long Y) : IComparable<GridPoint>, Topology.IExactPoint<GridPoint>
 {
+    public static int CompareX(GridPoint a, GridPoint b) => a.X.CompareTo(b.X);
+
+    public static int CompareY(GridPoint a, GridPoint b) => a.Y.CompareTo(b.Y);
+
     /// <summary>+1, wenn c links von a→b liegt, −1 rechts, 0 kollinear – exakt.</summary>
     public static int Orient(GridPoint a, GridPoint b, GridPoint c)
     {

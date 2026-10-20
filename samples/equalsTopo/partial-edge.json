@@ -1,0 +1,8 @@
+{
+  "name": "Teilweise gemeinsame Kante",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "POLYGON ((10 5, 20 5, 20 15, 10 15, 10 5))"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Linie im Inneren",
+  "tags": [
+    "normal"
+  ],
+  "a": "LINESTRING (2 2, 8 8)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}
