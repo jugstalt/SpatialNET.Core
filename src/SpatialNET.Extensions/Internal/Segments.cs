@@ -1,0 +1,49 @@
+namespace SpatialNET.Internal;
+
+/// <summary>Segment-Geometrie in double (die exakten Prädikate kommen mit dem Präzisionskern, #25).</summary>
+internal static class Segments
+{
+    /// <summary>Kreuzprodukt (b - a) × (c - a); &gt; 0 bedeutet c links von a→b.</summary>
+    public static double Orient(Coordinate a, Coordinate b, Coordinate c) =>
+        (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+
+    public static bool IsOnSegment(Coordinate p, Coordinate a, Coordinate b) =>
+        Orient(a, b, p) == 0 &&
+        p.X >= Math.Min(a.X, b.X) && p.X <= Math.Max(a.X, b.X) &&
+        p.Y >= Math.Min(a.Y, b.Y) && p.Y <= Math.Max(a.Y, b.Y);
+
+    public static bool Intersects(Coordinate a, Coordinate b, Coordinate c, Coordinate d)
+    {
+        double o1 = Orient(a, b, c), o2 = Orient(a, b, d), o3 = Orient(c, d, a), o4 = Orient(c, d, b);
+        if (((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) && ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0)))
+        {
+            return true;
+        }
+
+        return IsOnSegment(c, a, b) || IsOnSegment(d, a, b) || IsOnSegment(a, c, d) || IsOnSegment(b, c, d);
+    }
+
+    public static double PointDistance(Coordinate p, Coordinate a, Coordinate b)
+    {
+        double dx = b.X - a.X, dy = b.Y - a.Y, len2 = dx * dx + dy * dy;
+        if (len2 == 0)
+        {
+            return Rings.Distance(p, a);
+        }
+
+        double t = Math.Clamp(((p.X - a.X) * dx + (p.Y - a.Y) * dy) / len2, 0, 1);
+        return Rings.Distance(p, new Coordinate(a.X + t * dx, a.Y + t * dy));
+    }
+
+    public static double Distance(Coordinate a, Coordinate b, Coordinate c, Coordinate d)
+    {
+        if (Intersects(a, b, c, d))
+        {
+            return 0;
+        }
+
+        return Math.Min(
+            Math.Min(PointDistance(a, c, d), PointDistance(b, c, d)),
+            Math.Min(PointDistance(c, a, b), PointDistance(d, a, b)));
+    }
+}

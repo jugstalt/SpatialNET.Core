@@ -10,4 +10,10 @@
     <ProjectReference Include="..\SpatialNET.Core\SpatialNET.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Teilflächen-Bildung wird von IO (Writer) mitgenutzt; die Tests prüfen interne Bausteine direkt. -->
+    <InternalsVisibleTo Include="SpatialNET.IO" />
+    <InternalsVisibleTo Include="SpatialNET.Tests" />
+  </ItemGroup>
+
 </Project>
