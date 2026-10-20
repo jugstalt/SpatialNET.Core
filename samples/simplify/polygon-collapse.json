@@ -1,0 +1,10 @@
+{
+  "name": "Kleine Teilfläche kollabiert",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOLYGON (((0 0, 10 0, 10 10, 0 10, 0 0)), ((20 0, 20.5 0, 20.5 0.2, 20 0)))",
+  "params": {
+    "tolerance": 1
+  }
+}

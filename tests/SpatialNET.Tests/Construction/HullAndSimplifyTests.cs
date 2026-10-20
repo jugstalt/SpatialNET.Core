@@ -9,11 +9,8 @@ public class HullAndSimplifyFixtureTests
 {
     public static TheoryData<string, string> HullFixtures => FixtureCatalog.Theory("convexHull");
 
-    // Polygone und preserveTopology folgen mit #34.
-    public static TheoryData<string, string> SimplifyFixtures => FixtureCatalog.Theory("simplify",
-        f => (f.A.TrimStart().StartsWith("LINESTRING", StringComparison.OrdinalIgnoreCase)
-              || f.A.TrimStart().StartsWith("MULTILINESTRING", StringComparison.OrdinalIgnoreCase))
-             && f.Param("preserveTopology") is null);
+    // Punkte haben kein Simplify (ADR 0012)
+    public static TheoryData<string, string> SimplifyFixtures => FixtureCatalog.Theory("simplify", f => !f.A.TrimStart().StartsWith("POINT", StringComparison.OrdinalIgnoreCase) && !f.A.TrimStart().StartsWith("MULTIPOINT", StringComparison.OrdinalIgnoreCase));
 
     [Theory]
     [MemberData(nameof(HullFixtures))]
@@ -34,12 +31,20 @@ public class HullAndSimplifyFixtureTests
     {
         var fixture = FixtureCatalog.Get(id);
         var factory = Nts.Factory(implementation);
-        var input = Nts.Read(fixture.A);
+        var input = fixture.ReadA(factory);
         double tolerance = fixture.Param("tolerance", 0);
+        bool preserve = fixture.Param("preserveTopology") is "True" or "true";
 
-        var actual = ((IPolyline2D)fixture.ReadA(factory)).Simplify(tolerance, factory);
+        IGeometry2D actual = input is IPolygon2D polygon
+            ? polygon.Simplify(tolerance, preserve, factory)
+            : ((IPolyline2D)input).Simplify(tolerance, preserve, factory);
 
-        OracleAssert.SameGeometry(DouglasPeuckerSimplifier.Simplify(input, tolerance), actual, GridOf(input), fixture);
+        var source = input is IPolygon2D ? Nts.ToNts(input) : Nts.Read(fixture.A);
+        var expected = preserve
+            ? NetTopologySuite.Simplify.TopologyPreservingSimplifier.Simplify(source, tolerance)
+            : DouglasPeuckerSimplifier.Simplify(source, tolerance);
+        if (input is IPolygon2D) Assert.True(actual.IsValid(), "Vereinfachte Polygone sind gültig.");
+        OracleAssert.SameGeometry(expected, actual, GridOf(source), fixture);
     }
 
     /// <summary>Ohne Rundung: Vergleichsgitter im Bereich der Gleitkomma-Genauigkeit.</summary>
@@ -56,11 +61,11 @@ public class HullAndSimplifyContractTests
     public void Null_and_invalid_arguments_throw()
     {
         Assert.Throws<ArgumentNullException>(() => ((IGeometry2D)null!).ConvexHull(F));
-        Assert.Throws<ArgumentNullException>(() => ((IPolyline2D)null!).Simplify(1, F));
+        Assert.Throws<ArgumentNullException>(() => ((IPolyline2D)null!).Simplify(1, factory: F));
 
         var line = SpatialNET.IO.Wkt.Read<IPolyline2D>("LINESTRING (0 0, 1 1)", F);
-        Assert.Throws<ArgumentOutOfRangeException>(() => line.Simplify(-1, F));
-        Assert.Throws<ArgumentOutOfRangeException>(() => line.Simplify(double.NaN, F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.Simplify(-1, factory: F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.Simplify(double.NaN, factory: F));
     }
 
     [Fact]
@@ -79,7 +84,7 @@ public class HullAndSimplifyContractTests
         var line = (Foreign.Polyline)SpatialNET.IO.Wkt.Read<IPolyline2D>("LINESTRING Z (0 0 1, 1 0.1 2, 2 0 3, 3 5 4)", foreign);
         line.SrsId = 31256;
 
-        var result = (Foreign.Polyline)line.Simplify(0.5, foreign);
+        var result = (Foreign.Polyline)line.Simplify(0.5, factory: foreign);
 
         Assert.Equal(31256, result.SrsId);
         Assert.Equal([1d, 3d, 4d], Enumerable.Range(0, result[0].PointCount).Select(i => result[0][i].Z));

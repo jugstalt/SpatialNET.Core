@@ -1,0 +1,10 @@
+{
+  "name": "Loch berührt Rand",
+  "tags": [
+    "hole-touch"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (0 5, 5 2, 5.05 5, 5 8, 0 5))",
+  "params": {
+    "tolerance": 0.2
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Topologieerhaltend: keine neue Kreuzung",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "MULTILINESTRING ((0 0, 5 3, 10 0), (5 1, 5 2))",
+  "params": {
+    "tolerance": 5,
+    "preserveTopology": true
+  }
+}
