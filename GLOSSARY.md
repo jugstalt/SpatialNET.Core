@@ -59,6 +59,14 @@ _Avoid_: Operation, Funktion, Tool
 Der vom Host (oder der Referenz-Implementierung) bereitgestellte Erzeuger, über den ein Algorithmus seine Ergebnis-Geometrien aus Koordinaten als Host-Geometrien anlegt.
 _Avoid_: Builder, Creator
 
+**Füllregel**:
+Die Regel, nach der ein Algorithmus aus der Windungszahl eines Punktes entscheidet, ob er zur Fläche einer Eingabe gehört (EvenOdd, NonZero, Positive, Negative).
+_Avoid_: Fill-Mode, Polygon-Regel
+
+**Gitterweite**:
+Der Abstand des Rasters in Karteneinheiten, auf das ein Overlay alle Koordinaten seines Ergebnisses rundet.
+_Avoid_: Toleranz, Präzision, Epsilon, Scale
+
 ### Playground
 
 **Playground**:
