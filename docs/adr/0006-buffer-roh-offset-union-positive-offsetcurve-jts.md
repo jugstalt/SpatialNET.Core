@@ -7,8 +7,9 @@ Der Buffer entsteht aus dem Roh-Offset jedes Rings bzw. jeder Linie (mit Joins u
 - **API:** `Buffer(this IGeometry2D, double distance, BufferOptions? options = null, IGeometryFactory? factory = null, double? gridSize = null)` gibt immer `IPolygon2D` zurück. `OffsetCurve` gibt es auf `IPolyline2D` und `IPolygon2D` mit `OffsetOptions`, Rückgabe immer `IPolyline2D`. Die Optionen sind records mit `init`-Properties und `static Default`. Die Join-Parameter teilen beide.
 - **Defaults (wie JTS):** Join `Round`, Cap `Round`, `MitreLimit = 5`, `QuadrantSegments = 8`, Input-Simplifier 0,01·|d|, `SingleSided` optional. Eine optionale `ArcTolerance` (max. Sehnenabweichung in Karteneinheiten) hat Vorrang vor `QuadrantSegments`, wenn sie gesetzt ist.
 - **Offset-Richtung:** Bei Polylinien bedeutet positiv links in Laufrichtung. Bei Polygonen bedeutet positiv nach außen und negativ nach innen, **unabhängig von der Ring-Orientierung** (die laut ADR 0003 ignoriert wird). Das Ergebnis ist der Rand von `Buffer(d)` als geschlossene Pfade. Ein optionaler Joined-Modus verbindet Teilstücke zu einem Pfad.
+- **Negative Distanz** bei Polygonen bedeutet Pufferung **nach innen**: Das Polygon wird um |d| verkleinert. Schmale Teile können dabei verschwinden oder es zerfällt in mehrere Teilflächen.
 - **Randfälle:**
-  - Kollabierender negativer Buffer → leeres Polygon
+  - Polygon verschwindet beim negativen Buffer vollständig → leeres Polygon
   - Linie oder Punkt mit d ≤ 0 → leeres Polygon
   - Polygon mit d = 0 → per Even-Odd normalisierte Eingabe
   - Ungültige Eingaben werden per Even-Odd interpretiert, ohne Exception
