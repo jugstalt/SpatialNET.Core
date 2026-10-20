@@ -17,6 +17,30 @@ _Avoid_: Client, Anwendung, Consumer
 **Host-Geometrie**:
 Eine Geometrieklasse eines Hosts, die ein oder mehrere Geometrie-Interfaces implementiert.
 
+**Pfad**:
+Eine geordnete Folge von Punkten, die einen Linienzug bildet; Teil einer Polylinie, selbst keine Geometrie.
+_Avoid_: Linestring, Segmentkette
+
+**Ring**:
+Ein geschlossener Pfad, der eine Fläche umrandet; ob er Außenring oder Loch ist, ergibt sich aus seiner Lage im Polygon.
+_Avoid_: Kontur, Shell
+
+**Loch**:
+Ein Ring, der innerhalb eines anderen Rings desselben Polygons liegt und dessen Fläche ausspart.
+_Avoid_: Hole, Innenring
+
+**Polylinie**:
+Eine Geometrie aus einem oder mehreren Pfaden.
+_Avoid_: MultiLineString, Linie
+
+**Polygon**:
+Eine Geometrie aus einem oder mehreren Ringen, die zusammen eine oder mehrere Flächen beschreiben.
+_Avoid_: MultiPolygon, Fläche
+
+**Envelope**:
+Das achsenparallele Rechteck, das eine Geometrie umschließt.
+_Avoid_: Bounding Box, Extent, BBox
+
 **Referenz-Implementierung**:
 Die Implementierung der Geometrie-Interfaces in SpatialNET.Imp, gedacht für Tests, den Playground und Hosts ohne eigene Geometrien.
 _Avoid_: Default-Implementierung, Imp-Klassen
