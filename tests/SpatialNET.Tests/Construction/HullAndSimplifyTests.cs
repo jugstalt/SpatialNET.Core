@@ -1,0 +1,105 @@
+using NetTopologySuite.Simplify;
+using SpatialNET.Imp;
+using SpatialNET.Tests.Fixtures;
+using SpatialNET.Tests.Oracle;
+
+namespace SpatialNET.Tests.Construction;
+
+public class HullAndSimplifyFixtureTests
+{
+    public static TheoryData<string, string> HullFixtures => FixtureCatalog.Theory("convexHull");
+
+    // Polygone und preserveTopology folgen mit #34.
+    public static TheoryData<string, string> SimplifyFixtures => FixtureCatalog.Theory("simplify",
+        f => (f.A.TrimStart().StartsWith("LINESTRING", StringComparison.OrdinalIgnoreCase)
+              || f.A.TrimStart().StartsWith("MULTILINESTRING", StringComparison.OrdinalIgnoreCase))
+             && f.Param("preserveTopology") is null);
+
+    [Theory]
+    [MemberData(nameof(HullFixtures))]
+    public void ConvexHull(string id, string implementation)
+    {
+        var fixture = FixtureCatalog.Get(id);
+        var factory = Nts.Factory(implementation);
+        var input = Nts.Read(fixture.A);
+
+        var actual = fixture.ReadA(factory).ConvexHull(factory);
+
+        OracleAssert.SameGeometry(input.ConvexHull(), actual, GridOf(input), fixture);
+    }
+
+    [Theory]
+    [MemberData(nameof(SimplifyFixtures))]
+    public void Simplify(string id, string implementation)
+    {
+        var fixture = FixtureCatalog.Get(id);
+        var factory = Nts.Factory(implementation);
+        var input = Nts.Read(fixture.A);
+        double tolerance = fixture.Param("tolerance", 0);
+
+        var actual = ((IPolyline2D)fixture.ReadA(factory)).Simplify(tolerance, factory);
+
+        OracleAssert.SameGeometry(DouglasPeuckerSimplifier.Simplify(input, tolerance), actual, GridOf(input), fixture);
+    }
+
+    /// <summary>Ohne Rundung: Vergleichsgitter im Bereich der Gleitkomma-Genauigkeit.</summary>
+    private static double GridOf(NetTopologySuite.Geometries.Geometry g) =>
+        g.IsEmpty ? 1e-12 : 1e-12 * Math.Max(1, Math.Max(Math.Abs(g.EnvelopeInternal.MaxX), Math.Abs(g.EnvelopeInternal.MaxY)));
+}
+
+[Collection(GlobalStateCollection.Name)]
+public class HullAndSimplifyContractTests
+{
+    private static readonly IGeometryFactory F = ImpGeometryFactory.Instance;
+
+    [Fact]
+    public void Null_and_invalid_arguments_throw()
+    {
+        Assert.Throws<ArgumentNullException>(() => ((IGeometry2D)null!).ConvexHull(F));
+        Assert.Throws<ArgumentNullException>(() => ((IPolyline2D)null!).Simplify(1, F));
+
+        var line = SpatialNET.IO.Wkt.Read<IPolyline2D>("LINESTRING (0 0, 1 1)", F);
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.Simplify(-1, F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.Simplify(double.NaN, F));
+    }
+
+    [Fact]
+    public void Hull_degenerates_like_JTS()
+    {
+        Assert.IsAssignableFrom<IPoint2D>(SpatialNET.IO.Wkt.Read("MULTIPOINT ((1 1), (1 1))", F).ConvexHull(F));
+        Assert.Equal(0, Assert.IsAssignableFrom<IPolygon2D>(SpatialNET.IO.Wkt.Read("MULTIPOINT EMPTY", F).ConvexHull(F)).RingCount);
+        var line = Assert.IsAssignableFrom<IPolyline2D>(SpatialNET.IO.Wkt.Read("MULTIPOINT ((0 0), (2 2), (1 1))", F).ConvexHull(F));
+        Assert.Equal(2, line[0].PointCount);
+    }
+
+    [Fact]
+    public void Simplify_keeps_original_vertices_with_Z_and_passes_the_source()
+    {
+        var foreign = Foreign.ForeignGeometryFactory.Instance;
+        var line = (Foreign.Polyline)SpatialNET.IO.Wkt.Read<IPolyline2D>("LINESTRING Z (0 0 1, 1 0.1 2, 2 0 3, 3 5 4)", foreign);
+        line.SrsId = 31256;
+
+        var result = (Foreign.Polyline)line.Simplify(0.5, foreign);
+
+        Assert.Equal(31256, result.SrsId);
+        Assert.Equal([1d, 3d, 4d], Enumerable.Range(0, result[0].PointCount).Select(i => result[0][i].Z));
+    }
+
+    [Fact]
+    public void Missing_factory_throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            var saved = GeometryFactory.Default;
+            GeometryFactory.Default = null;
+            try
+            {
+                SpatialNET.IO.Wkt.Read("POINT (1 1)", F).ConvexHull();
+            }
+            finally
+            {
+                GeometryFactory.Default = saved;
+            }
+        });
+    }
+}

@@ -81,10 +81,10 @@ public static class FixtureCatalog
     }
 
     /// <summary>Theory-Daten: jedes Fixture eines Algorithmus × jede Implementierung.</summary>
-    public static TheoryData<string, string> Theory(string algorithm)
+    public static TheoryData<string, string> Theory(string algorithm, Func<Fixture, bool>? where = null)
     {
         var data = new TheoryData<string, string>();
-        foreach (var fixture in For(algorithm))
+        foreach (var fixture in For(algorithm).Where(where ?? (_ => true)))
             foreach (var (implementation, _) in Oracle.Nts.Implementations)
                 data.Add(fixture.Id, implementation);
         return data;

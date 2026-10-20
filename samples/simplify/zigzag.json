@@ -1,0 +1,11 @@
+{
+  "name": "Zackige Linie",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "LINESTRING (0 0, 1 0.3, 2 -0.2, 3 0.4, 4 0, 5 2, 6 2.2, 7 1.9)",
+  "params": {
+    "tolerance": 0.5
+  }
+}
