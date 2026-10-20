@@ -82,4 +82,18 @@ Eine Web-Anwendung mit Leaflet-Karte, in der Algorithmen interaktiv an Beispiel-
 _Avoid_: Demo, Viewer, Testseite
 
 **Beispielgeometrie**:
-Eine pro Algorithmus vorbereitete Eingabe, die der Playground automatisch anbietet.
+Ein Fixture mit dem Tag `playground`, das der Playground für seinen Algorithmus automatisch anbietet.
+
+### Tests
+
+**Fixture**:
+Ein gespeicherter Testfall eines Algorithmus mit Eingaben, Parametern und Tags, den Tests und Playground gemeinsam nutzen.
+_Avoid_: Testdatei, Sample, Testfall-Datei
+
+**Orakel**:
+Die Vergleichsberechnung mit NetTopologySuite, die das Soll eines Fixtures zur Testlaufzeit liefert.
+_Avoid_: Referenz, Golden File, Erwartungswert
+
+**Fremd-Implementierung**:
+Eine absichtlich von der Referenz-Implementierung abweichende Implementierung der Geometrie-Interfaces im Testprojekt, gegen die jeder Fixture-Test zusätzlich läuft.
+_Avoid_: Mock, Fake, Dummy
