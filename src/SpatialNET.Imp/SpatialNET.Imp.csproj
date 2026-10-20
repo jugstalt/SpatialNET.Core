@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>Referenz-Implementierung der SpatialNET-Geometrie-Interfaces samt Geometrie-Factory.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpatialNET.Core\SpatialNET.Core.csproj" />
+  </ItemGroup>
+
+</Project>

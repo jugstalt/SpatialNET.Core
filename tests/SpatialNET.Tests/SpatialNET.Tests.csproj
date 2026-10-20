@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="CsCheck" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NetTopologySuite" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SpatialNET.Core\SpatialNET.Core.csproj" />
+    <ProjectReference Include="..\..\src\SpatialNET.Extensions\SpatialNET.Extensions.csproj" />
+    <ProjectReference Include="..\..\src\SpatialNET.Imp\SpatialNET.Imp.csproj" />
+    <ProjectReference Include="..\..\src\SpatialNET.IO\SpatialNET.IO.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

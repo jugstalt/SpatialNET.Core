@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>WKT- und GeoJSON-Lesen und -Schreiben für SpatialNET-Geometrien.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpatialNET.Core\SpatialNET.Core.csproj" />
+    <ProjectReference Include="..\SpatialNET.Extensions\SpatialNET.Extensions.csproj" />
+  </ItemGroup>
+
+</Project>

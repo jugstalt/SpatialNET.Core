@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>Lesende Geometrie-Interfaces, Wert-Typen und Factory-Vertrag von SpatialNET.</Description>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Proj4Net.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpatialNET.Core\SpatialNET.Core.csproj" />
+    <ProjectReference Include="..\SpatialNET.Extensions\SpatialNET.Extensions.csproj" />
+    <ProjectReference Include="..\SpatialNET.Imp\SpatialNET.Imp.csproj" />
+    <ProjectReference Include="..\SpatialNET.IO\SpatialNET.IO.csproj" />
+  </ItemGroup>
+
+</Project>
