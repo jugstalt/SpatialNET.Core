@@ -1,0 +1,8 @@
+{
+  "name": "Unberührte Teilfläche bleibt",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOLYGON (((0 0, 10 0, 10 10, 0 10, 0 0)), ((20 0, 30 0, 30 10, 20 10, 20 0)), ((40 0, 50 0, 50 10, 40 10, 40 0)))",
+  "b": "LINESTRING (-1 5, 11 5)"
+}

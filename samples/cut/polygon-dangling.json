@@ -1,0 +1,9 @@
+{
+  "name": "Loses Ende schneidet nicht",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "LINESTRING (-1 5, 5 5)"
+}

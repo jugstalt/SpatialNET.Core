@@ -1,0 +1,8 @@
+{
+  "name": "Leeres Polygon",
+  "tags": [
+    "empty"
+  ],
+  "a": "POLYGON EMPTY",
+  "b": "LINESTRING (-1 5, 11 5)"
+}

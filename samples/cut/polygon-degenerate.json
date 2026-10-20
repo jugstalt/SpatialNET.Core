@@ -1,0 +1,8 @@
+{
+  "name": "Flächenloses Loch",
+  "tags": [
+    "degenerate-ring"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (5 5, 6 6, 5 5))",
+  "b": "LINESTRING (-1 5, 11 5)"
+}

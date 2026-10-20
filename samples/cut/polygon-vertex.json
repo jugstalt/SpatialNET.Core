@@ -1,0 +1,8 @@
+{
+  "name": "Berührung in einem Vertex",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "LINESTRING (-5 -5, 0 0)"
+}
