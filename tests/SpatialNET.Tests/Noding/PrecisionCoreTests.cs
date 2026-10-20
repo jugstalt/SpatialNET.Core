@@ -123,7 +123,8 @@ public class SnapRoundingNoderTests
     /// Auflösung zwischen Implementierungen legitim abweichen darf.
     /// </summary>
     private static readonly Gen<Coordinate[]> GeneralPaths =
-        Paths.Select(path => path.Select(c => new Coordinate(c.X + Math.Sqrt(2) * 1e-7, c.Y + Math.PI * 1e-7)).ToArray());
+        Gen.Select(Gen.Int[-50000, 50000], Gen.Int[-50000, 50000]).Array[2, 6]
+            .Select(points => points.Select(p => new Coordinate(p.Item1 / 1000.0 + Math.Sqrt(2) * 1e-7, p.Item2 / 1000.0 + Math.PI * 1e-7)).ToArray());
 
     [Fact]
     public void Matches_the_NTS_snap_rounding_noder()

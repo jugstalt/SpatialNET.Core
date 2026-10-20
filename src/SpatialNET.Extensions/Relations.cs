@@ -121,14 +121,8 @@ public static class Relations
             return true;
         }
 
-        var ea = a.Envelope();
-        var eb = b.Envelope();
-        if (ea.MaxX < eb.MinX || eb.MaxX < ea.MinX || ea.MaxY < eb.MinY || eb.MaxY < ea.MinY)
-        {
-            return true;
-        }
-
-        return a.Relate(b).Matches("FF*FF****");
+        // Schneller exakter Weg (Segment-Schnitt, dann Enthaltensein je Teil) statt voller DE-9IM-Matrix.
+        return new PreparedGeometry(a).Disjoint(b);
     }
 
     /// <summary>Ob <paramref name="b"/> in <paramref name="a"/> liegt und ein Inneres gemeinsam haben (<c>T*****FF*</c>).</summary>
