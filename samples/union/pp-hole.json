@@ -1,0 +1,8 @@
+{
+  "name": "Polygon mit Loch gegen Quadrat",
+  "tags": [
+    "nested"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 8 2, 8 8, 2 8, 2 2))",
+  "b": "POLYGON ((5 -5, 15 -5, 15 5, 5 5, 5 -5))"
+}
