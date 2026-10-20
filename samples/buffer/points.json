@@ -1,0 +1,10 @@
+{
+  "name": "Multipunkt, überlappende Kreise",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOINT ((0 0), (6 0), (30 0))",
+  "params": {
+    "distance": 5
+  }
+}

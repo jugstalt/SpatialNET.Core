@@ -1,0 +1,11 @@
+{
+  "name": "Mitre ohne Limit-Überschreitung",
+  "tags": [
+    "normal"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "params": {
+    "distance": 1,
+    "join": "Mitre"
+  }
+}

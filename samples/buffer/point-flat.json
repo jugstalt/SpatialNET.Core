@@ -1,0 +1,11 @@
+{
+  "name": "Punkt mit Flat-Kappe ist leer",
+  "tags": [
+    "empty"
+  ],
+  "a": "POINT (0 0)",
+  "params": {
+    "distance": 5,
+    "cap": "Flat"
+  }
+}

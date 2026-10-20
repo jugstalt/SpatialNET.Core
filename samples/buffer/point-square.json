@@ -1,0 +1,11 @@
+{
+  "name": "Punkt mit Square-Kappe",
+  "tags": [
+    "normal"
+  ],
+  "a": "POINT (0 0)",
+  "params": {
+    "distance": 5,
+    "cap": "Square"
+  }
+}

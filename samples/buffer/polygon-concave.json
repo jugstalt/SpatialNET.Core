@@ -1,0 +1,10 @@
+{
+  "name": "Konkaves Polygon nach innen, zerfällt",
+  "tags": [
+    "normal"
+  ],
+  "a": "POLYGON ((0 0, 30 0, 30 10, 16 10, 16 2, 14 2, 14 10, 0 10, 0 0))",
+  "params": {
+    "distance": -1.5
+  }
+}

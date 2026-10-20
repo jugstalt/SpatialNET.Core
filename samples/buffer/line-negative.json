@@ -1,0 +1,10 @@
+{
+  "name": "Linie mit negativer Distanz ist leer",
+  "tags": [
+    "empty"
+  ],
+  "a": "LINESTRING (0 0, 10 0)",
+  "params": {
+    "distance": -2
+  }
+}
