@@ -1,0 +1,10 @@
+{
+  "name": "Linien dürfen sich kreuzen",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "LINESTRING (0 0, 10 10, 10 0, 0 10)",
+  "params": {
+    "kinds": []
+  }
+}

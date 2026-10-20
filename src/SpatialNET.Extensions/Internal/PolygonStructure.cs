@@ -31,25 +31,7 @@ internal static class PolygonStructure
         }
 
         int n = rings.Count;
-        var area = rings.Select(r => Math.Abs(Rings.SignedArea(r))).ToArray();
-        var depth = new int[n];
-        var parent = new int[n];
-        Array.Fill(parent, -1);
-
-        for (int i = 0; i < n; i++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                if (i != j && Contains(rings[j], rings[i]))
-                {
-                    depth[i]++;
-                    if (parent[i] < 0 || area[j] < area[parent[i]])
-                    {
-                        parent[i] = j; // der kleinste umgebende Ring ist der direkte Elternring
-                    }
-                }
-            }
-        }
+        var (depth, parent) = Nesting(rings);
 
         var holes = new Dictionary<int, List<Coordinate[]>>();
         for (int i = 0; i < n; i++)
@@ -70,6 +52,43 @@ internal static class PolygonStructure
         }
 
         return parts;
+    }
+
+    /// <summary>
+    /// Verschachtelung geschlossener, nicht degenerierter Ringe: Tiefe (Anzahl umgebender Ringe) und direkter
+    /// Elternring (kleinster umgebender Ring, −1 für oberste Ebene).
+    /// </summary>
+    public static (int[] Depth, int[] Parent) Nesting(IReadOnlyList<Coordinate[]> rings)
+    {
+        int n = rings.Count;
+        var area = rings.Select(r => Math.Abs(Rings.SignedArea(r))).ToArray();
+        var depth = new int[n];
+        var parent = new int[n];
+        Array.Fill(parent, -1);
+
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (i != j && Contains(rings[j], rings[i]))
+                {
+                    depth[i]++;
+                    if (parent[i] < 0 || area[j] < area[parent[i]])
+                    {
+                        parent[i] = j; // der kleinste umgebende Ring ist der direkte Elternring
+                    }
+                }
+            }
+        }
+
+        return (depth, parent);
+    }
+
+    /// <summary>Teilfläche je Ring: Außenringe (gerade Tiefe) sind ihre eigene, Löcher gehören zu ihrem Elternring.</summary>
+    public static int[] PartOf(IReadOnlyList<Coordinate[]> rings)
+    {
+        var (depth, parent) = Nesting(rings);
+        return Enumerable.Range(0, rings.Count).Select(i => depth[i] % 2 == 0 ? i : parent[i]).ToArray();
     }
 
     /// <summary>Ob <paramref name="inner"/> innerhalb von <paramref name="outer"/> liegt (Ringe kreuzen sich nicht).</summary>

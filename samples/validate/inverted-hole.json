@@ -1,0 +1,12 @@
+{
+  "name": "Ring berührt sich selbst (invertiertes Loch)",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 5 10, 7 5, 3 5, 5 10, 0 10, 0 0))",
+  "params": {
+    "kinds": [
+      "RingSelfTouch"
+    ]
+  }
+}
