@@ -1,0 +1,11 @@
+{
+  "name": "Polygon außen",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "params": {
+    "distance": 2
+  }
+}

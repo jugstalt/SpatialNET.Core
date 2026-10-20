@@ -52,13 +52,19 @@ public static class OracleAssert
         Assert.Equal(expected.Dimension, result.Dimension);
         Assert.Equal(Parts(expected), Parts(result));
 
-        double size = expected.Dimension == Dimension.Surface ? expected.Area : expected.Length;
-        double symDiff = expected.Dimension == Dimension.Surface
-            ? expected.SymmetricDifference(result).Area
-            : expected.SymmetricDifference(result).Length;
         double relative = fixture?.ToleranceFor("symdiff", Relative) ?? Relative;
-        Assert.True(symDiff <= relative * Math.Max(size, 1),
-            $"Symmetrische Differenz {symDiff:R} zu groß.\nSoll: {expected.AsText()}\nIst:  {result.AsText()}");
+        if (expected.Dimension == Dimension.Surface)
+        {
+            double symDiff = expected.SymmetricDifference(result).Area;
+            Assert.True(symDiff <= relative * Math.Max(expected.Area, 1),
+                $"Symmetrische Differenz {symDiff:R} zu groß.\nSoll: {expected.AsText()}\nIst:  {result.AsText()}");
+        }
+        else if (expected.Dimension == Dimension.Curve)
+        {
+            // Linien: Länge relativ und Hausdorff – eine symmetrische Differenz wäre bei Abweichungen im ULP-Bereich die ganze Länge
+            Assert.True(Math.Abs(expected.Length - result.Length) <= relative * Math.Max(expected.Length, 1),
+                $"Länge {result.Length:R} statt {expected.Length:R}.\nSoll: {expected.AsText()}\nIst:  {result.AsText()}");
+        }
 
         double hausdorff = DiscreteHausdorffDistance.Distance(expected, result);
         double maxHausdorff = fixture?.ToleranceFor("hausdorff", 2 * gridSize * Math.Sqrt(2)) ?? 2 * gridSize * Math.Sqrt(2);

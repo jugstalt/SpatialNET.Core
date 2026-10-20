@@ -1,0 +1,10 @@
+{
+  "name": "Z vom Quellsegment",
+  "tags": [
+    "z"
+  ],
+  "a": "LINESTRING Z (0 0 0, 10 0 10, 10 10 20)",
+  "params": {
+    "distance": 2
+  }
+}

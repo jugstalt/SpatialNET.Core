@@ -1,0 +1,11 @@
+{
+  "name": "Mitre-Ecken",
+  "tags": [
+    "normal"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10, 20 10)",
+  "params": {
+    "distance": 1,
+    "join": "Mitre"
+  }
+}
