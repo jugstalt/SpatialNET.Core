@@ -73,7 +73,8 @@ internal static class SnapRoundingNoder
                     continue;
                 }
 
-                double z = p.HasZ && q.HasZ ? p.Z + t * (q.Z - p.Z) : double.NaN;
+                double tz = Math.Clamp(t, 0, 1);
+                double z = p.HasZ && q.HasZ ? p.Z + tz * (q.Z - p.Z) : double.NaN;
                 if (previous is { } prev)
                 {
                     result.Add(new NodedEdge(prev, pixel, previousZ, z, seg.Source, seg.Index));
@@ -126,21 +127,25 @@ internal static class SnapRoundingNoder
         long minX = (long)Math.Floor(seg.MinX - 0.5) - 1, maxX = (long)Math.Ceiling(seg.MaxX + 0.5) + 1;
         long minY = (long)Math.Floor(seg.MinY - 0.5) - 1, maxY = (long)Math.Ceiling(seg.MaxY + 0.5) + 1;
 
-        // Die Pixel der eigenen Endpunkte sind immer Knoten (gleiche Rundung wie beim Anlegen der Hot Pixels).
-        hits.Add((0, new GridPoint(GridModel.RoundUnits(seg.X0), GridModel.RoundUnits(seg.Y0))));
-        hits.Add((1, new GridPoint(GridModel.RoundUnits(seg.X1), GridModel.RoundUnits(seg.Y1))));
+        // Die Pixel der eigenen Endpunkte sind immer erster und letzter Knoten (gleiche Rundung wie beim
+        // Anlegen der Hot Pixels); innere Pixel werden nach ihrer nicht abgeschnittenen Projektion geordnet,
+        // auch wenn sie über das Segmentende hinaus projizieren.
+        var startPixel = new GridPoint(GridModel.RoundUnits(seg.X0), GridModel.RoundUnits(seg.Y0));
+        var endPixel = new GridPoint(GridModel.RoundUnits(seg.X1), GridModel.RoundUnits(seg.Y1));
+        hits.Add((double.NegativeInfinity, startPixel));
+        hits.Add((double.PositiveInfinity, endPixel));
 
         int start = LowerBound(pixels, new GridPoint(minX, long.MinValue));
         double dx = seg.X1 - seg.X0, dy = seg.Y1 - seg.Y0, len2 = dx * dx + dy * dy;
         for (int i = start; i < pixels.Length && pixels[i].X <= maxX; i++)
         {
             var pixel = pixels[i];
-            if (pixel.Y < minY || pixel.Y > maxY || !Touches(seg, pixel))
+            if (pixel.Y < minY || pixel.Y > maxY || pixel == startPixel || pixel == endPixel || !Touches(seg, pixel))
             {
                 continue;
             }
 
-            double t = len2 == 0 ? 0 : Math.Clamp(((pixel.X - seg.X0) * dx + (pixel.Y - seg.Y0) * dy) / len2, 0, 1);
+            double t = len2 == 0 ? 0 : ((pixel.X - seg.X0) * dx + (pixel.Y - seg.Y0) * dy) / len2;
             hits.Add((t, pixel));
         }
     }

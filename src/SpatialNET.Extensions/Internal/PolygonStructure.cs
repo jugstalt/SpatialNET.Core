@@ -30,6 +30,7 @@ internal static class PolygonStructure
             }
         }
 
+        rings = CancelDuplicates(rings);
         int n = rings.Count;
         var (depth, parent) = Nesting(rings);
 
@@ -82,6 +83,40 @@ internal static class PolygonStructure
         }
 
         return (depth, parent);
+    }
+
+    /// <summary>
+    /// Even-Odd: deckungsgleiche Ringe (gleiche Punktfolge, beliebiger Start und Umlaufsinn) heben sich paarweise auf.
+    /// </summary>
+    public static List<Coordinate[]> CancelDuplicates(List<Coordinate[]> rings)
+    {
+        var keys = rings.Select(Key).ToList();
+        var counts = keys.GroupBy(k => k).ToDictionary(g => g.Key, g => g.Count());
+        var seen = new Dictionary<string, int>();
+        var result = new List<Coordinate[]>(rings.Count);
+        for (int i = 0; i < rings.Count; i++)
+        {
+            int count = counts[keys[i]];
+            int index = seen[keys[i]] = seen.GetValueOrDefault(keys[i]) + 1;
+            if (count % 2 == 1 && index == count)
+            {
+                result.Add(rings[i]); // bei ungerader Anzahl bleibt einer
+            }
+        }
+
+        return result;
+    }
+
+    private static string Key(Coordinate[] closed)
+    {
+        var open = closed.Take(closed.Length - 1).Select(c => (c.X, c.Y)).ToArray();
+        if (open.Length == 0) return "";
+        int start = 0;
+        for (int i = 1; i < open.Length; i++) if (open[i].CompareTo(open[start]) < 0) start = i;
+        var forward = Enumerable.Range(0, open.Length).Select(i => open[(start + i) % open.Length]).ToArray();
+        var backward = Enumerable.Range(0, open.Length).Select(i => open[(start - i + open.Length) % open.Length]).ToArray();
+        var chosen = string.CompareOrdinal(string.Join(";", forward), string.Join(";", backward)) <= 0 ? forward : backward;
+        return string.Join(";", chosen.Select(p => $"{p.X:R},{p.Y:R}"));
     }
 
     /// <summary>Teilfläche je Ring: Außenringe (gerade Tiefe) sind ihre eigene, Löcher gehören zu ihrem Elternring.</summary>

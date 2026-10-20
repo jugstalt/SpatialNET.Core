@@ -1,0 +1,8 @@
+{
+  "name": "Mit leerer Linie",
+  "tags": [
+    "empty"
+  ],
+  "a": "LINESTRING (0 0, 1 1)",
+  "b": "LINESTRING EMPTY"
+}

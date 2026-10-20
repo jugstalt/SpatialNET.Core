@@ -1,0 +1,8 @@
+{
+  "name": "Linie auf dem Rand bleibt (Abschluss)",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "LINESTRING (-5 0, 15 0)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

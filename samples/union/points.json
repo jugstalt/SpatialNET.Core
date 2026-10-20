@@ -1,0 +1,8 @@
+{
+  "name": "Multipunkte",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOINT ((1 1), (2 2))",
+  "b": "MULTIPOINT ((2 2), (3 3))"
+}

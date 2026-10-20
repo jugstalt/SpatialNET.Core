@@ -1,0 +1,8 @@
+{
+  "name": "Linie ohne Linie",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "LINESTRING (0 0, 10 0)",
+  "b": "LINESTRING (5 0, 15 0)"
+}

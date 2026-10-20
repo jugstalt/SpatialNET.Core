@@ -72,8 +72,8 @@ public static class Nts
     public static SpatialNET.Coordinate ToCoordinate(NtsCoordinate c) =>
         double.IsNaN(c.Z) ? new(c.X, c.Y) : new(c.X, c.Y, c.Z);
 
-    public static NtsCoordinate ToNts(SpatialNET.Coordinate c) =>
-        c.HasZ ? new CoordinateZ(c.X, c.Y, c.Z) : new NtsCoordinate(c.X, c.Y);
+    /// <summary>Immer 2D: das Orakel vergleicht kein Z, und NTS verträgt keine 2D/3D-Mischung im Overlay.</summary>
+    public static NtsCoordinate ToNts(SpatialNET.Coordinate c) => new(c.X, c.Y);
 
     private static ReadOnlyMemory<SpatialNET.Coordinate>[] Paths(params LineString[] lines) =>
         lines.Where(l => !l.IsEmpty).Select(l => (ReadOnlyMemory<SpatialNET.Coordinate>)l.Coordinates.Select(ToCoordinate).ToArray()).ToArray();

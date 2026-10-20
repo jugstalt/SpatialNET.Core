@@ -1,0 +1,8 @@
+{
+  "name": "Linie gegen Polygon mit flächenlosem Loch",
+  "tags": [
+    "degenerate-ring"
+  ],
+  "a": "LINESTRING (0 5, 10 5)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (5 5, 6 5, 5 5))"
+}
