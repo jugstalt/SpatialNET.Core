@@ -1,0 +1,9 @@
+{
+  "name": "A - non-empty shell and empty hole (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 15",
+  "a": "POLYGON ((60 280, 260 180, 60 80, 60 280), EMPTY)"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "P - single point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 2",
+  "a": "POINT(10 10)"
+}

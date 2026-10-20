@@ -1,0 +1,10 @@
+{
+  "name": "LA - closed line / empty polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 12",
+  "a": "LINESTRING(110 60, 20 150, 200 150, 110 60)",
+  "b": "POLYGON EMPTY"
+}

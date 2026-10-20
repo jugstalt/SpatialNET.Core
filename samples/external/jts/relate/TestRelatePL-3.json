@@ -1,0 +1,10 @@
+{
+  "name": "PL - touches non-vertex",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePL.xml, case 3",
+  "a": "POINT(60 60)",
+  "b": "LINESTRING(40 40, 100 100)"
+}

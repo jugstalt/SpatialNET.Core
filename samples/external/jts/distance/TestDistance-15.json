@@ -1,0 +1,10 @@
+{
+  "name": "mAmA - multipolygon with empty element",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 15",
+  "a": "MULTIPOLYGON (EMPTY, ((98 200, 200 200, 200 99, 98 99, 98 200)))",
+  "b": "POLYGON ((300 200, 400 200, 400 100, 300 100, 300 200))"
+}

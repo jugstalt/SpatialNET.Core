@@ -1,0 +1,10 @@
+{
+  "name": "LL - simple overlapping lines",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 18",
+  "a": "LINESTRING(20 20, 100 20, 20 20)",
+  "b": "LINESTRING(60 20, 200 20)"
+}

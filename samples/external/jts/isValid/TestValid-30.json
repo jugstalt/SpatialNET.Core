@@ -1,0 +1,9 @@
+{
+  "name": "mA - shell inside hole, no touch (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 30",
+  "a": "MULTIPOLYGON (((60 320, 60 80, 300 80, 60 320), (80 280, 80 100, 260 100, 80 280)), ((120 160, 140 160, 140 140, 120 160)))"
+}

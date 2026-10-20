@@ -1,0 +1,9 @@
+{
+  "name": "mL - MultiLinestring with invalid point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 44",
+  "a": "MULTILINESTRING((1 1, 2 NaN, 0 0))"
+}

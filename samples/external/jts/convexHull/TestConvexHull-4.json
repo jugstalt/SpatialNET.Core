@@ -1,0 +1,9 @@
+{
+  "name": "Point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestConvexHull.xml, case 4",
+  "a": "POINT(20 20)"
+}

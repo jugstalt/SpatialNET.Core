@@ -1,0 +1,10 @@
+{
+  "name": "L on downward diagonal crosses",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 8",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "LINESTRING (50 120, 120 50)"
+}

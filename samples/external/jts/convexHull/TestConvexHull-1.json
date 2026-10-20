@@ -1,0 +1,9 @@
+{
+  "name": "Several points collinear and overlapping",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestConvexHull.xml, case 1",
+  "a": "MULTIPOINT((130 240), (130 240), (130 240), (570 240), (570 240), (570 240), (650 240))"
+}

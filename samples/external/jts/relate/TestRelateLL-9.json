@@ -1,0 +1,10 @@
+{
+  "name": "LmL - topographically equal with no boundary",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 9",
+  "a": "LINESTRING(0 0, 0 50, 50 50, 50 0, 0 0)",
+  "b": "MULTILINESTRING( (0 0, 0 50), (0 50, 50 50), (50 50, 50 0), (50 0, 0 0))"
+}

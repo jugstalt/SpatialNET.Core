@@ -1,0 +1,13 @@
+{
+  "name": "P - point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 1",
+  "a": "POINT(10 10)",
+  "params": {
+    "tolerance": 1,
+    "preserveTopology": true
+  }
+}

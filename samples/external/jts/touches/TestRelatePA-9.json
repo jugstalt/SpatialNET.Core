@@ -1,0 +1,10 @@
+{
+  "name": "mPA - empty MultiPoint element for B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePA.xml, case 9",
+  "a": "POLYGON ((1 0,0 1,-1 0,0 -1, 1 0))",
+  "b": "MULTIPOINT(EMPTY,(0 0))"
+}

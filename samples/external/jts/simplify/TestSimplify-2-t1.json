@@ -1,0 +1,13 @@
+{
+  "name": "mP - point with EMPTY",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 2",
+  "a": "MULTIPOINT( EMPTY, (10 10), (20 20))",
+  "params": {
+    "tolerance": 1,
+    "preserveTopology": true
+  }
+}

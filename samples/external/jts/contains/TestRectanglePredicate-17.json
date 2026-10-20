@@ -1,0 +1,10 @@
+{
+  "name": "mL with one component contained",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 17",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "MULTILINESTRING( (10 10, 10 20), (200 10, 200 20) )"
+}

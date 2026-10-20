@@ -1,0 +1,10 @@
+{
+  "name": "LL - one segment overlapping, one distinct",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 16",
+  "a": "LINESTRING(80 90, 50 50, 0 0)",
+  "b": "LINESTRING(0 0, 100 100)"
+}

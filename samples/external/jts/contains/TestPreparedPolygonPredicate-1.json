@@ -1,0 +1,10 @@
+{
+  "name": "A/P - point equal to start point of polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 1",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "POINT (10 10)"
+}

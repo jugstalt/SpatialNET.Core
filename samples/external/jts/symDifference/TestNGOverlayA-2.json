@@ -1,0 +1,10 @@
+{
+  "name": "AA - simple covered",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayA.xml, case 2",
+  "a": "POLYGON ((10 10, 10 30, 30 30, 30 10, 10 10))",
+  "b": "POLYGON ((15 25, 15 15, 25 15, 15 25))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "mA containing rectangle",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 4",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "MULTIPOLYGON (((-60 180, -60 -60, 40 -20, 140 -100, 180 120, -20 140, -60 180)), ((20 280, 0 180, 180 160, 200 280, 20 280)))"
+}

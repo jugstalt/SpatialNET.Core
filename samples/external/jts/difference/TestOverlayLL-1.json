@@ -1,0 +1,10 @@
+{
+  "name": "LL - A crosses B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLL.xml, case 1",
+  "a": "LINESTRING(0 0, 100 100)",
+  "b": "LINESTRING(0 100, 100 0)"
+}

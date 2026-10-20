@@ -1,0 +1,10 @@
+{
+  "name": "A/mP - one point interior, one point exterior",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 7",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "MULTIPOINT ((20 20), (500 500))"
+}

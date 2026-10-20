@@ -1,0 +1,10 @@
+{
+  "name": "mPL - touches Bdy and Ext",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePL.xml, case 4",
+  "a": "MULTIPOINT((40 40), (100 40))",
+  "b": "LINESTRING(40 40, 80 80)"
+}

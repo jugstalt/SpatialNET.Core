@@ -1,0 +1,9 @@
+{
+  "name": "mL - MultiLinestring with empty component (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 9",
+  "a": "MULTILINESTRING((1 1, 0 0), EMPTY)"
+}

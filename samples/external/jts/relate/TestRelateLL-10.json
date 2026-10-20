@@ -1,0 +1,10 @@
+{
+  "name": "LmL - topographically equal with self intersections",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 10",
+  "a": "LINESTRING(0 0, 80 0, 80 60, 80 0, 170 0)",
+  "b": "MULTILINESTRING( (0 0, 170 0), (80 0, 80 60))"
+}

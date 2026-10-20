@@ -1,0 +1,10 @@
+{
+  "name": "maybe colinear sides",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/maybe-colinear-sides",
+  "a": "POLYGON ((-62.8 -41, -63.0001099 -41.1121599, -62.93564 -41.0940399, -62.8 -41))",
+  "b": "POLYGON ((-62.8 -41.2, -62.8 -41, -62.964969880531925 -41.10228339712406, -63.0001099 -41.1121599, -62.8 -41.2))"
+}

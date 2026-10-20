@@ -1,0 +1,9 @@
+{
+  "name": "A - shell self-overlaps (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 64",
+  "a": "POLYGON ((60 340, 60 100, 340 100, 340 280, 340 200, 340 340, 60 340))"
+}

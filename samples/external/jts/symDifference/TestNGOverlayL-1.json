@@ -1,0 +1,10 @@
+{
+  "name": "LL - same line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 1",
+  "a": "LINESTRING (10 10, 20 20)",
+  "b": "LINESTRING (10 10, 20 20)"
+}

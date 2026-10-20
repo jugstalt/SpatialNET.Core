@@ -1,0 +1,10 @@
+{
+  "name": "AA - simple polygons intersecting in P, L and A",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAA.xml, case 4",
+  "a": "POLYGON((0 0, 110 0, 110 60, 40 60, 180 140, 40 220, 110 260, 0 260, 0 0))",
+  "b": "POLYGON((220 0, 110 0, 110 60, 180 60, 40 140, 180 220, 110 260, 220 260, 220 0))"
+}

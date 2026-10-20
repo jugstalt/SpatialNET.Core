@@ -1,0 +1,9 @@
+{
+  "name": "Test 719",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid2.xml, case 717",
+  "a": "POLYGON ((40 320, 140 320, 140 200, 40 200, 40 320))"
+}

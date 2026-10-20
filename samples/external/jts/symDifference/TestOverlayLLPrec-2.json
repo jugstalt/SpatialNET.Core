@@ -1,0 +1,13 @@
+{
+  "name": "LL - A and B intersect frequently",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLLPrec.xml, case 2",
+  "a": "LINESTRING(220 240, 200 220, 60 320, 40 300, 180 200, 160 180, 20 280)",
+  "b": "LINESTRING(220 240, 140 160, 120 180, 220 280, 200 300, 100 200)",
+  "params": {
+    "gridSize": 1
+  }
+}

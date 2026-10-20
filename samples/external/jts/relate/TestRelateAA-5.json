@@ -1,0 +1,10 @@
+{
+  "name": "AA A-shell contains B-shell contains A-hole contains B-hole",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateAA.xml, case 5",
+  "a": "POLYGON( (0 280, 0 0, 260 0, 260 280, 0 280), (220 240, 40 240, 40 40, 220 40, 220 240))",
+  "b": "POLYGON( (20 260, 240 260, 240 20, 20 20, 20 260), (160 180, 80 180, 120 120, 160 180))"
+}

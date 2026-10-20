@@ -1,0 +1,10 @@
+{
+  "name": "Fall 80",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayEmpty.xml, case 80",
+  "a": "MULTIPOINT EMPTY",
+  "b": "MULTILINESTRING EMPTY"
+}

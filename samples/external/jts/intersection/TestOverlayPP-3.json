@@ -1,0 +1,10 @@
+{
+  "name": "PmP - point in A contained in B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayPP.xml, case 3",
+  "a": "POINT(100 100)",
+  "b": "MULTIPOINT((100 100), (200 200))"
+}

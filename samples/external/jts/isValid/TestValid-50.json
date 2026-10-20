@@ -1,0 +1,9 @@
+{
+  "name": "A - polygon with degenerate hole ring A-B-C-B--A (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 50",
+  "a": "POLYGON ((0 0, 0 240, 260 240, 260 0, 0 0), (220 200, 40 200, 40 20, 40 200, 220 200, 220 200))"
+}

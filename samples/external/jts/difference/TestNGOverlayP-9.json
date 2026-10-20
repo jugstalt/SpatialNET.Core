@@ -1,0 +1,10 @@
+{
+  "name": "PA - disjoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayP.xml, case 9",
+  "a": "POINT (10 10)",
+  "b": "POLYGON ((15 15, 15 20, 20 20, 20 15, 15 15))"
+}

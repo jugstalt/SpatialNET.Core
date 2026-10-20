@@ -1,0 +1,10 @@
+{
+  "name": "AA - A-hole contains B, boundaries touch in line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateAA.xml, case 11",
+  "a": "POLYGON( (0 200, 0 0, 200 0, 200 200, 0 200), (20 180, 130 180, 130 30, 20 30, 20 180))",
+  "b": "POLYGON( (60 90, 130 90, 130 30, 60 30, 60 90))"
+}

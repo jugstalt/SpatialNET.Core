@@ -1,0 +1,12 @@
+{
+  "name": "Closed Line - CCW",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestBuffer.xml, case 4",
+  "a": "LINESTRING (1 9, 1 1, 9 1, 9 9, 1 9)",
+  "params": {
+    "distance": 0
+  }
+}

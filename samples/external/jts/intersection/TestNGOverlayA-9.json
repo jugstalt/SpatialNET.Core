@@ -1,0 +1,10 @@
+{
+  "name": "AA - A with hole matching B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayA.xml, case 9",
+  "a": "POLYGON ((10 30, 30 30, 30 10, 10 10, 10 30), (13 27, 27 27, 27 13, 13 13, 13 27))",
+  "b": "POLYGON ((13 27, 27 27, 27 13, 13 13, 13 27))"
+}

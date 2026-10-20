@@ -1,0 +1,10 @@
+{
+  "name": "mP in polygon boundary and interior",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 21",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "MULTIPOINT((50 100), (60 60))"
+}

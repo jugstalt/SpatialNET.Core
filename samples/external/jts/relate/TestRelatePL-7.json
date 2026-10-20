@@ -1,0 +1,10 @@
+{
+  "name": "mPL - touches IntNV and Ext",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePL.xml, case 7",
+  "a": "MULTIPOINT((60 60), (100 100))",
+  "b": "LINESTRING(40 40, 80 80)"
+}

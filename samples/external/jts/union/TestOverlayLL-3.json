@@ -1,0 +1,10 @@
+{
+  "name": "LL - A and B disjoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLL.xml, case 3",
+  "a": "LINESTRING(40 360, 40 220, 120 360)",
+  "b": "LINESTRING(120 340, 60 220, 140 220, 140 360)"
+}

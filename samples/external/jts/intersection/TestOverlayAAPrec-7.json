@@ -1,0 +1,13 @@
+{
+  "name": "AA - A polygon with sliver cutting all the way across B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 7",
+  "a": "POLYGON( (100 10, 0 10, 90 11, 90 20, 100 20, 100 10))",
+  "b": "POLYGON( (20 20, 0 20, 0 0, 20 0, 20 20))",
+  "params": {
+    "gridSize": 1
+  }
+}

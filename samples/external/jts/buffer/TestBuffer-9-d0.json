@@ -1,0 +1,12 @@
+{
+  "name": "Degenerate polygon which caused error in ver 1.10",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestBuffer.xml, case 9",
+  "a": "POLYGON ((-69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90, -69 -90))",
+  "params": {
+    "distance": 0
+  }
+}

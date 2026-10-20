@@ -1,0 +1,9 @@
+{
+  "name": "A - holes touch at one point (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 22",
+  "a": "POLYGON ((190 190, 360 20, 20 20, 190 190), (90 50, 150 110, 190 50, 90 50), (190 50, 230 110, 290 50, 190 50))"
+}

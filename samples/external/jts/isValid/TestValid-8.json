@@ -1,0 +1,9 @@
+{
+  "name": "L - linestring bowtie (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 8",
+  "a": "LINESTRING(0 0, 100 100, 100 0, 0 100, 0 0)"
+}

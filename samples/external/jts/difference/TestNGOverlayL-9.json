@@ -1,0 +1,10 @@
+{
+  "name": "LA - vertical Line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 9",
+  "a": "LINESTRING (50 50, 50 20)",
+  "b": "POLYGON ((10 60, 90 60, 90 10, 10 10, 10 60))"
+}

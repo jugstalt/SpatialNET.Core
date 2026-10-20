@@ -1,0 +1,9 @@
+{
+  "name": "A - hole outside, all vertices touch (hole outside shell)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 67",
+  "a": "POLYGON ((10 10, 30 10, 30 50, 70 50, 70 10, 90 10, 90 90, 10 90, 10 10), (50 50, 30 10, 70 10, 50 50))"
+}

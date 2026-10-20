@@ -1,0 +1,10 @@
+{
+  "name": "AA A-shell overlapping B-shell at A & B-vertex",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateAA.xml, case 8",
+  "a": "POLYGON( (40 40, 180 40, 180 180, 40 180, 40 40))",
+  "b": "POLYGON( (180 40, 40 180, 160 280, 300 140, 180 40))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "LL - line to multiline with empty element",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 8",
+  "a": "LINESTRING (0 0, 0 10)",
+  "b": "MULTILINESTRING ((10 0, 10 10), EMPTY)"
+}

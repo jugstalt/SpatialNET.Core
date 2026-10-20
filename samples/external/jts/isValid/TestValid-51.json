@@ -1,0 +1,9 @@
+{
+  "name": "mA - multipolygon with component with too few points (too few distinct points)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 51",
+  "a": "MULTIPOLYGON ( ((100 20, 180 20, 180 100, 100 100, 100 20)), ((20 100, 100 100, 100 180, 20 180, 20 100)), ((100 180, 180 180, 180 260, 100 260, 100 180)), ((180 100, 180 180, 180 180, 180 100)))"
+}

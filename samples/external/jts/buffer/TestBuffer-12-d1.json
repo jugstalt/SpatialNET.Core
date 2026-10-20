@@ -1,0 +1,12 @@
+{
+  "name": "LinearRing with end segments almost parallel. In JTS 1.16 this causes the hole to be omitted. Also test that a zero-width buffer is empty, and a large buffer does not contain a hole.",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestBuffer.xml, case 12",
+  "a": "LINESTRING (278601.0234 4295292.7193, 278598.7192 4295290.4934, 278589.0628369178 4295303.481014691, 278605.493 4295297.0369, 278601.0234 4295292.7193)",
+  "params": {
+    "distance": 1
+  }
+}

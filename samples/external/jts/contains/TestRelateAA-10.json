@@ -1,0 +1,10 @@
+{
+  "name": "AA A-shell touches B-shell, which contains A-hole",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateAA.xml, case 10",
+  "a": "POLYGON( (40 280, 200 280, 200 100, 40 100, 40 280), (100 220, 120 220, 120 200, 100 180, 100 220))",
+  "b": "POLYGON( (40 280, 180 260, 180 120, 60 120, 40 280))"
+}

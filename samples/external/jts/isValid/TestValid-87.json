@@ -1,0 +1,9 @@
+{
+  "name": "mA - shell inside shell, all vertices touch hole (nested shells)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 87",
+  "a": "MULTIPOLYGON (((20 380, 420 380, 420 20, 20 20, 20 380), (220 340, 180 240, 60 200, 200 180, 340 60, 240 220, 220 340)), ((60 200, 340 60, 220 340, 60 200)))"
+}

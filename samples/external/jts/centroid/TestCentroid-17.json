@@ -1,0 +1,9 @@
+{
+  "name": "A - box with offset hole (showing difference between area and line centroid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 17",
+  "a": "POLYGON ((0 0, 0 200, 200 200, 200 0, 0 0), (60 180, 20 180, 20 140, 60 140, 60 180))"
+}

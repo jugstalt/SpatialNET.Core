@@ -1,0 +1,10 @@
+{
+  "name": "AA - A contained completely in B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateAA.xml, case 13",
+  "a": "POLYGON ((0 0, 20 80, 120 80, -20 120, 0 0))",
+  "b": "POLYGON ((60 180, -100 120, -140 60, -40 20, -100 -80, 40 -20, 140 -100, 140 40, 260 160, 80 120, 60 180))"
+}

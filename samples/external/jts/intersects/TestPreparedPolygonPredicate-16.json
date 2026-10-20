@@ -1,0 +1,10 @@
+{
+  "name": "A/L - contained but touching bdy at interior point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 16",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "LINESTRING (60 10, 70 60)"
+}

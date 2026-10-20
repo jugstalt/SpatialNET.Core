@@ -1,0 +1,10 @@
+{
+  "name": "AA - simple touching in P",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayA.xml, case 4",
+  "a": "POLYGON ((10 10, 10 30, 30 30, 30 10, 10 10))",
+  "b": "POLYGON ((50 30, 30 20, 50 10, 50 30))"
+}

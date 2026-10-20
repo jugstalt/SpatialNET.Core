@@ -1,0 +1,10 @@
+{
+  "name": "LL - topographically equal with self-intersection",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 8",
+  "a": "LINESTRING(0 0, 110 0, 60 0)",
+  "b": "LINESTRING(0 0, 110 0)"
+}

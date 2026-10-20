@@ -1,0 +1,9 @@
+{
+  "name": "Test 355",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid2.xml, case 354",
+  "a": "LINESTRING (100 20, 100 180, 180 100, 100 20)"
+}

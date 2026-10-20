@@ -1,0 +1,10 @@
+{
+  "name": "LL - crossing linestrings",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 11",
+  "a": "LINESTRING (40 300, 280 220, 60 160, 140 60)",
+  "b": "LINESTRING (140 360, 260 280, 240 120, 120 160)"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PL - touches Bdy",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePL.xml, case 2",
+  "a": "POINT(40 40)",
+  "b": "LINESTRING(40 40, 100 100, 160 100)"
+}

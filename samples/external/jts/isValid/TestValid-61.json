@@ -1,0 +1,9 @@
+{
+  "name": "A - spike (self-intersection))",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 61",
+  "a": "POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "LL - line to line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 6",
+  "a": "LINESTRING (0 0, 0 10)",
+  "b": "LINESTRING (10 0, 10 10)"
+}

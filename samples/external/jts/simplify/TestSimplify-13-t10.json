@@ -1,0 +1,13 @@
+{
+  "name": "A - polygon with touching hole",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 13",
+  "a": "POLYGON ((10 10, 10 90, 90 90, 90 10, 10 10), (80 20, 20 20, 20 80, 50 90, 80 80, 80 20))",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

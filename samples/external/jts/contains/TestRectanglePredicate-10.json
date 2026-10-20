@@ -1,0 +1,10 @@
+{
+  "name": "L with many segments crosses",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 10",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "LINESTRING (110 160, 150 70, 110 -20, 130 80, 90 150, 60 -20, 38 128)"
+}

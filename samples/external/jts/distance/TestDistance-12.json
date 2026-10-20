@@ -1,0 +1,10 @@
+{
+  "name": "AA - overlapping polygons",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 12",
+  "a": "POLYGON ((60 260, 260 180, 100 60, 60 160, 60 260))",
+  "b": "POLYGON ((220 280, 120 160, 300 60, 360 220, 220 280))"
+}

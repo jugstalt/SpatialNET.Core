@@ -1,0 +1,10 @@
+{
+  "name": "A/P - point in polygon interior",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 2",
+  "a": "POLYGON ((10 10, 60 100, 110 10, 10 10))",
+  "b": "POINT (20 20)"
+}

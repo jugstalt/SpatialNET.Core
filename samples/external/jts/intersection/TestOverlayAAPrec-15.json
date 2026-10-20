@@ -1,0 +1,13 @@
+{
+  "name": "AA - Polygon with hole with outward sliver, cut by line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 15",
+  "a": "POLYGON( (20 40, 20 200, 180 200, 180 40, 20 40), (180 120, 120 120, 120 160, 60 120, 120 80, 120 119, 180 120))",
+  "b": "LINESTRING(160 140, 160 100)",
+  "params": {
+    "gridSize": 1
+  }
+}

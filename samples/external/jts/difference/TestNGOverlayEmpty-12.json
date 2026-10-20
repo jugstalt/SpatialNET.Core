@@ -1,0 +1,10 @@
+{
+  "name": "PP - empty points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayEmpty.xml, case 12",
+  "a": "POINT EMPTY",
+  "b": "POINT EMPTY"
+}

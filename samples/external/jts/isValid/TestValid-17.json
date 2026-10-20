@@ -1,0 +1,9 @@
+{
+  "name": "A - hole with repeated points (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 17",
+  "a": "POLYGON ((40 260, 40 60, 120 60, 180 160, 240 60, 300 60, 300 260, 40 260), (70 230, 80 230, 80 220, 80 220, 70 230))"
+}

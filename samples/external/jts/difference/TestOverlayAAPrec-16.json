@@ -1,0 +1,13 @@
+{
+  "name": "AA - Polygon with inward sliver touching hole, cut by polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAAPrec.xml, case 16",
+  "a": "POLYGON( (20 40, 20 200, 180 200, 180 120, 140 120, 180 119, 180 40, 20 40), (140 160, 80 120, 140 80, 140 160))",
+  "b": "POLYGON( (200 160, 150 160, 150 80, 200 80, 200 160))",
+  "params": {
+    "gridSize": 1
+  }
+}

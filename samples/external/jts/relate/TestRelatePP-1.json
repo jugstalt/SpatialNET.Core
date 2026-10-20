@@ -1,0 +1,10 @@
+{
+  "name": "same point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePP.xml, case 1",
+  "a": "POINT(20 20)",
+  "b": "POINT(20 20)"
+}

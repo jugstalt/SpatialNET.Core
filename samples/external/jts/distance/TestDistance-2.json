@@ -1,0 +1,10 @@
+{
+  "name": "PP - point to point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 2",
+  "a": "POINT(10 10)",
+  "b": "POINT (10 0)"
+}

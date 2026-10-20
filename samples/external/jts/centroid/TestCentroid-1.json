@@ -1,0 +1,9 @@
+{
+  "name": "P - empty",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 1",
+  "a": "POINT EMPTY"
+}

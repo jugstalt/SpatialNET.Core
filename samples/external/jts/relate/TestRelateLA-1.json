@@ -1,0 +1,10 @@
+{
+  "name": "LA - intersection at NV: {A-Bdy, A-Int} = {B-Bdy, B-Int}",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 1",
+  "a": "LINESTRING(100 120, 100 240)",
+  "b": "POLYGON( (40 60, 160 60, 160 180, 40 180, 40 60))"
+}

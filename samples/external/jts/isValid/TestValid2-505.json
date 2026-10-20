@@ -1,0 +1,9 @@
+{
+  "name": "Test 506",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid2.xml, case 505",
+  "a": "MULTIPOINT ((50 250), (90 220), (130 190))"
+}

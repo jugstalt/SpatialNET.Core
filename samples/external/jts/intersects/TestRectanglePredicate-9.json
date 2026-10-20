@@ -1,0 +1,10 @@
+{
+  "name": "L on downward diagonal does not intersect",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 9",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "LINESTRING (70 140, 150 50)"
+}

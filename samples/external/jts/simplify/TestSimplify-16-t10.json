@@ -1,0 +1,13 @@
+{
+  "name": "mA - multipolygon with EMPTY",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 16",
+  "a": "MULTIPOLYGON (EMPTY, ((10 90, 10 10, 90 10, 50 60, 10 90)), ((70 90, 90 90, 90 70, 70 70, 70 90)))",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

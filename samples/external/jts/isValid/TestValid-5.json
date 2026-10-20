@@ -1,0 +1,9 @@
+{
+  "name": "L - empty (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 5",
+  "a": "LINESTRING EMPTY"
+}

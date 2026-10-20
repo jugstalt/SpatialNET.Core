@@ -1,0 +1,10 @@
+{
+  "name": "P/A - point in interior of poly",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPointPredicate.xml, case 1",
+  "a": "POINT (100 100)",
+  "b": "POLYGON ((50 130, 150 130, 100 50, 50 130))"
+}

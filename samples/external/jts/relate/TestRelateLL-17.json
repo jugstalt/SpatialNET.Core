@@ -1,0 +1,10 @@
+{
+  "name": "LL - A contained in B",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 17",
+  "a": "LINESTRING(40 140, 240 140)",
+  "b": "LINESTRING(40 140, 100 140, 80 80, 120 60, 100 140, 160 140, 160 100, 200 100, 160 140, 240 140)"
+}

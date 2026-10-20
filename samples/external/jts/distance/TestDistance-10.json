@@ -1,0 +1,10 @@
+{
+  "name": "PA - point inside polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 10",
+  "a": "POINT (240 160)",
+  "b": "POLYGON ((100 260, 340 180, 100 60, 180 160, 100 260))"
+}

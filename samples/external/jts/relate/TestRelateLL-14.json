@@ -1,0 +1,10 @@
+{
+  "name": "LL - intersection: {A-Bdy, A-IntNV} = B-IntNV",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 14",
+  "a": "LINESTRING(40 40, 180 180, 100 180, 100 100)",
+  "b": "LINESTRING(140 60, 60 140)"
+}

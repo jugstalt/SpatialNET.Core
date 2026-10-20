@@ -1,0 +1,9 @@
+{
+  "name": "A - duplicate holes (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 73",
+  "a": "POLYGON ((100 200, 200 200, 200 100, 100 100, 100 200), (120 180, 180 180, 180 120, 120 120, 120 180), (120 180, 180 180, 180 120, 120 120, 120 180))"
+}

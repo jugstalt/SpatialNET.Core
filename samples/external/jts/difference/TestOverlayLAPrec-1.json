@@ -1,0 +1,13 @@
+{
+  "name": "LA - line and sliver intersecting, dimensional collapse",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLAPrec.xml, case 1",
+  "a": "POLYGON( (95 9, 81 414, 87 414, 95 9))",
+  "b": "LINESTRING(93 13, 96 13)",
+  "params": {
+    "gridSize": 1
+  }
+}

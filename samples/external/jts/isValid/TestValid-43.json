@@ -1,0 +1,9 @@
+{
+  "name": "mL - MultiLinestring with two identical points in second component (too few distinct points)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 43",
+  "a": "MULTILINESTRING((1 1, 0 0), (0 0, 0 0))"
+}

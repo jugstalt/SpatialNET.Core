@@ -1,0 +1,13 @@
+{
+  "name": "L - empty line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 3",
+  "a": "LINESTRING EMPTY",
+  "params": {
+    "tolerance": 10,
+    "preserveTopology": true
+  }
+}

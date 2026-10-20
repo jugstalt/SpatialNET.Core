@@ -1,0 +1,10 @@
+{
+  "name": "LL - test intersection node computation (see https://github.com/locationtech/jts/issues/396)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 22",
+  "a": "LINESTRING (1 0, 0 2, 0 0, 2 2)",
+  "b": "LINESTRING (0 0, 2 2)"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "LA - A intersects B-hole",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLAPrec.xml, case 3",
+  "a": "LINESTRING(0 100, 100 100, 200 200)",
+  "b": "POLYGON( (30 240, 260 30, 30 30, 30 240), (80 140, 80 80, 140 80, 80 140))",
+  "params": {
+    "gridSize": 1
+  }
+}

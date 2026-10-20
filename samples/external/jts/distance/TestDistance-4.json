@@ -1,0 +1,10 @@
+{
+  "name": "PP - point to multipoint with empty element",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 4",
+  "a": "POINT(10 10)",
+  "b": "MULTIPOINT ((10 0), EMPTY)"
+}

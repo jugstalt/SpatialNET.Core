@@ -1,0 +1,9 @@
+{
+  "name": "P - invalid NaN Y ordinate",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 38",
+  "a": "POINT(10 NaN)"
+}

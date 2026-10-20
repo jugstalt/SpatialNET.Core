@@ -1,0 +1,10 @@
+{
+  "name": "PL - disjoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelatePL.xml, case 1",
+  "a": "POINT(60 120)",
+  "b": "LINESTRING(40 40, 120 120, 200 120)"
+}

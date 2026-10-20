@@ -1,0 +1,13 @@
+{
+  "name": "A - polygon with edge collapse. DP: polygon is split TP: unchanged",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestSimplify.xml, case 11",
+  "a": "POLYGON ((40 240, 160 241, 280 240, 280 160, 160 240, 40 140, 40 240))",
+  "params": {
+    "tolerance": 1,
+    "preserveTopology": true
+  }
+}

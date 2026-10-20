@@ -1,0 +1,10 @@
+{
+  "name": "LmL - disjoint with interior endpoints. See https://github.com/locationtech/jts/issues/1175",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLL.xml, case 26",
+  "a": "LINESTRING (10 10, 20 20)",
+  "b": "MULTILINESTRING ((0 0, 1 0), (1 0, 2 0), (-1 0, 0 0))"
+}

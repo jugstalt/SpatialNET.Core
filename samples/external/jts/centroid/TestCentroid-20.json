@@ -1,0 +1,9 @@
+{
+  "name": "A - invalid box - too few points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 20",
+  "a": "POLYGON ((0 0, 100 100, 0 0))"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "P - empty point (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 2",
+  "a": "POINT EMPTY"
+}

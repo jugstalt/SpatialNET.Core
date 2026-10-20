@@ -1,0 +1,9 @@
+{
+  "name": "A - holes do not overlap, first point is identical (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 21",
+  "a": "POLYGON ((20 320, 240 320, 240 40, 20 40, 20 320), (140 180, 60 120, 60 240, 140 180), (140 180, 200 120, 200 240, 140 180))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "A/A - two equal polygons",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 18",
+  "a": "POLYGON((20 20, 20 100, 120 100, 140 20, 20 20))",
+  "b": "POLYGON((20 20, 20 100, 120 100, 140 20, 20 20))"
+}

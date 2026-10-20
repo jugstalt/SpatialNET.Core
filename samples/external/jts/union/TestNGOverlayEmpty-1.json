@@ -1,0 +1,10 @@
+{
+  "name": "AA - empty polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayEmpty.xml, case 1",
+  "a": "POLYGON ((10 10, 10 30, 30 30, 30 10, 10 10))",
+  "b": "POLYGON EMPTY"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "L (3 pts) in polygon boundary",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 14",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "LINESTRING( 10 0, 100 0, 100 50 )"
+}

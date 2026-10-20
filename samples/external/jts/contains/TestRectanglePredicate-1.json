@@ -1,0 +1,10 @@
+{
+  "name": "A disjoint",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 1",
+  "a": "POLYGON( (0 0, 80 0, 80 80, 0 80, 0 0))",
+  "b": "POLYGON( (100 200, 100 140, 180 140, 180 200, 100 200))"
+}

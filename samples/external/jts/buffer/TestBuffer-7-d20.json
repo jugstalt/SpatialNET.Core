@@ -1,0 +1,12 @@
+{
+  "name": "Polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestBuffer.xml, case 7",
+  "a": "POLYGON ((80 300, 280 300, 280 80, 80 80, 80 300), (260 280, 180 200, 100 280, 100 100, 260 100, 260 280))",
+  "params": {
+    "distance": 20
+  }
+}

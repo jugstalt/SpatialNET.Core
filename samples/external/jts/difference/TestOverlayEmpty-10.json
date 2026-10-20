@@ -1,0 +1,10 @@
+{
+  "name": "Fall 10",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayEmpty.xml, case 10",
+  "a": "POINT EMPTY",
+  "b": "MULTIPOINT ((2 2), (3 3))"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mP - NaN ordinate",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 39",
+  "a": "MULTIPOINT((10 10), (20 20), (30 30), (10 NaN))"
+}

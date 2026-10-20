@@ -1,0 +1,12 @@
+{
+  "name": "Point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestBuffer.xml, case 1",
+  "a": "POINT (100 100)",
+  "params": {
+    "distance": -1
+  }
+}

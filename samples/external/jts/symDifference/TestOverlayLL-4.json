@@ -1,0 +1,10 @@
+{
+  "name": "LL - A and B equal",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayLL.xml, case 4",
+  "a": "LINESTRING(80 320, 220 320, 220 160, 80 300)",
+  "b": "LINESTRING(80 320, 220 320, 220 160, 80 300)"
+}

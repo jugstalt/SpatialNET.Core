@@ -1,0 +1,10 @@
+{
+  "name": "two disjoint polygons",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/two-disjoint-polygons",
+  "a": "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "b": "POLYGON ((2 0, 3 0, 3 1, 2 1, 2 0))"
+}

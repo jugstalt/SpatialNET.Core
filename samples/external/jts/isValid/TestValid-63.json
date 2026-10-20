@@ -1,0 +1,9 @@
+{
+  "name": "A - hole crossing shell at non-vertex (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 63",
+  "a": "POLYGON ((60 280, 260 180, 60 80, 60 280), (140 80, 120 180, 200 180, 140 80))"
+}

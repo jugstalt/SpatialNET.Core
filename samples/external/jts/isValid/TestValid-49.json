@@ -1,0 +1,9 @@
+{
+  "name": "A - polygon with invalid point",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 49",
+  "a": "POLYGON ((0 0, 10 NaN, 20 0, 0 10, 0 0))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "LL - crossing",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 2",
+  "a": "LINESTRING (10 10, 20 20)",
+  "b": "LINESTRING (10 20, 20 10)"
+}

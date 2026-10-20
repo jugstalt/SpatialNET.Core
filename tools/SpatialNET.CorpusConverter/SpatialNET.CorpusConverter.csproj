@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Einmaliges Werkzeug (ADR 0008): übernimmt fremde Testkorpora als Fixtures nach samples/external/. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SpatialNET.Imp\SpatialNET.Imp.csproj" />
+    <ProjectReference Include="..\..\src\SpatialNET.IO\SpatialNET.IO.csproj" />
+  </ItemGroup>
+
+</Project>

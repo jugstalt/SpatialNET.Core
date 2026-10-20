@@ -1,0 +1,10 @@
+{
+  "name": "LA - A crosses B at {shell-NV, hole-V}",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 4",
+  "a": "LINESTRING(60 160, 150 70)",
+  "b": "POLYGON( (190 190, 360 20, 20 20, 190 190), (110 110, 250 100, 140 30, 110 110))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "PA - point to empty polygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestDistance.xml, case 9",
+  "a": "POINT (240 160)",
+  "b": "POLYGON EMPTY"
+}

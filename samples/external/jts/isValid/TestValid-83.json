@@ -1,0 +1,9 @@
+{
+  "name": "mA - duplicate shells (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 83",
+  "a": "MULTIPOLYGON (((60 300, 320 220, 260 60, 60 100, 60 300)), ((60 300, 320 220, 260 60, 60 100, 60 300)))"
+}

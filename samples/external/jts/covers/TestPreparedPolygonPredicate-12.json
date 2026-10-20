@@ -1,0 +1,10 @@
+{
+  "name": "mA/L - 2 disjoint shells with line crossing between them",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestPreparedPolygonPredicate.xml, case 12",
+  "a": "MULTIPOLYGON (((50 20, 10 70, 80 70, 50 20)), ((10 90, 80 90, 50 140, 10 90)))",
+  "b": "LINESTRING (50 110, 50 60)"
+}

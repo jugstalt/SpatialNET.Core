@@ -1,0 +1,10 @@
+{
+  "name": "mLmA - disjoint and overlaps in lines and points",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 10",
+  "a": "MULTILINESTRING ((50 150, 150 150), (100 350, 200 350), (320 350, 350 350), (300 150, 400 150), (150 300, 400 300))",
+  "b": "MULTIPOLYGON (((100 200, 200 200, 200 100, 100 100, 100 200)), ((100 400, 200 400, 200 300, 100 300, 100 400)), ((300 400, 400 400, 400 300, 300 300, 300 400)))"
+}

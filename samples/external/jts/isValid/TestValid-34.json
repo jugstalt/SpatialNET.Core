@@ -1,0 +1,9 @@
+{
+  "name": "mA - shell touches other shell at all vertices (valid)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 34",
+  "a": "MULTIPOLYGON (((180 60, 240 160, 300 60, 180 60)), ((80 80, 180 60, 160 140, 240 160, 360 140, 300 60, 420 100, 320 280, 120 260, 80 80)))"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "AmA - A simple, B connected multiPolygon touching A at interior of edge",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestOverlayAA.xml, case 8",
+  "a": "POLYGON( (0 0, 120 0, 120 120, 0 120, 0 0))",
+  "b": "MULTIPOLYGON( ( (60 20, 0 20, 60 60, 60 20)), ( (60 100, 60 60, 100 60, 100 100, 60 100)))"
+}

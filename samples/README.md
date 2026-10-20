@@ -7,6 +7,7 @@ Gemeinsame Testfälle für Tests und Playground (ADR 0008). Eine JSON-Datei pro 
 {
   "name": "Insel im Loch",
   "description": "optional",
+  "source": "optional: Herkunft bei übernommenen Fällen",
   "tags": ["nested", "multi", "playground"],
   "a": "WKT",
   "b": "WKT (optional, zweiter Operand)",
@@ -42,3 +43,13 @@ Jeder Algorithmus braucht mindestens einen Fall je Tag. Trifft ein Tag fachlich 
 | `nested` | Insel im Loch |
 
 Der Test `FixtureCompletenessTests` erzwingt Katalog und Abdeckung jeder öffentlichen Methode.
+
+## Externe Korpora
+
+`samples/external/<quelle>/<algorithmus>/` enthält per `tools/SpatialNET.CorpusConverter` übernommene Fälle
+(Tags `external` + Quelle, Herkunft im Feld `source`, Lizenz der Quelle daneben):
+
+- `jts/` – JTS-XML-Testsuites (`modules/tests/src/test/resources/testxml/general`), EDL 1.0
+- `polygon-clipping/` – End-to-End-Fälle von mfogel/polygon-clipping (`test/end-to-end`), MIT
+
+Übernommen werden nur Eingaben und Parameter; das Soll berechnet das NTS-Orakel zur Laufzeit.

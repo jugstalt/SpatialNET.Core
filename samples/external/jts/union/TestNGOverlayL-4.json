@@ -1,0 +1,10 @@
+{
+  "name": "LL - overlapping",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestNGOverlayL.xml, case 4",
+  "a": "LINESTRING (10 10, 20 20)",
+  "b": "LINESTRING (15 15, 30 30)"
+}

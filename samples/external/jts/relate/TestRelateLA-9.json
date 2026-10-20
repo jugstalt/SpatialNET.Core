@@ -1,0 +1,10 @@
+{
+  "name": "LA - Line with a very small piece in the exterior between parts of a multipolygon",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRelateLA.xml, case 9",
+  "a": "LINESTRING(100 140, 100 40)",
+  "b": "MULTIPOLYGON( ( (20 80, 180 79, 100 0, 20 80)), ( (20 160, 180 160, 100 80, 20 160)))"
+}

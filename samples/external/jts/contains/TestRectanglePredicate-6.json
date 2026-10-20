@@ -1,0 +1,10 @@
+{
+  "name": "L overlaps through X axis side",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestRectanglePredicate.xml, case 6",
+  "a": "POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))",
+  "b": "LINESTRING(10 10, 10 2000)"
+}

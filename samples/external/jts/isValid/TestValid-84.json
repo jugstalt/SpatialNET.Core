@@ -1,0 +1,9 @@
+{
+  "name": "mA - shell inside shell, disjoint (nested shells)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 84",
+  "a": "MULTIPOLYGON (((80 260, 240 260, 240 100, 80 100, 80 260)), ((120 240, 220 240, 220 140, 120 140, 120 240)))"
+}

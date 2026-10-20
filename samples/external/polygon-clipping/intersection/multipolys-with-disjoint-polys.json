@@ -1,0 +1,10 @@
+{
+  "name": "multipolys with disjoint polys",
+  "tags": [
+    "external",
+    "polygon-clipping"
+  ],
+  "source": "polygon-clipping test/end-to-end/multipolys-with-disjoint-polys",
+  "a": "MULTIPOLYGON (((-7 -2, -6 -2, -2 2, -3 2, -7 -2)), ((2 -2, 3 -2, 7 2, 6 2, 2 -2)))",
+  "b": "MULTIPOLYGON (((-7 2, -3 -2, -2 -2, -6 2, -7 2)), ((2 2, 6 -2, 7 -2, 3 2, 2 2)))"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "L - zero length line",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestCentroid.xml, case 7",
+  "a": "LINESTRING (10 10, 10 10)"
+}

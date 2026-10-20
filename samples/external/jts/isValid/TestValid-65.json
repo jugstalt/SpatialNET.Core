@@ -1,0 +1,9 @@
+{
+  "name": "A - hole outside, adjacent (self-intersection)",
+  "tags": [
+    "external",
+    "jts"
+  ],
+  "source": "JTS TestValid.xml, case 65",
+  "a": "POLYGON ((40 260, 40 60, 120 60, 180 160, 240 60, 300 60, 300 260, 40 260), (180 160, 240 60, 120 60, 180 160))"
+}
