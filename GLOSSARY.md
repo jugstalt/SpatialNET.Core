@@ -56,7 +56,7 @@ Eine räumliche Operation (z.B. Clip, Cut), bereitgestellt als Extension-Methode
 _Avoid_: Operation, Funktion, Tool
 
 **Geometrie-Factory**:
-Der vom Host bereitgestellte Erzeuger, über den ein Algorithmus seine Ergebnis-Geometrien als Host-Geometrien anlegt.
+Der vom Host (oder der Referenz-Implementierung) bereitgestellte Erzeuger, über den ein Algorithmus seine Ergebnis-Geometrien aus Koordinaten als Host-Geometrien anlegt.
 _Avoid_: Builder, Creator
 
 ### Playground
