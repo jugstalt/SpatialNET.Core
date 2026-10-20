@@ -1,0 +1,7 @@
+{
+  "name": "Kollineare Zwischenpunkte",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "POLYGON ((0 0, 5 0, 10 0, 10 10, 0 10, 0 0))"
+}

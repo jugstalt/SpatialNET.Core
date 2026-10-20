@@ -3,6 +3,7 @@ using SpatialNET.Tests.Foreign;
 
 namespace SpatialNET.Tests.Core;
 
+[SpatialNET.Tests.Fixtures.Covers("AsList")]
 public class ListViewTests
 {
     private static readonly IPolyline2D ImpLine = ImpGeometryFactory.Instance.CreatePolyline(

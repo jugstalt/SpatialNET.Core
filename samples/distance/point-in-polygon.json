@@ -1,0 +1,8 @@
+{
+  "name": "Punkt im Polygon",
+  "tags": [
+    "normal"
+  ],
+  "a": "POINT (5 5)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

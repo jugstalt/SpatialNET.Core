@@ -1,0 +1,9 @@
+{
+  "name": "Punkt neben Polygon",
+  "tags": [
+    "normal",
+    "playground"
+  ],
+  "a": "POINT (15 5)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

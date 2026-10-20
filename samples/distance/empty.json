@@ -1,0 +1,10 @@
+{
+  "name": "Leere Geometrie ergibt NaN",
+  "tags": [
+    "empty"
+  ],
+  "a": "POINT (1 1)",
+  "b": "POLYGON EMPTY",
+  "expected": "NaN",
+  "divergence": "NTS liefert 0; SpatialNET liefert NaN, weil „nichts da“ nicht „berührt sich“ ist (ADR 0012)."
+}

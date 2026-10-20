@@ -1,0 +1,9 @@
+{
+  "name": "Polygon im Loch",
+  "tags": [
+    "nested",
+    "playground"
+  ],
+  "a": "POLYGON ((4 4, 6 4, 6 6, 4 6, 4 4))",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 8 2, 8 8, 2 8, 2 2))"
+}

@@ -36,12 +36,12 @@ public class MeasuresPropertyTests
             foreach (var (_, factory) in Nts.Implementations)
             {
                 var polygon = Nts.ToSpatial(nts, factory);
-                MeasuresOracleTests.AssertClose(nts.Area, polygon.Area(), 1e-8);
+                OracleAssert.Close(nts.Area, polygon.Area(), 1e-8);
 
                 var expected = Centroid.GetCentroid(nts);
                 var actual = polygon.Centroid()!.Value;
-                MeasuresOracleTests.AssertClose(expected.X, actual.X, 1e-12);
-                MeasuresOracleTests.AssertClose(expected.Y, actual.Y, 1e-12);
+                OracleAssert.Close(expected.X, actual.X, 1e-12);
+                OracleAssert.Close(expected.Y, actual.Y, 1e-12);
             }
         });
     }
@@ -56,8 +56,8 @@ public class MeasuresPropertyTests
             var atOrigin = Nts.ToSpatial(NtsGeometryFactory.Default.CreatePolygon(
                 t.Ring.Select(c => new NtsCoordinate(c.X - t.Dx, c.Y - t.Dy)).ToArray()), factory);
 
-            MeasuresOracleTests.AssertClose(atOrigin.Area(), moved.Area(), 1e-8);
-            MeasuresOracleTests.AssertClose(atOrigin.Length(), moved.Length(), 1e-8);
+            OracleAssert.Close(atOrigin.Area(), moved.Area(), 1e-8);
+            OracleAssert.Close(atOrigin.Length(), moved.Length(), 1e-8);
         });
     }
 }

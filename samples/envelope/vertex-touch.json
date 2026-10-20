@@ -1,0 +1,8 @@
+{
+  "name": "Zwei Teilflächen berühren sich in einem Punkt",
+  "tags": [
+    "vertex-touch",
+    "multi"
+  ],
+  "a": "MULTIPOLYGON (((0 0, 5 0, 5 5, 0 5, 0 0)), ((5 5, 10 5, 10 10, 5 10, 5 5)))"
+}

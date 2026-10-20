@@ -1,7 +1,6 @@
 using CsCheck;
 using SpatialNET.Imp;
 using SpatialNET.IO;
-using SpatialNET.Tests.Measures;
 using SpatialNET.Tests.Oracle;
 using ForeignGeometryFactory = SpatialNET.Tests.Foreign.ForeignGeometryFactory;
 
@@ -186,13 +185,14 @@ public class WktWriteTests
     [Fact]
     public void Output_is_readable_by_NTS_with_equal_measures()
     {
-        foreach (var (tag, wkt) in MeasuresOracleTests.Cases)
+        foreach (var fixture in SpatialNET.Tests.Fixtures.FixtureCatalog.For("area"))
         {
+            var (tag, wkt) = (fixture.Id, fixture.A);
             var original = Nts.Read(wkt);
             var written = Wkt.Read(wkt, ImpGeometryFactory.Instance).ToWkt(new WktOptions { ZMode = ZMode.Never });
             var reread = Nts.Read(written);
 
-            MeasuresOracleTests.AssertClose(original.Area, reread.Area);
+            OracleAssert.Close(original.Area, reread.Area);
             Assert.True(original.IsEmpty == reread.IsEmpty, tag);
         }
     }
