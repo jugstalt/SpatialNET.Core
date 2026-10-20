@@ -231,6 +231,53 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
     }
 
     [Fact]
+    public async Task Web_Mercator_warns_with_the_local_scale()
+    {
+        var (status, body) = await Run(new { algorithm = "area", inputs = new { a = Square(13.4, 60, 0.001) }, kbs = "EPSG:3857" });
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.Contains("Faktor 2", body["warnings"]![0]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Unknown_KBS_is_a_bad_request()
+    {
+        var (status, body) = await Run(new { algorithm = "area", inputs = new { a = Square(13.4, 52.5, 0.001) }, kbs = "EPSG:999999" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, status);
+        Assert.Contains("EPSG:999999", body["error"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Import_reads_all_geometries_of_a_file()
+    {
+        const string file = """
+            {"type":"FeatureCollection","features":[
+              {"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[1,2]}},
+              {"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[[0,0],[1,1]]}}]}
+            """;
+
+        var response = await _client.PostAsync("/api/import", new StringContent(file));
+        var body = await response.Content.ReadFromJsonAsync<JsonObject>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(["Point", "LineString"], body!["geometries"]!.AsArray().Select(g => g!["type"]!.GetValue<string>()));
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsync("/api/import", new StringContent("""{"type":"Pointt"}"""))).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/js/app.js")]
+    [InlineData("/js/map.js")]
+    [InlineData("/css/app.css")]
+    [InlineData("/lib/leaflet/leaflet.js")]
+    [InlineData("/lib/leaflet-geoman/leaflet-geoman.min.js")]
+    public async Task Frontend_is_served_locally(string path)
+    {
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync(path)).StatusCode);
+    }
+
+    [Fact]
     public async Task Explicit_geographic_KBS_warns()
     {
         var (status, body) = await Run(new { algorithm = "area", inputs = new { a = Square(13.4, 52.5, 0.001) }, kbs = "EPSG:4326" });

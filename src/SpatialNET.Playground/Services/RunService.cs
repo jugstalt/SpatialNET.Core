@@ -54,8 +54,17 @@ public sealed class RunService
         if (!request.Local)
         {
             var requested = string.IsNullOrWhiteSpace(request.Kbs) ? "auto" : request.Kbs.Trim();
-            var epsg = requested.Equals("auto", StringComparison.OrdinalIgnoreCase) ? AutoUtm(raw.Values) : requested.ToUpperInvariant();
-            projection = new Projection(epsg);
+            var center = Center(raw.Values);
+            var epsg = requested.Equals("auto", StringComparison.OrdinalIgnoreCase) ? Projection.AutoUtm(center.X, center.Y) : requested.ToUpperInvariant();
+            try
+            {
+                projection = new Projection(epsg);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Unbekanntes oder nicht unterstütztes KBS „{epsg}“ ({e.Message}).", e);
+            }
+
             kbs = requested.Equals("auto", StringComparison.OrdinalIgnoreCase) ? $"{epsg} (auto)" : epsg;
             if (projection.IsGeographic)
             {
@@ -63,7 +72,9 @@ public sealed class RunService
             }
             else if (epsg == "EPSG:3857")
             {
-                warnings.Add("EPSG:3857 ist nicht längentreu: Meter sind um den Faktor 1/cos(Breite) gestreckt.");
+                double scale = 1 / Math.Cos(center.Y * Math.PI / 180);
+                warnings.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"EPSG:3857 ist nicht längentreu: am Ort (Breite {center.Y:0.##}°) ist 1 Einheit ≈ {1 / scale:0.###} m (Faktor {scale:0.###})."));
             }
         }
 
@@ -79,18 +90,18 @@ public sealed class RunService
         return response;
     }
 
-    /// <summary>Auto-UTM aus dem Mittelpunkt des gemeinsamen Envelopes aller Eingaben (ADR 0010).</summary>
-    private static string AutoUtm(IEnumerable<IGeometry2D> inputs)
+    /// <summary>Mittelpunkt des gemeinsamen Envelopes aller Eingaben in WGS84; bestimmt die Auto-UTM-Zone (ADR 0010).</summary>
+    private static Coordinate Center(IEnumerable<IGeometry2D> inputs)
     {
         var envelopes = inputs.Select(g => g.Envelope()).Where(e => !e.IsEmpty).ToList();
         if (envelopes.Count == 0)
         {
-            return "EPSG:32632";
+            return new Coordinate(9, 0); // leere Eingaben: beliebige Zone
         }
 
-        double lon = (envelopes.Min(e => e.MinX) + envelopes.Max(e => e.MaxX)) / 2;
-        double lat = (envelopes.Min(e => e.MinY) + envelopes.Max(e => e.MaxY)) / 2;
-        return Projection.AutoUtm(lon, lat);
+        return new Coordinate(
+            (envelopes.Min(e => e.MinX) + envelopes.Max(e => e.MaxX)) / 2,
+            (envelopes.Min(e => e.MinY) + envelopes.Max(e => e.MaxY)) / 2);
     }
 
     private static JsonObject Describe(object? value, Projection? projection)

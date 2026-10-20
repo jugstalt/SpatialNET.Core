@@ -1,8 +1,49 @@
 <!doctype html>
 <html lang="de">
-<head><meta charset="utf-8"><title>SpatialNET Playground</title></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpatialNET Playground</title>
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <link rel="stylesheet" href="lib/leaflet-geoman/leaflet-geoman.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="lib/leaflet-geoman/leaflet-geoman.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</head>
 <body>
-  <h1>SpatialNET Playground</h1>
-  <p>Backend: <a href="api/algorithms">/api/algorithms</a>, <code>/api/fixtures?algorithm=…</code>, <code>POST /api/run</code>. Die Oberfläche folgt mit #37.</p>
+  <div id="map"></div>
+
+  <!-- Befehlspalette: Algorithmus (Strg+K), Parameter, Eingaben -->
+  <section class="palette" aria-label="Algorithmus">
+    <input id="search" class="search" type="search" placeholder="Algorithmus suchen …  (Strg+K)" autocomplete="off">
+    <div id="list" class="list" hidden></div>
+    <div class="panel">
+      <div class="title"><b id="alg-name"></b> <span id="alg-group" class="muted"></span></div>
+      <div id="params"></div>
+      <h3>Eingaben</h3>
+      <div id="inputs"></div>
+    </div>
+  </section>
+
+  <!-- Chips: Rechen-KBS, Layer, Ergebnis -->
+  <aside class="chips">
+    <div class="chip"><label>Modus <select id="mode"><option value="geo">Karte (WGS84)</option><option value="local">Lokal planar</option></select></label></div>
+    <div class="chip"><label>Rechen-KBS <select id="kbs"></select></label> <input id="kbs-free" placeholder="EPSG:…" size="10" hidden></div>
+    <div class="chip" id="kbs-label"></div>
+    <div class="chip layers">
+      <label><input type="checkbox" data-show="a" checked> <span class="sw a"></span> A</label>
+      <label><input type="checkbox" data-show="b" checked> <span class="sw b"></span> B</label>
+      <label><input type="checkbox" data-show="r" checked> <span class="sw r"></span> Ergebnis</label>
+    </div>
+    <div class="chip result" id="result"></div>
+    <div class="chip error" id="error" hidden></div>
+  </aside>
+
+  <!-- Beispiel-Leiste -->
+  <footer class="strip-wrap">
+    <label class="muted strip-toggle"><input type="checkbox" id="all-fixtures"> alle Fixtures</label>
+    <div id="strip" class="strip"></div>
+  </footer>
 </body>
 </html>
