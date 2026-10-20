@@ -16,8 +16,23 @@ internal static class Orientation
     /// <summary>+1, wenn c links von a→b liegt, −1 rechts, 0 kollinear – exakt.</summary>
     public static int Orient2D(double ax, double ay, double bx, double by, double cx, double cy)
     {
-        double detLeft = (ax - cx) * (by - cy);
-        double detRight = (ay - cy) * (bx - cx);
+        double acx = ax - cx, bcy = by - cy, acy = ay - cy, bcx = bx - cx;
+
+        // Ist ein Faktor exakt 0 (gemeinsamer Vertex, gleiche X bzw. Y), ist ein Produkt exakt 0 und das
+        // Vorzeichen des anderen folgt exakt aus den Vorzeichen der Differenzen (Differenzen von Doubles
+        // haben immer das exakte Vorzeichen). Häufig beim Noding benachbarter Segmente – ohne exakten Pfad.
+        if (acx == 0 || bcy == 0)
+        {
+            return acy == 0 || bcx == 0 ? 0 : -Math.Sign(acy) * Math.Sign(bcx);
+        }
+
+        if (acy == 0 || bcx == 0)
+        {
+            return Math.Sign(acx) * Math.Sign(bcy);
+        }
+
+        double detLeft = acx * bcy;
+        double detRight = acy * bcx;
         double det = detLeft - detRight;
 
         // Ein Produkt, das auf 0 unterläuft, oder Werte im subnormalen Bereich machen Filter und Abkürzungen

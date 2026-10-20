@@ -64,7 +64,27 @@ internal static class OverlayRunner
     public static IPolygon2D Areas(OverlayOp op, IGeometry2D a, IGeometry2D? b, FillRule fill, IGeometryFactory? factory, double? gridSize)
     {
         var f = GeometryFactory.Resolve(factory);
-        var engine = new OverlayEngine(a, b, GridModel.Resolve(gridSize, a, b), fill);
+        var grid = GridModel.Resolve(gridSize, a, b);
+        OverlayEngine engine;
+        if (b is not null && op is OverlayOp.Intersection or OverlayOp.Difference && Dimension(a) == 2 && Dimension(b) == 2
+            && EnvelopeFilter(op, a, b, grid) is var (clip, resultBox, disjoint))
+        {
+            if (disjoint)
+            {
+                // Envelopes mit Abstand disjunkt (#38): Schnitt leer, Differenz ist A allein (ohne B zu noden)
+                if (op == OverlayOp.Intersection) return f.CreatePolygon([], a);
+                engine = new OverlayEngine(a, null, grid, fill);
+            }
+            else
+            {
+                engine = new OverlayEngine(a, b, grid, fill, clip, resultBox);
+            }
+        }
+        else
+        {
+            engine = new OverlayEngine(a, b, grid, fill);
+        }
+
         var parts = engine.Areas(h => OverlayEngine.Apply(op, engine.InsideLeft(h, 0), engine.InsideLeft(h, 1)));
         return f.CreatePolygon(f.SupportsZ ? parts.ToArray() : parts.Select(StripZ).ToArray(), a);
     }
@@ -126,6 +146,39 @@ internal static class OverlayRunner
         var coordinates = result.ToArray();
         return f.CreateMultiPoint(f.SupportsZ ? coordinates : StripZ(coordinates), a);
     }
+
+    /// <summary>
+    /// Envelope-Vorfilter (#38): Das Ergebnis von A ∩ B liegt in env(A) ∩ env(B), das von A \ B in env(A) (jeweils
+    /// bis auf eine halbe Gitterzelle). Ringe werden auf diesen Bereich plus Rand M reduziert (B bei der Differenz,
+    /// beide beim Schnitt); M ist groß gegen die Gitterweite, damit Vorfilter-Artefakte das Ergebnis nicht berühren.
+    /// </summary>
+    private static (Envelope2D?[] Clip, Envelope2D ResultBox, bool Disjoint)? EnvelopeFilter(OverlayOp op, IGeometry2D a, IGeometry2D b, GridModel grid)
+    {
+        var ea = a.Envelope();
+        var eb = b.Envelope();
+        if (ea.IsEmpty || eb.IsEmpty)
+        {
+            return null;
+        }
+
+        double scale = new[] { ea.MinX, ea.MinY, ea.MaxX, ea.MaxY, eb.MinX, eb.MinY, eb.MaxX, eb.MaxY }.Max(Math.Abs);
+        double resultMargin = 2 * grid.Size + 1e-12 * scale;
+        double clipMargin = 8 * grid.Size + 1e-9 * scale;
+
+        // Envelopes mit Abstand disjunkt: B trägt nichts bei (Schnitt leer, Differenz ist A)
+        var common = new Envelope2D(Math.Max(ea.MinX, eb.MinX), Math.Max(ea.MinY, eb.MinY), Math.Min(ea.MaxX, eb.MaxX), Math.Min(ea.MaxY, eb.MaxY));
+        var commonClip = Expand(common, clipMargin);
+        if (commonClip.MinX > commonClip.MaxX || commonClip.MinY > commonClip.MaxY)
+        {
+            return ([], ea, true);
+        }
+
+        var box = op == OverlayOp.Intersection ? common : ea;
+        var clip = Expand(box, clipMargin);
+        return ([op == OverlayOp.Intersection ? clip : null, clip], Expand(box, resultMargin), false);
+    }
+
+    private static Envelope2D Expand(Envelope2D e, double m) => new(e.MinX - m, e.MinY - m, e.MaxX + m, e.MaxY + m);
 
     private static Coordinate[] StripZ(Coordinate[] coordinates) => coordinates.Select(c => new Coordinate(c.X, c.Y)).ToArray();
 
