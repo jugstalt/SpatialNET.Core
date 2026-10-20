@@ -1,0 +1,8 @@
+{
+  "name": "Fast gemeinsame Kante (Kollaps auf dem Gitter)",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "POLYGON ((10.0000000000001 0, 20 0, 20 10, 10.0000000000001 10, 10.0000000000001 0))"
+}

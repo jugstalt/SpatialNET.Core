@@ -49,8 +49,25 @@ internal static class Rings
         return sum / 2;
     }
 
-    /// <summary>Ob ein Ring keine Fläche hat (weniger als 3 verschiedene Punkte oder Fläche 0).</summary>
-    public static bool IsDegenerate(ReadOnlySpan<Coordinate> closed) => SignedArea(closed) == 0;
+    /// <summary>
+    /// Ob ein Ring keine Fläche hat: weniger als 3 verschiedene Punkte oder alle Punkte exakt kollinear.
+    /// (Nicht über die vorzeichenbehaftete Fläche – bei sich kreuzenden Ringen kann sie 0 sein.)
+    /// </summary>
+    public static bool IsDegenerate(ReadOnlySpan<Coordinate> closed)
+    {
+        if (closed.Length < 4) return true;
+        var a = closed[0];
+        int i = 1;
+        while (i < closed.Length && SameXY(closed[i], a)) i++;
+        if (i == closed.Length) return true;
+        var b = closed[i];
+        for (int k = i + 1; k < closed.Length; k++)
+        {
+            if (Noding.Orientation.Orient2D(a, b, closed[k]) != 0) return false;
+        }
+
+        return true;
+    }
 
     /// <summary>Lage eines Punktes zu einem geschlossenen Ring (Crossing-Number, Rand explizit).</summary>
     public static Location Locate(Coordinate p, ReadOnlySpan<Coordinate> closed)
