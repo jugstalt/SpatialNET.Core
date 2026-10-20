@@ -1,0 +1,8 @@
+{
+  "name": "Linie knapp am Rand",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "LINESTRING (-5 10.000000000001, 15 10.000000000001)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

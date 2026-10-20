@@ -1,0 +1,8 @@
+{
+  "name": "Kreuzende Linien",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "LINESTRING (0 0, 10 10)",
+  "b": "LINESTRING (0 10, 10 0)"
+}

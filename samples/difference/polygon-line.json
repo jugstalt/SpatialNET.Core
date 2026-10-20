@@ -1,0 +1,8 @@
+{
+  "name": "Polygon minus Linie bleibt Polygon",
+  "tags": [
+    "normal"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "LINESTRING (-5 5, 15 5)"
+}

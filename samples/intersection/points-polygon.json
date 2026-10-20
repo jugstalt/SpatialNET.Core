@@ -1,0 +1,8 @@
+{
+  "name": "Punkte in, auf und außerhalb",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOINT ((5 5), (10 5), (20 5))",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

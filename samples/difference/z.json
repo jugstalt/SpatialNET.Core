@@ -1,0 +1,8 @@
+{
+  "name": "Mit Höhen",
+  "tags": [
+    "z"
+  ],
+  "a": "LINESTRING Z (-5 5 0, 15 5 20)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Gleiche Linie ergibt leer",
+  "tags": [
+    "collinear-overlap",
+    "empty"
+  ],
+  "a": "LINESTRING (0 0, 10 0)",
+  "b": "LINESTRING (10 0, 0 0)"
+}
