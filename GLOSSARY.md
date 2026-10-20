@@ -81,6 +81,10 @@ _Avoid_: Toleranz, Präzision, Epsilon, Scale
 Eine Web-Anwendung mit Leaflet-Karte, in der Algorithmen interaktiv an Beispiel-, gezeichneten oder hochgeladenen Geometrien ausprobiert werden.
 _Avoid_: Demo, Viewer, Testseite
 
+**Rechen-KBS**:
+Das projizierte Koordinatenbezugssystem, in das der Playground Eingaben vor der Berechnung transformiert und in dessen Einheiten alle Distanz-Parameter gelten.
+_Avoid_: Arbeits-CRS, Ziel-Projektion
+
 **Beispielgeometrie**:
 Ein Fixture mit dem Tag `playground`, das der Playground für seinen Algorithmus automatisch anbietet.
 
