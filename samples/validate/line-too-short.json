@@ -1,0 +1,12 @@
+{
+  "name": "Pfad mit einem Punkt",
+  "tags": [
+    "degenerate-ring"
+  ],
+  "a": "LINESTRING (1 1, 1 1)",
+  "params": {
+    "kinds": [
+      "TooFewPoints"
+    ]
+  }
+}
