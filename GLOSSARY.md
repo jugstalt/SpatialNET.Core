@@ -59,6 +59,10 @@ _Avoid_: Operation, Funktion, Tool
 Der vom Host (oder der Referenz-Implementierung) bereitgestellte Erzeuger, über den ein Algorithmus seine Ergebnis-Geometrien aus Koordinaten als Host-Geometrien anlegt.
 _Avoid_: Builder, Creator
 
+**Schnittlinie**:
+Die Polylinie, an der Cut ein Polygon oder eine Polylinie in Teile zerlegt.
+_Avoid_: Cutter, Schneider, Trennlinie
+
 **Offset-Kurve**:
 Eine Polylinie im festen Abstand zu einer Linie (links bei positivem Abstand) oder zum Rand eines Polygons (außen bei positivem Abstand).
 _Avoid_: Parallele, Versatzlinie, Offset-Linie
