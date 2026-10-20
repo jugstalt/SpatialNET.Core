@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Overlay-Benchmarks (BenchmarkDotNet, #38); NTS dient als Vergleich. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="NetTopologySuite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SpatialNET.Extensions\SpatialNET.Extensions.csproj" />
+    <ProjectReference Include="..\..\src\SpatialNET.Imp\SpatialNET.Imp.csproj" />
+  </ItemGroup>
+
+</Project>

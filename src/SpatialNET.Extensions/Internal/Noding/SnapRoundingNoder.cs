@@ -107,14 +107,16 @@ internal static class SnapRoundingNoder
                 var p1 = a.Source.Points[a.Index + 1];
                 var q0 = s.Source.Points[s.Index];
                 var q1 = s.Source.Points[s.Index + 1];
-                int o1 = Orientation.Orient2D(p0, p1, q0), o2 = Orientation.Orient2D(p0, p1, q1);
-                int o3 = Orientation.Orient2D(q0, q1, p0), o4 = Orientation.Orient2D(q0, q1, p1);
-                if (o1 * o2 < 0 && o3 * o4 < 0)
+                if (Orientation.Orient2D(p0, p1, q0) * Orientation.Orient2D(p0, p1, q1) >= 0 ||
+                    Orientation.Orient2D(q0, q1, p0) * Orientation.Orient2D(q0, q1, p1) >= 0)
                 {
-                    // eigentliche Kreuzung; Endpunkt-Berührungen und Überlappungen liefern Vertices (schon Hot Pixels).
-                    // Der Schnittpunkt wird exakt (rational) bestimmt und dann gerundet.
-                    hotPixels.Add(grid.RoundExactIntersection(p0, p1, q0, q1));
+                    continue;
                 }
+
+                // eigentliche Kreuzung; Endpunkt-Berührungen und Überlappungen liefern Vertices (schon Hot Pixels).
+                // Der Schnittpunkt wird exakt (rational) bestimmt und dann gerundet. Die Orientierungen werden
+                // nur so weit ausgewertet, bis eine Seite keine echte Trennung zeigt (früher Abbruch).
+                hotPixels.Add(grid.RoundExactIntersection(p0, p1, q0, q1));
             }
 
             active.Add(s);

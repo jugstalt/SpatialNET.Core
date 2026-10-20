@@ -171,7 +171,8 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
 
             for (int k = 0; k < Operands; k++)
             {
-                _leftWinding[h, k] = RayWinding(Nodes[v], k, component, c);
+                // eine einzige Komponente liegt im Unendlichen außen: Windungszahl 0
+                _leftWinding[h, k] = componentCount == 1 ? 0 : RayWinding(Nodes[v], k, component, c);
             }
 
             assigned[h] = true;
@@ -200,11 +201,13 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
     /// <summary>
     /// Windungszahl des Operanden an einem Punkt knapp links oberhalb von <paramref name="p"/>, gezählt über alle
     /// Kanten außerhalb der Komponente <paramref name="excluded"/> (−1 = alle), die einen Strahl nach links kreuzen.
+    /// Kandidaten sind nur die Kanten, deren Y-Bereich die Höhe von <paramref name="p"/> enthält (Segmentbaum).
     /// </summary>
     public int RayWinding(T p, int operand, int[]? component = null, int excluded = -1)
     {
         int sum = 0;
-        for (int e = 0; e < Edges.Count; e++)
+        _yIndex ??= new YIndex(this);
+        foreach (int e in _yIndex.Stab(p))
         {
             var edge = Edges[e];
             int w = edge.Winding[operand];
@@ -221,6 +224,86 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
         }
 
         return sum;
+    }
+
+    private YIndex? _yIndex;
+
+    /// <summary>
+    /// Segmentbaum über die sortierten, verschiedenen Y-Werte der Knoten: jede Kante mit Windungsbeitrag liegt in
+    /// O(log n) Baumknoten ihres halboffenen Y-Bereichs [unten, oben); eine Abfrage liefert genau die Kanten,
+    /// deren Bereich die Höhe enthält. Generisch über <see cref="IExactPoint{T}.CompareY"/>, ohne Rundung.
+    /// </summary>
+    private sealed class YIndex
+    {
+        private readonly PlanarGraph<T> _graph;
+        private readonly T[] _ys;
+        private readonly List<int>?[] _tree;
+        private readonly int _size;
+
+        public YIndex(PlanarGraph<T> graph)
+        {
+            _graph = graph;
+            var ys = graph.Nodes.ToArray();
+            Array.Sort(ys, (a, b) => T.CompareY(a, b));
+            var distinct = new List<T>(ys.Length);
+            foreach (var y in ys)
+            {
+                if (distinct.Count == 0 || T.CompareY(distinct[^1], y) != 0) distinct.Add(y);
+            }
+
+            _ys = distinct.ToArray();
+            _size = Math.Max(1, _ys.Length);
+            _tree = new List<int>?[2 * _size];
+
+            for (int e = 0; e < graph.Edges.Count; e++)
+            {
+                var edge = graph.Edges[e];
+                if (edge.Winding.All(w => w == 0)) continue;
+                int ra = LowerBound(graph.Nodes[edge.A]), rb = LowerBound(graph.Nodes[edge.B]);
+                if (ra == rb) continue; // waagrecht: kreuzt keinen waagrechten Strahl
+                Insert(Math.Min(ra, rb), Math.Max(ra, rb) - 1, e);
+            }
+        }
+
+        /// <summary>Erste Position mit Y ≥ p.Y.</summary>
+        private int LowerBound(T p)
+        {
+            int lo = 0, hi = _ys.Length;
+            while (lo < hi)
+            {
+                int mid = (lo + hi) >>> 1;
+                if (T.CompareY(_ys[mid], p) < 0) lo = mid + 1;
+                else hi = mid;
+            }
+
+            return lo;
+        }
+
+        /// <summary>Kante in die Blätter <paramref name="from"/>..<paramref name="to"/> (inklusive) eintragen.</summary>
+        private void Insert(int from, int to, int edge)
+        {
+            for (int l = from + _size, r = to + _size + 1; l < r; l >>= 1, r >>= 1)
+            {
+                if ((l & 1) == 1) (_tree[l++] ??= []).Add(edge);
+                if ((r & 1) == 1) (_tree[--r] ??= []).Add(edge);
+            }
+        }
+
+        /// <summary>Kanten, deren Y-Bereich [unten, oben) die Höhe von <paramref name="p"/> enthält (Obermenge, genau geprüft wird beim Aufrufer).</summary>
+        public IEnumerable<int> Stab(T p)
+        {
+            int i = LowerBound(p);
+            // liegt p.Y zwischen zwei Knotenhöhen, gilt der Bereich der unteren
+            int leaf = i < _ys.Length && T.CompareY(_ys[i], p) == 0 ? i : i - 1;
+            if (leaf < 0 || leaf >= _ys.Length) yield break;
+            for (int node = leaf + _size; node >= 1; node >>= 1)
+            {
+                if (_tree[node] is { } list)
+                {
+                    foreach (int e in list) yield return e;
+                }
+            }
+        }
     }
 
     private int[] Components(out int count)

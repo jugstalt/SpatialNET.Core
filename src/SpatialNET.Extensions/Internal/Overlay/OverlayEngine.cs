@@ -28,11 +28,28 @@ internal sealed class OverlayEngine
     {
     }
 
+    /// <summary>Overlay zweier Flächen mit Envelope-Vorfilter (<see cref="RingClipper"/>).</summary>
+    /// <param name="a">Erster Operand.</param>
+    /// <param name="b">Zweiter Operand.</param>
+    /// <param name="grid">Das Gitter.</param>
+    /// <param name="fillRule">Füllregel.</param>
+    /// <param name="clip">Rechteck je Operand, auf das seine Ringe reduziert werden (null = keins).</param>
+    /// <param name="resultBox">Bereich, der das Ergebnis sicher enthält; nur Kanten darin werden ausgewählt.</param>
+    public OverlayEngine(IGeometry2D a, IGeometry2D? b, GridModel grid, FillRule fillRule, Envelope2D?[] clip, Envelope2D resultBox)
+        : this([a, b], grid, [fillRule, fillRule], extraLines: null, clip)
+    {
+        _resultBox = (grid.ToUnits(resultBox.MinX), grid.ToUnits(resultBox.MinY), grid.ToUnits(resultBox.MaxX), grid.ToUnits(resultBox.MaxY));
+    }
+
+    private readonly (double MinX, double MinY, double MaxX, double MaxY)? _resultBox;
+
     /// <param name="operands">Bis zu zwei Operanden.</param>
     /// <param name="grid">Das Gitter.</param>
     /// <param name="fill">Füllregel je Operand.</param>
     /// <param name="extraLines">Zusätzliche Ringe/Pfade je Operand mit eigener Orientierung (z. B. Roh-Offsets des Buffers).</param>
-    public OverlayEngine(IGeometry2D?[] operands, GridModel grid, FillRule[] fill, List<(Coordinate[] Path, int Operand, bool Area)>? extraLines)
+    /// <param name="clip">Optional: Rechteck je Operand für den Envelope-Vorfilter der Ringe.</param>
+    public OverlayEngine(IGeometry2D?[] operands, GridModel grid, FillRule[] fill, List<(Coordinate[] Path, int Operand, bool Area)>? extraLines,
+        Envelope2D?[]? clip = null)
     {
         _grid = grid;
         _fill = fill;
@@ -69,7 +86,12 @@ internal sealed class OverlayEngine
                         .Select(i => Rings.Closed(polygon[i]))
                         .Where(r => r.Length > 0 && !Rings.IsDegenerate(r))
                         .ToList();
-                    foreach (var ring in PolygonStructure.CancelDuplicates(rings)) Add(ring, k, area: true);
+                    var region = clip?[k];
+                    foreach (var ring in PolygonStructure.CancelDuplicates(rings))
+                    {
+                        Add(region is { } r ? RingClipper.Clip(ring, r) : ring, k, area: true);
+                    }
+
                     break;
             }
         }
@@ -147,10 +169,20 @@ internal sealed class OverlayEngine
         var selected = new bool[Graph.HalfEdgeCount];
         for (int h = 0; h < Graph.HalfEdgeCount; h++)
         {
-            selected[h] = inResult(h) && !inResult(h ^ 1);
+            selected[h] = inResult(h) && !inResult(h ^ 1) && InResultBox(h >> 1);
         }
 
         return BuildAreas(selected);
+    }
+
+    /// <summary>Ob die Kante im Ergebnisbereich liegt (immer, ohne Envelope-Vorfilter); Artefakte des Vorfilters liegen außerhalb.</summary>
+    private bool InResultBox(int e)
+    {
+        if (_resultBox is not { } box) return true;
+        var a = Graph.Nodes[Graph.Edges[e].A];
+        var b = Graph.Nodes[Graph.Edges[e].B];
+        return Math.Min(a.X, b.X) >= box.MinX && Math.Max(a.X, b.X) <= box.MaxX
+            && Math.Min(a.Y, b.Y) >= box.MinY && Math.Max(a.Y, b.Y) <= box.MaxY;
     }
 
     /// <summary>Teilflächen aus ausgewählten Halbkanten (Ergebnis links): Maschen verfolgen, an Mehrfachknoten trennen, Löcher zuordnen.</summary>
