@@ -1,0 +1,8 @@
+{
+  "name": "Berührung in einem Eckpunkt",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "b": "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))"
+}

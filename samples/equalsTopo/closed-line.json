@@ -1,0 +1,8 @@
+{
+  "name": "Geschlossene Linie hat keinen Rand (Mod-2)",
+  "tags": [
+    "normal"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10, 0 0)",
+  "b": "POINT (0 0)"
+}

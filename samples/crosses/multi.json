@@ -1,0 +1,8 @@
+{
+  "name": "Multipolygon gegen Linie",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOLYGON (((0 0, 4 0, 4 4, 0 4, 0 0)), ((6 0, 10 0, 10 4, 6 4, 6 0)))",
+  "b": "LINESTRING (-1 2, 11 2)"
+}
