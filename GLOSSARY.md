@@ -59,6 +59,10 @@ _Avoid_: Operation, Funktion, Tool
 Der vom Host (oder der Referenz-Implementierung) bereitgestellte Erzeuger, über den ein Algorithmus seine Ergebnis-Geometrien aus Koordinaten als Host-Geometrien anlegt.
 _Avoid_: Builder, Creator
 
+**Offset-Kurve**:
+Eine Polylinie im festen Abstand zu einer Linie (links bei positivem Abstand) oder zum Rand eines Polygons (außen bei positivem Abstand).
+_Avoid_: Parallele, Versatzlinie, Offset-Linie
+
 **Füllregel**:
 Die Regel, nach der ein Algorithmus aus der Windungszahl eines Punktes entscheidet, ob er zur Fläche einer Eingabe gehört (EvenOdd, NonZero, Positive, Negative).
 _Avoid_: Fill-Mode, Polygon-Regel
