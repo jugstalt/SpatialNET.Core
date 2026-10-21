@@ -148,6 +148,43 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void ConceptSpatialIndex()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: concept-index
+        var parcels = new[]
+        {
+            Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
+            Wkt.Read<IPolygon2D>("POLYGON((20 0, 30 0, 30 10, 20 10, 20 0))"),
+            Wkt.Read<IPolygon2D>("POLYGON((8 8, 22 8, 8 12, 8 8))"),
+        };
+
+        // Build once; the index is immutable, so any number of threads may query it.
+        SpatialIndex<IPolygon2D> index = parcels.ToSpatialIndex();
+
+        // Range query: envelope candidates first, then the exact test on the real geometry.
+        var probe = Wkt.Read<IPolygon2D>("POLYGON((16 10, 18 10, 18 12, 16 12, 16 10))");
+        Console.WriteLine(index.Query(probe).Count());                         // 1 - the envelope of the triangle meets the probe's
+        Console.WriteLine(index.Query(probe).Count(p => p.Intersects(probe))); // 0 - but the triangle itself does not
+
+        // "Within 5 map units of a point": query with the point's envelope widened by 5.
+        var here = new Coordinate(15, 5);
+        Console.WriteLine(index.Query(new Envelope2D(here.X - 5, here.Y - 5, here.X + 5, here.Y + 5)).Count()); // 3
+
+        // The nearest parcel by exact distance (without the delegate, the envelope distance is used).
+        var hereGeometry = Wkt.Read<IGeometry2D>("POINT(15 5)");
+        IReadOnlyList<IPolygon2D> nearest = index.Nearest(here, 1, (parcel, _) => parcel.Distance(hereGeometry));
+        Console.WriteLine(nearest[0].ToWkt()); // POLYGON ((8 8, 22 8, 8 12, 8 8))
+        // --- end
+
+        Assert.Single(index.Query(probe));
+        Assert.Equal(0, index.Query(probe).Count(p => p.Intersects(probe)));
+        Assert.Equal(3, index.Query(new Envelope2D(here.X - 5, here.Y - 5, here.X + 5, here.Y + 5)).Count());
+        Assert.Equal("POLYGON ((8 8, 22 8, 8 12, 8 8))", nearest[0].ToWkt());
+    }
+
+    [Fact]
     public void ConceptBufferAndOffset()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

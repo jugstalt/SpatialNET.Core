@@ -19,6 +19,8 @@ public class PlaygroundCompletenessTests
     {
         ["AsList"] = "Adapter für IReadOnlyList, kein Algorithmus",
         ["Prepare"] = "Optimierung für wiederholte Prädikate; im Playground identisch zu den Prädikaten",
+        ["ToSpatialIndex"] = "Datenstruktur (ADR 0014), kein Algorithmus mit Geometrie-Ergebnis",
+        ["Query"] = "Abfrage auf einer Datenstruktur (ADR 0014), kein Algorithmus mit Geometrie-Ergebnis",
     };
 
     [Theory]
