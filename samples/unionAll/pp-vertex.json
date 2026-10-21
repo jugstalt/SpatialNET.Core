@@ -1,0 +1,7 @@
+{
+  "name": "Berührung in einem Punkt",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "GEOMETRYCOLLECTION (POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0)), POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)))"
+}

@@ -32,3 +32,5 @@
   href: ../../adr/0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.de.md
 - name: "0017 Lineare Referenzierung: nach Länge und nach M, erster Treffer entlang der Linie, Werte statt Geometrien"
   href: ../../adr/0017-lineare-referenzierung-laenge-und-m-erster-treffer.de.md
+- name: "0018 UnionAll: kaskadierte Vereinigung über den räumlichen Index, ein Gitter für alle Schritte"
+  href: ../../adr/0018-unionall-kaskadiert-gemeinsames-gitter.de.md

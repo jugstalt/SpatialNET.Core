@@ -1,0 +1,7 @@
+{
+  "name": "Fünf überlappende Quadrate in einer Reihe",
+  "tags": [
+    "multi"
+  ],
+  "a": "GEOMETRYCOLLECTION (POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0)), POLYGON ((7 0, 17 0, 17 10, 7 10, 7 0)), POLYGON ((14 0, 24 0, 24 10, 14 10, 14 0)), POLYGON ((21 0, 31 0, 31 10, 21 10, 21 0)), POLYGON ((28 0, 38 0, 38 10, 28 10, 28 0)))"
+}

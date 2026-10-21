@@ -7,6 +7,7 @@ using SpatialNET.Imp;
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks            → BenchmarkDotNet
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick → grobe Stoppuhr-Messung
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-index → dasselbe für den räumlichen Index (ADR 0014)
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-unionall → UnionAll gegen das Falten von Union (ADR 0018)
 if (args.Contains("--quick-index"))
 {
     foreach (var layout in Enum.GetValues<Layout>())
@@ -22,6 +23,22 @@ if (args.Contains("--quick-index"))
                               $"tree {Measure(() => new SpatialIndex<int>(segments.Select((s, i) => (new Envelope2D(Math.Min(s.A.X, s.B.X), Math.Min(s.A.Y, s.B.Y), Math.Max(s.A.X, s.B.X), Math.Max(s.A.Y, s.B.Y)), i)))),8:F2} ms  " +
                               $"| {queries.Length} queries: grid {Measure(() => { foreach (var q in queries) grid.Query(q.MinX, q.MinY, q.MaxX, q.MaxY); }),8:F3} ms  " +
                               $"tree {Measure(() => { foreach (var q in queries) { list.Clear(); tree.Query(q, list); } }),8:F3} ms");
+        }
+    }
+
+    return;
+}
+
+if (args.Contains("--quick-unionall"))
+{
+    GeometryFactory.Default = ImpGeometryFactory.Instance;
+    foreach (var layout in Enum.GetValues<UnionLayout>())
+    {
+        foreach (int n in new[] { 100, 400, 1_000 })
+        {
+            var polygons = UnionAllBenchmarks.Create(layout, n);
+            Console.WriteLine($"{layout,-12} N={n,5}  fold {Measure(() => polygons.Aggregate((acc, p) => acc.Union(p))),9:F1} ms  " +
+                              $"UnionAll {Measure(() => polygons.UnionAll()),9:F1} ms");
         }
     }
 

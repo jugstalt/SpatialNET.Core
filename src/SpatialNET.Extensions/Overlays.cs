@@ -14,7 +14,7 @@ namespace SpatialNET;
 /// branches at run time. If the first operand is a point or multipoint, the result is a multipoint.
 /// Union and SymDifference exist only for equal dimensions.
 /// </remarks>
-public static class Overlays
+public static partial class Overlays
 {
     // ---------- Intersection ----------
 

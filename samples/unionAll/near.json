@@ -1,0 +1,7 @@
+{
+  "name": "Fast gleiche Linien",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 0), LINESTRING (0 0.000000000001, 10 0.000000000001))"
+}

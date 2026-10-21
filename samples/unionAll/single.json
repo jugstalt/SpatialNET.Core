@@ -1,0 +1,7 @@
+{
+  "name": "Eine einzelne Eingabe wird normalisiert",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "GEOMETRYCOLLECTION (POLYGON ((0 0, 10 10, 10 0, 0 10, 0 0)))"
+}

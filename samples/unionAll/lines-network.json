@@ -1,0 +1,7 @@
+{
+  "name": "Drei sich kreuzende Linien",
+  "tags": [
+    "multi"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 10), LINESTRING (0 10, 10 0), LINESTRING (5 0, 5 10))"
+}

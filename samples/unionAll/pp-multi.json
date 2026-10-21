@@ -1,0 +1,7 @@
+{
+  "name": "Multipolygon gegen Polygon",
+  "tags": [
+    "multi"
+  ],
+  "a": "GEOMETRYCOLLECTION (MULTIPOLYGON (((0 0, 4 0, 4 4, 0 4, 0 0)), ((6 0, 10 0, 10 4, 6 4, 6 0))), POLYGON ((2 2, 8 2, 8 8, 2 8, 2 2)))"
+}

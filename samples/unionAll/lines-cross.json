@@ -1,0 +1,7 @@
+{
+  "name": "Kreuzende Linien werden genodet",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 10), LINESTRING (0 10, 10 0))"
+}

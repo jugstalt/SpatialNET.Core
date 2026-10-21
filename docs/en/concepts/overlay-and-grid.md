@@ -69,6 +69,26 @@ Precision.DefaultGridSize = 0.01;
 
 The automatic grid is derived from all inputs together, so `a.Intersection(b)` and `b.Intersection(a)` use the same grid. Choose an explicit grid size when you deliberately want coarser results, for example to clean up noisy data. `gridSize` must be finite and greater than 0; a grid that is too small for the coordinates (the coordinate no longer fits into the grid's integer range) throws an `ArgumentOutOfRangeException`.
 
+## Uniting many geometries
+
+`Union` takes two operands. To dissolve many geometries, use `UnionAll`; a loop over `Union` is quadratic, because each step processes the whole accumulated result again ([ADR 0018](../../adr/0018-unionall-kaskadiert-gemeinsames-gitter.md)).
+
+```csharp
+var parcels = new[]
+{
+    Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
+    Wkt.Read<IPolygon2D>("POLYGON((5 0, 15 0, 15 10, 5 10, 5 0))"),
+    Wkt.Read<IPolygon2D>("POLYGON((50 50, 60 50, 60 60, 50 60, 50 50))"),
+};
+
+IPolygon2D all = parcels.UnionAll();   // two parts: the merged row and the separate square
+
+// "Dissolve by key": group, then unite each group.
+var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Select(g => g.UnionAll());
+```
+
+`UnionAll` exists for polygons (with a `FillRule`), polylines and multipoints, and for geometries of equal dimension in general. Each input is read under the fill rule as in `Union`, empty inputs are skipped, and mixed dimensions throw `NotSupportedException`. It orders the inputs by their envelopes and unites them in small groups, level by level, so that neighbours meet early. **All steps use one grid**, resolved once over all inputs, so the grouping can change the result only by about one grid cell. The same sequence always gives the identical result; a different order gives the same area up to that tolerance.
+
 ## What else you should know
 
 - **Strict semantics.** Results are dimension-homogeneous. Touch and collapse remnants of lower dimension are dropped: two polygons that only touch along an edge intersect in an *empty polygon*, not in a line. Where a result type is not unique, the typed overloads fix it: polygon ∩ polygon is an `IPolygon2D`; polygon ∩ polyline and polyline ∩ polyline are `IPolyline2D` (overlaps only, pure crossing points are dropped); point or multipoint ∩ anything is an `IMultiPoint2D`. `Difference` returns the type of the first operand. `Union` and `SymDifference` exist only for operands of equal dimension.

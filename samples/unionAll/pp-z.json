@@ -1,0 +1,7 @@
+{
+  "name": "Mit Höhen",
+  "tags": [
+    "z"
+  ],
+  "a": "GEOMETRYCOLLECTION (POLYGON Z ((0 0 1, 10 0 2, 10 10 3, 0 10 4, 0 0 1)), POLYGON ((5 5, 15 5, 15 15, 5 15, 5 5)))"
+}

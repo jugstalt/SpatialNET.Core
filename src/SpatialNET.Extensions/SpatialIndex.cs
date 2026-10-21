@@ -1,3 +1,5 @@
+using SpatialNET.Internal;
+
 namespace SpatialNET;
 
 /// <summary>
@@ -50,7 +52,7 @@ public sealed class SpatialIndex<T>
         }
 
         int n = envelopes.Count;
-        var perm = StrOrder(envelopes, nodeCapacity);
+        var perm = StrPacking.Order(envelopes, nodeCapacity);
         _envelopes = new Envelope2D[n];
         _items = new T[n];
         _order = perm;
@@ -213,26 +215,6 @@ public sealed class SpatialIndex<T>
         }
     }
 
-    /// <summary>Sort-Tile-Recursive order: sort by X, cut into vertical slices, sort each slice by Y.</summary>
-    private static int[] StrOrder(IReadOnlyList<Envelope2D> envelopes, int capacity)
-    {
-        int n = envelopes.Count;
-        var perm = new int[n];
-        for (int i = 0; i < n; i++) perm[i] = i;
-        if (n <= capacity) return perm;
-
-        Array.Sort(perm, (a, b) => Compare(CenterX(envelopes[a]), CenterX(envelopes[b]), a, b));
-        int leafCount = (n + capacity - 1) / capacity;
-        int sliceSize = (int)Math.Ceiling(Math.Sqrt(leafCount)) * capacity;
-        for (int start = 0; start < n; start += sliceSize)
-        {
-            Array.Sort(perm, start, Math.Min(sliceSize, n - start),
-                Comparer<int>.Create((a, b) => Compare(CenterY(envelopes[a]), CenterY(envelopes[b]), a, b)));
-        }
-
-        return perm;
-    }
-
     private static Node[] BuildNodes(Envelope2D[] entries, int capacity)
     {
         if (entries.Length == 0) return [];
@@ -260,7 +242,7 @@ public sealed class SpatialIndex<T>
 
             // Pack the next level in STR order; the order of the nodes in the array must follow it so that children stay contiguous.
             var boxes = parents.Select(p => p.Envelope).ToList();
-            var perm = StrOrder(boxes, capacity);
+            var perm = StrPacking.Order(boxes, capacity);
             for (int i = 0; i < perm.Length; i++) nodes[parentStart + i] = parents[perm[i]];
             level = perm.Select(i => boxes[i]).ToArray();
             levelStart = parentStart;
@@ -271,15 +253,6 @@ public sealed class SpatialIndex<T>
     private static Envelope2D Union(Envelope2D a, Envelope2D b) =>
         new(Math.Min(a.MinX, b.MinX), Math.Min(a.MinY, b.MinY), Math.Max(a.MaxX, b.MaxX), Math.Max(a.MaxY, b.MaxY));
 
-    private static double CenterX(Envelope2D e) => e.MinX / 2 + e.MaxX / 2;
-
-    private static double CenterY(Envelope2D e) => e.MinY / 2 + e.MaxY / 2;
-
-    private static int Compare(double a, double b, int ia, int ib)
-    {
-        int c = a.CompareTo(b);
-        return c != 0 ? c : ia.CompareTo(ib);
-    }
 }
 
 /// <summary>Building and querying a <see cref="SpatialIndex{T}"/> from geometries (ADR 0014).</summary>

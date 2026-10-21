@@ -1,0 +1,7 @@
+{
+  "name": "Mit Höhen",
+  "tags": [
+    "z"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING Z (0 0 0, 10 0 10), LINESTRING Z (5 -5 0, 5 5 0))"
+}

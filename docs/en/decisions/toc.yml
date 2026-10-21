@@ -32,3 +32,5 @@
   href: ../../adr/0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.md
 - name: "0017 Linear referencing: by length and by M, first hit along the line, values instead of geometries"
   href: ../../adr/0017-lineare-referenzierung-laenge-und-m-erster-treffer.md
+- name: "0018 UnionAll: cascaded union over the spatial index, one grid for all steps"
+  href: ../../adr/0018-unionall-kaskadiert-gemeinsames-gitter.md

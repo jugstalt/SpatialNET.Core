@@ -1,0 +1,7 @@
+{
+  "name": "Zwei Linien",
+  "tags": [
+    "normal"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 0), LINESTRING (5 0, 15 0))"
+}

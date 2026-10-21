@@ -69,6 +69,26 @@ Precision.DefaultGridSize = 0.01;
 
 Das automatische Gitter wird aus allen Eingaben gemeinsam abgeleitet, `a.Intersection(b)` und `b.Intersection(a)` nutzen also dasselbe Gitter. Eine explizite Gitterweite wählst du, wenn du bewusst gröbere Ergebnisse willst, etwa um verrauschte Daten zu bereinigen. `gridSize` muss endlich und größer als 0 sein; ein Gitter, das für die Koordinaten zu klein ist (die Koordinate passt nicht mehr in den ganzzahligen Bereich des Gitters), wirft eine `ArgumentOutOfRangeException`.
 
+## Viele Geometrien vereinigen
+
+`Union` nimmt zwei Operanden. Um viele Geometrien aufzulösen, gibt es `UnionAll`; eine Schleife über `Union` ist quadratisch, weil jeder Schritt das ganze angesammelte Ergebnis neu verarbeitet ([ADR 0018](../../adr/0018-unionall-kaskadiert-gemeinsames-gitter.de.md)).
+
+```csharp
+var parcels = new[]
+{
+    Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
+    Wkt.Read<IPolygon2D>("POLYGON((5 0, 15 0, 15 10, 5 10, 5 0))"),
+    Wkt.Read<IPolygon2D>("POLYGON((50 50, 60 50, 60 60, 50 60, 50 50))"),
+};
+
+IPolygon2D all = parcels.UnionAll();   // zwei Teilflächen: die verschmolzene Reihe und das einzelne Quadrat
+
+// „Dissolve nach Schlüssel“: gruppieren, dann jede Gruppe vereinigen.
+var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Select(g => g.UnionAll());
+```
+
+`UnionAll` gibt es für Polygone (mit `FillRule`), Polylinien und Multipunkte sowie allgemein für Geometrien gleicher Dimension. Jede Eingabe wird wie bei `Union` unter der Füllregel gelesen, leere Eingaben werden übersprungen, gemischte Dimensionen werfen `NotSupportedException`. Die Eingaben werden nach ihren Envelopes geordnet und in kleinen Gruppen Ebene für Ebene vereinigt, damit sich Nachbarn früh treffen. **Alle Schritte nutzen ein Gitter**, das einmal über alle Eingaben aufgelöst wird; die Gruppierung kann das Ergebnis deshalb nur um etwa eine Gitterzelle verändern. Dieselbe Folge liefert immer das identische Ergebnis; eine andere Reihenfolge liefert dieselbe Fläche bis auf diese Toleranz.
+
 ## Was du sonst noch wissen solltest
 
 - **Strikte Semantik.** Ergebnisse sind dimensionshomogen. Berührungs- und Kollapsreste niedrigerer Dimension fallen weg: Zwei Polygone, die sich nur an einer Kante berühren, schneiden sich in einem *leeren Polygon*, nicht in einer Linie. Wo der Ergebnistyp nicht eindeutig wäre, legen ihn die typisierten Overloads fest: Polygon ∩ Polygon ist ein `IPolygon2D`; Polygon ∩ Polylinie und Polylinie ∩ Polylinie sind `IPolyline2D` (nur Überlappungen, reine Kreuzungspunkte fallen weg); Punkt oder Multipunkt ∩ beliebig ist ein `IMultiPoint2D`. `Difference` liefert den Typ des ersten Operanden. `Union` und `SymDifference` gibt es nur für Operanden gleicher Dimension.

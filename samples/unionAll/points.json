@@ -1,0 +1,7 @@
+{
+  "name": "Punkte und Multipunkte",
+  "tags": [
+    "multi"
+  ],
+  "a": "GEOMETRYCOLLECTION (MULTIPOINT ((0 0), (1 1)), MULTIPOINT ((1 1), (2 2)), POINT (3 3))"
+}

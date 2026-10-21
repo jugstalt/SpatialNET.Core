@@ -1,0 +1,7 @@
+{
+  "name": "UTM",
+  "tags": [
+    "large-coords"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING (533000 5212000, 533100 5212000), LINESTRING (533050 5211950, 533050 5212050))"
+}

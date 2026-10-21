@@ -68,6 +68,29 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void UnionAllDissolve()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: union-all
+        var parcels = new[]
+        {
+            Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
+            Wkt.Read<IPolygon2D>("POLYGON((5 0, 15 0, 15 10, 5 10, 5 0))"),
+            Wkt.Read<IPolygon2D>("POLYGON((50 50, 60 50, 60 60, 50 60, 50 50))"),
+        };
+
+        IPolygon2D all = parcels.UnionAll();   // two parts: the merged row and the separate square
+
+        // "Dissolve by key": group, then unite each group.
+        var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Select(g => g.UnionAll());
+        // --- end
+
+        Assert.Equal(250, all.Area(), 6);
+        Assert.Equal(2, byOwner.Count());
+    }
+
+    [Fact]
     public void LinearReferencing()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

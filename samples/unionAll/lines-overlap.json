@@ -1,0 +1,7 @@
+{
+  "name": "Teilüberlappung",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 0), LINESTRING (5 0, 8 0))"
+}

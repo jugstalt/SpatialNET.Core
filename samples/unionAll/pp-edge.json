@@ -1,0 +1,7 @@
+{
+  "name": "Gemeinsame Kante",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "GEOMETRYCOLLECTION (POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0)), POLYGON ((10 0, 20 0, 20 10, 10 10, 10 0)))"
+}

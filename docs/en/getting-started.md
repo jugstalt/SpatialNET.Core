@@ -94,7 +94,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 
 | Area | Methods (extension methods in the namespace `SpatialNET`) |
 |---|---|
-| Overlays | `Intersection`, `Union`, `Difference`, `SymDifference` |
+| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference` |
 | Derived geometries | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Predicates | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
 | Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |

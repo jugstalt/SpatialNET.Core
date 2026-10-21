@@ -1,0 +1,7 @@
+{
+  "name": "Drei Eingaben mit Loch",
+  "tags": [
+    "nested"
+  ],
+  "a": "GEOMETRYCOLLECTION (POLYGON ((0 0, 30 0, 30 30, 0 30, 0 0), (10 10, 20 10, 20 20, 10 20, 10 10)), POLYGON ((12 12, 18 12, 18 18, 12 18, 12 12)), POLYGON ((25 25, 35 25, 35 35, 25 35, 25 25)))"
+}
