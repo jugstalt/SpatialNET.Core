@@ -1,26 +1,28 @@
-# Overlay: OverlayNG-artige Pipeline mit Windungszahlen und Snap-Rounding
+# Overlay: OverlayNG-style pipeline with winding numbers and snap rounding
 
-Alle Overlay-Operationen laufen über **einen** Kern nach dem Muster von JTS OverlayNG: Snap-Rounding-Noding aller Kanten, planarer Graph, Labelling jeder Masche, Auswahl nach Operation, Aufbau von Ringen/Teilflächen bzw. Linien. Anders als OverlayNG bekommt jede Masche **je Operand eine Windungszahl**, und eine wählbare **Füllregel** (EvenOdd, NonZero, Positive, Negative) entscheidet daraus über innen/außen. Nur so lassen sich sich kreuzende Eingaben (ADR 0003, Even-Odd) und der Buffer als `Union(FillRule.Positive)` über Roh-Offsets (#12) mit demselben Kern bedienen. Konstruierte Schnittpunkte werden immer per **Snap-Rounding auf ein Gitter** gerundet, Prädikate rechnen exakt (Shewchuk `orient2d`). Ausgabekoordinaten liegen damit auf dem Gitter, dafür ist die Topologie beweisbar konsistent. Das ist die Voraussetzung für die Zusage „Ergebnisse sind gültig“ aus ADR 0003.
+All overlay operations run through **one** core following the pattern of JTS OverlayNG: snap-rounding noding of all edges, planar graph, labelling of every face, selection by operation, construction of rings/parts or lines. Unlike OverlayNG, every face gets **one winding number per operand**, and a selectable **fill rule** (EvenOdd, NonZero, Positive, Negative) decides from it between inside and outside. Only this way can self-crossing input (ADR 0003, even-odd) and the buffer as `Union(FillRule.Positive)` over raw offsets (#12) be served by the same core. Constructed intersection points are always rounded by **snap rounding to a grid**, predicates compute exactly (Shewchuk `orient2d`). Output coordinates therefore lie on the grid, but the topology is provably consistent. This is the prerequisite for the guarantee "results are valid" from ADR 0003.
+
+*German version: [0005-overlay-winding-number-snap-rounding.de.md](0005-overlay-winding-number-snap-rounding.de.md)*
 
 ## Consequences
 
-- **Gitterweite:** `double? gridSize = null` → `SpatialNET.Precision.DefaultGridSize` (statisch, anfangs `null`) → automatisch aus max|Koordinate| beider Eingaben · 1e-12, auf eine Zehnerpotenz gerundet. Das ist dasselbe Kaskadenmuster wie bei der Factory (ADR 0004).
-- **Strict-Semantik wie OverlayNG Strict-Mode:** Ergebnisse sind dimensionshomogen. Berührungs- und Kollapsreste niedrigerer Dimension fallen weg (z. B. Polygon ∩ Polygon an einer Kante berührend = leeres Polygon).
-- **Prädikate** (Intersects, Contains …) rechnen exakt auf den Eingabekoordinaten, ohne Gitter. Bei Beinahe-Berührungen unterhalb der Gitterweite kann `Intersects` wahr und `Intersection` leer sein. Das ist dokumentiert und bei NTS genauso.
-- **FillRule** ist öffentlich als optionaler Parameter an allen Overlay-Operationen, Standard EvenOdd. `Union(fillRule: NonZero)` verschmilzt z. B. überlappende Außenringe aus Host-Daten.
-- **Z** an neuen Knoten wird über den Parameter t auf dem ungerundeten Originalsegment interpoliert. Bei Kreuzungen gilt das Z des ersten Operanden, oder das des einzigen 3D-Operanden.
-- **Bau-Reihenfolge:**
-  1. Präzisionskern (`orient2d`-Port, Snap-Rounding-Noder, **interner** Segment-Index)
-  2. Linie/Polygon, Linie/Linie, Cut
-  3. Polygon/Polygon mit Winding-Labelling (danach kann Buffer starten)
-  4. Optimierungen (Envelope-Vorfilter, ggf. Floating-Fast-Path ohne API-Änderung)
-- **Tests:** Das NTS-Orakel nutzt OverlayNG mit gleichem `PrecisionModel` im Strict-Mode. Verglichen wird über Validität, Fläche, symmetrische Differenz, Hausdorff-Distanz und Topologie-Kennzahlen, nie über Koordinatengleichheit.
+- **Grid size:** `double? gridSize = null` → `SpatialNET.Precision.DefaultGridSize` (static, initially `null`) → automatic from max|coordinate| of both inputs · 1e-12, rounded to a power of ten. This is the same cascade pattern as for the factory (ADR 0004).
+- **Strict semantics as in OverlayNG strict mode:** results are dimension-homogeneous. Touch and collapse remnants of lower dimension are dropped (e.g. polygon ∩ polygon touching along an edge = empty polygon).
+- **Predicates** (Intersects, Contains …) compute exactly on the input coordinates, without a grid. For near-touches below the grid size, `Intersects` can be true while `Intersection` is empty. This is documented and the same in NTS.
+- **FillRule** is public as an optional parameter on all overlay operations, default EvenOdd. `Union(fillRule: NonZero)` merges, e.g., overlapping shells from host data.
+- **Z** at new nodes is interpolated via the parameter t on the unrounded original segment. At crossings the Z of the first operand applies, or that of the only 3D operand.
+- **Build order:**
+  1. Precision core (`orient2d` port, snap-rounding noder, **internal** segment index)
+  2. Line/polygon, line/line, Cut
+  3. Polygon/polygon with winding labelling (after that, Buffer can start)
+  4. Optimizations (envelope prefilter, possibly a floating fast path without API change)
+- **Tests:** The NTS oracle uses OverlayNG with the same `PrecisionModel` in strict mode. Comparison is via validity, area, symmetric difference, Hausdorff distance and topology figures, never via coordinate equality.
 
 ## Considered Options
 
-- Martinez-Rueda-Feito 2013 plus separater Linien-Clip (verworfen: zwei Codepfade, Füllregeln und Buffer schwer anzubinden)
-- Vatti/Clipper-Nachbau (verworfen: kein Linie/Linie, hoher Aufwand)
-- Floating mit Fallback-Kaskade wie `OverlayNGRobust` oder mit Epsilon (verworfen als Standard: keine beweisbare Gültigkeit, zweistufig schwer testbar)
-- OGC-Vollsemantik mit Berührungslinien/-punkten (verworfen: Mischergebnisse, widerspricht ADR 0004)
+- Martinez-Rueda-Feito 2013 plus a separate line clip (rejected: two code paths, fill rules and buffer hard to connect)
+- Vatti/Clipper re-implementation (rejected: no line/line, high effort)
+- Floating point with a fallback cascade like `OverlayNGRobust` or with epsilon (rejected as default: no provable validity, two stages hard to test)
+- Full OGC semantics with touch lines/points (rejected: mixed results, contradicts ADR 0004)
 
-Recherche: #11 (`research/overlay-algorithmen`), #12 (`research/buffer-offset`).
+Research: #11 (`research/overlay-algorithmen`), #12 (`research/buffer-offset`).

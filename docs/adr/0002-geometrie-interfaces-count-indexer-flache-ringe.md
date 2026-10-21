@@ -1,20 +1,22 @@
-# Geometrie-Interfaces: Count + Indexer, flache Ringliste, Z nur am Punkt
+# Geometry interfaces: count + indexer, flat ring list, Z only on the point
 
-Die Geometrie-Interfaces in SpatialNET.Core sind lesend und minimal: `IGeometry2D` (leerer Basistyp), `IPoint2D` (X, Y), `IPoint3D : IPoint2D` (Z), `IPointCollection2D` (`PointCount` + Indexer) als Basis von `IPath2D`, `IRing2D : IPath2D` und `IMultiPoint2D`, dazu `IPolyline2D` (`PathCount` + Indexer) und `IPolygon2D` (`RingCount` + Indexer über eine flache Ringliste). Envelope ist kein Interface, sondern der Wert-Typ `Envelope2D`. Punktfolgen sind bewusst **nicht** `IReadOnlyList<T>`: gViews `IPointCollection`/`IPolyline`/`IPolygon` sind bereits `IEnumerable<IPoint/IPath/IRing>`. Ein zweites `IEnumerable<T>` macht LINQ auf allen gView-Geometrien mehrdeutig (CS0411), auch in gViews bestehendem Code. Die Namen `PointCount`/`PathCount`/`RingCount` werden dagegen von beiden Hosts schon implizit erfüllt. Für LINQ/`foreach` liefert SpatialNET.Extensions eine `IReadOnlyList`-Sicht (`.AsList()`). Ein Host darf `IReadOnlyList<T>` zusätzlich selbst implementieren und wird dann direkt durchgereicht.
+The geometry interfaces in SpatialNET.Core are read-only and minimal: `IGeometry2D` (empty base type), `IPoint2D` (X, Y), `IPoint3D : IPoint2D` (Z), `IPointCollection2D` (`PointCount` + indexer) as the base of `IPath2D`, `IRing2D : IPath2D` and `IMultiPoint2D`, plus `IPolyline2D` (`PathCount` + indexer) and `IPolygon2D` (`RingCount` + indexer over a flat ring list). The envelope is not an interface but the value type `Envelope2D`. Point sequences are deliberately **not** `IReadOnlyList<T>`: gView's `IPointCollection`/`IPolyline`/`IPolygon` are already `IEnumerable<IPoint/IPath/IRing>`. A second `IEnumerable<T>` makes LINQ ambiguous on all gView geometries (CS0411), including in gView's existing code. The names `PointCount`/`PathCount`/`RingCount`, on the other hand, are already satisfied implicitly by both hosts. For LINQ/`foreach`, SpatialNET.Extensions provides an `IReadOnlyList` view (`.AsList()`). A host may additionally implement `IReadOnlyList<T>` itself and is then passed through directly.
+
+*German version: [0002-geometrie-interfaces-count-indexer-flache-ringe.de.md](0002-geometrie-interfaces-count-indexer-flache-ringe.de.md)*
 
 ## Consequences
 
-- Die Anprobe an die Hosts ist klein. **gView** hängt die Interfaces an seine eigenen Interfaces (`IPoint : IPoint3D` …) und setzt die drei Indexer mit abweichendem Rückgabetyp als Default-Interface-Member dort um. Die Klassen bleiben unverändert. **WebGIS** hängt die Interfaces an die Klassen und braucht drei explizite Indexer (`PointCollection`, `Polyline`, `Polygon`).
-- 3D gibt es nur am Punkt (keine `IPath3D`/`IPolyline3D`/`IPolygon3D`). Ein Algorithmus interpoliert Z, wenn die beteiligten Punkte `IPoint3D` sind. Beide Hosts liefern immer `IPoint3D`, auch mit Z = 0.
-- `IPolyline2D` ist zugleich Multi-Linie und `IPolygon2D` zugleich Multi-Polygon. Als eigenen Multi-Typ gibt es nur `IMultiPoint2D`, keine GeometryCollection in v1. Pfad und Ring sind Teile, keine Geometrien.
-- Ob ein Ring Außenring oder Loch ist, steht nicht im Interface (kein `IHole2D`). Algorithmen ermitteln es selbst, die Regeln dafür regelt #3. Ein Ring darf seinen Schlusspunkt wiederholen oder weglassen.
-- Weitere Member (Envelope, IsEmpty, Length, Area …) gehören nicht in die Interfaces. Sie kollidieren in den Hosts mit gleichnamigen Membern anderer Form (z. B. gView `IsEmpty()` vs. WebGIS `IsEmpty`). Sie kommen als Extensions. Algorithmen sind Extension-*Methoden*: Eine C#-14-Extension-*Property* würde auf Host-Typen von einer gleichnamigen Host-Property (z. B. `Area`) still überdeckt. Extension-Properties sind deshalb nur für Komfort-Member ohne solche Namensgleichheit gedacht. Extension-Methoden wie `Area()` kollidieren dagegen nicht mit Host-Properties.
+- Adapting the hosts is cheap. **gView** attaches the interfaces to its own interfaces (`IPoint : IPoint3D` …) and implements the three indexers with a differing return type there as default interface members. The classes stay unchanged. **WebGIS** attaches the interfaces to the classes and needs three explicit indexers (`PointCollection`, `Polyline`, `Polygon`).
+- 3D exists only on the point (no `IPath3D`/`IPolyline3D`/`IPolygon3D`). An algorithm interpolates Z if the points involved are `IPoint3D`. Both hosts always deliver `IPoint3D`, even with Z = 0.
+- `IPolyline2D` is at the same time a multi-line and `IPolygon2D` at the same time a multi-polygon. The only separate multi type is `IMultiPoint2D`; there is no GeometryCollection in v1. Path and ring are parts, not geometries.
+- Whether a ring is a shell or a hole is not part of the interface (no `IHole2D`). Algorithms determine it themselves; the rules for that are settled in #3. A ring may repeat its closing point or omit it.
+- Further members (envelope, IsEmpty, Length, Area …) do not belong in the interfaces. In the hosts they collide with members of the same name but a different shape (e.g. gView `IsEmpty()` vs. WebGIS `IsEmpty`). They come as extensions. Algorithms are extension *methods*: a C# 14 extension *property* would be silently shadowed on host types by a host property of the same name (e.g. `Area`). Extension properties are therefore intended only for convenience members without such name clashes. Extension methods such as `Area()`, by contrast, do not collide with host properties.
 
 ## Considered Options
 
-- `IReadOnlyList<T>` als Pflicht (verworfen: CS0411 auf allen gView-Geometrien, zusätzlich `Count` neben `PointCount`)
-- Parallele 3D-Hierarchie (verworfen: verdoppelt Interfaces und Overloads)
-- `IHole2D`-Marker oder strukturiertes Außenring→Löcher-Modell (verworfen: setzt Host-Garantien voraus bzw. passt zu keinem Host)
-- `IEnvelope2D` als Interface (verworfen: Ergebnis-Envelopes bräuchten die Factory)
+- `IReadOnlyList<T>` as mandatory (rejected: CS0411 on all gView geometries, plus `Count` next to `PointCount`)
+- Parallel 3D hierarchy (rejected: doubles interfaces and overloads)
+- `IHole2D` marker or a structured shell→holes model (rejected: presupposes host guarantees or fits no host)
+- `IEnvelope2D` as an interface (rejected: result envelopes would need the factory)
 
-Prototyp: Branch `prototype/interface-form`.
+Prototype: branch `prototype/interface-form`.

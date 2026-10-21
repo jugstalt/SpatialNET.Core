@@ -1,55 +1,57 @@
 # Fixtures
 
-Gemeinsame Testfälle für Tests und Playground (ADR 0008). Eine JSON-Datei pro Fall unter
-`samples/<algorithmus>/`; der Ordnername ist der Algorithmus (Methodenname in Kleinbuchstaben, z. B. `area`).
+*German version: [README.de.md](README.de.md)*
+
+Shared test cases for tests and the playground (ADR 0008). One JSON file per case under
+`samples/<algorithm>/`; the folder name is the algorithm (method name in lower case, e.g. `area`).
 
 ```json
 {
-  "name": "Insel im Loch",
+  "name": "Island in hole",
   "description": "optional",
-  "source": "optional: Herkunft bei übernommenen Fällen",
+  "source": "optional: provenance for imported cases",
   "tags": ["nested", "multi", "playground"],
   "a": "WKT",
-  "b": "WKT (optional, zweiter Operand)",
+  "b": "WKT (optional, second operand)",
   "params": { "distance": 10 },
-  "crs": "EPSG:25833 (optional; ohne = lokal planar)",
-  "expected": "optional: Soll statt NTS-Orakel (WKT oder Zahl)",
-  "divergence": "Pflicht, wenn expected bewusst vom NTS-Orakel abweicht",
+  "crs": "EPSG:25833 (optional; without = local planar)",
+  "expected": "optional: expected value instead of the NTS oracle (WKT or number)",
+  "divergence": "mandatory if expected deliberately deviates from the NTS oracle",
   "tolerance": { "area": 1e-6 }
 }
 ```
 
-- **Soll:** berechnet NTS zur Laufzeit (`Oracle/`); nur Fälle mit `expected` nutzen den gespeicherten Wert.
-- **Playground:** zeigt Fälle mit Tag `playground` als Beispielgeometrien.
-- **Toleranzen:** zentral in `OracleAssert`, per `tolerance` überschreibbar.
+- **Expected value:** NTS computes it at run time (`Oracle/`); only cases with `expected` use the stored value.
+- **Playground:** shows cases with the tag `playground` as sample geometries.
+- **Tolerances:** central in `OracleAssert`, overridable per case via `tolerance`.
 
-## Pflicht-Tag-Katalog
+## Mandatory tag catalog
 
-Jeder Algorithmus braucht mindestens einen Fall je Tag. Trifft ein Tag fachlich nicht zu, wird er in
-`samples/<algorithmus>/_catalog.json` begründet ausgenommen: `{ "n/a": { "z": "Begründung" } }`.
+Every algorithm needs at least one case per tag. If a tag does not apply for domain reasons, it is excluded with a
+justification in `samples/<algorithm>/_catalog.json`: `{ "n/a": { "z": "justification" } }`.
 
-| Tag | Bedeutung |
+| Tag | Meaning |
 |---|---|
-| `empty` | leere Eingabe |
-| `degenerate-ring` | Ring ohne Fläche bzw. unter 3 Punkten |
-| `collinear-overlap` | kollineare Kanten bzw. Überlappung |
-| `vertex-touch` | Berührung in einem Vertex |
-| `hole-touch` | Loch berührt den Außenring |
-| `self-crossing` | ungültige Eingabe nach ADR 0003 |
-| `near-coincident` | Abstände im ULP-Bereich |
-| `large-coords` | Koordinaten ≥ 1e6 (UTM-artig) |
-| `z` | 3D-Eingaben |
-| `multi` | mehrere Teilflächen bzw. Pfade |
-| `nested` | Insel im Loch |
+| `empty` | empty input |
+| `degenerate-ring` | ring without area or with fewer than 3 points |
+| `collinear-overlap` | collinear edges or overlap |
+| `vertex-touch` | touch at a vertex |
+| `hole-touch` | hole touches the shell |
+| `self-crossing` | invalid input according to ADR 0003 |
+| `near-coincident` | distances in the ULP range |
+| `large-coords` | coordinates ≥ 1e6 (UTM-like) |
+| `z` | 3D input |
+| `multi` | several parts or paths |
+| `nested` | island in a hole |
 
-Der Test `FixtureCompletenessTests` erzwingt Katalog und Abdeckung jeder öffentlichen Methode.
+The test `FixtureCompletenessTests` enforces the catalog and the coverage of every public method.
 
-## Externe Korpora
+## External corpora
 
-`samples/external/<quelle>/<algorithmus>/` enthält per `tools/SpatialNET.CorpusConverter` übernommene Fälle
-(Tags `external` + Quelle, Herkunft im Feld `source`, Lizenz der Quelle daneben):
+`samples/external/<source>/<algorithm>/` contains cases imported with `tools/SpatialNET.CorpusConverter`
+(tags `external` + source, provenance in the field `source`, license of the source next to it):
 
-- `jts/` – JTS-XML-Testsuites (`modules/tests/src/test/resources/testxml/general`), EDL 1.0
-- `polygon-clipping/` – End-to-End-Fälle von mfogel/polygon-clipping (`test/end-to-end`), MIT
+- `jts/` – JTS XML test suites (`modules/tests/src/test/resources/testxml/general`), EDL 1.0
+- `polygon-clipping/` – end-to-end cases from mfogel/polygon-clipping (`test/end-to-end`), MIT
 
-Übernommen werden nur Eingaben und Parameter; das Soll berechnet das NTS-Orakel zur Laufzeit.
+Only inputs and parameters are imported; the expected value is computed by the NTS oracle at run time.

@@ -1,234 +1,236 @@
-# Buffer- und Offset-Algorithmen: Optionen
+# Buffer and offset algorithms: options
 
-Research zu [#12](https://github.com/jugstalt/SpatialNET.Core/issues/12). Rahmen: [ADR 0001](../docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.md) – alle Algorithmen werden selbst gegen die read-only **Geometrie-Interfaces** implementiert, keine NetTopologySuite/Clipper in der Lib (NTS nur als Test-Orakel), Ziel `net10.0`, planar 2D. Ergebnisgeometrien entstehen über die **Geometrie-Factory** des **Hosts**.
+*German version: [buffer-offset.de.md](buffer-offset.de.md)*
 
-Eng verwandt: [#11 Overlay-Algorithmen und Präzisionsmodelle](https://github.com/jugstalt/SpatialNET.Core/issues/11) und [#5 Overlay-Algorithmus festlegen](https://github.com/jugstalt/SpatialNET.Core/issues/5) – praktisch jeder ernsthafte Buffer-Ansatz braucht einen Teil der Overlay-Infrastruktur.
+Research for [#12](https://github.com/jugstalt/SpatialNET.Core/issues/12). Framework: [ADR 0001](../docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.md) – all algorithms are implemented in-house against the read-only **geometry interfaces**, no NetTopologySuite/Clipper in the lib (NTS only as test oracle), target `net10.0`, planar 2D. Result geometries are created through the **geometry factory** of the **host**.
+
+Closely related: [#11 Overlay algorithms and precision models](https://github.com/jugstalt/SpatialNET.Core/issues/11) and [#5 Decide the overlay algorithm](https://github.com/jugstalt/SpatialNET.Core/issues/5) – practically every serious buffer approach needs part of the overlay infrastructure.
 
 ---
 
-## 1. Begriffe und Semantik
+## 1. Terms and semantics
 
-| Begriff | Bedeutung |
+| Term | Meaning |
 |---|---|
-| **Buffer(G, d)**, d > 0 | Menge aller Punkte mit Abstand ≤ d zu G = Minkowski-Summe von G mit einer Kreisscheibe vom Radius d. Ergebnis immer (Multi-)Polygon. |
-| **Buffer(P, d)**, d < 0 | Erosion: alle Punkte von P, die mindestens \|d\| vom Rand entfernt sind (Minkowski-Differenz). Nur für flächige Eingaben sinnvoll; Linien/Punkte → leer. Kann Polygone aufspalten oder ganz verschwinden lassen. |
-| **Offset-Kurve** (Parallel-Linie) | Einseitige Linie im Abstand d links (d > 0) oder rechts (d < 0) einer Polylinie. Ergebnis ist eine *Linie*, kein Polygon. Keine harte mathematische Definition bei Schleifen/Selbstschnitten (siehe §4). |
-| **Single-sided Buffer** | Polygon zwischen Linie und ihrer Offset-Kurve (JTS `BufferParameters.setSingleSided`). |
-| **Join-Style** | Behandlung *konvexer* Ecken (außen): **round** (Kreisbogen), **mitre** (Schnitt der verlängerten Offset-Segmente, begrenzt durch **mitre limit**, sonst Abschrägung), **bevel** (direkte Verbindung der Segmentenden). Konkave Ecken (innen) werden bei allen Stilen gleich behandelt – dort entstehen Überlappungen, die bereinigt werden müssen. |
-| **Cap-Style** | Enden offener Linien: **round** (Halbkreis), **flat/butt** (senkrecht am Endpunkt abgeschnitten), **square** (um d verlängert, rechteckig). |
-| **Quadrant segments** | Anzahl Sehnen pro Viertelkreis bei der Bogenapproximation (JTS-Default 8). Alternative Parametrisierung: **arc tolerance** (max. Sehnenabweichung, Clipper2). Aus Toleranz t folgt Segmentwinkel θ = 2·acos(1 − t/d). |
+| **Buffer(G, d)**, d > 0 | The set of all points with distance ≤ d to G = Minkowski sum of G with a disk of radius d. The result is always a (multi)polygon. |
+| **Buffer(P, d)**, d < 0 | Erosion: all points of P that are at least \|d\| away from the boundary (Minkowski difference). Meaningful only for areal input; lines/points → empty. Can split polygons or make them vanish completely. |
+| **Offset curve** (parallel line) | A one-sided line at distance d to the left (d > 0) or right (d < 0) of a polyline. The result is a *line*, not a polygon. No hard mathematical definition for loops/self-intersections (see §4). |
+| **Single-sided buffer** | The polygon between a line and its offset curve (JTS `BufferParameters.setSingleSided`). |
+| **Join style** | Treatment of *convex* corners (outside): **round** (circular arc), **mitre** (intersection of the extended offset segments, limited by the **mitre limit**, otherwise beveled), **bevel** (direct connection of the segment ends). Concave corners (inside) are treated the same for all styles – overlaps arise there that have to be cleaned up. |
+| **Cap style** | Ends of open lines: **round** (semicircle), **flat/butt** (cut off perpendicular at the end point), **square** (extended by d, rectangular). |
+| **Quadrant segments** | Number of chords per quarter circle in the arc approximation (JTS default 8). Alternative parametrization: **arc tolerance** (maximum chord deviation, Clipper2). From tolerance t follows the segment angle θ = 2·acos(1 − t/d). |
 
-Planare Konsequenz: Buffer in geografischen Koordinaten (Grad) ist verzerrt – das ist Sache des Hosts bzw. der Projektion (#8), nicht des Algorithmus.
-
----
-
-## 2. Grundbausteine, die alle Ansätze brauchen
-
-1. **Offset-Segment-Generator**: für jedes Segment die um d parallel verschobene Strecke, an Ecken je nach Drehrichtung (Kreuzprodukt) Join-Geometrie, an Linienenden Cap-Geometrie. Reine lokale Geometrie, ~300–600 LOC, gut testbar.
-2. **Bogenapproximation** (Kreis, Halbkreis, Eckbogen) mit Quadrant-Segments bzw. Arc-Tolerance – gleiche Stützpunkte wie NTS wählen, sonst sind Orakel-Vergleiche nur über Flächen-/Hausdorff-Toleranz möglich.
-3. **Bereinigung**: der rohe Offset überlappt sich selbst (an konkaven Ecken, engen Engstellen, bei d > lokaler Krümmungsradius). Diese Bereinigung ist *der eigentliche Aufwand* – und genau sie unterscheidet die Ansätze.
+Planar consequence: a buffer in geographic coordinates (degrees) is distorted – that is a matter for the host or the projection (#8), not for the algorithm.
 
 ---
 
-## 3. Ansätze
+## 2. Building blocks that all approaches need
 
-### A. Raw-Offset-Kurve + Noding + Tiefen-/Winding-Polygonisierung (JTS `BufferBuilder`)
-
-**Prinzip** ([JTS buffer package](https://github.com/locationtech/jts/tree/master/modules/core/src/main/java/org/locationtech/jts/operation/buffer)):
-
-1. `BufferCurveSetBuilder` erzeugt pro Komponente geschlossene **Raw-Offset-Ringe** (`OffsetCurveBuilder` / `OffsetSegmentGenerator`): Punkt → Kreis; Linie → ein Ring, der links hin, Cap, rechts zurück, Cap läuft; Polygon → Schale und Löcher jeweils einseitig, Orientierung so gewählt, dass bei negativem d nach innen erodiert wird. Jede Kante trägt eine *Tiefen-Markierung* (links/rechts: innen/außen).
-2. **Konkave Ecken**: Statt die zwei Offset-Segmente exakt zu schneiden, wird die Kurve über den Originalvertex geführt („closing segment“). Das erzeugt bewusst kleine Schleifen, die später herausfallen, vermeidet aber Lücken bei Rundungsfehlern.
-3. **Vorfilter**: `BufferInputLineSimplifier` entfernt Konkavitäten, die kleiner als ein Bruchteil von d sind (Default `simplifyFactor` = 0.01·d) – drastisch weniger Schnittpunkte bei verrauschten Linien. Komplett erodierte Ringe (z.B. Hüllrechteck schmaler als 2·|d|) werden vorab verworfen.
-4. **Noding** aller Raw-Kurven (`MCIndexNoder`, Monotone Chains), anschließend Aufbau eines planaren Graphen.
-5. **Tiefenberechnung**: `BufferSubgraph`/`RightmostEdgeFinder`/`SubgraphDepthLocater` bestimmen für jeden zusammenhängenden Teilgraphen die Tiefe ausgehend von der äußersten Kante; Kanten mit Tiefenübergang 0↔1 bilden den Rand. Das ist äquivalent zu „Winding-Number ≥ 1 ist innen“.
-6. `PolygonBuilder` setzt Maximal-/Minimal-Edge-Rings zu Polygonen mit Löchern zusammen.
-7. **Robustheits-Fallback** (`BufferOp`): Wirft das Floating-Noding eine `TopologyException`, wird mit schrittweise reduzierter Präzision und **Snap-Rounding**-Noder wiederholt.
-
-**Bewertung**: Industriestandard (JTS, GEOS, NTS, damit PostGIS/Shapely/QGIS). Alle Join-/Cap-Styles, negative Distanzen, Single-sided Buffer. Die Schritte 4–6 sind *exakt* die Overlay-Infrastruktur (Noding, planarer Graph, Ring-Aufbau, Loch-Zuordnung). Hoher Aufwand, aber fast komplett geteilt mit dem Overlay.
-
-### B. Clipper-Offset-Prinzip (`ClipperOffset`)
-
-**Prinzip** ([Clipper2 ClipperOffset](https://angusj.com/clipper2/Docs/Units/Clipper.Offset/Classes/ClipperOffset/_Body.htm), Quelle [`clipper.offset.cpp`](https://github.com/AngusJohnson/Clipper2/blob/main/CPP/Clipper2Lib/src/clipper.offset.cpp)):
-
-1. Pro Pfad wird eine Offset-Kontur gebaut (`DoRound`, `DoMiter`, `DoSquare`, `DoBevel`). Konkave Ecken werden ebenfalls über den Originalvertex geführt; laut Quellkommentar entstehen dabei Artefakte, die „later by the finishing union operation“ entfernt werden.
-2. Offene Pfade (`EndType.Butt/Square/Round/Joined`) werden zu einer geschlossenen Umrisskontur (beide Seiten + Caps) gemacht.
-3. **Ein einziger Union-Schritt** mit Füllregel **Positive** (bzw. Negative bei invertierter Orientierung) über alle Roh-Konturen. Konturen und Schleifen mit Winding ≤ 0 fallen weg.
-4. Koordinaten sind Integer (`Path64`); Gleitkomma-API skaliert intern. Mitre-Limit und Arc-Tolerance sind Parameter; Default-Bogenfeinheit ergibt sich aus der Arc-Tolerance relativ zu d.
-
-Das ist eine direkte Umsetzung von **Chen & McMains (2005)** „Polygon Offsetting by Computing Winding Numbers“ ([PDF](https://mcmains.me.berkeley.edu/pubs/DAC05OffsetPolygon.pdf)), das in den Clipper1-Quellen auch zitiert wird: Raw-Offset-Kurve so bauen, dass alle ungültigen Schleifen Winding-Number ≤ 0 haben, dann positive Winding-Regel anwenden. Komplexität O((n+k) log n), k = Selbstschnitte.
-
-**Bewertung**: Konzeptionell einfacher als A, weil keine Tiefen-Markierung pro Kante nötig ist – nur „Union mit Füllregel Positive“. Voraussetzung: das eigene Overlay kann **Selbstüberlagerungen mit Füllregel** auswerten (Non-Zero/Positive), nicht nur Bool-Ops zweier gültiger Polygone. Clipper-Hinweise: Eingabepolygone sollten vorher per Union bereinigt sein; sehr kurze Segmente vorher entfernen (`SimplifyPaths`), sonst „Blemishes“.
-
-### C. Minkowski-Summe (Konvolution / konvexe Zerlegung)
-
-**Prinzip**: Buffer = P ⊕ D, D = regelmäßiges n-Eck als Kreisapproximation.
-- *Konvexe Zerlegung*: P in konvexe Teile zerlegen, je Teil konvexe Minkowski-Summe in O(n+m) (Kantensortierung nach Winkel), danach Union aller Teile.
-- *Konvolution* ([Wein 2006, „Exact and Efficient Construction of Planar Minkowski Sums using the Convolution Method“](https://doi.org/10.1007/11841036_73); in [CGAL Minkowski_sum_2](https://doc.cgal.org/latest/Minkowski_sum_2/index.html)): Konvolutionszyklus der Kanten von P und D bilden, dann Bereiche mit Winding-Number > 0 behalten – strukturell dasselbe wie B.
-
-**Bewertung**: Eleganter Formalismus, liefert aber nativ nur **round** (bzw. die Form von D). Mitre/Bevel, Caps flat/square und negative Distanz (Minkowski-Differenz = Komplement-Trick) passen schlecht. Für Buffer mit Kreis degeneriert die Konvolution praktisch zu Ansatz B. CGAL ist GPL/kommerziell – nur als Literatur nutzbar. Eigener Mehrwert gering; Minkowski lohnt sich nur, wenn SpatialNET allgemeine Minkowski-Summen (z.B. Kollision, Konfigurationsraum) anbieten will.
-
-### D. Segmentweise Kapsel-Union („Stadium-Union“)
-
-**Prinzip**: Jedes Segment → Kapsel (Rechteck + zwei Halbkreise, Minkowski-Summe Segment ⊕ Kreis), Punkt → Kreis. Buffer(Linie) = Union aller Kapseln. Buffer(Polygon, d > 0) = P ∪ Kapseln aller Randsegmente. Buffer(Polygon, d < 0) = P \ (Union der Kapseln aller Randsegmente mit |d|).
-
-Varianten: Kapseln baumartig vereinigen (Cascaded Union, wie JTS `CascadedPolygonUnion`/`UnaryUnionOp`), damit nicht n-mal gegen ein wachsendes Resultat vereinigt wird.
-
-**Bewertung**:
-- + Mathematisch trivial korrekt für **round/round**; jede Teiloperation ist ein gewöhnliches Overlay – 100 % Wiederverwendung, kein eigener Bereinigungscode.
-- + Sehr guter **Referenz-/Fallback-Pfad** und Testorakel *innerhalb* der Lib (z.B. zum Vergleich mit Ansatz A/B).
-- − Nur Round-Join natürlich. Mitre/Bevel brauchen zusätzliche Keile/Dreiecke an konvexen Ecken (machbar, aber fummelig); flat/square Caps durch Kapsel-Variation an den Endsegmenten.
-- − Benachbarte Kapseln teilen nahezu identische Bögen → viele fast-kollineare, fast-koinzidente Kanten. Das ist ein **Stresstest für die Overlay-Robustheit** (genau die Fälle, an denen Floating-Overlays scheitern) und erzeugt viele Stützpunkte. Performance deutlich schlechter als A/B (Faktor 5–50 je nach Overlay).
-- − Ergebnis-Vertices weichen von NTS ab (andere Bogenstützpunkte an Ecken), Orakel-Vergleich nur über Toleranz.
-
-### E. Straight Skeleton / Voronoi-basierte Offsets
-
-**Prinzip**:
-- **Straight Skeleton** ([Aichholzer, Aurenhammer et al. 1995, „A Novel Type of Skeleton for Polygons“](https://www.jucs.org/jucs_1_12/a_novel_type_of.html)): Wellenfront, deren Kanten mit konstanter Geschwindigkeit parallel nach innen laufen; Edge- und Split-Events ändern die Topologie. Der Offset bei Distanz d ist der Schnitt der Wellenfront zum Zeitpunkt d – entspricht einem **mitre-Offset ohne Mitre-Limit**. Implementierungen: Felkel & Obdržálek 1998 (bekannt fehleranfällig), [Palfrader/Held/Huber 2012 „On Computing Straight Skeletons by Means of Kinetic Triangulations“](https://doi.org/10.1007/978-3-642-33090-2_66), [CGAL Straight_skeleton_2 inkl. Polygon Offsetting](https://doc.cgal.org/latest/Straight_skeleton_2/index.html) (GPL/kommerziell, Autor F. Cacciola).
-- **Voronoi-Diagramm von Segmenten / Medial Axis** (Held 1998, „Voronoi diagrams and offset curves of curvilinear polygons“, CAD 30(4); Held: [VRONI / Voronoi-Projekt](https://www.cosy.sbg.ac.at/~held/projects/voronoi_2d/voronoi.html)): liefert exakte **round**-Offsets; Offsets für viele d ohne Neuberechnung (typisch für CNC-Taschenfräsen).
-
-**Bewertung**: Algorithmisch die schwerste Option. Robustheit (Split-Events, gleichzeitige Events, parallele Kanten, Entartungen) ist ein Forschungsthema für sich; brauchbare Implementierungen sind fast nur in CGAL/VRONI zu finden, beide nicht übernehmbar. Natürlicher Einsatz: viele *innere* Offsets desselben Polygons, Dachformen, Mitte-Linien. Für GIS-Buffer (positiv, Linien mit Caps, Multi-Geometrien, round als Default) überdimensioniert. Kein Overlay nötig, aber auch keine Wiederverwendung des Overlays – eine zweite große Robustheitsbaustelle. **Nicht empfohlen** für SpatialNET-Buffer; allenfalls später als eigener Algorithmus „StraightSkeleton/MedialAxis“.
-
-### Weitere Referenzen mit demselben Grundmuster
-
-- **Boost.Geometry `buffer`** ([Doku](https://www.boost.org/doc/libs/latest/libs/geometry/doc/html/geometry/reference/algorithms/buffer/buffer_7_with_strategies.html), BSL-1.0, Barend Gehrels): baut pro Segment/Ecke/Ende „Pieces“ (Strategien für Distanz, Side, Join, End, Point), berechnet Turns (Schnittpunkte) zwischen Pieces, klassifiziert Turns per `turn_in_piece_visitor`/`turn_in_input` als innen/außen und traversiert wie im Overlay. Ein Hybrid aus A und D.
-- **georust `geo` `Buffer`** ([buffer.rs](https://github.com/georust/geo/blob/main/geo/src/algorithm/buffer.rs), MIT/Apache-2.0): delegiert an [iOverlay](https://github.com/iShape-Rust/iOverlay) (Apache-2.0) `OutlineOffset`/`StrokeOffset` + `unary_union` – also Prinzip B mit einem Integer-Overlay.
+1. **Offset segment generator**: for each segment the segment shifted in parallel by d, join geometry at corners depending on the turning direction (cross product), cap geometry at line ends. Pure local geometry, ~300–600 LOC, easy to test.
+2. **Arc approximation** (circle, semicircle, corner arc) with quadrant segments or arc tolerance – choose the same support points as NTS, otherwise oracle comparisons are possible only via area/Hausdorff tolerance.
+3. **Cleanup**: the raw offset overlaps itself (at concave corners, narrow constrictions, for d > local radius of curvature). This cleanup is *the actual effort* – and it is exactly what distinguishes the approaches.
 
 ---
 
-## 4. Offset-Kurven für Polylinien
+## 3. Approaches
 
-### Naiver Ansatz
-Offset-Segmente einer Seite bilden, Joins nur auf der Außenseite, auf der Innenseite Nachbarsegmente schneiden. Scheitert, sobald d größer als die Länge kurzer Segmente oder der lokale Krümmungsradius ist (Schleifen, „Swallowtails“). Selbstschnitt-Trimming (Tiller & Hanson 1984, „Offsets of Two-Dimensional Profiles“, IEEE CG&A; Choi & Park 1999, „A pair-wise offset algorithm for 2D point-sequence curve“, CAD 31) entfernt lokale Schleifen, globale Interferenzen (Engstellen der Linie, Selbstschnitte der Eingabe) bleiben ungelöst.
+### A. Raw offset curve + noding + depth/winding polygonization (JTS `BufferBuilder`)
 
-### Buffer-abgeleitet (alt: GEOS `OffsetCurve`/PostGIS `ST_OffsetCurve` vor 2022)
-Single-sided Buffer bzw. Buffer berechnen, Raw-Offset-Kurve berechnen, beide **schneiden** und die passenden Teile behalten. Problem: Buffer-Heuristiken (Simplifier, Snap-Rounding) lassen Buffer-Rand und Raw-Kurve minimal auseinanderlaufen → kaputte Schnitte, zerrissene oder zusätzliche Teilstücke. Martin Davis 2018: „nothing ‚simple‘ about parallel offset curves“ ([jts-dev](https://www.eclipse.org/lists/jts-dev/msg00225.html)).
+**Principle** ([JTS buffer package](https://github.com/locationtech/jts/tree/master/modules/core/src/main/java/org/locationtech/jts/operation/buffer)):
 
-### JTS `OffsetCurve` (neu, Ende 2021/2022)
-Eingeführt mit [JTS PR #810](https://github.com/locationtech/jts/pull/810) (Dez. 2021), beschrieben im Blog [„JTS Offset Curves“ (Jan. 2022)](http://lin-ear-th-inking.blogspot.com/2022/01/jts-offset-curves.html), erweitert in [PR #956](https://github.com/locationtech/jts/pull/956) (Feb. 2023, Multi-Ergebnis + „Joined mode“), Mitre-Joins für Polygone in [PR #1109](https://github.com/locationtech/jts/pull/1109) (2025). GEOS-Port in 3.11; Quelle [`OffsetCurve.java`](https://github.com/locationtech/jts/blob/master/modules/core/src/main/java/org/locationtech/jts/operation/buffer/OffsetCurve.java).
+1. `BufferCurveSetBuilder` creates closed **raw offset rings** per component (`OffsetCurveBuilder` / `OffsetSegmentGenerator`): point → circle; line → one ring running left forth, cap, right back, cap; polygon → shell and holes, each one-sided, orientation chosen so that erosion goes inwards for negative d. Each edge carries a *depth marking* (left/right: inside/outside).
+2. **Concave corners**: instead of intersecting the two offset segments exactly, the curve is routed via the original vertex ("closing segment"). This deliberately creates small loops that drop out later, but avoids gaps from rounding errors.
+3. **Prefilter**: `BufferInputLineSimplifier` removes concavities smaller than a fraction of d (default `simplifyFactor` = 0.01·d) – drastically fewer intersection points for noisy lines. Completely eroded rings (e.g. bounding rectangle narrower than 2·|d|) are discarded beforehand.
+4. **Noding** of all raw curves (`MCIndexNoder`, monotone chains), followed by construction of a planar graph.
+5. **Depth computation**: `BufferSubgraph`/`RightmostEdgeFinder`/`SubgraphDepthLocater` determine, for each connected subgraph, the depth starting from the outermost edge; edges with a depth transition 0↔1 form the boundary. This is equivalent to "winding number ≥ 1 is inside".
+6. `PolygonBuilder` assembles maximal/minimal edge rings into polygons with holes.
+7. **Robustness fallback** (`BufferOp`): if the floating noding throws a `TopologyException`, the computation is repeated with stepwise reduced precision and a **snap-rounding** noder.
 
-Algorithmus:
-1. Buffer der Linie mit Distanz |d| berechnen (normaler, robuster Buffer).
-2. Raw-Offset-Kurve der gewünschten Seite berechnen.
-3. Raw-Kurven-Segmente über einen räumlichen Index und **Distanztoleranz** auf Segmente des Buffer-Randes **matchen** (kein exakter Schnitt!).
-4. Ausgegeben werden die Abschnitte des Buffer-Randes, die zur Raw-Kurve passen – geordnet entlang der Raw-Kurve, Hauptkurve zuerst; Richtung wie die Eingabe.
+**Assessment**: industry standard (JTS, GEOS, NTS, hence PostGIS/Shapely/QGIS). All join/cap styles, negative distances, single-sided buffer. Steps 4–6 are *exactly* the overlay infrastructure (noding, planar graph, ring construction, hole assignment). High effort, but almost completely shared with the overlay.
 
-Unterschiede zum buffer-abgeleiteten Schneiden:
-- Ergebnis liegt **garantiert auf dem Buffer-Rand** → konsistent mit Buffer, exakter Abstand d (bis auf Quantisierung), nie selbstschneidend.
-- Robust, weil Toleranz-Matching statt fragiler Schnittpunktberechnung.
-- Bei Selbstschnitten oder Engstellen < 2d: seit #956 **MultiLineString** mit disjunkten Abschnitten (ggf. Ringe); im „Joined mode“ eine durchgehende Linie, die dann selbstschneiden darf und bei großem d „Flat-Line-Artefakte“ haben kann.
-- Konsequenz: Offset ist *kein eigener Geometriekern*, sondern Buffer + Raw-Offset-Generator + Matching (~300 LOC zusätzlich). Wer Buffer hat, bekommt robusten Offset fast geschenkt.
+### B. Clipper offset principle (`ClipperOffset`)
 
-Clipper2 hat **keine** einseitige Offset-Kurve (offene Pfade nur als geschlossener Umriss, negative Distanz für offene Pfade unzulässig).
+**Principle** ([Clipper2 ClipperOffset](https://angusj.com/clipper2/Docs/Units/Clipper.Offset/Classes/ClipperOffset/_Body.htm), source [`clipper.offset.cpp`](https://github.com/AngusJohnson/Clipper2/blob/main/CPP/Clipper2Lib/src/clipper.offset.cpp)):
+
+1. For each path an offset contour is built (`DoRound`, `DoMiter`, `DoSquare`, `DoBevel`). Concave corners are likewise routed via the original vertex; according to a source comment, this creates artifacts that are removed "later by the finishing union operation".
+2. Open paths (`EndType.Butt/Square/Round/Joined`) are turned into a closed outline contour (both sides + caps).
+3. **A single union step** with fill rule **Positive** (or Negative for inverted orientation) over all raw contours. Contours and loops with winding ≤ 0 drop out.
+4. Coordinates are integers (`Path64`); the floating-point API scales internally. Mitre limit and arc tolerance are parameters; the default arc fineness results from the arc tolerance relative to d.
+
+This is a direct implementation of **Chen & McMains (2005)** "Polygon Offsetting by Computing Winding Numbers" ([PDF](https://mcmains.me.berkeley.edu/pubs/DAC05OffsetPolygon.pdf)), which is also cited in the Clipper1 sources: build the raw offset curve so that all invalid loops have winding number ≤ 0, then apply the positive winding rule. Complexity O((n+k) log n), k = self-intersections.
+
+**Assessment**: conceptually simpler than A, because no per-edge depth marking is needed – only "union with fill rule Positive". Prerequisite: our own overlay can evaluate **self-overlaps with a fill rule** (non-zero/positive), not just Boolean ops of two valid polygons. Clipper hints: input polygons should be cleaned up beforehand by a union; remove very short segments beforehand (`SimplifyPaths`), otherwise "blemishes".
+
+### C. Minkowski sum (convolution / convex decomposition)
+
+**Principle**: buffer = P ⊕ D, D = regular n-gon as a circle approximation.
+- *Convex decomposition*: decompose P into convex parts, for each part a convex Minkowski sum in O(n+m) (sorting edges by angle), then the union of all parts.
+- *Convolution* ([Wein 2006, "Exact and Efficient Construction of Planar Minkowski Sums using the Convolution Method"](https://doi.org/10.1007/11841036_73); in [CGAL Minkowski_sum_2](https://doc.cgal.org/latest/Minkowski_sum_2/index.html)): form the convolution cycle of the edges of P and D, then keep regions with winding number > 0 – structurally the same as B.
+
+**Assessment**: elegant formalism, but natively delivers only **round** (or the shape of D). Mitre/bevel, flat/square caps and negative distance (Minkowski difference = complement trick) fit poorly. For a buffer with a circle, the convolution degenerates practically to approach B. CGAL is GPL/commercial – usable only as literature. Own added value is low; Minkowski pays off only if SpatialNET wants to offer general Minkowski sums (e.g. collision, configuration space).
+
+### D. Segment-wise capsule union ("stadium union")
+
+**Principle**: each segment → capsule (rectangle + two semicircles, Minkowski sum segment ⊕ circle), point → circle. Buffer(line) = union of all capsules. Buffer(polygon, d > 0) = P ∪ capsules of all boundary segments. Buffer(polygon, d < 0) = P \ (union of the capsules of all boundary segments with |d|).
+
+Variants: unite capsules tree-like (cascaded union, like JTS `CascadedPolygonUnion`/`UnaryUnionOp`) so that one does not unite n times against a growing result.
+
+**Assessment**:
+- + Mathematically trivially correct for **round/round**; each partial operation is an ordinary overlay – 100 % reuse, no cleanup code of its own.
+- + A very good **reference/fallback path** and test oracle *inside* the lib (e.g. for comparison with approach A/B).
+- − Naturally only round join. Mitre/bevel need additional wedges/triangles at convex corners (feasible, but fiddly); flat/square caps by capsule variation at the end segments.
+- − Adjacent capsules share almost identical arcs → many nearly collinear, nearly coincident edges. This is a **stress test for overlay robustness** (exactly the cases on which floating overlays fail) and produces many support points. Performance clearly worse than A/B (factor 5–50 depending on the overlay).
+- − Result vertices deviate from NTS (different arc support points at corners), oracle comparison only via tolerance.
+
+### E. Straight skeleton / Voronoi-based offsets
+
+**Principle**:
+- **Straight skeleton** ([Aichholzer, Aurenhammer et al. 1995, "A Novel Type of Skeleton for Polygons"](https://www.jucs.org/jucs_1_12/a_novel_type_of.html)): a wavefront whose edges move inwards in parallel at constant speed; edge and split events change the topology. The offset at distance d is the cut of the wavefront at time d – corresponds to a **mitre offset without mitre limit**. Implementations: Felkel & Obdržálek 1998 (known to be error-prone), [Palfrader/Held/Huber 2012 "On Computing Straight Skeletons by Means of Kinetic Triangulations"](https://doi.org/10.1007/978-3-642-33090-2_66), [CGAL Straight_skeleton_2 incl. polygon offsetting](https://doc.cgal.org/latest/Straight_skeleton_2/index.html) (GPL/commercial, author F. Cacciola).
+- **Voronoi diagram of segments / medial axis** (Held 1998, "Voronoi diagrams and offset curves of curvilinear polygons", CAD 30(4); Held: [VRONI / Voronoi project](https://www.cosy.sbg.ac.at/~held/projects/voronoi_2d/voronoi.html)): delivers exact **round** offsets; offsets for many d without recomputation (typical for CNC pocket milling).
+
+**Assessment**: algorithmically the hardest option. Robustness (split events, simultaneous events, parallel edges, degeneracies) is a research topic of its own; usable implementations are found almost only in CGAL/VRONI, neither of which can be taken over. Natural use: many *inner* offsets of the same polygon, roof shapes, center lines. Oversized for GIS buffers (positive, lines with caps, multi-geometries, round as default). No overlay needed, but also no reuse of the overlay – a second large robustness construction site. **Not recommended** for the SpatialNET buffer; at most later as an algorithm of its own, "StraightSkeleton/MedialAxis".
+
+### Further references with the same basic pattern
+
+- **Boost.Geometry `buffer`** ([docs](https://www.boost.org/doc/libs/latest/libs/geometry/doc/html/geometry/reference/algorithms/buffer/buffer_7_with_strategies.html), BSL-1.0, Barend Gehrels): builds "pieces" per segment/corner/end (strategies for distance, side, join, end, point), computes turns (intersection points) between pieces, classifies turns by `turn_in_piece_visitor`/`turn_in_input` as inside/outside and traverses as in the overlay. A hybrid of A and D.
+- **georust `geo` `Buffer`** ([buffer.rs](https://github.com/georust/geo/blob/main/geo/src/algorithm/buffer.rs), MIT/Apache-2.0): delegates to [iOverlay](https://github.com/iShape-Rust/iOverlay) (Apache-2.0) `OutlineOffset`/`StrokeOffset` + `unary_union` – thus principle B with an integer overlay.
 
 ---
 
-## 5. Robustheit – typische Fallen
+## 4. Offset curves for polylines
 
-| Problem | Ursache | Gegenmittel |
+### Naive approach
+Form offset segments of one side, joins only on the outside, intersect neighboring segments on the inside. Fails as soon as d is larger than the length of short segments or the local radius of curvature (loops, "swallowtails"). Self-intersection trimming (Tiller & Hanson 1984, "Offsets of Two-Dimensional Profiles", IEEE CG&A; Choi & Park 1999, "A pair-wise offset algorithm for 2D point-sequence curve", CAD 31) removes local loops, while global interferences (constrictions of the line, self-intersections of the input) remain unsolved.
+
+### Buffer-derived (old: GEOS `OffsetCurve`/PostGIS `ST_OffsetCurve` before 2022)
+Compute a single-sided buffer or buffer, compute the raw offset curve, **intersect** both and keep the matching parts. Problem: buffer heuristics (simplifier, snap rounding) let the buffer boundary and the raw curve diverge minimally → broken cuts, torn or additional pieces. Martin Davis 2018: "nothing 'simple' about parallel offset curves" ([jts-dev](https://www.eclipse.org/lists/jts-dev/msg00225.html)).
+
+### JTS `OffsetCurve` (new, end of 2021/2022)
+Introduced with [JTS PR #810](https://github.com/locationtech/jts/pull/810) (Dec 2021), described in the blog post ["JTS Offset Curves" (Jan 2022)](http://lin-ear-th-inking.blogspot.com/2022/01/jts-offset-curves.html), extended in [PR #956](https://github.com/locationtech/jts/pull/956) (Feb 2023, multi result + "joined mode"), mitre joins for polygons in [PR #1109](https://github.com/locationtech/jts/pull/1109) (2025). GEOS port in 3.11; source [`OffsetCurve.java`](https://github.com/locationtech/jts/blob/master/modules/core/src/main/java/org/locationtech/jts/operation/buffer/OffsetCurve.java).
+
+Algorithm:
+1. Compute the buffer of the line with distance |d| (normal, robust buffer).
+2. Compute the raw offset curve of the desired side.
+3. **Match** raw curve segments to segments of the buffer boundary via a spatial index and a **distance tolerance** (no exact intersection!).
+4. The output consists of the sections of the buffer boundary that match the raw curve – ordered along the raw curve, main curve first; direction like the input.
+
+Differences from buffer-derived intersecting:
+- The result **lies guaranteed on the buffer boundary** → consistent with the buffer, exact distance d (up to quantization), never self-intersecting.
+- Robust, because of tolerance matching instead of fragile intersection point computation.
+- With self-intersections or constrictions < 2d: since #956 a **MultiLineString** with disjoint sections (possibly rings); in "joined mode" one continuous line, which may then self-intersect and, for large d, have "flat-line artifacts".
+- Consequence: offset is *not a geometry core of its own*, but buffer + raw offset generator + matching (~300 LOC additional). Whoever has a buffer gets a robust offset almost for free.
+
+Clipper2 has **no** one-sided offset curve (open paths only as a closed outline, negative distance for open paths not permitted).
+
+---
+
+## 5. Robustness – typical pitfalls
+
+| Problem | Cause | Remedy |
 |---|---|---|
-| Enge Konkavitäten / Engstellen < 2·\|d\| | Raw-Kurve faltet sich, viele Selbstschnitte | Bereinigung über Winding/Tiefe (A/B); Vorab-Simplifizierung kleiner Konkavitäten (JTS `BufferInputLineSimplifier`) |
-| Kollaps bei negativem Buffer | Ring oder Teil verschwindet; Raw-Ring kehrt Orientierung um | Ringe mit Hüllrechteck < 2·\|d\| vorab verwerfen; invertierte Raw-Ringe erkennen (JTS `isRingCurveInverted`); leeres Ergebnis sauber über die Factory erzeugen |
-| Aufspaltung bei negativem Buffer | Polygon zerfällt in mehrere | Ergebnis immer als Multi-Polygon behandeln; Loch-Zuordnung durch Polygonisierung |
-| Winzige Segmente, Duplikat-Punkte | Offset-Normalen numerisch instabil, Mikro-Schleifen | Duplikate entfernen; Segmente < ε·d überspringen/zusammenfassen (Clipper `SimplifyPaths`, JTS-Fix in 1.20 für Repeated Points) |
-| Fast-kollineare Nachbarsegmente | Mitre-Schnittpunkt im Unendlichen | Kollinearitätstest mit Toleranz, dann ohne Join fortsetzen; Mitre-Limit erzwingen |
-| Spitze Winkel bei Mitre | Mitre-Spitze sehr lang | Mitre-Limit (JTS Default 5.0); darüber Bevel bzw. abgeschnittene Spitze |
-| Noding-Fehler (Floating Point) | Schnittpunkte nicht konsistent | Snap-Rounding, Retry mit reduzierter Präzision (JTS `BufferOp`) oder Integer-Koordinaten (Clipper) – Entscheidung gehört zu #11/#5 |
-| Große d relativ zur Geometrie | Bögen dominieren, viele Vertices | Quadrant-Segments/Arc-Tolerance konfigurierbar; Konvexhülle als Shortcut für sehr große d möglich |
-| Ungültige Eingabe (selbstschneidende Polygone) | Undefinierter Buffer | Vorher validieren/„make valid“ oder dokumentiertes Verhalten (JTS: `buffer(0)` als Reparatur-Trick) |
+| Narrow concavities / constrictions < 2·\|d\| | The raw curve folds, many self-intersections | Cleanup via winding/depth (A/B); upfront simplification of small concavities (JTS `BufferInputLineSimplifier`) |
+| Collapse with negative buffer | A ring or part vanishes; the raw ring reverses orientation | Discard rings with bounding rectangle < 2·\|d\| beforehand; detect inverted raw rings (JTS `isRingCurveInverted`); create an empty result cleanly through the factory |
+| Splitting with negative buffer | The polygon falls apart into several | Always treat the result as a multipolygon; hole assignment by polygonization |
+| Tiny segments, duplicate points | Offset normals numerically unstable, micro loops | Remove duplicates; skip/merge segments < ε·d (Clipper `SimplifyPaths`, JTS fix in 1.20 for repeated points) |
+| Nearly collinear neighboring segments | Mitre intersection point at infinity | Collinearity test with tolerance, then continue without join; enforce mitre limit |
+| Sharp angles with mitre | Mitre tip very long | Mitre limit (JTS default 5.0); beyond it bevel or truncated tip |
+| Noding errors (floating point) | Intersection points not consistent | Snap rounding, retry with reduced precision (JTS `BufferOp`) or integer coordinates (Clipper) – decision belongs to #11/#5 |
+| Large d relative to the geometry | Arcs dominate, many vertices | Quadrant segments/arc tolerance configurable; convex hull as a shortcut for very large d possible |
+| Invalid input (self-intersecting polygons) | Undefined buffer | Validate/"make valid" beforehand or documented behavior (JTS: `buffer(0)` as a repair trick) |
 
 ---
 
-## 6. Geteilte Bausteine mit dem Overlay
+## 6. Building blocks shared with the overlay
 
-| Baustein | Overlay | A JTS | B Clipper | C Minkowski | D Kapseln | E Skeleton |
+| Building block | Overlay | A JTS | B Clipper | C Minkowski | D Capsules | E Skeleton |
 |---|---|---|---|---|---|---|
-| Segment-Schnitt, Orientierungsprädikat | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (andere Prädikate) |
-| Noding (Monotone Chains / Sweep, Snap-Rounding) | ✓ | ✓ | ✓ | ✓ | ✓ (über Overlay) | – |
-| Planarer Graph / Kantenring-Aufbau | ✓ | ✓ | ✓ | ✓ | ✓ | eigener Graph |
-| Winding-Number / Tiefen-Labeling | ✓ (Bool-Ops = Labeling) | ✓ Tiefe | ✓ Füllregel Positive | ✓ | ✓ | – |
-| Union mehrerer / selbstüberlappender Ringe | Cascaded Union | implizit | ✓ zentral | ✓ | ✓ zentral | – |
-| Loch-Zuordnung, Polygon-Assembly | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Räumlicher Index (STR-Tree, Monotone Chains) | ✓ | ✓ | ✓ | ✓ | ✓ | – |
-| Offset-Segment-Generator, Bögen, Joins, Caps | – | ✓ | ✓ | (Kreispolygon) | (Kapselform) | – |
+| Segment intersection, orientation predicate | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (other predicates) |
+| Noding (monotone chains / sweep, snap rounding) | ✓ | ✓ | ✓ | ✓ | ✓ (via overlay) | – |
+| Planar graph / edge ring construction | ✓ | ✓ | ✓ | ✓ | ✓ | own graph |
+| Winding number / depth labelling | ✓ (Bool ops = labelling) | ✓ depth | ✓ fill rule Positive | ✓ | ✓ | – |
+| Union of several / self-overlapping rings | Cascaded union | implicit | ✓ central | ✓ | ✓ central | – |
+| Hole assignment, polygon assembly | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Spatial index (STR tree, monotone chains) | ✓ | ✓ | ✓ | ✓ | ✓ | – |
+| Offset segment generator, arcs, joins, caps | – | ✓ | ✓ | (circle polygon) | (capsule shape) | – |
 
-Kernaussage: Wenn das Overlay (#5/#11) so gebaut wird, dass es **(1)** beliebige Kantenmengen nodet und **(2)** Flächen per **Winding-Number mit wählbarer Füllregel** labelt, dann sind Buffer nach Ansatz B (und auch A) im Wesentlichen „Offset-Segment-Generator + `Overlay.Union(rawRings, FillRule.Positive)`“. Das ist die wichtigste Anforderung, die aus diesem Ticket an das Overlay-Design zurückfließt.
+Key statement: if the overlay (#5/#11) is built so that it **(1)** nodes arbitrary edge sets and **(2)** labels areas by **winding number with a selectable fill rule**, then buffers by approach B (and also A) are essentially "offset segment generator + `Overlay.Union(rawRings, FillRule.Positive)`". This is the most important requirement flowing back from this ticket into the overlay design.
 
 ---
 
-## 7. Aufwand (grob, ohne Overlay-Kern)
+## 7. Effort (rough, without overlay core)
 
-Annahme: ein robustes Overlay mit Noding und Winding-Labeling existiert (eigener Aufwand in #5/#11).
+Assumption: a robust overlay with noding and winding labelling exists (own effort in #5/#11).
 
-| Komponente | Aufwand |
+| Component | Effort |
 |---|---|
-| Offset-Segment-Generator inkl. round/mitre/bevel, Caps round/flat/square, Quadrant-Segments, Mitre-Limit | 3–5 PT |
-| Buffer-Fassade für Punkt/MultiPoint/Linie/Polygon/Multi*, Orientierung, negative Distanz, Kollaps-Vorfilter, leere Ergebnisse | 2–4 PT |
-| Bereinigung Ansatz B (Union mit Füllregel) – wenn Overlay sie kann | 1–2 PT |
-| Bereinigung Ansatz A (Tiefen-Labeling, BufferSubgraph-Logik) zusätzlich zum Overlay | 5–10 PT |
-| Input-Simplifier (kleine Konkavitäten), Duplikat-/Kurzsegment-Filter | 1–2 PT |
-| Offset-Kurve à la JTS `OffsetCurve` (Raw-Kurve + Matching gegen Buffer-Rand, Multi-Ergebnis, optional Joined mode) | 3–5 PT |
-| Kapsel-Union (D) als Referenz-/Fallback-Pfad | 1–2 PT |
-| Tests gegen NTS-Orakel (Flächendifferenz, Hausdorff-Distanz, Gültigkeit), Fuzzing, Randfälle | 5–8 PT |
-| **Summe B (+ Offset + D als Referenz + Tests)** | **~ 17–30 PT** |
-| Straight Skeleton (E) robust, zusätzlich | 20–40+ PT, hohes Risiko |
+| Offset segment generator incl. round/mitre/bevel, caps round/flat/square, quadrant segments, mitre limit | 3–5 PD |
+| Buffer facade for point/multipoint/line/polygon/multi*, orientation, negative distance, collapse prefilter, empty results | 2–4 PD |
+| Cleanup approach B (union with fill rule) – if the overlay can do it | 1–2 PD |
+| Cleanup approach A (depth labelling, BufferSubgraph logic) in addition to the overlay | 5–10 PD |
+| Input simplifier (small concavities), duplicate/short-segment filter | 1–2 PD |
+| Offset curve à la JTS `OffsetCurve` (raw curve + matching against buffer boundary, multi result, optional joined mode) | 3–5 PD |
+| Capsule union (D) as reference/fallback path | 1–2 PD |
+| Tests against the NTS oracle (area difference, Hausdorff distance, validity), fuzzing, edge cases | 5–8 PD |
+| **Total B (+ offset + D as reference + tests)** | **~ 17–30 PD** |
+| Straight skeleton (E) robust, additionally | 20–40+ PD, high risk |
 
-Ohne vorhandenes Overlay kommen für Noding + Labeling + Polygon-Assembly erfahrungsgemäß mehrere Wochen hinzu – die Buffer-Arbeit sollte deshalb **nach** dem Overlay-Kern eingeplant werden.
+Without an existing overlay, noding + labelling + polygon assembly add several weeks by experience – the buffer work should therefore be scheduled **after** the overlay core.
 
 ---
 
-## 8. Open-Source-Referenzen (nur als Studienmaterial, nicht als Abhängigkeit)
+## 8. Open-source references (as study material only, not as a dependency)
 
-| Projekt | Ansatz | Lizenz | Hinweis |
+| Project | Approach | License | Note |
 |---|---|---|---|
-| [JTS](https://github.com/locationtech/jts) `operation.buffer` | A + OffsetCurve | EPL-2.0 / EDL-1.0 (BSD-artig) | Referenz-Design, sehr gut kommentiert |
-| [NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite) | Port von JTS | BSD-3-Clause | Test-Orakel gemäß ADR 0001 |
-| [GEOS](https://github.com/libgeos/geos) | C++-Port von JTS | LGPL-2.1 | `OffsetCurve` ab 3.11 |
-| [Clipper2](https://github.com/AngusJohnson/Clipper2) | B | BSL-1.0 | C#-Quelle vorhanden, Integer-Koordinaten |
-| [Boost.Geometry](https://github.com/boostorg/geometry) | Pieces + Turns (A/D-Hybrid) | BSL-1.0 | Strategien-Design für Join/End/Side |
-| [georust geo](https://github.com/georust/geo) + [iOverlay](https://github.com/iShape-Rust/iOverlay) | B mit Integer-Overlay | MIT/Apache-2.0, Apache-2.0 | Moderne, kompakte Umsetzung |
-| [CGAL Straight_skeleton_2](https://doc.cgal.org/latest/Straight_skeleton_2/index.html), [Minkowski_sum_2](https://doc.cgal.org/latest/Minkowski_sum_2/index.html) | E, C | GPL-3+ / kommerziell | Nur Literatur, Code nicht übernehmen |
+| [JTS](https://github.com/locationtech/jts) `operation.buffer` | A + OffsetCurve | EPL-2.0 / EDL-1.0 (BSD-like) | Reference design, very well commented |
+| [NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite) | Port of JTS | BSD-3-Clause | Test oracle according to ADR 0001 |
+| [GEOS](https://github.com/libgeos/geos) | C++ port of JTS | LGPL-2.1 | `OffsetCurve` from 3.11 |
+| [Clipper2](https://github.com/AngusJohnson/Clipper2) | B | BSL-1.0 | C# source available, integer coordinates |
+| [Boost.Geometry](https://github.com/boostorg/geometry) | Pieces + turns (A/D hybrid) | BSL-1.0 | Strategy design for join/end/side |
+| [georust geo](https://github.com/georust/geo) + [iOverlay](https://github.com/iShape-Rust/iOverlay) | B with integer overlay | MIT/Apache-2.0, Apache-2.0 | Modern, compact implementation |
+| [CGAL Straight_skeleton_2](https://doc.cgal.org/latest/Straight_skeleton_2/index.html), [Minkowski_sum_2](https://doc.cgal.org/latest/Minkowski_sum_2/index.html) | E, C | GPL-3+ / commercial | Literature only, do not take over code |
 
-Lizenzhinweis: Auch bei permissiven Lizenzen gilt ADR 0001 – kein Einbinden. Wird Code *portiert* (z.B. Struktur von JTS `OffsetSegmentGenerator`), Lizenz-/Copyright-Hinweise beachten; EPL-2.0 ist für abgeleiteten Quelltext nicht trivial, EDL-1.0 (BSD) ist die unkompliziertere Wahl bei JTS.
+License note: even with permissive licenses ADR 0001 applies – no inclusion. If code is *ported* (e.g. the structure of JTS `OffsetSegmentGenerator`), observe license/copyright notices; EPL-2.0 is not trivial for derived source code, EDL-1.0 (BSD) is the simpler choice with JTS.
 
 ## 9. Papers
 
 - X. Chen, S. McMains: *Polygon Offsetting by Computing Winding Numbers*, ASME IDETC/CIE 2005, DETC2005-85513. [PDF](https://mcmains.me.berkeley.edu/pubs/DAC05OffsetPolygon.pdf)
 - W. Tiller, E. Hanson: *Offsets of Two-Dimensional Profiles*, IEEE CG&A 4(9), 1984.
 - B. K. Choi, S. C. Park: *A pair-wise offset algorithm for 2D point-sequence curve*, Computer-Aided Design 31(12), 1999.
-- R. Wein: *Exact and Efficient Construction of Planar Minkowski Sums using the Convolution Method*, ESA 2006, S. 829–840. [DOI](https://doi.org/10.1007/11841036_73)
+- R. Wein: *Exact and Efficient Construction of Planar Minkowski Sums using the Convolution Method*, ESA 2006, pp. 829–840. [DOI](https://doi.org/10.1007/11841036_73)
 - O. Aichholzer, F. Aurenhammer, D. Alberts, B. Gärtner: *A Novel Type of Skeleton for Polygons*, J.UCS 1(12), 1995. [J.UCS](https://www.jucs.org/jucs_1_12/a_novel_type_of.html)
 - P. Felkel, Š. Obdržálek: *Straight Skeleton Implementation*, SCCG 1998.
 - P. Palfrader, M. Held, S. Huber: *On Computing Straight Skeletons by Means of Kinetic Triangulations*, ESA 2012. [DOI](https://doi.org/10.1007/978-3-642-33090-2_66)
-- M. Held: *Voronoi diagrams and offset curves of curvilinear polygons*, Computer-Aided Design 30(4):287–300, 1998. [Projektseite](https://www.cosy.sbg.ac.at/~held/projects/voronoi_2d/voronoi.html)
-- J. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13(4), 1999 (Snap-Rounding, relevant für Noding).
-- M. Davis: [JTS Offset Curves](http://lin-ear-th-inking.blogspot.com/2022/01/jts-offset-curves.html) (Blog, 2022) und [jts-dev-Diskussion 2018](https://www.eclipse.org/lists/jts-dev/msg00225.html).
+- M. Held: *Voronoi diagrams and offset curves of curvilinear polygons*, Computer-Aided Design 30(4):287–300, 1998. [Project page](https://www.cosy.sbg.ac.at/~held/projects/voronoi_2d/voronoi.html)
+- J. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13(4), 1999 (snap rounding, relevant for noding).
+- M. Davis: [JTS Offset Curves](http://lin-ear-th-inking.blogspot.com/2022/01/jts-offset-curves.html) (blog, 2022) and [jts-dev discussion 2018](https://www.eclipse.org/lists/jts-dev/msg00225.html).
 
 ---
 
-## 10. Vergleich
+## 10. Comparison
 
-| Kriterium | A Raw-Offset + Tiefe (JTS) | B Raw-Offset + Union Positive (Clipper) | C Minkowski | D Kapsel-Union | E Straight Skeleton / Voronoi |
+| Criterion | A Raw offset + depth (JTS) | B Raw offset + union Positive (Clipper) | C Minkowski | D Capsule union | E Straight skeleton / Voronoi |
 |---|---|---|---|---|---|
-| Punkt / Linie / Polygon | ✓ / ✓ / ✓ | ✓ / ✓ / ✓ | ✓ / (✓) / ✓ | ✓ / ✓ / ✓ | – / – / ✓ (innen) |
-| Negative Distanz | ✓ | ✓ | umständlich | ✓ (Differenz) | ✓ (Kernkompetenz) |
-| Join round / mitre / bevel | ✓ ✓ ✓ | ✓ ✓ ✓ | nur Form von D | ✓ / Zusatz / Zusatz | mitre (Skel.) bzw. round (Voronoi) |
-| Cap round / flat / square | ✓ ✓ ✓ | ✓ ✓ ✓ | nur round | ✓ / Zusatz / Zusatz | n/a |
-| Einseitiger Offset ableitbar | ✓ (OffsetCurve) | ✓ (mit Matching à la JTS) | – | ✓ (Matching) | teilweise |
-| Robustheit | hoch (mit Snap-Rounding-Fallback) | hoch (wenn Overlay robust) | wie Overlay | wie Overlay, aber Stressfälle | heikel |
-| Performance | sehr gut | sehr gut | gut | mäßig bis schlecht | gut bei vielen d |
-| Wiederverwendung Overlay | hoch | sehr hoch | hoch | vollständig | gering |
-| Zusatzaufwand ggü. Overlay | mittel–hoch | gering–mittel | mittel | gering | sehr hoch |
-| Nähe zum NTS-Orakel | identisches Verfahren | sehr ähnlich | abweichend | abweichende Vertices | abweichend |
+| Point / line / polygon | ✓ / ✓ / ✓ | ✓ / ✓ / ✓ | ✓ / (✓) / ✓ | ✓ / ✓ / ✓ | – / – / ✓ (inside) |
+| Negative distance | ✓ | ✓ | cumbersome | ✓ (difference) | ✓ (core competence) |
+| Join round / mitre / bevel | ✓ ✓ ✓ | ✓ ✓ ✓ | only shape of D | ✓ / extra / extra | mitre (skeleton) or round (Voronoi) |
+| Cap round / flat / square | ✓ ✓ ✓ | ✓ ✓ ✓ | only round | ✓ / extra / extra | n/a |
+| One-sided offset derivable | ✓ (OffsetCurve) | ✓ (with matching à la JTS) | – | ✓ (matching) | partly |
+| Robustness | high (with snap-rounding fallback) | high (if the overlay is robust) | like the overlay | like the overlay, but stress cases | delicate |
+| Performance | very good | very good | good | moderate to poor | good for many d |
+| Reuse of overlay | high | very high | high | complete | low |
+| Additional effort vs. overlay | medium–high | low–medium | medium | low | very high |
+| Closeness to the NTS oracle | identical method | very similar | deviating | deviating vertices | deviating |
 
 ---
 
-## 11. Empfehlung (unverbindlich)
+## 11. Recommendation (non-binding)
 
-1. **Buffer nach Ansatz B** (Chen–McMains/Clipper-Prinzip): eigener Offset-Segment-Generator mit allen Join-/Cap-Styles und Quadrant-Segments, Bereinigung über **eine Union mit Füllregel Positive** im eigenen Overlay. Bogenstützpunkte, Mitre-Limit und Defaults (8 Quadrant-Segments, Mitre-Limit 5, closing segment an konkaven Ecken, Input-Simplifier 0.01·d) **wie JTS** wählen, damit Vergleiche mit dem NTS-Orakel eng bleiben.
-2. **Overlay-Anforderung festhalten** (an #5/#11): Das Overlay muss beliebige, selbstüberlappende Ringmengen noden und per Winding-Number mit wählbarer Füllregel (mind. Non-Zero/Positive) labeln. Damit ist Ansatz A nur noch eine Optimierung, kein eigenes Subsystem.
-3. **Kapsel-Union (D)** als einfacher Referenzpfad in den Tests bzw. als interner Fallback, wenn B auf einem Randfall eine Topologie-Ausnahme liefert.
-4. **Offset-Kurve nach JTS-`OffsetCurve`-Muster**: Buffer + Raw-Offset der Seite + Toleranz-Matching gegen den Buffer-Rand; Ergebnis Multi-Linie, optional „Joined mode“. Keine eigene Selbstschnitt-Trimmlogik bauen.
-5. **Straight Skeleton nicht für Buffer**; höchstens später als eigenständiger Algorithmus, falls Medial-Axis-/Dachflächen-Use-Cases auftauchen.
-6. Reihenfolge: Overlay-Kern → Offset-Segment-Generator → Buffer (B) → OffsetCurve → Feintuning (Simplifier, Kollaps-Shortcuts, Performance).
+1. **Buffer by approach B** (Chen–McMains/Clipper principle): an offset segment generator of our own with all join/cap styles and quadrant segments, cleanup through **one union with fill rule Positive** in our own overlay. Choose arc support points, mitre limit and defaults (8 quadrant segments, mitre limit 5, closing segment at concave corners, input simplifier 0.01·d) **as in JTS**, so that comparisons with the NTS oracle stay close.
+2. **Record the overlay requirement** (for #5/#11): the overlay must node arbitrary, self-overlapping ring sets and label them by winding number with a selectable fill rule (at least non-zero/positive). Approach A is then only an optimization, not a subsystem of its own.
+3. **Capsule union (D)** as a simple reference path in the tests or as an internal fallback if B yields a topology exception on an edge case.
+4. **Offset curve after the JTS `OffsetCurve` pattern**: buffer + raw offset of the side + tolerance matching against the buffer boundary; result multi-line, optionally "joined mode". Do not build self-intersection trimming logic of our own.
+5. **No straight skeleton for the buffer**; at most later as a standalone algorithm if medial-axis/roof-surface use cases show up.
+6. Order: overlay core → offset segment generator → buffer (B) → OffsetCurve → fine tuning (simplifier, collapse shortcuts, performance).
 
-Offene Fragen für die Spezifikation: Sollen Buffer-Parameter als eigenes Parameterobjekt (analog `BufferParameters`) oder als optionale Argumente der Extension-Methode erscheinen? Soll Arc-Tolerance zusätzlich zu Quadrant-Segments angeboten werden? Welches Verhalten bei ungültigen Eingaben (Fehler vs. „make valid“)?
+Open questions for the specification: Should buffer parameters appear as a parameter object of their own (analogous to `BufferParameters`) or as optional arguments of the extension method? Should arc tolerance be offered in addition to quadrant segments? Which behavior for invalid input (error vs. "make valid")?

@@ -1,17 +1,19 @@
-# Cut: flache Liste der Teile, Unberührtes bleibt zusammen und ungerundet
+# Cut: flat list of pieces, untouched parts stay together and unrounded
 
-`Cut(this IPolygon2D, IPolyline2D cutter, factory?, gridSize?)` liefert `IReadOnlyList<IPolygon2D>`, `Cut(this IPolyline2D, IPolyline2D cutter, …)` liefert `IReadOnlyList<IPolyline2D>`, also eine flache Liste ohne links/rechts-Zuordnung, wie die bestehenden `Cut`-Funktionen in gView und WebGIS. Das Editier-Werkzeug (WebGIS `CutFeature`) macht aus jedem Element ein neues Feature. Deshalb gilt: Jedes zerschnittene Stück ist ein eigenes Element, aber alle **unberührten** Teilflächen bzw. Pfade bleiben **zusammen ein Element** und behalten ihre **Originalkoordinaten**, ohne Snap-Rounding. Ein Multipart-Feature zerfällt also nicht nebenbei, und was der Schnitt nicht trifft, bleibt unverändert. Wird nichts geschnitten, enthält die Liste genau ein Element.
+`Cut(this IPolygon2D, IPolyline2D cutter, factory?, gridSize?)` returns `IReadOnlyList<IPolygon2D>`, `Cut(this IPolyline2D, IPolyline2D cutter, …)` returns `IReadOnlyList<IPolyline2D>`: a flat list without left/right assignment, like the existing `Cut` functions in gView and WebGIS. The editing tool (WebGIS `CutFeature`) turns every element into a new feature. Therefore the following applies: every cut piece is an element of its own, but all **untouched** parts or paths **stay together as one element** and keep their **original coordinates**, without snap rounding. A multipart feature thus does not fall apart incidentally, and whatever the cut does not hit stays unchanged. If nothing is cut, the list contains exactly one element.
+
+*German version: [0007-cut-flache-teilliste-unberuehrtes-bleibt-zusammen.de.md](0007-cut-flache-teilliste-unberuehrtes-bleibt-zusammen.de.md)*
 
 ## Consequences
 
-- **Polygon-Semantik:** Die Teile sind die Maschen aus dem genodeten Polygonrand plus den Teilen der Schnittlinie im Inneren (ADR 0005). Lose Enden, Verläufe entlang des Randes und Berührungen an Vertices schneiden nicht. Teile der Schnittlinie in Löchern zählen nicht, und die Löcher werden passend auf die Teile verteilt.
-- **Linien-Semantik:** Die Linie wird an jedem Kontakt mit der Schnittlinie zerlegt: Kreuzung, Berührung in einem Punkt sowie Anfang und Ende einer kollinearen Überlappung. Jedes Teil ist eine Polylinie mit genau einem Pfad.
-- SpatialNET verlängert die Schnittlinie **nicht** implizit. Eine Fangtoleranz, wie WebGIS sie mit `Extend(tolerance)` umsetzt, bleibt Sache des Werkzeugs.
-- Alle Pfade der Schnittlinie schneiden, mehrere Schnitte in einem Aufruf sind also möglich. Es gibt keine Optionen-Klasse. Die Reihenfolge der Elemente ist nicht festgelegt (ADR 0003), das Ergebnis aber deterministisch.
-- **Test-Orakel:** NTS `Polygonize(Union(Rand, Schnittlinie))`, gefiltert auf Teile im Inneren.
+- **Polygon semantics:** the pieces are the faces from the noded polygon boundary plus the parts of the cutting line in the interior (ADR 0005). Loose ends, runs along the boundary and touches at vertices do not cut. Parts of the cutting line in holes do not count, and the holes are distributed over the pieces accordingly.
+- **Line semantics:** the line is split at every contact with the cutting line: crossing, touch at a point, and start and end of a collinear overlap. Each piece is a polyline with exactly one path.
+- SpatialNET does **not** extend the cutting line implicitly. A snap tolerance, as WebGIS implements it with `Extend(tolerance)`, remains the tool's business.
+- All paths of the cutting line cut, so several cuts in one call are possible. There is no options class. The order of the elements is not fixed (ADR 0003), but the result is deterministic.
+- **Test oracle:** NTS `Polygonize(Union(boundary, cutting line))`, filtered to pieces in the interior.
 
 ## Considered Options
 
-- Links/rechts-Ergebnis wie ESRI (verworfen: bei Zickzack-Schnitten nicht eindeutig)
-- Jede Teilfläche als eigenes Element, auch unberührte (verworfen: zerlegt Multipart-Features, die der Nutzer nicht schneiden wollte)
-- Schnittlinie bis zum Rand verlängern (verworfen: nicht deterministisch, gehört ins UI)
+- Left/right result as in ESRI (rejected: not unambiguous for zigzag cuts)
+- Every part as an element of its own, including untouched ones (rejected: breaks up multipart features the user did not want to cut)
+- Extend the cutting line to the boundary (rejected: not deterministic, belongs in the UI)

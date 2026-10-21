@@ -1,19 +1,21 @@
-# Geometrie-Factory: koordinatenbasiert, optionaler Parameter mit globalem Default
+# Geometry factory: coordinate-based, optional parameter with a global default
 
-Algorithmen erzeugen Ergebnisse über `IGeometryFactory`. Jeder Algorithmus nimmt sie als **optionalen Parameter** (`IGeometryFactory? factory = null`). Bei `null` greift er auf das statische `SpatialNET.GeometryFactory.Default` in Core zurück. Ist auch das nicht gesetzt, wirft er eine `InvalidOperationException` mit klarer Meldung. Es gibt bewusst keinen impliziten Default: Extensions hängt nur von Core ab, und ein stiller Fallback auf die Referenz-Implementierung würde fremde Objekte in einen Host schieben. Die Factory bekommt **nur Koordinaten** (`readonly struct Coordinate(X, Y, Z = NaN)`), keine Punkt-Objekte. So können keine Objekte verschiedener Hosts oder Implementierungen gemischt werden, und unveränderte Eingabepunkte müssen nicht neu erzeugt werden.
+Algorithms create results through `IGeometryFactory`. Every algorithm takes it as an **optional parameter** (`IGeometryFactory? factory = null`). If it is `null`, the algorithm falls back to the static `SpatialNET.GeometryFactory.Default` in Core. If that is not set either, it throws an `InvalidOperationException` with a clear message. There is deliberately no implicit default: Extensions depends only on Core, and a silent fallback to the reference implementation would push foreign objects into a host. The factory receives **coordinates only** (`readonly struct Coordinate(X, Y, Z = NaN)`), no point objects. This way objects from different hosts or implementations cannot be mixed, and unchanged input points do not have to be recreated.
+
+*German version: [0004-geometrie-factory-koordinatenbasiert-optional-mit-default.de.md](0004-geometrie-factory-koordinatenbasiert-optional-mit-default.de.md)*
 
 ## Consequences
 
-- Vertrag: `CreatePoint(Coordinate, source)`, `CreateMultiPoint(ReadOnlySpan<Coordinate>, source)`, `CreatePolyline(ReadOnlySpan<ReadOnlyMemory<Coordinate>>, source)`, `CreatePolygon(ReadOnlySpan<PolygonPart>, source)` und `bool SupportsZ`. `PolygonPart` ist eine Teilfläche (Außenring plus Löcher, gültig, geschlossen, außen gegen den Uhrzeigersinn, ADR 0003). Rückgabe sind die SpatialNET-Interfaces, Host-Wrapper casten auf ihre Typen.
-- Factories sind thread-sicher bzw. zustandslos und dürfen übergebene Puffer nach dem Aufruf nicht mehr referenzieren.
-- `source` ist die primäre Eingabe-Geometrie (oder `null`). Darüber übernimmt der Host Metadaten wie die Spatial Reference, ohne dass SpatialNET sie kennt.
-- Z: Bei `SupportsZ == false` rechnet der Algorithmus rein 2D. Sonst liefert er Z, wenn die Eingabepunkte `IPoint3D` sind, und die Factory darf es verwerfen. Das ist nötig, weil gView/WebGIS immer `IPoint3D` liefern.
-- Kein `CreateGeometryCollection`: Ergebnisse sind dimensionshomogen. Leere Ergebnisse sind leere Geometrien (0 Teilflächen/Pfade/Punkte), nie `null`.
-- `Default` ist ein einfaches statisches Property, einmal beim Start gesetzt. Tests übergeben die Factory explizit. Ein `AsyncLocal`-Scope lässt sich später ohne Bruch nachrüsten.
+- Contract: `CreatePoint(Coordinate, source)`, `CreateMultiPoint(ReadOnlySpan<Coordinate>, source)`, `CreatePolyline(ReadOnlySpan<ReadOnlyMemory<Coordinate>>, source)`, `CreatePolygon(ReadOnlySpan<PolygonPart>, source)` and `bool SupportsZ`. `PolygonPart` is a part (shell plus holes, valid, closed, shell counter-clockwise, ADR 0003). The return values are the SpatialNET interfaces; host wrappers cast to their types.
+- Factories are thread-safe or stateless and must not reference passed buffers after the call.
+- `source` is the primary input geometry (or `null`). Through it the host takes over metadata such as the spatial reference without SpatialNET knowing it.
+- Z: with `SupportsZ == false` the algorithm computes purely in 2D. Otherwise it delivers Z if the input points are `IPoint3D`, and the factory may drop it. This is necessary because gView/WebGIS always deliver `IPoint3D`.
+- No `CreateGeometryCollection`: results are dimension-homogeneous. Empty results are empty geometries (0 parts/paths/points), never `null`.
+- `Default` is a plain static property, set once at startup. Tests pass the factory explicitly. An `AsyncLocal` scope can be added later without a break.
 
 ## Considered Options
 
-- Nur globale Registrierung (verworfen: Factory pro Aufruf nicht wählbar)
-- Factory über die Eingabe-Geometrie (verworfen: neuer Interface-Member, widerspricht ADR 0002)
-- Objekt-hierarchische Factory `CreatePath(IReadOnlyList<IPoint2D>)` (verworfen: Mischobjekte, eine Allokation je Vertex) und Builder (verworfen: größerer, zustandsbehafteter Vertrag)
-- Generische Factory `IGeometryFactory<TPoint, …>` (verworfen: vier Typparameter an jedem Algorithmus)
+- Global registration only (rejected: factory cannot be chosen per call)
+- Factory via the input geometry (rejected: new interface member, contradicts ADR 0002)
+- Object-hierarchical factory `CreatePath(IReadOnlyList<IPoint2D>)` (rejected: mixed objects, one allocation per vertex) and builder (rejected: larger, stateful contract)
+- Generic factory `IGeometryFactory<TPoint, …>` (rejected: four type parameters on every algorithm)

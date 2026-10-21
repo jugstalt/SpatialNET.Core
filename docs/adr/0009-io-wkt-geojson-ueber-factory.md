@@ -1,27 +1,29 @@
-# SpatialNET.IO: WKT und GeoJSON über die Factory, nur Geometrien
+# SpatialNET.IO: WKT and GeoJSON via the factory, geometries only
 
-SpatialNET.IO liest und schreibt **WKT** und **GeoJSON** und erzeugt beim Lesen alle Geometrien über die Geometrie-Factory (optionaler Parameter, Fallback `GeometryFactory.Default`, ADR 0004). Die Abnehmer sind Fixtures und Orakel (ADR 0008), der Playground (Upload, Leaflet) und Hosts ohne eigene Geometrien. gView und WebGIS haben eigene GeoJSON-Unterstützung. Deshalb bleibt IO bewusst schmal: kein WKB, kein Feature-Modell (GeoJSON-`properties` werden ignoriert), keine CRS-Auswertung. IO hängt von Core **und Extensions** ab, damit der Writer die Gruppierung in Teilflächen und die Orientierung nicht nachbauen muss. JSON läuft über System.Text.Json, weitere Abhängigkeiten gibt es nicht.
+SpatialNET.IO reads and writes **WKT** and **GeoJSON** and creates all geometries through the geometry factory when reading (optional parameter, fallback `GeometryFactory.Default`, ADR 0004). The consumers are fixtures and oracles (ADR 0008), the playground (upload, Leaflet) and hosts without geometries of their own. gView and WebGIS have their own GeoJSON support. IO therefore stays deliberately slim: no WKB, no feature model (GeoJSON `properties` are ignored), no CRS evaluation. IO depends on Core **and Extensions**, so that the writer does not have to rebuild the grouping into parts and the orientation. JSON runs through System.Text.Json; there are no further dependencies.
+
+*German version: [0009-io-wkt-geojson-ueber-factory.de.md](0009-io-wkt-geojson-ueber-factory.de.md)*
 
 ## Consequences
 
-- **Typabbildung:** POINT → `IPoint2D`, MULTIPOINT → `IMultiPoint2D`, (MULTI)LINESTRING → `IPolyline2D`, (MULTI)POLYGON → `IPolygon2D` mit Teilflächen. Geschrieben wird jeweils der schlankste Typ, z. B. POLYGON bei einer Teilfläche.
-- **GeometryCollection:** Beim Lesen einer Einzelgeometrie gibt es eine `NotSupportedException`. In `ReadAll` bzw. bei `FeatureCollection` wird sie flachgeklopft. `POINT EMPTY` wird als leerer `IMultiPoint2D` gelesen und als `MULTIPOINT EMPTY` geschrieben.
-- **Z/M/CRS:** Z wird gelesen. M wird still verworfen. Ein CRS (auch das GeoJSON-`crs`-Member von 2008) wird ignoriert.
-- **Schreiben von Z** über `ZMode`:
-  - `Auto` (Standard): Z wird geschrieben, wenn die Punkte `IPoint3D` sind und mindestens ein Z ≠ 0 und nicht NaN ist. Das ist nötig, weil die Hosts immer `IPoint3D` mit Z = 0 liefern.
+- **Type mapping:** POINT → `IPoint2D`, MULTIPOINT → `IMultiPoint2D`, (MULTI)LINESTRING → `IPolyline2D`, (MULTI)POLYGON → `IPolygon2D` with parts. The leanest type is written, e.g. POLYGON for a single part.
+- **GeometryCollection:** reading a single geometry throws a `NotSupportedException`. In `ReadAll`, or for a `FeatureCollection`, it is flattened. `POINT EMPTY` is read as an empty `IMultiPoint2D` and written as `MULTIPOINT EMPTY`.
+- **Z/M/CRS:** Z is read. M is silently dropped. A CRS (including the GeoJSON `crs` member of 2008) is ignored.
+- **Writing Z** via `ZMode`:
+  - `Auto` (default): Z is written if the points are `IPoint3D` and at least one Z is ≠ 0 and not NaN. This is necessary because the hosts always deliver `IPoint3D` with Z = 0.
   - `Always` / `Never`.
-- **Orientierung:** Beide Writer normalisieren, Außenring gegen den Uhrzeigersinn, Loch im Uhrzeigersinn (RFC 7946, ADR 0003).
+- **Orientation:** both writers normalize, shell counter-clockwise, hole clockwise (RFC 7946, ADR 0003).
 - **API:**
   - **WKT:** `Wkt.Read`, `Wkt.Read<T>`, `ToWkt(WktOptions?)`
   - **GeoJSON:** `GeoJson.Read`/`ReadAll` (string, `ReadOnlySpan<byte>`, `Stream`), `ToGeoJson(options?)`, `WriteTo(Utf8JsonWriter)`
-  - **Zahlenformat:** invariant und Round-Trip-genau. `Read(ToWkt(g))` liefert bitgenau dieselben Koordinaten.
-- **Strenge:**
-  - Syntaxfehler → `FormatException` mit Position bzw. JSON-Pfad
-  - Geometrisch ungültige, aber syntaktisch korrekte Eingaben werden akzeptiert (ADR 0002/0003)
-  - `EMPTY` wird zu einer leeren Geometrie
+  - **Number format:** invariant and round-trip exact. `Read(ToWkt(g))` yields bit-identical coordinates.
+- **Strictness:**
+  - Syntax errors → `FormatException` with position or JSON path
+  - Geometrically invalid but syntactically correct input is accepted (ADR 0002/0003)
+  - `EMPTY` becomes an empty geometry
 
 ## Considered Options
 
-- WKB in v1 (verschoben: kein Abnehmer, lässt sich ohne Bruch nachrüsten)
-- Feature-Modell mit Properties (verworfen: neues Domänenkonzept, gehört zu den Hosts)
-- IO nur auf Core, Hole-Gruppierung nachgebaut (verworfen: doppelte Logik)
+- WKB in v1 (postponed: no consumer, can be added later without a break)
+- Feature model with properties (rejected: new domain concept, belongs to the hosts)
+- IO on Core only, hole grouping rebuilt (rejected: duplicated logic)

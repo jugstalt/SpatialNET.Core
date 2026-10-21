@@ -1,17 +1,19 @@
-# Playground: „Karte zuerst“, Minimal API ohne Frontend-Build, UI aus expliziten Algorithmus-Deskriptoren
+# Playground: "map first", minimal API without a frontend build, UI from explicit algorithm descriptors
 
-Der Playground ist eine ASP.NET Core Minimal API (net10.0) mit einer einzigen statischen Seite in reinem JavaScript (ES-Module, kein npm/Build). Leaflet 1.9 und Leaflet-Geoman free liegen lokal in `wwwroot/lib`. Die UI folgt der Prototyp-Variante **„Karte zuerst“**: Vollbild-Karte, Befehlspalette (Strg+K) mit den Parametern des gewählten Algorithmus darunter, Chips für Rechen-KBS, Layer und Kennzahlen, unten eine Leiste mit Vorschaukarten der Beispielgeometrien. Die UI kennt keinen Algorithmus fest, sondern baut sich aus `GET /api/algorithms`. Jeder Algorithmus hat dafür einen **expliziten Deskriptor im Playground** (`IPlaygroundAlgorithm`: Id, Name, Gruppe, Eingaben mit erlaubten Typen, Parameter mit Typ, Default, Einheit `kbs` und deutschem Label, `Run(...)`), gefunden per Assembly-Scan. Reflection über die Extension-Methoden mit Attributen in SpatialNET.Extensions wurde verworfen, weil sie Playground-Belange in die Bibliothek trägt.
+The playground is an ASP.NET Core minimal API (net10.0) with a single static page in plain JavaScript (ES modules, no npm/build). Leaflet 1.9 and Leaflet-Geoman free live locally in `wwwroot/lib`. The UI follows the prototype variant **"map first"**: a full-screen map, a command palette (Ctrl+K) with the parameters of the selected algorithm below it, chips for computation CRS, layers and figures, and at the bottom a bar with preview cards of the sample geometries. The UI knows no algorithm by heart but builds itself from `GET /api/algorithms`. For this, every algorithm has an **explicit descriptor in the playground** (`IPlaygroundAlgorithm`: id, name, group, inputs with allowed types, parameters with type, default, unit `crs` and German label, `Run(...)`), found by assembly scan. Reflection over the extension methods with attributes in SpatialNET.Extensions was rejected because it carries playground concerns into the library.
+
+*German version: [0011-playground-karte-zuerst-deskriptor-registry.de.md](0011-playground-karte-zuerst-deskriptor-registry.de.md)*
 
 ## Consequences
 
-- **Vollständigkeitstest:** Jede öffentliche Methode von SpatialNET.Extensions muss einen Playground-Deskriptor haben (analog zum Reflection-Test aus ADR 0008).
-- **`GET /api/fixtures?algorithm=`** liest `samples/` (ins Ausgabeverzeichnis kopiert) und wandelt WKT mit SpatialNET.IO in GeoJSON. Fixtures mit `crs` werden nach WGS84 projiziert, lokal planare kommen roh mit Kennzeichen `local` (ADR 0010). Standardmäßig erscheinen nur Fixtures mit Tag `playground`, ein Schalter zeigt alle.
-- **`POST /api/run`** rechnet automatisch bei jeder Änderung (300 ms Entprellung). Die Antwort enthält das Ergebnis als GeoJSON (WGS84 bzw. lokal), das Rechen-KBS, Kennzahlen (Fläche, Länge, Vertices, Teile) und Warnungen. Listen-Ergebnisse wie bei Cut werden pro Teil eingefärbt und nummeriert. Fehler erscheinen als Chip, das letzte Ergebnis bleibt stehen.
-- Eingaben entstehen durch Zeichnen mit Geoman (Ziel A/B wählbar), GeoJSON-Upload (`GeoJson.ReadAll`, ADR 0009) oder Beispielgeometrien.
-- Der Eintrag `node_modules/` in `.gitignore` entfällt.
+- **Completeness test:** every public method of SpatialNET.Extensions must have a playground descriptor (analogous to the reflection test from ADR 0008).
+- **`GET /api/fixtures?algorithm=`** reads `samples/` (copied to the output directory) and converts WKT to GeoJSON with SpatialNET.IO. Fixtures with `crs` are projected to WGS84, local planar ones arrive raw with the flag `local` (ADR 0010). By default only fixtures with the tag `playground` appear; a switch shows all.
+- **`POST /api/run`** computes automatically on every change (300 ms debounce). The response contains the result as GeoJSON (WGS84 or local), the computation CRS, figures (area, length, vertices, parts) and warnings. List results such as Cut are colored and numbered per piece. Errors appear as a chip; the last result stays in place.
+- Inputs come from drawing with Geoman (target A/B selectable), GeoJSON upload (`GeoJson.ReadAll`, ADR 0009) or sample geometries.
+- The `node_modules/` entry in `.gitignore` is dropped.
 
 ## Considered Options
 
-- Varianten „Werkbank“ (3 Spalten) und „Katalog“ (Fixture-Tabelle mit Text-Editor) – Prototyp auf Branch `prototype/playground-ux`
-- Frontend mit npm/Vite-Build, Blazor (verworfen: Werkzeugballast für eine Seite)
-- Reflection plus Attribute in SpatialNET.Extensions (verworfen: Playground-Belange in der Bibliothek)
+- Variants "workbench" (3 columns) and "catalog" (fixture table with text editor) – prototype on branch `prototype/playground-ux`
+- Frontend with an npm/Vite build, Blazor (rejected: tooling ballast for one page)
+- Reflection plus attributes in SpatialNET.Extensions (rejected: playground concerns in the library)

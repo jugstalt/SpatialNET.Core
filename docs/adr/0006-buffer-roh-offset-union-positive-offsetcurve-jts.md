@@ -1,27 +1,29 @@
-# Buffer als Roh-Offset + Union(Positive), OffsetCurve nach JTS-Muster
+# Buffer as raw offset + union(Positive), OffsetCurve after the JTS pattern
 
-Der Buffer entsteht aus dem Roh-Offset jedes Rings bzw. jeder Linie (mit Joins und Caps), der anschließend mit `Union(FillRule.Positive)` im eigenen Overlay (ADR 0005) bereinigt wird. Die Offset-Kurve folgt dem Muster von JTS `OffsetCurve`: Buffer mit flachen Enden, Roh-Offset der gewünschten Seite, Abgleich mit dem Buffer-Rand. Es gibt keine eigene Trimmlogik für Selbstschnitte. So gibt es im Produkt nur einen Codepfad, der auf dem Overlay-Kern aufsetzt, und das Verhalten bleibt eng am NTS-Orakel. Defaults und Parameter sind deshalb bewusst JTS-kompatibel.
+The buffer is built from the raw offset of each ring or line (with joins and caps), which is then cleaned up with `Union(FillRule.Positive)` in our own overlay (ADR 0005). The offset curve follows the pattern of JTS `OffsetCurve`: buffer with flat ends, raw offset of the desired side, matching against the buffer boundary. There is no separate trimming logic for self-intersections. This leaves only one code path in the product, built on the overlay core, and the behavior stays close to the NTS oracle. Defaults and parameters are therefore deliberately JTS-compatible.
+
+*German version: [0006-buffer-roh-offset-union-positive-offsetcurve-jts.de.md](0006-buffer-roh-offset-union-positive-offsetcurve-jts.de.md)*
 
 ## Consequences
 
-- **API:** `Buffer(this IGeometry2D, double distance, BufferOptions? options = null, IGeometryFactory? factory = null, double? gridSize = null)` gibt immer `IPolygon2D` zurück. `OffsetCurve` gibt es auf `IPolyline2D` und `IPolygon2D` mit `OffsetOptions`, Rückgabe immer `IPolyline2D`. Die Optionen sind records mit `init`-Properties und `static Default`. Die Join-Parameter teilen beide.
-- **Defaults (wie JTS):** Join `Round`, Cap `Round`, `MitreLimit = 5`, `QuadrantSegments = 8`, Input-Simplifier 0,01·|d|, `SingleSided` optional. Eine optionale `ArcTolerance` (max. Sehnenabweichung in Karteneinheiten) hat Vorrang vor `QuadrantSegments`, wenn sie gesetzt ist.
-- **Offset-Richtung:** Bei Polylinien bedeutet positiv links in Laufrichtung. Bei Polygonen bedeutet positiv nach außen und negativ nach innen, **unabhängig von der Ring-Orientierung** (die laut ADR 0003 ignoriert wird). Das Ergebnis ist der Rand von `Buffer(d)` als geschlossene Pfade. Ein optionaler Joined-Modus verbindet Teilstücke zu einem Pfad.
-- **Negative Distanz** bei Polygonen bedeutet Pufferung **nach innen**: Das Polygon wird um |d| verkleinert. Schmale Teile können dabei verschwinden oder es zerfällt in mehrere Teilflächen.
-- **Randfälle:**
-  - Polygon verschwindet beim negativen Buffer vollständig → leeres Polygon
-  - Linie oder Punkt mit d ≤ 0 → leeres Polygon
-  - Polygon mit d = 0 → per Even-Odd normalisierte Eingabe
-  - Ungültige Eingaben werden per Even-Odd interpretiert, ohne Exception
-  - Exceptions nur bei `NaN`/`Infinity` als Distanz oder ungültigen Optionen
-- **Z:** Buffer-Ergebnisse sind 2D. Offset-Kurven interpolieren Z auf dem jeweils zugehörigen Quellsegment (sofern `SupportsZ`).
-- Die **Kapsel-Union** (je Segment eine Kapsel, alles vereinigt) existiert nur im Testprojekt als zweiter Referenzpfad neben NTS.
+- **API:** `Buffer(this IGeometry2D, double distance, BufferOptions? options = null, IGeometryFactory? factory = null, double? gridSize = null)` always returns `IPolygon2D`. `OffsetCurve` exists on `IPolyline2D` and `IPolygon2D` with `OffsetOptions`, and always returns `IPolyline2D`. The options are records with `init` properties and `static Default`. Both share the join parameters.
+- **Defaults (as in JTS):** join `Round`, cap `Round`, `MitreLimit = 5`, `QuadrantSegments = 8`, input simplifier 0.01·|d|, `SingleSided` optional. An optional `ArcTolerance` (maximum chord deviation in map units) takes precedence over `QuadrantSegments` when set.
+- **Offset direction:** for polylines, positive means left in the direction of travel. For polygons, positive means outwards and negative inwards, **regardless of ring orientation** (which ADR 0003 ignores). The result is the boundary of `Buffer(d)` as closed paths. An optional joined mode connects pieces into one path.
+- **Negative distance** on polygons means buffering **inwards**: the polygon is shrunk by |d|. Narrow parts may disappear or it may split into several parts.
+- **Edge cases:**
+  - Polygon disappears completely under a negative buffer → empty polygon
+  - Line or point with d ≤ 0 → empty polygon
+  - Polygon with d = 0 → input normalized by even-odd
+  - Invalid input is interpreted by even-odd, without an exception
+  - Exceptions only for `NaN`/`Infinity` as distance or invalid options
+- **Z:** buffer results are 2D. Offset curves interpolate Z on the respective source segment (if `SupportsZ`).
+- The **capsule union** (one capsule per segment, everything united) exists only in the test project, as a second reference path next to NTS.
 
 ## Considered Options
 
-- Kapsel-Union als interner Fallback (verworfen: Snap-Rounding wirft keine Topologie-Ausnahmen, ADR 0005)
-- JTS-`BufferBuilder` mit Tiefen-Labeling (bleibt allenfalls Optimierung, kein eigenes Subsystem)
-- Minkowski-Summe, Straight Skeleton (verworfen für Buffer)
-- Optionen als einzelne optionale Argumente (verworfen: lange Signaturen, jede neue Option bricht)
+- Capsule union as an internal fallback (rejected: snap rounding throws no topology exceptions, ADR 0005)
+- JTS `BufferBuilder` with depth labelling (remains at most an optimization, not a subsystem of its own)
+- Minkowski sum, straight skeleton (rejected for buffer)
+- Options as individual optional arguments (rejected: long signatures, every new option breaks)
 
-Recherche: #12 (`research/buffer-offset`).
+Research: #12 (`research/buffer-offset`).

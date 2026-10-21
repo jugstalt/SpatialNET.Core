@@ -1,28 +1,30 @@
-# Teststrategie: gemeinsame WKT-Fixtures, NTS-Orakel zur Laufzeit, zwei Implementierungen
+# Test strategy: shared WKT fixtures, NTS oracle at run time, two implementations
 
-Testfälle liegen als **eine JSON-Datei pro Fall** unter `samples/<algorithmus>/`. Darin stehen Name, Beschreibung, `tags`, die Eingaben `a`/`b` als **WKT**, `params`, optional `crs`, `expected` (mit `divergence`-Begründung) und `tolerance`. Tests **und** Playground lesen dieselben Dateien, Beispielgeometrien sind die Fälle mit Tag `playground`. Das Soll berechnet **NTS zur Laufzeit** (OverlayNG mit gleichem `PrecisionModel` im Strict-Mode, `BufferOp`, `OffsetCurve`, `Polygonize` …). Gespeicherte Soll-Werte gibt es nur für bewusste, begründete Abweichungen. So fällt jede NTS-Änderung sofort auf, es veralten keine Snapshots, und jede Abweichung ist im Fixture dokumentiert.
+Test cases live as **one JSON file per case** under `samples/<algorithm>/`. They contain name, description, `tags`, the inputs `a`/`b` as **WKT**, `params`, optionally `crs`, `expected` (with a `divergence` justification) and `tolerance`. Tests **and** the playground read the same files; sample geometries are the cases with the tag `playground`. The expected value is computed by **NTS at run time** (OverlayNG with the same `PrecisionModel` in strict mode, `BufferOp`, `OffsetCurve`, `Polygonize` …). Stored expected values exist only for deliberate, justified deviations. This way every NTS change shows up immediately, no snapshots go stale, and every deviation is documented in the fixture.
+
+*German version: [0008-teststrategie-fixtures-nts-orakel.de.md](0008-teststrategie-fixtures-nts-orakel.de.md)*
 
 ## Consequences
 
-- **Struktur je Algorithmus** in `SpatialNET.Tests/<Algorithmus>/`:
-  - `…FixtureTests`: `[Theory]` über alle Fixtures gegen das Orakel
-  - `…ContractTests`: leere Eingaben, fehlender `GeometryFactory.Default`, `SupportsZ`, Z, ungültige Optionen, bitgenau unberührte Teile bei Cut
-  - `…PropertyTests`: Invarianten mit **CsCheck**
-- **Factory-Vertragstest:** Thread-Sicherheit, keine Referenz auf übergebene Puffer, leere Geometrien, `SupportsZ`. Tests übergeben die Factory immer explizit.
-- **Toleranzen** zentral in `OracleAssert`:
-  - Fläche und Länge relativ 1e-9, symmetrische Differenz ≤ 1e-9·Fläche(Soll)
-  - Hausdorff-Distanz ≤ 2·gridSize·√2
-  - Topologie-Kennzahlen, Validität und Prädikate exakt
-  - Buffer-Fläche relativ 1e-6
-  - Ein Fixture darf einzelne Werte überschreiben. Verglichen wird nie über Koordinatengleichheit.
-- **Zwei Implementierungen:** Jeder Fixture-Test läuft gegen die Referenz-Implementierung **und** gegen eine absichtlich unbequeme Fremd-Implementierung im Testprojekt. Diese hat klassenbasierte Indexer, Ringe ohne Schlusspunkt, Außenringe im Uhrzeigersinn, zusätzlich `IReadOnlyList` und immer `IPoint3D` mit Z = 0. Damit fallen Annahmen über konkrete Typen auf.
-- **Zweiter Referenzpfad für Buffer:** eine Kapsel-Union, nur im Testprojekt.
-- **Fremde Korpora** (JTS-XML-Suites, EDL 1.0; Fixtures von polygon-clipping, MIT) werden einmalig per Konverter-Tool nach `samples/external/<quelle>/` übernommen, mit LICENSE und Herkunftsvermerk.
-- **Vollständigkeit:** Ein Reflection-Test prüft, dass jede öffentliche Methode von SpatialNET.Extensions Fixtures oder `[Covers]`-Tests hat und den **Pflicht-Tag-Katalog** abdeckt: `empty`, `degenerate-ring`, `collinear-overlap`, `vertex-touch`, `hole-touch`, `self-crossing`, `near-coincident`, `large-coords`, `z`, `multi`, `nested`. Nicht anwendbare Tags werden mit Begründung als `n/a` markiert. Eine Coverage-Schwelle folgt mit CI.
-- **CRS:** Fixtures ohne `crs` gelten als lokal planar, der Playground zeigt sie mit `L.CRS.Simple`.
+- **Structure per algorithm** in `SpatialNET.Tests/<Algorithm>/`:
+  - `…FixtureTests`: `[Theory]` over all fixtures against the oracle
+  - `…ContractTests`: empty inputs, missing `GeometryFactory.Default`, `SupportsZ`, Z, invalid options, bit-exactly untouched parts for Cut
+  - `…PropertyTests`: invariants with **CsCheck**
+- **Factory contract test:** thread safety, no reference to passed buffers, empty geometries, `SupportsZ`. Tests always pass the factory explicitly.
+- **Tolerances** centrally in `OracleAssert`:
+  - Area and length relative 1e-9, symmetric difference ≤ 1e-9·area(expected)
+  - Hausdorff distance ≤ 2·gridSize·√2
+  - Topology figures, validity and predicates exact
+  - Buffer area relative 1e-6
+  - A fixture may override individual values. Comparison is never via coordinate equality.
+- **Two implementations:** every fixture test runs against the reference implementation **and** against a deliberately awkward third-party implementation in the test project. It has class-based indexers, rings without closing point, shells clockwise, additionally `IReadOnlyList`, and always `IPoint3D` with Z = 0. This exposes assumptions about concrete types.
+- **Second reference path for the buffer:** a capsule union, only in the test project.
+- **Third-party corpora** (JTS XML suites, EDL 1.0; fixtures from polygon-clipping, MIT) are imported once via a converter tool to `samples/external/<source>/`, with LICENSE and provenance note.
+- **Completeness:** a reflection test checks that every public method of SpatialNET.Extensions has fixtures or `[Covers]` tests and covers the **mandatory tag catalog**: `empty`, `degenerate-ring`, `collinear-overlap`, `vertex-touch`, `hole-touch`, `self-crossing`, `near-coincident`, `large-coords`, `z`, `multi`, `nested`. Tags that do not apply are marked `n/a` with a justification. A coverage threshold follows with CI.
+- **CRS:** fixtures without `crs` count as local planar; the playground shows them with `L.CRS.Simple`.
 
 ## Considered Options
 
-- GeoJSON-Fixtures (verworfen: RFC 7946 verlangt WGS84, projizierte Koordinaten passen nicht, Korpora sind WKT)
-- Golden Files bzw. Snapshots der NTS-Ergebnisse (verworfen: veralten still)
-- FsCheck (verworfen zugunsten von CsCheck: C#-nativ, ohne F#-Abhängigkeit)
+- GeoJSON fixtures (rejected: RFC 7946 requires WGS84, projected coordinates do not fit, corpora are WKT)
+- Golden files or snapshots of the NTS results (rejected: they go stale silently)
+- FsCheck (rejected in favor of CsCheck: C#-native, without an F# dependency)

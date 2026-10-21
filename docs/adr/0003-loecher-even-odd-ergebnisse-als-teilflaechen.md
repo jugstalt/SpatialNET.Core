@@ -1,16 +1,18 @@
-# Löcher: Even-Odd in der Eingabe, Teilflächen im Ergebnis
+# Holes: even-odd on input, parts in the result
 
-Ein `IPolygon2D` ist eine flache Ringliste ohne Loch-Marker (ADR 0002). Seine Fläche ist nach der **Even-Odd-Regel** über alle Ringe definiert, die Ring-Orientierung wird bei der Eingabe ignoriert. Für gültige Polygone entspricht das der Verschachtelungstiefe (gerade = Außenring, ungerade = Loch) und damit genau dem `VerifyHoles()` von gView und WebGIS. Beide Hosts ignorieren die Orientierung. Eine Orientierungsregel wie bei OGC/GeoJSON hätte ihren Daten widersprochen.
+An `IPolygon2D` is a flat list of rings without a hole marker (ADR 0002). Its area is defined by the **even-odd rule** over all rings; ring orientation is ignored on input. For valid polygons this corresponds to the nesting depth (even = shell, odd = hole) and thus exactly to the `VerifyHoles()` of gView and WebGIS. Both hosts ignore orientation. An orientation rule as in OGC/GeoJSON would have contradicted their data.
+
+*German version: [0003-loecher-even-odd-ergebnisse-als-teilflaechen.de.md](0003-loecher-even-odd-ergebnisse-als-teilflaechen.de.md)*
 
 ## Consequences
 
-- **Gültigkeit** folgt der OGC-Regel, wie NTS sie prüft: Ringe kreuzen sich nicht. Ein Loch darf den Außenring oder ein anderes Loch in genau einem Punkt berühren, ein Ring sich selbst nicht. Degenerierte Ringe (weniger als 3 verschiedene Punkte, Fläche 0) werden ignoriert und von `IsValid()` gemeldet.
-- **Maße und Prädikate** (Area, Centroid, Contains …) setzen gültige Eingaben voraus, bei ungültiger Eingabe ist das Ergebnis undefiniert. **Overlay-Operationen** (Union, Intersection, Buffer …) werten die Even-Odd-Füllregel ohnehin aus und liefern auch für sich kreuzende Ringe ein definiertes Ergebnis. Eine Union mit Even-Odd ersetzt damit das ausgeklammerte MakeValid für diesen Fall.
-- **Ergebnisse** sind immer gültig und geschlossen. Außenringe laufen gegen den Uhrzeigersinn, Löcher im Uhrzeigersinn (RFC 7946). Sie gehen strukturiert als **Teilflächen** (Außenring plus Löcher) an die Geometrie-Factory (#4), damit die Hosts kein `VerifyHoles()` nachrechnen müssen. Die Reihenfolge der Teilflächen und die Startpunkte der Ringe sind nicht festgelegt, Ergebnisse sind aber deterministisch. Tests vergleichen normalisiert.
-- Teilweise überlappende Außenringe sind ungültig: Even-Odd macht die Überlappung zum Loch, die Hosts würden die Fläche dagegen doppelt zählen.
+- **Validity** follows the OGC rule as NTS checks it: rings do not cross. A hole may touch the shell or another hole at exactly one point, a ring may not touch itself. Degenerate rings (fewer than 3 distinct points, area 0) are ignored and reported by `IsValid()`.
+- **Measures and predicates** (Area, Centroid, Contains …) assume valid input; for invalid input the result is undefined. **Overlay operations** (Union, Intersection, Buffer …) evaluate the even-odd fill rule anyway and deliver a defined result even for self-crossing rings. A union with even-odd thus replaces the omitted MakeValid for this case.
+- **Results** are always valid and closed. Shells run counter-clockwise, holes clockwise (RFC 7946). They are handed to the geometry factory (#4) in structured form as **parts** (shell plus holes), so the hosts do not have to recompute `VerifyHoles()`. The order of the parts and the start points of the rings are not fixed, but results are deterministic. Tests compare in normalized form.
+- Partially overlapping shells are invalid: even-odd turns the overlap into a hole, whereas the hosts would count the area twice.
 
 ## Considered Options
 
-- Marker-Interface `IHole2D` (verworfen in ADR 0002)
-- Orientierung als Loch-Kennzeichen (verworfen: beide Hosts ignorieren sie)
-- Reine Verschachtelung statt Even-Odd (gleichwertig für gültige Eingaben, aber für Kreuzungen undefiniert)
+- Marker interface `IHole2D` (rejected in ADR 0002)
+- Orientation as hole marker (rejected: both hosts ignore it)
+- Pure nesting instead of even-odd (equivalent for valid input, but undefined for crossings)
