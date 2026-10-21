@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -14,12 +14,29 @@
   <!-- Paket-Metadaten; packbar sind nur die Bibliotheken (IsPackable im jeweiligen Projekt). -->
   <PropertyGroup>
     <Authors>jugstalt</Authors>
-    <Copyright>Copyright © jugstalt</Copyright>
+    <Copyright>Copyright © Jürgen Gstaltmaier</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/jugstalt/SpatialNET.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jugstalt/SpatialNET.Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>gis;geometry;spatial;clip;buffer;overlay</PackageTags>
   </PropertyGroup>
+
+  <!-- NuGet-Vorbereitung: Debug-Symbole als .snupkg mit Source Link (im .NET SDK enthalten), reproduzierbare Builds in CI. -->
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- Die README liegt im Paket, sobald sie im Wurzelordner existiert. -->
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)README.md')">
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)README.md')">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
 
 </Project>
