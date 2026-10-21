@@ -4,7 +4,15 @@ This page walks through the first program: installing, setting up the geometry f
 
 ## Installation
 
-SpatialNET is a pre-release (0.1.0) and has not been published to NuGet yet. For now, clone the repository and reference the projects you need:
+SpatialNET is a pre-release and is on NuGet. Install the packages you need with `--prerelease`:
+
+```bash
+dotnet add package SpatialNET.Extensions --prerelease
+dotnet add package SpatialNET.Imp --prerelease
+dotnet add package SpatialNET.IO --prerelease
+```
+
+Alternatively, clone the repository and reference the projects:
 
 ```bash
 git clone https://github.com/jugstalt/SpatialNET.Core.git

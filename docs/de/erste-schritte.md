@@ -4,7 +4,15 @@ Diese Seite führt durch das erste Programm: Installation, Einrichten der Geomet
 
 ## Installation
 
-SpatialNET ist eine Vorabversion (0.1.0) und noch nicht auf NuGet veröffentlicht. Vorerst das Repository klonen und die benötigten Projekte referenzieren:
+SpatialNET ist eine Vorabversion und liegt auf NuGet. Die benötigten Pakete mit `--prerelease` installieren:
+
+```bash
+dotnet add package SpatialNET.Extensions --prerelease
+dotnet add package SpatialNET.Imp --prerelease
+dotnet add package SpatialNET.IO --prerelease
+```
+
+Alternativ das Repository klonen und die Projekte referenzieren:
 
 ```bash
 git clone https://github.com/jugstalt/SpatialNET.Core.git

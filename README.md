@@ -19,7 +19,7 @@ SpatialNET is a .NET library for planar spatial computations: overlays (intersec
 
 ## Quick start
 
-> SpatialNET is a pre-release (0.1.0) and has not been published to NuGet yet. For now, clone the repository and reference the projects; the package names above are the planned NuGet IDs.
+> SpatialNET is a pre-release and is on NuGet; install the packages with `--prerelease`, for example `dotnet add package SpatialNET.Extensions --prerelease` (plus `SpatialNET.Imp` and `SpatialNET.IO` as needed). You can also clone the repository and reference the projects.
 
 ```csharp
 using SpatialNET;

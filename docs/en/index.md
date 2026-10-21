@@ -10,4 +10,4 @@ SpatialNET is a .NET library for planar spatial computations that works exclusiv
 - **[Decisions](decisions/toc.yml)**: the architecture decision records, the reasoning behind the design.
 - **[Research notes](https://github.com/jugstalt/SpatialNET.Core/tree/main/research)**: background on the algorithm choices.
 
-SpatialNET is a pre-release (0.1.0) and has not been published to NuGet yet. The source is on [GitHub](https://github.com/jugstalt/SpatialNET.Core) under the Apache License 2.0.
+SpatialNET is a pre-release and is available on NuGet. The source is on [GitHub](https://github.com/jugstalt/SpatialNET.Core) under the Apache License 2.0.

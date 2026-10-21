@@ -19,7 +19,7 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overla
 
 ## Schnellstart
 
-> SpatialNET ist eine Vorabversion (0.1.0) und noch nicht auf NuGet veröffentlicht. Vorerst das Repository klonen und die Projekte referenzieren; die obigen Paketnamen sind die geplanten NuGet-IDs.
+> SpatialNET ist eine Vorabversion und liegt auf NuGet; die Pakete mit `--prerelease` installieren, zum Beispiel `dotnet add package SpatialNET.Extensions --prerelease` (dazu bei Bedarf `SpatialNET.Imp` und `SpatialNET.IO`). Alternativ das Repository klonen und die Projekte referenzieren.
 
 ```csharp
 using SpatialNET;

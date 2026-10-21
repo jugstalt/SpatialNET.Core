@@ -10,4 +10,4 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen, die au
 - **[Entscheidungen](decisions/toc.yml)**: die Architecture Decision Records, die Begründungen hinter dem Design.
 - **[Recherche](https://github.com/jugstalt/SpatialNET.Core/tree/main/research)**: Hintergründe zur Algorithmenwahl.
 
-SpatialNET ist eine Vorabversion (0.1.0) und noch nicht auf NuGet veröffentlicht. Der Quelltext liegt auf [GitHub](https://github.com/jugstalt/SpatialNET.Core) unter der Apache License 2.0.
+SpatialNET ist eine Vorabversion und auf NuGet verfügbar. Der Quelltext liegt auf [GitHub](https://github.com/jugstalt/SpatialNET.Core) unter der Apache License 2.0.
