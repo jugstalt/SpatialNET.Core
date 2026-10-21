@@ -4,6 +4,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.4.0-preview.1] - 2026-10-21
+
 ### Added
 
 - Measure and point helpers (ADR 0019): `NearestPoints`, `IsWithinDistance` and `PointOnSurface` in `Measures`, and `Boundary`, `Densify` and `Reverse` in the new `Constructions`. Playground entries for all six.
@@ -45,7 +47,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.3.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.4.0-preview.1...HEAD
+[0.4.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.3.0-preview.1...v0.4.0-preview.1
 [0.3.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.2.0-preview.1...v0.3.0-preview.1
 [0.2.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.1.0-preview.1...v0.2.0-preview.1
 [0.1.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/releases/tag/v0.1.0-preview.1
