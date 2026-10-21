@@ -32,6 +32,7 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | snap rounding | Snap-Rounding | Rounding of constructed intersection points to the grid in a way that keeps the topology consistent |
 | even-odd rule | Even-Odd-Regel | A point is inside if it lies within an odd number of rings; the default for all inputs |
 | strict semantics | Strict-Semantik | Overlay results are dimension-homogeneous; touch and collapse remnants of lower dimension are dropped |
+| spatial index | räumlicher Index | A static, bulk-loaded tree over envelopes with a payload for range queries and nearest neighbours (`SpatialIndex<T>`) |
 | prepared geometry | vorbereitete Geometrie | A geometry with a coordinate snapshot and a spatial index for repeated predicates (`Prepare()`) |
 
 ## Playground and tests

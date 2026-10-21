@@ -10,3 +10,5 @@
   href: simplify-and-validation.md
 - name: Cut
   href: cut.md
+- name: Spatial index
+  href: spatial-index.md

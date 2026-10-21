@@ -13,7 +13,7 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overla
 | Paket | Inhalt |
 |---|---|
 | `SpatialNET.Core` | Geometrie-Interfaces, Wert-Typen (`Coordinate`, `Envelope2D`), Vertrag der Geometrie-Factory |
-| `SpatialNET.Extensions` | Die Algorithmen als Extension-Methoden: Overlays, Buffer, Offset-Kurve, Cut, Simplify, Prädikate und `Relate`, `IsValid`/`Validate`, `Prepare`, Maße |
+| `SpatialNET.Extensions` | Die Algorithmen als Extension-Methoden: Overlays, Buffer, Offset-Kurve, Cut, Simplify, Prädikate und `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, Maße |
 | `SpatialNET.Imp` | Referenz-Implementierung der Geometrie-Interfaces und der Factory, für Tests, Werkzeuge und Hosts ohne eigene Geometrien |
 | `SpatialNET.IO` | WKT und GeoJSON lesen und schreiben, über die Geometrie-Factory |
 
@@ -45,7 +45,7 @@ Hosts implementieren die Interfaces an ihren eigenen Geometrieklassen und stelle
 ## Dokumentation
 
 - [Erste Schritte](docs/de/erste-schritte.md) und [Host-Anbindung](docs/de/host-anbindung.md)
-- [Konzepte](docs/de/konzepte/geometriemodell.md): Geometriemodell, [Overlays und Gitter](docs/de/konzepte/overlay-und-gitter.md), [Prädikate](docs/de/konzepte/praedikate.md), [Buffer und Offset](docs/de/konzepte/buffer-und-offset.md), [Vereinfachen und Validieren](docs/de/konzepte/vereinfachen-und-validieren.md), [Cut](docs/de/konzepte/cut.md)
+- [Konzepte](docs/de/konzepte/geometriemodell.md): Geometriemodell, [Overlays und Gitter](docs/de/konzepte/overlay-und-gitter.md), [Prädikate](docs/de/konzepte/praedikate.md), [Buffer und Offset](docs/de/konzepte/buffer-und-offset.md), [Vereinfachen und Validieren](docs/de/konzepte/vereinfachen-und-validieren.md), [Cut](docs/de/konzepte/cut.md), [Räumlicher Index](docs/de/konzepte/raeumlicher-index.md)
 - [Glossar](docs/de/glossar.md) (Begriffe Deutsch ↔ Englisch)
 - API-Referenz: aus den XML-Kommentaren mit DocFX generiert (nur Englisch), Build mit `docs/build.ps1` (siehe [docs/de/erste-schritte.md](docs/de/erste-schritte.md#die-dokumentation-bauen))
 - [Architekturentscheidungen (ADRs)](docs/adr/) – die Begründungen hinter dem Design (Englisch, mit deutschen Fassungen)

@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- `SpatialIndex<T>`: a static, thread-safe spatial index over envelopes with a payload (STR-packed), with range queries (`Query`) and k-nearest-neighbours (`Nearest`), plus `ToSpatialIndex()` and `Query(IGeometry2D)` for geometries (ADR 0014).
 - API compatibility check against the last published version at pack time (package validation).
 - Contribution guide, issue and pull request templates.
 

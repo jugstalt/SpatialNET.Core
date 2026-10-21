@@ -45,6 +45,10 @@ _Avoid_: MultiPolygon, Fläche
 Das achsenparallele Rechteck, das eine Geometrie umschließt.
 _Avoid_: Bounding Box, Extent, BBox
 
+**Räumlicher Index**:
+Ein statischer, per Bulk-Load gebauter Baum über Envelopes mit Nutzlast für Bereichsabfragen und nächste Nachbarn (`SpatialIndex<T>`); er liefert nur einen Vorfilter über Envelopes.
+_Avoid_: Spatial Index, R-Tree
+
 **Referenz-Implementierung**:
 Die Implementierung der Geometrie-Interfaces in SpatialNET.Imp, gedacht für Tests, den Playground und Hosts ohne eigene Geometrien.
 _Avoid_: Default-Implementierung, Imp-Klassen

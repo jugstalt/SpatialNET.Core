@@ -24,3 +24,5 @@
   href: ../../adr/0012-api-signaturen-typisierte-overloads.md
 - name: "0013 Predicates: full DE-9IM, public Relate, prepared geometries as a snapshot"
   href: ../../adr/0013-praedikate-de9im-relate-prepared.md
+- name: "0014 Public spatial index: static, STR-packed, over envelopes with a payload"
+  href: ../../adr/0014-oeffentlicher-raeumlicher-index-statisch-str.md

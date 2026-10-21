@@ -86,6 +86,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Overlays | `Intersection`, `Union`, `Difference`, `SymDifference` |
 | Derived geometries | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Predicates | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
+| Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
 | Validity | `IsValid`, `Validate` |
 | Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson` |

@@ -13,7 +13,7 @@ SpatialNET is a .NET library for planar spatial computations: overlays (intersec
 | Package | Contents |
 |---|---|
 | `SpatialNET.Core` | Geometry interfaces, value types (`Coordinate`, `Envelope2D`), geometry factory contract |
-| `SpatialNET.Extensions` | The algorithms as extension methods: overlays, buffer, offset curve, cut, simplify, predicates and `Relate`, `IsValid`/`Validate`, `Prepare`, measures |
+| `SpatialNET.Extensions` | The algorithms as extension methods: overlays, buffer, offset curve, cut, simplify, predicates and `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, measures |
 | `SpatialNET.Imp` | Reference implementation of the geometry interfaces and the factory, for tests, tools and hosts without geometries of their own |
 | `SpatialNET.IO` | WKT and GeoJSON reading and writing through the geometry factory |
 
@@ -45,7 +45,7 @@ Hosts implement the interfaces on their own geometry classes and provide their o
 ## Documentation
 
 - [Getting started](docs/en/getting-started.md) and [host integration](docs/en/host-integration.md)
-- [Concepts](docs/en/concepts/geometry-model.md): geometry model, [overlays and the grid](docs/en/concepts/overlay-and-grid.md), [predicates](docs/en/concepts/predicates.md), [buffer and offset](docs/en/concepts/buffer-and-offset.md), [simplify and validation](docs/en/concepts/simplify-and-validation.md), [cut](docs/en/concepts/cut.md)
+- [Concepts](docs/en/concepts/geometry-model.md): geometry model, [overlays and the grid](docs/en/concepts/overlay-and-grid.md), [predicates](docs/en/concepts/predicates.md), [buffer and offset](docs/en/concepts/buffer-and-offset.md), [simplify and validation](docs/en/concepts/simplify-and-validation.md), [cut](docs/en/concepts/cut.md), [spatial index](docs/en/concepts/spatial-index.md)
 - [Glossary](docs/en/glossary.md) (English ↔ German terms)
 - API reference: generated from the XML comments with DocFX, build it with `docs/build.ps1` (see [docs/en/getting-started.md](docs/en/getting-started.md#building-the-documentation))
 - [Architecture decision records](docs/adr/) – the reasoning behind the design (English, with German versions)

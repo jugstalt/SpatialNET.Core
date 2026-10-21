@@ -32,6 +32,7 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | Snap-Rounding | snap rounding |
 | Even-Odd-Regel | even-odd rule |
 | Strict-Semantik | strict semantics |
+| räumlicher Index | spatial index |
 | vorbereitete Geometrie | prepared geometry |
 
 ## Playground und Tests
