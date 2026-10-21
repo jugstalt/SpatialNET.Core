@@ -26,3 +26,5 @@
   href: ../../adr/0013-praedikate-de9im-relate-prepared.de.md
 - name: "0014 Öffentlicher räumlicher Index: statisch, STR-gepackt, über Envelopes mit Nutzlast"
   href: ../../adr/0014-oeffentlicher-raeumlicher-index-statisch-str.de.md
+- name: "0015 M-Werte: wie Z mitgeführt und interpoliert, von den Geometrie-Algorithmen nie ausgewertet"
+  href: ../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md
