@@ -1,0 +1,30 @@
+name: Property tests (extended)
+
+# The property-based tests (CsCheck) run with their default iteration count in CI.
+# This weekly run multiplies them; a failing seed is printed in the log and can be replayed locally.
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: Iterations per property test
+        default: '10000'
+
+permissions:
+  contents: read
+
+jobs:
+  property-tests:
+    runs-on: ubuntu-latest
+    env:
+      SPATIALNET_PROPERTY_ITER: ${{ inputs.iterations || '10000' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test tests/SpatialNET.Tests -c Release

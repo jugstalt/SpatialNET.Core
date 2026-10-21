@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Code coverage of the four library assemblies (coverlet.collector); used by CI, see .github/scripts/check-coverage.ps1. -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[SpatialNET.Core]*,[SpatialNET.Extensions]*,[SpatialNET.Imp]*,[SpatialNET.IO]*</Include>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

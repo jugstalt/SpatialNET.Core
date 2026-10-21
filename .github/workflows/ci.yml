@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        run: dotnet build SpatialNET.sln -c Release
+
+      - name: Test with coverage
+        run: dotnet test tests/SpatialNET.Tests -c Release --no-build --settings tests/coverage.runsettings --results-directory TestResults
+
+      - name: Check coverage threshold
+        if: matrix.os == 'ubuntu-latest'
+        shell: pwsh
+        run: ./.github/scripts/check-coverage.ps1
+
+      - name: Upload coverage report
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: TestResults/**/coverage.cobertura.xml
+
+  pack:
+    name: Pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack all libraries
+        run: dotnet pack SpatialNET.sln -c Release -o artifacts
+
+      - name: Check the packages contain the README
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          Get-ChildItem artifacts -Filter *.nupkg | ForEach-Object {
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($_.FullName)
+            try {
+              if (-not ($zip.Entries | Where-Object FullName -eq 'README.md')) { throw "$($_.Name) has no README.md" }
+            } finally { $zip.Dispose() }
+          }
+
+  docs:
+    name: Documentation build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build the documentation (warnings are errors)
+        shell: pwsh
+        run: ./docs/build.ps1
