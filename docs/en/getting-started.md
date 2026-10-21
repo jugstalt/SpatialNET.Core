@@ -100,7 +100,8 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
 | Linear referencing | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Validity | `IsValid`, `Validate` |
-| Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance` |
+| Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
+| Constructions | `Boundary`, `Densify`, `Reverse` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 The signatures, parameters and exceptions of every method are in the API reference, which is generated from the XML comments.

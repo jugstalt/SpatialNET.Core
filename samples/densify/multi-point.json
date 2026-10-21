@@ -1,0 +1,10 @@
+{
+  "name": "Multipunkt",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOINT ((0 0), (2 0), (2 6))",
+  "params": {
+    "maxSegmentLength": 2
+  }
+}

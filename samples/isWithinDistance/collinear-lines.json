@@ -1,0 +1,11 @@
+{
+  "name": "Kollinear überlappende Linien",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "LINESTRING (0 0, 10 0)",
+  "b": "LINESTRING (5 0, 15 0)",
+  "params": {
+    "distance": 2
+  }
+}

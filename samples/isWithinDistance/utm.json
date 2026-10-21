@@ -1,0 +1,11 @@
+{
+  "name": "UTM",
+  "tags": [
+    "large-coords"
+  ],
+  "a": "POINT (533100 5212100)",
+  "b": "LINESTRING (533000 5212000, 533200 5212000)",
+  "params": {
+    "distance": 100
+  }
+}

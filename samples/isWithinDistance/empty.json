@@ -1,0 +1,11 @@
+{
+  "name": "Leere Geometrie (immer falsch)",
+  "tags": [
+    "empty"
+  ],
+  "a": "POINT EMPTY",
+  "b": "POINT (1 1)",
+  "params": {
+    "distance": 5
+  }
+}

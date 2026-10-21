@@ -1,0 +1,8 @@
+{
+  "name": "Punkt",
+  "tags": [],
+  "a": "POINT (3 4)",
+  "params": {
+    "maxSegmentLength": 2
+  }
+}

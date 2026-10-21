@@ -7,7 +7,7 @@ namespace SpatialNET;
 /// Measures assume valid input (ADR 0003); for invalid input the result is
 /// deterministic but not guaranteed. Empty or invalid geometries never throw.
 /// </remarks>
-public static class Measures
+public static partial class Measures
 {
     /// <summary>The area by the even-odd rule: shells minus holes, islands in holes positive again.</summary>
     /// <param name="polygon">The polygon.</param>

@@ -1,0 +1,6 @@
+{
+  "name": "Linie quert Polygon",
+  "tags": [],
+  "a": "LINESTRING (-5 5, 15 5)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+}

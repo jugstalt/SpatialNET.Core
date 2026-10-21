@@ -1,0 +1,10 @@
+{
+  "name": "Zwei Pfade",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTILINESTRING ((0 0, 3 4), (10 10, 10 20))",
+  "params": {
+    "maxSegmentLength": 2
+  }
+}

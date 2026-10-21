@@ -41,6 +41,14 @@ _Avoid_: MultiLineString, Linie
 Eine Geometrie aus einem oder mehreren Ringen, die zusammen eine oder mehrere Flächen beschreiben.
 _Avoid_: MultiPolygon, Fläche
 
+**Punkt auf der Fläche**:
+Ein Punkt, der auf einer Geometrie liegt, bei einer Fläche in ihrem Inneren; er dient zum Beschriften.
+_Avoid_: Interior Point, Label-Punkt
+
+**Nächste Punkte**:
+Die zwei Punkte, je einer auf zwei Geometrien, deren Abstand der Abstand der Geometrien ist.
+_Avoid_: Nearest Points, kürzeste Linie
+
 **Lineare Referenzierung**:
 Das Ansprechen einer Position auf einer Linie über ihre Länge entlang der Linie oder über ihren M-Wert.
 _Avoid_: Linear Referencing, Routing

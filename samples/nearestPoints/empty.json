@@ -1,0 +1,8 @@
+{
+  "name": "Leere Geometrie",
+  "tags": [
+    "empty"
+  ],
+  "a": "POINT EMPTY",
+  "b": "POINT (1 1)"
+}

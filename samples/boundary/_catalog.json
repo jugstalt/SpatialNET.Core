@@ -1,0 +1,5 @@
+{
+  "n/a": {
+    "self-crossing": "Maße setzen gültige Eingaben voraus (ADR 0003); Stabilität bei ungültiger Eingabe prüft MeasuresContractTests."
+  }
+}

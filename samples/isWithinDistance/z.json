@@ -1,0 +1,11 @@
+{
+  "name": "Mit Höhen",
+  "tags": [
+    "z"
+  ],
+  "a": "POINT Z (0 5 7)",
+  "b": "LINESTRING Z (0 0 1, 10 0 2)",
+  "params": {
+    "distance": 2
+  }
+}

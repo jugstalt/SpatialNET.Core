@@ -1,0 +1,9 @@
+{
+  "name": "Zwei Linien",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0)",
+  "b": "LINESTRING (3 2, 7 5)",
+  "params": {
+    "distance": 2
+  }
+}

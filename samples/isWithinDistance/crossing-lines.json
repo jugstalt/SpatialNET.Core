@@ -1,0 +1,9 @@
+{
+  "name": "Kreuzende Linien",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 10)",
+  "b": "LINESTRING (0 10, 10 0)",
+  "params": {
+    "distance": 2
+  }
+}

@@ -235,7 +235,7 @@ public static class LinearReferencing
                 if (d <= pos[i])
                 {
                     double len = pos[i] - pos[i - 1];
-                    return len == 0 ? path[i] : Lerp(path[i - 1], path[i], (d - pos[i - 1]) / len);
+                    return len == 0 ? path[i] : Segments.Lerp(path[i - 1], path[i], (d - pos[i - 1]) / len);
                 }
             }
 
@@ -267,7 +267,7 @@ public static class LinearReferencing
                     var b = path[i];
                     double dx = b.X - a.X, dy = b.Y - a.Y, len2 = dx * dx + dy * dy;
                     double t = len2 == 0 ? 0 : Math.Clamp(((p.X - a.X) * dx + (p.Y - a.Y) * dy) / len2, 0, 1);
-                    var q = Lerp(a, b, t);
+                    var q = Segments.Lerp(a, b, t);
                     double distance = Squared(p, q);
                     if (distance < bestDistance)
                     {
@@ -298,7 +298,7 @@ public static class LinearReferencing
                     }
 
                     double t = a.M == b.M ? 0 : (m - a.M) / (b.M - a.M);
-                    var point = Lerp(a, b, t) with { M = m };
+                    var point = Segments.Lerp(a, b, t) with { M = m };
                     return (point, pos[i - 1] + t * len);
                 }
             }
@@ -340,21 +340,6 @@ public static class LinearReferencing
         {
             double dx = a.X - b.X, dy = a.Y - b.Y;
             return dx * dx + dy * dy;
-        }
-
-        /// <summary>
-        /// The point at parameter <paramref name="t"/> on a segment. The end points keep their own values; inside,
-        /// Z and M are interpolated only if both ends carry them (ADR 0015).
-        /// </summary>
-        private static Coordinate Lerp(Coordinate a, Coordinate b, double t)
-        {
-            if (t <= 0) return a;
-            if (t >= 1) return b;
-            return new Coordinate(
-                a.X + t * (b.X - a.X),
-                a.Y + t * (b.Y - a.Y),
-                a.HasZ && b.HasZ ? a.Z + t * (b.Z - a.Z) : double.NaN,
-                a.HasM && b.HasM ? a.M + t * (b.M - a.M) : double.NaN);
         }
     }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "Zwei getrennte Teilflächen",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOLYGON (((0 0, 4 0, 4 4, 0 4, 0 0)), ((10 0, 13 0, 13 3, 10 3, 10 0)))",
+  "params": {
+    "maxSegmentLength": 2
+  }
+}

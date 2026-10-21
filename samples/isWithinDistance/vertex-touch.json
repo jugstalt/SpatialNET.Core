@@ -1,0 +1,11 @@
+{
+  "name": "Berührung in einem Vertex",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "POLYGON ((0 0, 5 0, 5 5, 0 5, 0 0))",
+  "b": "POLYGON ((5 5, 10 5, 10 10, 5 10, 5 5))",
+  "params": {
+    "distance": 2
+  }
+}

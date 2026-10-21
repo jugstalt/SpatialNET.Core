@@ -100,7 +100,8 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
 | Lineare Referenzierung | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Gültigkeit | `IsValid`, `Validate` |
-| Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance` |
+| Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
+| Konstruktionen | `Boundary`, `Densify`, `Reverse` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 Signaturen, Parameter und Exceptions jeder Methode stehen in der API-Referenz (Englisch), die aus den XML-Kommentaren generiert wird.

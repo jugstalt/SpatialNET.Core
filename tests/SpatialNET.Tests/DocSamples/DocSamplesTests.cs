@@ -68,6 +68,31 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void MeasuresAndConstructions()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: measures-and-constructions
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+        var well = Wkt.Read<IPoint2D>("POINT(14 5)");
+
+        var (onParcel, onWell) = parcel.NearestPoints(well)!.Value;  // (10 5) and (14 5)
+        bool near = parcel.IsWithinDistance(well, 5);                // true: 4 away, and it stops as soon as it knows
+        Coordinate? label = parcel.PointOnSurface();                 // a point inside, for a label
+        IPolyline2D outline = parcel.Boundary();                     // the ring as a line
+        IPolyline2D dense = outline.Densify(2.5);                    // no segment longer than 2.5
+        IPolyline2D back = outline.Reverse();                        // the same line, backwards
+        // --- end
+
+        Assert.Equal((new Coordinate(10, 5), new Coordinate(14, 5)), (onParcel, onWell));
+        Assert.True(near);
+        Assert.True(parcel.Contains(ImpGeometryFactory.Instance.CreatePoint(label!.Value, null)));
+        Assert.Equal(40, dense.Length());
+        Assert.Equal(17, Internal.Rings.Coordinates(dense[0]).Length);
+        Assert.Equal(outline.ToWkt(), back.Reverse().ToWkt());
+    }
+
+    [Fact]
     public void UnionAllDissolve()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

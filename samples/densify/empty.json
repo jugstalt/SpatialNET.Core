@@ -1,0 +1,10 @@
+{
+  "name": "Leeres Polygon",
+  "tags": [
+    "empty"
+  ],
+  "a": "POLYGON EMPTY",
+  "params": {
+    "maxSegmentLength": 2
+  }
+}

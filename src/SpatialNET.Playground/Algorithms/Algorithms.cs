@@ -136,3 +136,28 @@ public sealed class SubstringAlgorithm() : PlaygroundAlgorithm("substring", "Sub
     [In.A(In.Lines, "Linie")],
     [new("from", "Von (Länge)", "number", 0.0, "kbs"), new("to", "Bis (Länge)", "number", 10.0, "kbs")],
     (i, p, f, _) => ((IPolyline2D)i["a"]).Substring(p.Number("from"), p.Number("to"), f));
+
+// ---------- Mess- und Punkt-Helfer (ADR 0019) ----------
+
+public sealed class NearestPointsAlgorithm() : PlaygroundAlgorithm("nearestPoints", "NearestPoints", "Maße",
+    [In.A(In.Any, "A"), In.B(In.Any)], [],
+    (i, _, f, _) => i["a"].NearestPoints(i["b"]) is { } pair
+        ? f.CreatePolyline([new[] { pair.OnA, pair.OnB }], null)
+        : null);
+
+public sealed class IsWithinDistanceAlgorithm() : PlaygroundAlgorithm("isWithinDistance", "IsWithinDistance", "Maße",
+    [In.A(In.Any, "A"), In.B(In.Any)], [P.Distance(10)],
+    (i, p, _, _) => i["a"].IsWithinDistance(i["b"], p.Number("distance")));
+
+public sealed class PointOnSurfaceAlgorithm() : PlaygroundAlgorithm("pointOnSurface", "PointOnSurface", "Maße",
+    [In.A(In.Any)], [], (i, _, _, _) => i["a"].PointOnSurface());
+
+public sealed class BoundaryAlgorithm() : PlaygroundAlgorithm("boundary", "Boundary", "Konstruktion",
+    [In.A(In.Any)], [], (i, _, f, _) => i["a"].Boundary(f));
+
+public sealed class DensifyAlgorithm() : PlaygroundAlgorithm("densify", "Densify", "Konstruktion",
+    [In.A(In.Any)], [new("maxSegmentLength", "Maximale Segmentlänge", "number", 5.0, "kbs")],
+    (i, p, f, _) => i["a"].Densify(p.Number("maxSegmentLength"), f));
+
+public sealed class ReverseAlgorithm() : PlaygroundAlgorithm("reverse", "Reverse", "Konstruktion",
+    [In.A(In.Lines, "Linie")], [], (i, _, f, _) => ((IPolyline2D)i["a"]).Reverse(f));

@@ -34,3 +34,5 @@
   href: ../../adr/0017-lineare-referenzierung-laenge-und-m-erster-treffer.md
 - name: "0018 UnionAll: cascaded union over the spatial index, one grid for all steps"
   href: ../../adr/0018-unionall-kaskadiert-gemeinsames-gitter.md
+- name: "0019 Measure and point helpers: nearest points, distance test, point on surface, boundary, densify, reverse"
+  href: ../../adr/0019-mess-und-punkt-helfer-werte-statt-geometrien.md

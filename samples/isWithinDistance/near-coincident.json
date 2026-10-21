@@ -1,0 +1,11 @@
+{
+  "name": "Fast berührend",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "POINT (10.000000000001 5)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "params": {
+    "distance": 1e-09
+  }
+}

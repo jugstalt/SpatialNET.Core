@@ -1,0 +1,11 @@
+{
+  "name": "Multipunkt zu Linie",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOINT ((0 5), (20 20))",
+  "b": "LINESTRING (0 0, 10 0)",
+  "params": {
+    "distance": 2
+  }
+}
