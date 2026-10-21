@@ -5,22 +5,22 @@ using SpatialNET.Internal.Overlay;
 namespace SpatialNET;
 
 /// <summary>
-/// Cut nach ADR 0007: flache Liste der Teile ohne links/rechts. Zerschnittene Stücke sind je ein Element;
-/// alle unberührten Teilflächen bzw. Pfade bilden zusammen ein Element und behalten ihre Originalkoordinaten
-/// (ohne Snap-Rounding). Wird nichts geschnitten, enthält die Liste genau ein Element. Die Schnittlinie wird
-/// nicht verlängert; Z an Schnittpunkten wird auf dem Originalsegment interpoliert (ADR 0005).
+/// Cut according to ADR 0007: a flat list of the pieces without left/right. Cut pieces are one element each;
+/// all untouched parts or paths together form one element and keep their original coordinates
+/// (without snap rounding). If nothing is cut, the list contains exactly one element. The cutting line is
+/// not extended; Z at intersection points is interpolated on the original segment (ADR 0005).
 /// </summary>
 public static class Cutting
 {
     /// <summary>
-    /// Zerlegt das Polygon an der Schnittlinie: Nur vollständige Durchquerungen schneiden; lose Enden, Verläufe
-    /// entlang des Randes und Berührungen in Vertices nicht. Löcher werden passend auf die Teile verteilt.
+    /// Splits the polygon along the cutting line: only complete crossings cut; loose ends, runs
+    /// along the boundary and touches at vertices do not. Holes are distributed over the pieces accordingly.
     /// </summary>
-    /// <param name="polygon">Das Polygon.</param>
-    /// <param name="cutter">Die Schnittlinie; alle Pfade schneiden.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <param name="gridSize">Die Gitterweite; <c>null</c> = Kaskade.</param>
-    /// <exception cref="ArgumentNullException">Ein Argument ist <c>null</c>.</exception>
+    /// <param name="polygon">The polygon.</param>
+    /// <param name="cutter">The cutting line; all paths cut.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <param name="gridSize">The grid size; <c>null</c> = cascade (global default, otherwise automatic).</param>
+    /// <exception cref="ArgumentNullException">An argument is <c>null</c>.</exception>
     public static IReadOnlyList<IPolygon2D> Cut(this IPolygon2D polygon, IPolyline2D cutter, IGeometryFactory? factory = null, double? gridSize = null)
     {
         ArgumentNullException.ThrowIfNull(polygon);
@@ -64,14 +64,14 @@ public static class Cutting
     }
 
     /// <summary>
-    /// Zerlegt die Polylinie an jedem Kontakt mit der Schnittlinie (Kreuzung, Berührung, Anfang und Ende einer
-    /// Überlappung). Jedes zerschnittene Stück ist eine Polylinie mit genau einem Pfad.
+    /// Splits the polyline at every contact with the cutting line (crossing, touch, start and end of an
+    /// overlap). Each cut piece is a polyline with exactly one path.
     /// </summary>
-    /// <param name="polyline">Die Polylinie.</param>
-    /// <param name="cutter">Die Schnittlinie; alle Pfade schneiden.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <param name="gridSize">Die Gitterweite; <c>null</c> = Kaskade.</param>
-    /// <exception cref="ArgumentNullException">Ein Argument ist <c>null</c>.</exception>
+    /// <param name="polyline">The polyline.</param>
+    /// <param name="cutter">The cutting line; all paths cut.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <param name="gridSize">The grid size; <c>null</c> = cascade (global default, otherwise automatic).</param>
+    /// <exception cref="ArgumentNullException">An argument is <c>null</c>.</exception>
     public static IReadOnlyList<IPolyline2D> Cut(this IPolyline2D polyline, IPolyline2D cutter, IGeometryFactory? factory = null, double? gridSize = null)
     {
         ArgumentNullException.ThrowIfNull(polyline);

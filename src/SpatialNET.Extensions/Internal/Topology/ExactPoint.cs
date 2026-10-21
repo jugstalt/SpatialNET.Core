@@ -3,10 +3,10 @@ using SpatialNET.Internal.Noding;
 
 namespace SpatialNET.Internal.Topology;
 
-/// <summary>Ein Punkttyp mit exakten Prädikaten – Grundlage des generischen planaren Graphen.</summary>
+/// <summary>A point type with exact predicates – basis of the generic planar graph.</summary>
 internal interface IExactPoint<T> : IEquatable<T> where T : struct, IExactPoint<T>
 {
-    /// <summary>+1, wenn c links von a→b liegt, −1 rechts, 0 kollinear – exakt.</summary>
+    /// <summary>+1 if c lies to the left of a→b, −1 to the right, 0 collinear – exact.</summary>
     static abstract int Orient(T a, T b, T c);
 
     static abstract int CompareX(T a, T b);
@@ -15,9 +15,9 @@ internal interface IExactPoint<T> : IEquatable<T> where T : struct, IExactPoint<
 }
 
 /// <summary>
-/// Ein exakter Punkt in homogenen Koordinaten (X/W, Y/W) mit ganzzahligen Werten, W &gt; 0, gekürzt.
-/// Eingabe-Doubles werden über einen gemeinsamen Exponenten exakt zu ganzen Zahlen (W = 1);
-/// Schnittpunkte sind exakte Brüche. Grundlage der Prädikate (exakt ohne Gitter, ADR 0005/0013).
+/// An exact point in homogeneous coordinates (X/W, Y/W) with integer values, W &gt; 0, reduced.
+/// Input doubles are converted exactly to integers via a common exponent (W = 1);
+/// intersection points are exact fractions. Basis of the predicates (exact without a grid, ADR 0005/0013).
 /// </summary>
 internal readonly struct HPoint : IExactPoint<HPoint>
 {
@@ -60,7 +60,7 @@ internal readonly struct HPoint : IExactPoint<HPoint>
 
     public override string ToString() => W.IsOne ? $"({X} {Y})" : $"({X}/{W} {Y}/{W})";
 
-    /// <summary>Exakter Schnittpunkt der Geraden durch p0p1 und q0q1 (ganzzahlige Endpunkte, W = 1).</summary>
+    /// <summary>Exact intersection point of the lines through p0p1 and q0q1 (integer end points, W = 1).</summary>
     public static HPoint Intersection(HPoint p0, HPoint p1, HPoint q0, HPoint q1)
     {
         BigInteger rx = p1.X - p0.X, ry = p1.Y - p0.Y, sx = q1.X - q0.X, sy = q1.Y - q0.Y;
@@ -70,7 +70,7 @@ internal readonly struct HPoint : IExactPoint<HPoint>
     }
 }
 
-/// <summary>Skaliert Doubles exakt auf ganze Zahlen über den kleinsten gemeinsamen Exponenten.</summary>
+/// <summary>Scales doubles exactly to integers via the smallest common exponent.</summary>
 internal sealed class ExactScale
 {
     private readonly int _minExponent;
@@ -98,7 +98,7 @@ internal sealed class ExactScale
     public HPoint ToPoint(Coordinate c) => new(ToInteger(c.X), ToInteger(c.Y), BigInteger.One);
 }
 
-/// <summary>Grundoperationen über <see cref="IExactPoint{T}"/>.</summary>
+/// <summary>Basic operations over <see cref="IExactPoint{T}"/>.</summary>
 internal static class ExactGeometry
 {
     public static int Compare<T>(T a, T b) where T : struct, IExactPoint<T>
@@ -107,7 +107,7 @@ internal static class ExactGeometry
         return c != 0 ? c : T.CompareY(a, b);
     }
 
-    /// <summary>Exakter Winkelvergleich zweier Richtungen um <paramref name="o"/> (Halbebene, dann Orientierung).</summary>
+    /// <summary>Exact angle comparison of two directions around <paramref name="o"/> (half-plane, then orientation).</summary>
     public static int CompareAngle<T>(T o, T a, T b) where T : struct, IExactPoint<T>
     {
         int ha = Half(o, a), hb = Half(o, b);
@@ -115,7 +115,7 @@ internal static class ExactGeometry
         return -T.Orient(o, a, b);
     }
 
-    /// <summary>0 für Winkel in [0°, 180°), 1 für [180°, 360°).</summary>
+    /// <summary>0 for angles in [0°, 180°), 1 for [180°, 360°).</summary>
     public static int Half<T>(T o, T a) where T : struct, IExactPoint<T>
     {
         int cy = T.CompareY(a, o);

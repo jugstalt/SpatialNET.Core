@@ -1,20 +1,20 @@
 namespace SpatialNET.Internal.Overlay;
 
 /// <summary>
-/// Envelope-Vorfilter für Overlays (#38, Muster JTS OverlayNG RingClipper): Ringteile weit außerhalb eines
-/// Rechtecks R werden durch ihre Projektion auf den Rand von R ersetzt. Anders als beim Abschneiden bleiben alle
-/// Segmente, die R berühren, unverändert erhalten (keine neuen Schnittpunkte), und nur Läufe von Segmenten
-/// komplett außerhalb werden ersetzt: P → r(P) → r(Lauf) → r(Q) → Q mit r = Klemmen auf R.
+/// Envelope prefilter for overlays (#38, after JTS OverlayNG RingClipper): ring parts far outside a
+/// rectangle R are replaced by their projection onto the boundary of R. Unlike clipping, all
+/// segments that touch R are kept unchanged (no new intersection points), and only runs of segments
+/// completely outside are replaced: P → r(P) → r(run) → r(Q) → Q with r = clamping to R.
 /// </summary>
 /// <remarks>
-/// Die Windungszahl jedes Punkts im Inneren von R bleibt exakt erhalten: Lauf und Ersatz sind über
-/// t ↦ (1 − t)·γ + t·r(γ) homotop, und diese Homotopie verlässt das Komplement des offenen R nie
-/// (die Strecke von einem Punkt außerhalb zu seiner Projektion auf ein konvexes R berührt dessen Inneres nicht).
-/// Außerhalb von R können Artefakt-Maschen entstehen; der Aufrufer wählt deshalb nur Kanten im Ergebnisbereich.
+/// The winding number of every point in the interior of R is preserved exactly: run and replacement are
+/// homotopic via t ↦ (1 − t)·γ + t·r(γ), and this homotopy never leaves the complement of the open R
+/// (the segment from a point outside to its projection onto a convex R does not touch its interior).
+/// Artifact faces can arise outside R; the caller therefore selects only edges in the result region.
 /// </remarks>
 internal static class RingClipper
 {
-    /// <summary>Der Ring (geschlossen) mit ersetzten Außenläufen; unverändert, wenn jedes Segment R berührt.</summary>
+    /// <summary>The ring (closed) with outer runs replaced; unchanged if every segment touches R.</summary>
     public static Coordinate[] Clip(Coordinate[] ring, Envelope2D r)
     {
         int segments = ring.Length - 1;
@@ -71,7 +71,7 @@ internal static class RingClipper
         return result.ToArray();
     }
 
-    /// <summary>Ob das Segment das abgeschlossene Rechteck berühren kann (Envelope-Test, konservativ).</summary>
+    /// <summary>Whether the segment can touch the closed rectangle (envelope test, conservative).</summary>
     private static bool Touches(Coordinate a, Coordinate b, Envelope2D r) =>
         Math.Max(a.X, b.X) >= r.MinX && Math.Min(a.X, b.X) <= r.MaxX &&
         Math.Max(a.Y, b.Y) >= r.MinY && Math.Min(a.Y, b.Y) <= r.MaxY;
@@ -80,10 +80,10 @@ internal static class RingClipper
         new(Math.Clamp(c.X, r.MinX, r.MaxX), Math.Clamp(c.Y, r.MinY, r.MaxY));
 
     /// <summary>
-    /// Projektion r(a→b) eines Segments komplett außerhalb: Das Segment liegt ganz jenseits einer Rechteckkante
-    /// (Envelope-Test), also liegt r(a→b) auf deren Gerade, und die Strecke r(a)→r(b) ist genau r(a→b) –
-    /// Knicke an den Ecken fallen mit den Endpunkten zusammen oder sind kollinear. Beide Punkte liegen exakt auf dem Rand.
-    /// <c>run</c> ist der Index des ersten Punkts des Außenlaufs im Ergebnis (davor stehen Originalpunkte).
+    /// Projection r(a→b) of a segment completely outside: the segment lies entirely beyond a rectangle edge
+    /// (envelope test), so r(a→b) lies on its line, and the segment r(a)→r(b) is exactly r(a→b) –
+    /// kinks at the corners coincide with the end points or are collinear. Both points lie exactly on the boundary.
+    /// <c>run</c> is the index of the first point of the outer run in the result (original points precede it).
     /// </summary>
     private static void Retract(Coordinate a, Coordinate b, Envelope2D r, List<Coordinate> result, int run)
     {
@@ -92,9 +92,9 @@ internal static class RingClipper
     }
 
     /// <summary>
-    /// Wie <see cref="Add"/>, entfernt aber einen geklemmten Vorgänger, der auf derselben achsparallelen Geraden
-    /// zwischen seinen Nachbarn liegt (gleicher Weg). Sonst ergäben lange Außenläufe tausende kollineare
-    /// Randsegmente beider Operanden auf denselben Linien, die das Noding teuer machen.
+    /// Like <see cref="Add"/>, but removes a clamped predecessor that lies on the same axis-parallel line
+    /// between its neighbors (same path). Otherwise long outer runs would yield thousands of collinear
+    /// boundary segments of both operands on the same lines, which make the noding expensive.
     /// </summary>
     private static void AddOnBoundary(List<Coordinate> result, Coordinate c, int run)
     {

@@ -2,7 +2,7 @@ using SpatialNET.Internal.Noding;
 
 namespace SpatialNET.Internal.Overlay;
 
-/// <summary>Führt eine Overlay-Operation aus und erzeugt das Ergebnis über die Factory (ADR 0004/0005/0012).</summary>
+/// <summary>Runs an overlay operation and creates the result through the factory (ADR 0004/0005/0012).</summary>
 internal static class OverlayRunner
 {
     public static int Dimension(IGeometry2D g) => g switch
@@ -49,7 +49,7 @@ internal static class OverlayRunner
                 if (da != db)
                 {
                     throw new NotSupportedException(
-                        $"{op} gemischter Dimensionen ({da}/{db}) ist nicht abbildbar: Ergebnisse sind dimensionshomogen (ADR 0004/0012).");
+                        $"{op} of mixed dimensions ({da}/{db}) cannot be represented: results are dimension-homogeneous (ADR 0004/0012).");
                 }
 
                 return da switch
@@ -148,9 +148,9 @@ internal static class OverlayRunner
     }
 
     /// <summary>
-    /// Envelope-Vorfilter (#38): Das Ergebnis von A ∩ B liegt in env(A) ∩ env(B), das von A \ B in env(A) (jeweils
-    /// bis auf eine halbe Gitterzelle). Ringe werden auf diesen Bereich plus Rand M reduziert (B bei der Differenz,
-    /// beide beim Schnitt); M ist groß gegen die Gitterweite, damit Vorfilter-Artefakte das Ergebnis nicht berühren.
+    /// Envelope prefilter (#38): the result of A ∩ B lies in env(A) ∩ env(B), that of A \ B in env(A) (each
+    /// up to half a grid cell). Rings are reduced to this region plus a margin M (B for the difference,
+    /// both for the intersection); M is large compared to the grid size so that prefilter artifacts do not touch the result.
     /// </summary>
     private static (Envelope2D?[] Clip, Envelope2D ResultBox, bool Disjoint)? EnvelopeFilter(OverlayOp op, IGeometry2D a, IGeometry2D b, GridModel grid)
     {

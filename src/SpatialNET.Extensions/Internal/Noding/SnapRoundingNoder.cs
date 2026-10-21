@@ -1,24 +1,24 @@
 namespace SpatialNET.Internal.Noding;
 
-/// <summary>Eine Eingabe-Punktfolge (Pfad oder geschlossener Ring) mit Herkunft.</summary>
-/// <param name="Points">Die Originalkoordinaten (bei Ringen geschlossen).</param>
-/// <param name="Operand">Index des Operanden (0 = a, 1 = b, …).</param>
-/// <param name="Index">Laufnummer der Folge innerhalb des Aufrufs.</param>
+/// <summary>An input point sequence (path or closed ring) with its origin.</summary>
+/// <param name="Points">The original coordinates (closed for rings).</param>
+/// <param name="Operand">Index of the operand (0 = a, 1 = b, …).</param>
+/// <param name="Index">Sequence number of the sequence within the call.</param>
 internal sealed record SegmentString(Coordinate[] Points, int Operand, int Index);
 
-/// <summary>Eine genodete Kante auf dem Gitter; Richtung wie im Originalsegment.</summary>
-/// <param name="A">Anfangsknoten.</param>
-/// <param name="B">Endknoten.</param>
-/// <param name="ZA">Interpolierte Höhe an <paramref name="A"/> (NaN = keine).</param>
-/// <param name="ZB">Interpolierte Höhe an <paramref name="B"/> (NaN = keine).</param>
-/// <param name="Source">Die Eingabe-Punktfolge.</param>
-/// <param name="Segment">Index des Originalsegments in <paramref name="Source"/>.</param>
+/// <summary>A noded edge on the grid; direction as in the original segment.</summary>
+/// <param name="A">Start node.</param>
+/// <param name="B">End node.</param>
+/// <param name="ZA">Interpolated height at <paramref name="A"/> (NaN = none).</param>
+/// <param name="ZB">Interpolated height at <paramref name="B"/> (NaN = none).</param>
+/// <param name="Source">The input point sequence.</param>
+/// <param name="Segment">Index of the original segment in <paramref name="Source"/>.</param>
 internal readonly record struct NodedEdge(GridPoint A, GridPoint B, double ZA, double ZB, SegmentString Source, int Segment);
 
 /// <summary>
-/// Snap-Rounding-Noder (Hobby 1999, Muster JTS SnapRoundingNoder; ADR 0005): Hot Pixels sind alle gerundeten
-/// Vertices und Schnittpunkte; jedes Segment wird durch die Mittelpunkte aller Hot Pixels geführt, die es
-/// berührt. Die Ausgabekanten schneiden sich nur in Gitterpunkten (Überlappungen sind möglich).
+/// Snap-rounding noder (Hobby 1999, after JTS SnapRoundingNoder; ADR 0005): hot pixels are all rounded
+/// vertices and intersection points; each segment is routed through the centers of all hot pixels it
+/// touches. The output edges intersect only at grid points (overlaps are possible).
 /// </summary>
 internal static class SnapRoundingNoder
 {
@@ -88,7 +88,7 @@ internal static class SnapRoundingNoder
         return result;
     }
 
-    /// <summary>Echte Kreuzungen (exakt über orient2d erkannt) werden als Hot Pixels ergänzt.</summary>
+    /// <summary>Proper crossings (detected exactly via orient2d) are added as hot pixels.</summary>
     private static void AddIntersectionPixels(List<Segment> segments, HashSet<GridPoint> hotPixels, GridModel grid)
     {
         var order = segments.OrderBy(s => s.MinX).ToArray();
@@ -123,7 +123,7 @@ internal static class SnapRoundingNoder
         }
     }
 
-    /// <summary>Alle Hot Pixels (halboffene Einheitsquadrate um Gitterpunkte), die das Segment berührt, mit Parameter t.</summary>
+    /// <summary>All hot pixels (half-open unit squares around grid points) that the segment touches, with parameter t.</summary>
     private static void CollectPixels(Segment seg, GridPoint[] pixels, List<(double, GridPoint)> hits)
     {
         long minX = (long)Math.Floor(seg.MinX - 0.5) - 1, maxX = (long)Math.Ceiling(seg.MaxX + 0.5) + 1;
@@ -153,8 +153,8 @@ internal static class SnapRoundingNoder
     }
 
     /// <summary>
-    /// Ob das Segment das halboffene Pixel [x−½, x+½) × [y−½, y+½) berührt (Liang–Barsky auf dem geschlossenen
-    /// Quadrat; ein Stück, das nur auf der rechten oder oberen Kante liegt, zählt nicht).
+    /// Whether the segment touches the half-open pixel [x−½, x+½) × [y−½, y+½) (Liang–Barsky on the closed
+    /// square; a piece lying only on the right or top edge does not count).
     /// </summary>
     private static bool Touches(Segment seg, GridPoint pixel)
     {

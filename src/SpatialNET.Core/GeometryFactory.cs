@@ -1,71 +1,71 @@
 namespace SpatialNET;
 
 /// <summary>
-/// Eine Teilfläche: ein Außenring mit den Löchern, die direkt in ihm liegen (ADR 0003).
+/// A polygon part: a shell together with the holes that lie directly inside it (ADR 0003).
 /// </summary>
-/// <param name="Shell">Der Außenring; geschlossen, gegen den Uhrzeigersinn.</param>
-/// <param name="Holes">Die Löcher; geschlossen, im Uhrzeigersinn.</param>
+/// <param name="Shell">The shell; closed, counter-clockwise.</param>
+/// <param name="Holes">The holes; closed, clockwise.</param>
 public readonly record struct PolygonPart(
     ReadOnlyMemory<Coordinate> Shell,
     ReadOnlyMemory<ReadOnlyMemory<Coordinate>> Holes = default);
 
 /// <summary>
-/// Die Geometrie-Factory: erzeugt die Ergebnis-Geometrien eines Algorithmus aus Koordinaten
-/// als Host-Geometrien (ADR 0004).
+/// The geometry factory: creates the result geometries of an algorithm from coordinates
+/// as host geometries (ADR 0004).
 /// </summary>
 /// <remarks>
-/// <para>Vertrag für Implementierungen:</para>
+/// <para>Contract for implementations:</para>
 /// <list type="bullet">
-/// <item>Thread-sicher bzw. zustandslos – <see cref="GeometryFactory.Default"/> wird von allen Threads genutzt.</item>
-/// <item>Übergebene Puffer werden kopiert und nach dem Aufruf nicht mehr referenziert.</item>
-/// <item>Leere Eingaben (0 Punkte, Pfade bzw. Teilflächen) erzeugen leere Geometrien, nie <c>null</c>.</item>
-/// <item>Z darf verworfen werden; bei <see cref="SupportsZ"/> = <c>false</c> liefern Algorithmen gar kein Z.</item>
+/// <item>Thread-safe or stateless – <see cref="GeometryFactory.Default"/> is used by all threads.</item>
+/// <item>Buffers that are passed in are copied and not referenced after the call.</item>
+/// <item>Empty input (0 points, paths or parts) produces empty geometries, never <c>null</c>.</item>
+/// <item>Z may be dropped; if <see cref="SupportsZ"/> is <c>false</c>, algorithms produce no Z at all.</item>
 /// </list>
-/// <para>Der Parameter <c>source</c> ist die primäre Eingabe-Geometrie des Algorithmus (oder <c>null</c>);
-/// daraus kann der Host Metadaten wie die Spatial Reference übernehmen.</para>
+/// <para>The <c>source</c> parameter is the algorithm's primary input geometry (or <c>null</c>);
+/// the host can take metadata such as the spatial reference from it.</para>
 /// </remarks>
 public interface IGeometryFactory
 {
-    /// <summary>Ob die erzeugten Geometrien Z tragen sollen.</summary>
+    /// <summary>Whether the created geometries are meant to carry Z.</summary>
     bool SupportsZ { get; }
 
-    /// <summary>Erzeugt einen Punkt.</summary>
-    /// <param name="coordinate">Die Koordinate.</param>
-    /// <param name="source">Die primäre Eingabe-Geometrie oder <c>null</c>.</param>
+    /// <summary>Creates a point.</summary>
+    /// <param name="coordinate">The coordinate.</param>
+    /// <param name="source">The primary input geometry or <c>null</c>.</param>
     IPoint2D CreatePoint(Coordinate coordinate, IGeometry2D? source);
 
-    /// <summary>Erzeugt einen Multipunkt; ohne Koordinaten einen leeren.</summary>
-    /// <param name="coordinates">Die Punkte.</param>
-    /// <param name="source">Die primäre Eingabe-Geometrie oder <c>null</c>.</param>
+    /// <summary>Creates a multipoint; an empty one if there are no coordinates.</summary>
+    /// <param name="coordinates">The points.</param>
+    /// <param name="source">The primary input geometry or <c>null</c>.</param>
     IMultiPoint2D CreateMultiPoint(ReadOnlySpan<Coordinate> coordinates, IGeometry2D? source);
 
-    /// <summary>Erzeugt eine Polylinie; ohne Pfade eine leere.</summary>
-    /// <param name="paths">Die Pfade als Koordinatenfolgen.</param>
-    /// <param name="source">Die primäre Eingabe-Geometrie oder <c>null</c>.</param>
+    /// <summary>Creates a polyline; an empty one if there are no paths.</summary>
+    /// <param name="paths">The paths as coordinate sequences.</param>
+    /// <param name="source">The primary input geometry or <c>null</c>.</param>
     IPolyline2D CreatePolyline(ReadOnlySpan<ReadOnlyMemory<Coordinate>> paths, IGeometry2D? source);
 
-    /// <summary>Erzeugt ein Polygon aus Teilflächen; ohne Teilflächen ein leeres.</summary>
-    /// <param name="parts">Die Teilflächen (gültig, geschlossen, außen gegen den Uhrzeigersinn).</param>
-    /// <param name="source">Die primäre Eingabe-Geometrie oder <c>null</c>.</param>
+    /// <summary>Creates a polygon from parts; an empty one if there are no parts.</summary>
+    /// <param name="parts">The parts (valid, closed, shell counter-clockwise).</param>
+    /// <param name="source">The primary input geometry or <c>null</c>.</param>
     IPolygon2D CreatePolygon(ReadOnlySpan<PolygonPart> parts, IGeometry2D? source);
 }
 
-/// <summary>Globaler Zugang zur Standard-<see cref="IGeometryFactory"/> (ADR 0004).</summary>
+/// <summary>Global access to the default <see cref="IGeometryFactory"/> (ADR 0004).</summary>
 public static class GeometryFactory
 {
     /// <summary>
-    /// Die Factory, die Algorithmen verwenden, wenn ihr <c>factory</c>-Parameter <c>null</c> ist.
-    /// Anfangs <c>null</c>; Hosts, Referenz-Implementierung und Playground setzen sie beim Start.
+    /// The factory that algorithms use when their <c>factory</c> parameter is <c>null</c>.
+    /// Initially <c>null</c>; hosts, the reference implementation and the playground set it at startup.
     /// </summary>
     public static IGeometryFactory? Default { get; set; }
 
     /// <summary>
-    /// Liefert <paramref name="factory"/> oder, wenn <c>null</c>, <see cref="Default"/>.
+    /// Returns <paramref name="factory"/> or, if <c>null</c>, <see cref="Default"/>.
     /// </summary>
-    /// <param name="factory">Die explizit übergebene Factory oder <c>null</c>.</param>
-    /// <exception cref="InvalidOperationException">Weder <paramref name="factory"/> noch <see cref="Default"/> ist gesetzt.</exception>
+    /// <param name="factory">The explicitly passed factory or <c>null</c>.</param>
+    /// <exception cref="InvalidOperationException">Neither <paramref name="factory"/> nor <see cref="Default"/> is set.</exception>
     public static IGeometryFactory Resolve(IGeometryFactory? factory) =>
         factory ?? Default ?? throw new InvalidOperationException(
-            "Keine Geometrie-Factory: Weder wurde dem Algorithmus eine Factory übergeben, " +
-            "noch ist SpatialNET.GeometryFactory.Default gesetzt.");
+            "No geometry factory: neither was a factory passed to the algorithm, " +
+            "nor is SpatialNET.GeometryFactory.Default set.");
 }

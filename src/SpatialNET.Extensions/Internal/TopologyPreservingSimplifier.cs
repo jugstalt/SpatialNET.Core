@@ -1,9 +1,9 @@
 namespace SpatialNET.Internal;
 
 /// <summary>
-/// Topologieerhaltende Vereinfachung nach dem Muster von JTS TaggedLinesSimplifier: Douglas-Peucker je Linie,
-/// aber ein Abschnitt wird nur durch eine Strecke ersetzt, wenn diese weder die bereits erzeugten noch die
-/// verbliebenen Eingabe-Segmente (aller Linien) im Inneren schneidet. Ringe behalten mindestens 4 Punkte.
+/// Topology-preserving simplification after the pattern of JTS TaggedLinesSimplifier: Douglas-Peucker per line,
+/// but a section is replaced by a segment only if that segment crosses neither the already produced nor the
+/// remaining input segments (of all lines) in its interior. Rings keep at least 4 points.
 /// </summary>
 internal sealed class TopologyPreservingSimplifier(double tolerance)
 {
@@ -21,7 +21,7 @@ internal sealed class TopologyPreservingSimplifier(double tolerance)
     private readonly List<(Coordinate A, Coordinate B)> _output = [];
     private List<Line> _lines = [];
 
-    /// <summary>Vereinfacht alle Linien gemeinsam; Rückgabe in Eingabereihenfolge.</summary>
+    /// <summary>Simplifies all lines together; returned in input order.</summary>
     public List<Coordinate[]> Simplify(IReadOnlyList<(Coordinate[] Points, bool Ring)> lines)
     {
         var tagged = lines.Select(l => new Line(l.Points, l.Ring)).ToList();
@@ -120,8 +120,8 @@ internal sealed class TopologyPreservingSimplifier(double tolerance)
     }
 
     /// <summary>
-    /// Ob die Ersatzstrecke über eine andere Komponente „springt“ (wie JTS ComponentJumpChecker): für einen Punkt
-    /// jeder anderen Linie unterscheidet sich die Parität der Strahlkreuzungen von Originalabschnitt und Strecke.
+    /// Whether the replacement segment "jumps" over another component (as in JTS ComponentJumpChecker): for a point
+    /// of every other line, the parity of the ray crossings differs between the original section and the segment.
     /// </summary>
     private bool HasJump(Line line, int i, int j, Coordinate a, Coordinate b)
     {
@@ -137,7 +137,7 @@ internal sealed class TopologyPreservingSimplifier(double tolerance)
         return false;
     }
 
-    /// <summary>1, wenn der Strahl von p nach +x die Strecke kreuzt (halboffen in y), sonst 0.</summary>
+    /// <summary>1 if the ray from p towards +x crosses the segment (half-open in y), otherwise 0.</summary>
     private static int Crossing(Coordinate p, Coordinate a, Coordinate b)
     {
         if ((a.Y > p.Y) == (b.Y > p.Y)) return 0;
@@ -145,7 +145,7 @@ internal sealed class TopologyPreservingSimplifier(double tolerance)
         return Noding.Orientation.Orient2D(lo, hi, p) > 0 ? 1 : 0; // p links der aufwärts gerichteten Strecke
     }
 
-    /// <summary>Schnitt, der nicht nur in gemeinsamen Endpunkten liegt (wie JTS isInteriorIntersection).</summary>
+    /// <summary>Intersection that does not lie only in shared end points (as in JTS isInteriorIntersection).</summary>
     private static bool IsInteriorIntersection(Coordinate a, Coordinate b, Coordinate c, Coordinate d)
     {
         if (Math.Max(a.X, b.X) < Math.Min(c.X, d.X) || Math.Max(c.X, d.X) < Math.Min(a.X, b.X)

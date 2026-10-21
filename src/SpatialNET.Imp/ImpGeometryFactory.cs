@@ -1,16 +1,16 @@
 namespace SpatialNET.Imp;
 
 /// <summary>
-/// Die Geometrie-Factory der Referenz-Implementierung. Zustandslos und damit thread-sicher;
-/// alle Koordinaten werden in neue, unveränderliche Objekte kopiert.
+/// The geometry factory of the reference implementation. Stateless and therefore thread-safe;
+/// all coordinates are copied into new, immutable objects.
 /// </summary>
 /// <param name="supportsZ">
-/// Ob Koordinaten mit Höhe als <see cref="Point3D"/> erzeugt werden. Bei <c>false</c> entstehen
-/// immer <see cref="Point"/> ohne Z.
+/// Whether coordinates with a height are created as <see cref="Point3D"/>. If <c>false</c>, only
+/// <see cref="Point"/> without Z is created.
 /// </param>
 public sealed class ImpGeometryFactory(bool supportsZ = true) : IGeometryFactory
 {
-    /// <summary>Eine gemeinsame Instanz mit Z-Unterstützung.</summary>
+    /// <summary>A shared instance with Z support.</summary>
     public static ImpGeometryFactory Instance { get; } = new();
 
     /// <inheritdoc />

@@ -1,9 +1,9 @@
 namespace SpatialNET.Internal;
 
-/// <summary>Segment-Geometrie; Entscheidungen über das exakte orient2d, Abstände in double.</summary>
+/// <summary>Segment geometry; decisions via the exact orient2d, distances in double.</summary>
 internal static class Segments
 {
-    /// <summary>Exaktes Vorzeichen: +1 c links von a→b, −1 rechts, 0 kollinear.</summary>
+    /// <summary>Exact sign: +1 c left of a→b, −1 right, 0 collinear.</summary>
     public static int Orient(Coordinate a, Coordinate b, Coordinate c) => Noding.Orientation.Orient2D(a, b, c);
 
     public static bool IsOnSegment(Coordinate p, Coordinate a, Coordinate b) =>

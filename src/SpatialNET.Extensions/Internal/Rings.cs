@@ -2,10 +2,10 @@ namespace SpatialNET.Internal;
 
 internal enum Location { Outside, Boundary, Inside }
 
-/// <summary>Grundrechnung auf Ringen und Pfaden.</summary>
+/// <summary>Basic computation on rings and paths.</summary>
 internal static class Rings
 {
-    /// <summary>Die Koordinaten einer Punktfolge.</summary>
+    /// <summary>The coordinates of a point sequence.</summary>
     public static Coordinate[] Coordinates(IPointCollection2D points)
     {
         var result = new Coordinate[points.PointCount];
@@ -17,7 +17,7 @@ internal static class Rings
         return result;
     }
 
-    /// <summary>Die Koordinaten eines Rings, geschlossen (Schlusspunkt = Startpunkt), auch wenn der Host ihn offen speichert.</summary>
+    /// <summary>The coordinates of a ring, closed (closing point = start point), even if the host stores it open.</summary>
     public static Coordinate[] Closed(IPointCollection2D ring)
     {
         var c = Coordinates(ring);
@@ -31,8 +31,8 @@ internal static class Rings
 
     public static bool SameXY(Coordinate a, Coordinate b) => a.X == b.X && a.Y == b.Y;
 
-    /// <summary>Vorzeichenbehaftete Fläche eines geschlossenen Rings; positiv gegen den Uhrzeigersinn.</summary>
-    /// <remarks>Gerechnet relativ zum ersten Punkt, damit große Koordinaten (UTM) nicht auslöschen.</remarks>
+    /// <summary>Signed area of a closed ring; positive counter-clockwise.</summary>
+    /// <remarks>Computed relative to the first point so that large coordinates (UTM) do not cancel out.</remarks>
     public static double SignedArea(ReadOnlySpan<Coordinate> closed)
     {
         if (closed.Length < 4)
@@ -50,8 +50,8 @@ internal static class Rings
     }
 
     /// <summary>
-    /// Ob ein Ring keine Fläche hat: weniger als 3 verschiedene Punkte oder alle Punkte exakt kollinear.
-    /// (Nicht über die vorzeichenbehaftete Fläche – bei sich kreuzenden Ringen kann sie 0 sein.)
+    /// Whether a ring has no area: fewer than 3 distinct points or all points exactly collinear.
+    /// (Not via the signed area – for self-crossing rings it can be 0.)
     /// </summary>
     public static bool IsDegenerate(ReadOnlySpan<Coordinate> closed)
     {
@@ -69,7 +69,7 @@ internal static class Rings
         return true;
     }
 
-    /// <summary>Lage eines Punktes zu einem geschlossenen Ring (Crossing-Number, Rand explizit).</summary>
+    /// <summary>Position of a point relative to a closed ring (crossing number, boundary explicit).</summary>
     public static Location Locate(Coordinate p, ReadOnlySpan<Coordinate> closed)
     {
         bool inside = false;
@@ -96,7 +96,7 @@ internal static class Rings
     }
 
     /// <summary>
-    /// Lage eines Punktes zur Fläche eines Polygons nach der Even-Odd-Regel über alle Ringe (ADR 0003).
+    /// Position of a point relative to the area of a polygon by the even-odd rule over all rings (ADR 0003).
     /// </summary>
     public static Location LocateInPolygon(Coordinate p, IReadOnlyList<Coordinate[]> closedRings)
     {

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>Lesende Geometrie-Interfaces, Wert-Typen und Factory-Vertrag von SpatialNET.</Description>
+    <Description>Read-only geometry interfaces, value types and the factory contract of SpatialNET.</Description>
   </PropertyGroup>
 
 </Project>

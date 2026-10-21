@@ -4,7 +4,7 @@ using SpatialNET.Internal;
 
 namespace SpatialNET.IO;
 
-/// <summary>Schreibt Geometrien als WKT im schlanksten Typ, mit normalisierter Orientierung (ADR 0009).</summary>
+/// <summary>Writes geometries as WKT in the leanest type, with normalized orientation (ADR 0009).</summary>
 internal static class WktWriter
 {
     public static string Write(IGeometry2D geometry, WktOptions options)
@@ -70,7 +70,7 @@ internal static class WktWriter
                 break;
 
             default:
-                throw new NotSupportedException($"{geometry.GetType().FullName} ist keine bekannte Geometrie-Art.");
+                throw new NotSupportedException($"{geometry.GetType().FullName} is not a known geometry kind.");
         }
 
         return sb.ToString();
@@ -110,6 +110,6 @@ internal static class WktWriter
         }
     }
 
-    /// <summary>Invariant und Round-Trip-genau (kürzeste Darstellung, die bitgenau zurückgelesen wird).</summary>
+    /// <summary>Invariant and round-trip exact (shortest representation that reads back bit-exactly).</summary>
     private static string Number(double value) => value.ToString("R", CultureInfo.InvariantCulture);
 }

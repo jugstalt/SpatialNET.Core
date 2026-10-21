@@ -1,6 +1,6 @@
 namespace SpatialNET.Internal;
 
-/// <summary>Unveränderliche Kopie einer Geometrie (für <see cref="PreparedGeometry"/>, ADR 0013).</summary>
+/// <summary>Immutable copy of a geometry (for <see cref="PreparedGeometry"/>, ADR 0013).</summary>
 internal static class Snapshot
 {
     public static IGeometry2D Of(IGeometry2D g) => g switch
@@ -41,7 +41,7 @@ internal static class Snapshot
     }
 }
 
-/// <summary>Gitter-Index über Segmente für schnelle Bereichsabfragen.</summary>
+/// <summary>Grid index over segments for fast range queries.</summary>
 internal sealed class SegmentIndex
 {
     private readonly (Coordinate A, Coordinate B)[] _segments;
@@ -71,7 +71,7 @@ internal sealed class SegmentIndex
 
     public (Coordinate A, Coordinate B) this[int i] => _segments[i];
 
-    /// <summary>Kandidaten, deren Zellen das Rechteck berühren (ohne Doppelte; nicht thread-sicher).</summary>
+    /// <summary>Candidates whose cells touch the rectangle (without duplicates; not thread-safe).</summary>
     public List<int> Query(double minX, double minY, double maxX, double maxY)
     {
         var result = new List<int>();

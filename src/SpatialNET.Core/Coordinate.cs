@@ -1,14 +1,14 @@
 namespace SpatialNET;
 
 /// <summary>
-/// Eine Koordinate als Wert. Algorithmen übergeben Ergebnisse ausschließlich als Koordinaten
-/// an die <see cref="IGeometryFactory"/> (ADR 0004).
+/// A coordinate as a value. Algorithms pass results to the <see cref="IGeometryFactory"/>
+/// exclusively as coordinates (ADR 0004).
 /// </summary>
-/// <param name="X">Die X-Koordinate (Rechtswert).</param>
-/// <param name="Y">Die Y-Koordinate (Hochwert).</param>
-/// <param name="Z">Die Höhe; <see cref="double.NaN"/> bedeutet „kein Z“.</param>
+/// <param name="X">The X coordinate (easting).</param>
+/// <param name="Y">The Y coordinate (northing).</param>
+/// <param name="Z">The height; <see cref="double.NaN"/> means "no Z".</param>
 public readonly record struct Coordinate(double X, double Y, double Z = double.NaN)
 {
-    /// <summary>Ob die Koordinate eine Höhe trägt.</summary>
+    /// <summary>Whether the coordinate carries a height.</summary>
     public bool HasZ => !double.IsNaN(Z);
 }

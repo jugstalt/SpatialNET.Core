@@ -1,16 +1,16 @@
 namespace SpatialNET.Internal.Buffer;
 
 /// <summary>
-/// Erzeugt Roh-Offset-Kurven (ADR 0006) mit positiver Windung innen: Seite rechts der Laufrichtung bei
-/// positiver Distanz, äußere Ecken mit Join, innere Ecken über den Offset-Schnittpunkt bzw. den Vertex
-/// (Selbstüberlappungen bereinigt die Union mit FillRule.Positive). Bögen quantisiert wie JTS.
+/// Creates raw offset curves (ADR 0006) with positive winding inside: side to the right of the direction of travel for
+/// positive distance, outer corners with join, inner corners via the offset intersection point or the vertex
+/// (self-overlaps are cleaned up by the union with FillRule.Positive). Arcs quantized as in JTS.
 /// </summary>
 internal sealed class OffsetBuilder(BufferOptions options, double distance)
 {
     private readonly double _radius = Math.Abs(distance);
     private readonly int _sign = Math.Sign(distance);
 
-    /// <summary>Winkelschritt der Bögen: Viertelkreis / QuadrantSegments bzw. aus der ArcTolerance.</summary>
+    /// <summary>Angle step of the arcs: quarter circle / QuadrantSegments, or derived from the ArcTolerance.</summary>
     private double Quantum =>
         options.ArcTolerance is { } tol && tol > 0 && tol < _radius
             ? Math.Min(Math.PI / 2, 2 * Math.Acos(1 - tol / _radius))
@@ -18,7 +18,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
 
     // ---------- Punkte, Linien, Ringe ----------
 
-    /// <summary>Kreis (Round) bzw. Quadrat (Square) um einen Punkt, gegen den Uhrzeigersinn; Flat: nichts.</summary>
+    /// <summary>Circle (Round) or square (Square) around a point, counter-clockwise; Flat: nothing.</summary>
     public Coordinate[]? Point(Coordinate p)
     {
         switch (options.CapStyle)
@@ -36,7 +36,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
         }
     }
 
-    /// <summary>Geschlossene Kurve um einen Pfad (beide Seiten, Kappen an den Enden).</summary>
+    /// <summary>Closed curve around a path (both sides, caps at the ends).</summary>
     public Coordinate[]? Line(Coordinate[] path)
     {
         path = Distinct(path);
@@ -56,7 +56,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
         return ring.ToArray();
     }
 
-    /// <summary>Einseitige Kurve: Band zwischen Pfad und Offset (positiv links, negativ rechts), flache Enden.</summary>
+    /// <summary>One-sided curve: band between path and offset (positive left, negative right), flat ends.</summary>
     public Coordinate[]? SingleSided(Coordinate[] path)
     {
         path = Distinct(path);
@@ -83,7 +83,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
     }
 
     /// <summary>
-    /// Roh-Offset eines Pfads auf einer Seite (positiv links, negativ rechts) mit Ecken, wie JTS OffsetCurveBuilder.
+    /// Raw offset of a path on one side (positive left, negative right) with corners, as in JTS OffsetCurveBuilder.
     /// </summary>
     public Coordinate[] RawOffset(Coordinate[] path)
     {
@@ -97,8 +97,8 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
     }
 
     /// <summary>
-    /// Offset eines geschlossenen Rings nach rechts (positive Distanz; Innen links bei normalisierter Orientierung),
-    /// nach links bei negativer Distanz.
+    /// Offset of a closed ring to the right (positive distance; interior on the left with normalized orientation),
+    /// to the left for negative distance.
     /// </summary>
     public Coordinate[]? Ring(Coordinate[] closed)
     {
@@ -118,7 +118,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
 
     // ---------- Seiten, Ecken, Kappen ----------
 
-    /// <summary>Offset-Seite (rechts bei positiver Distanz) eines offenen Pfads bzw. eines geschlossenen Rings.</summary>
+    /// <summary>Offset side (right for positive distance) of an open path or a closed ring.</summary>
     private void Side(List<Coordinate> output, Coordinate[] pts, double offset, bool closed)
     {
         int segments = pts.Length - 1;
@@ -205,7 +205,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
         }
     }
 
-    /// <summary>Mitre-Ecke; über dem Limit wird die Spitze im Abstand Limit·d senkrecht zur Winkelhalbierenden abgeschnitten.</summary>
+    /// <summary>Mitre corner; above the limit the tip is cut off at distance limit·d, perpendicular to the angle bisector.</summary>
     private void Mitre(List<Coordinate> output, Coordinate p0, Coordinate v, (Coordinate A, Coordinate B) o0, (Coordinate A, Coordinate B) o1)
     {
         var m = LineIntersection(o0.A, o0.B, o1.A, o1.B);
@@ -231,7 +231,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
         output.Add(OnLineAtProjection(o1.A, o1.B, v, bx, by, limit) ?? o1.A);
     }
 
-    /// <summary>Punkt auf der Geraden a–b, dessen Projektion auf die Richtung (bx, by) ab v genau <paramref name="length"/> ist.</summary>
+    /// <summary>Point on the line a–b whose projection onto the direction (bx, by) from v is exactly <paramref name="length"/>.</summary>
     private static Coordinate? OnLineAtProjection(Coordinate a, Coordinate b, Coordinate v, double bx, double by, double length)
     {
         double dx = b.X - a.X, dy = b.Y - a.Y;
@@ -258,7 +258,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
         }
     }
 
-    /// <summary>Bogenpunkte um <paramref name="center"/> von start nach end (Richtung ±1), Endpunkt ausgenommen, wie JTS quantisiert.</summary>
+    /// <summary>Arc points around <paramref name="center"/> from start to end (direction ±1), end point excluded, quantized as in JTS.</summary>
     private void Fillet(List<Coordinate> output, Coordinate center, double start, double end, int direction, bool skipFirst = false)
     {
         double total = direction > 0 ? end - start : start - end;
@@ -310,15 +310,15 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
 }
 
 /// <summary>
-/// Eingabe-Vereinfachung wie JTS BufferInputLineSimplifier (inklusive seiner Stichprobenprüfung), damit der
-/// Buffer eng am NTS-Orakel bleibt: entfernt nur flache Einbuchtungen einer Seite.
+/// Input simplification as in JTS BufferInputLineSimplifier (including its sampling check), so that the
+/// buffer stays close to the NTS oracle: removes only shallow indentations on one side.
 /// </summary>
 internal static class Simplifier
 {
     private const int SamplePoints = 10;
 
-    /// <param name="points">Die Punkte.</param>
-    /// <param name="distanceTolerance">Positiv: Einbuchtungen bei Linksknicken, negativ: bei Rechtsknicken.</param>
+    /// <param name="points">The points.</param>
+    /// <param name="distanceTolerance">Positive: indentations at left turns, negative: at right turns.</param>
     public static Coordinate[] Simplify(Coordinate[] points, double distanceTolerance)
     {
         double tol = Math.Abs(distanceTolerance);

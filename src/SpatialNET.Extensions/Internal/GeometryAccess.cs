@@ -1,23 +1,23 @@
 namespace SpatialNET.Internal;
 
-/// <summary>Einheitlicher Zugriff auf die vier Geometrie-Arten.</summary>
+/// <summary>Uniform access to the four geometry kinds.</summary>
 internal static class GeometryAccess
 {
     public static Coordinate ToCoordinate(this IPoint2D p) =>
         p is IPoint3D p3 ? new Coordinate(p.X, p.Y, p3.Z) : new Coordinate(p.X, p.Y);
 
-    /// <summary>Wirft bei <c>null</c> bzw. einer unbekannten Geometrie-Art (ADR 0012).</summary>
+    /// <summary>Throws for <c>null</c> or an unknown geometry kind (ADR 0012).</summary>
     public static void EnsureKnown(IGeometry2D geometry, string paramName)
     {
         ArgumentNullException.ThrowIfNull(geometry, paramName);
         if (geometry is not (IPoint2D or IMultiPoint2D or IPolyline2D or IPolygon2D))
         {
             throw new NotSupportedException(
-                $"{geometry.GetType().FullName} ist keine der Geometrie-Arten IPoint2D, IMultiPoint2D, IPolyline2D oder IPolygon2D.");
+                $"{geometry.GetType().FullName} is none of the geometry kinds IPoint2D, IMultiPoint2D, IPolyline2D or IPolygon2D.");
         }
     }
 
-    /// <summary>Alle Punkte einer Geometrie (bei Ringen wie gespeichert, ohne Schluss-Ergänzung).</summary>
+    /// <summary>All points of a geometry (for rings as stored, without closing point added).</summary>
     public static IEnumerable<IPoint2D> AllPoints(IGeometry2D geometry)
     {
         switch (geometry)
@@ -39,7 +39,7 @@ internal static class GeometryAccess
         }
     }
 
-    /// <summary>Ob die Geometrie keine Punkte hat.</summary>
+    /// <summary>Whether the geometry has no points.</summary>
     public static bool IsEmpty(IGeometry2D geometry) => geometry switch
     {
         IPoint2D => false,
@@ -47,8 +47,8 @@ internal static class GeometryAccess
     };
 
     /// <summary>
-    /// Die Liniensegmente einer Geometrie: Pfade wie gespeichert, Ringe geschlossen,
-    /// Punkte als Segmente der Länge 0.
+    /// The line segments of a geometry: paths as stored, rings closed,
+    /// points as segments of length 0.
     /// </summary>
     public static IEnumerable<(Coordinate A, Coordinate B)> Segments(IGeometry2D geometry)
     {

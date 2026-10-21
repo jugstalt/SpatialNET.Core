@@ -1,6 +1,6 @@
 namespace SpatialNET.Internal;
 
-/// <summary>Eine Teilfläche mit geschlossenen, normalisierten Ringen (außen gegen, Löcher im Uhrzeigersinn).</summary>
+/// <summary>A part with closed, normalized rings (shell counter-clockwise, holes clockwise).</summary>
 internal sealed record Part(Coordinate[] Shell, IReadOnlyList<Coordinate[]> Holes)
 {
     public PolygonPart ToPolygonPart() =>
@@ -8,13 +8,13 @@ internal sealed record Part(Coordinate[] Shell, IReadOnlyList<Coordinate[]> Hole
 }
 
 /// <summary>
-/// Teilflächen-Bildung (ADR 0003): ordnet die flache Ringliste eines Polygons nach Verschachtelungstiefe –
-/// gerade Tiefe = Außenring, ungerade = Loch des nächst umgebenden Außenrings; eine Insel im Loch ist eine
-/// eigene Teilfläche. Degenerierte Ringe werden ignoriert, die Orientierung normalisiert.
+/// Part construction (ADR 0003): orders the flat ring list of a polygon by nesting depth –
+/// even depth = shell, odd = hole of the nearest enclosing shell; an island in a hole is a
+/// part of its own. Degenerate rings are ignored, the orientation is normalized.
 /// </summary>
 /// <remarks>
-/// Setzt eine gültige Eingabe voraus (Ringe kreuzen sich nicht); für ungültige Eingaben ist das Ergebnis
-/// deterministisch, aber nicht zugesichert. O(n²) über die Ringe – Optimierung folgt mit #38.
+/// Requires valid input (rings do not cross); for invalid input the result is
+/// deterministic but not guaranteed. O(n²) over the rings – optimization follows with #38.
 /// </remarks>
 internal static class PolygonStructure
 {
@@ -56,8 +56,8 @@ internal static class PolygonStructure
     }
 
     /// <summary>
-    /// Verschachtelung geschlossener, nicht degenerierter Ringe: Tiefe (Anzahl umgebender Ringe) und direkter
-    /// Elternring (kleinster umgebender Ring, −1 für oberste Ebene).
+    /// Nesting of closed, non-degenerate rings: depth (number of enclosing rings) and direct
+    /// parent ring (smallest enclosing ring, −1 for the top level).
     /// </summary>
     public static (int[] Depth, int[] Parent) Nesting(IReadOnlyList<Coordinate[]> rings)
     {
@@ -86,7 +86,7 @@ internal static class PolygonStructure
     }
 
     /// <summary>
-    /// Even-Odd: deckungsgleiche Ringe (gleiche Punktfolge, beliebiger Start und Umlaufsinn) heben sich paarweise auf.
+    /// Even-odd: coincident rings (same point sequence, any start and direction) cancel each other in pairs.
     /// </summary>
     public static List<Coordinate[]> CancelDuplicates(List<Coordinate[]> rings)
     {
@@ -119,14 +119,14 @@ internal static class PolygonStructure
         return string.Join(";", chosen.Select(p => $"{p.X:R},{p.Y:R}"));
     }
 
-    /// <summary>Teilfläche je Ring: Außenringe (gerade Tiefe) sind ihre eigene, Löcher gehören zu ihrem Elternring.</summary>
+    /// <summary>Part per ring: shells (even depth) are their own, holes belong to their parent ring.</summary>
     public static int[] PartOf(IReadOnlyList<Coordinate[]> rings)
     {
         var (depth, parent) = Nesting(rings);
         return Enumerable.Range(0, rings.Count).Select(i => depth[i] % 2 == 0 ? i : parent[i]).ToArray();
     }
 
-    /// <summary>Ob <paramref name="inner"/> innerhalb von <paramref name="outer"/> liegt (Ringe kreuzen sich nicht).</summary>
+    /// <summary>Whether <paramref name="inner"/> lies inside <paramref name="outer"/> (rings do not cross).</summary>
     private static bool Contains(Coordinate[] outer, Coordinate[] inner)
     {
         // Ein Vertex, der nicht auf dem Rand liegt, entscheidet; sonst ein Kantenmittelpunkt.

@@ -2,16 +2,16 @@ using SpatialNET.Internal;
 
 namespace SpatialNET;
 
-/// <summary>Maße: Fläche, Länge, Envelope, Schwerpunkt und Abstand (ADR 0012).</summary>
+/// <summary>Measures: area, length, envelope, centroid and distance (ADR 0012).</summary>
 /// <remarks>
-/// Maße setzen gültige Eingaben voraus (ADR 0003); bei ungültigen Eingaben ist das Ergebnis
-/// deterministisch, aber nicht zugesichert. Leere oder ungültige Geometrien werfen nie.
+/// Measures assume valid input (ADR 0003); for invalid input the result is
+/// deterministic but not guaranteed. Empty or invalid geometries never throw.
 /// </remarks>
 public static class Measures
 {
-    /// <summary>Die Fläche nach der Even-Odd-Regel: Außenringe minus Löcher, Inseln in Löchern wieder positiv.</summary>
-    /// <param name="polygon">Das Polygon.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> ist <c>null</c>.</exception>
+    /// <summary>The area by the even-odd rule: shells minus holes, islands in holes positive again.</summary>
+    /// <param name="polygon">The polygon.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> is <c>null</c>.</exception>
     public static double Area(this IPolygon2D polygon)
     {
         ArgumentNullException.ThrowIfNull(polygon);
@@ -29,19 +29,19 @@ public static class Measures
         return area;
     }
 
-    /// <summary>Die Fläche; 0 für Punkte, Multipunkte und Polylinien.</summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>The area; 0 for points, multipoints and polylines.</summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static double Area(this IGeometry2D geometry)
     {
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));
         return geometry is IPolygon2D polygon ? polygon.Area() : 0;
     }
 
-    /// <summary>Die Länge aller Pfade.</summary>
-    /// <param name="polyline">Die Polylinie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polyline"/> ist <c>null</c>.</exception>
+    /// <summary>The length of all paths.</summary>
+    /// <param name="polyline">The polyline.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polyline"/> is <c>null</c>.</exception>
     public static double Length(this IPolyline2D polyline)
     {
         ArgumentNullException.ThrowIfNull(polyline);
@@ -55,9 +55,9 @@ public static class Measures
         return length;
     }
 
-    /// <summary>Der Umfang: die Länge aller Ringe, jeweils geschlossen.</summary>
-    /// <param name="polygon">Das Polygon.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> ist <c>null</c>.</exception>
+    /// <summary>The perimeter: the length of all rings, each closed.</summary>
+    /// <param name="polygon">The polygon.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> is <c>null</c>.</exception>
     public static double Length(this IPolygon2D polygon)
     {
         ArgumentNullException.ThrowIfNull(polygon);
@@ -71,10 +71,10 @@ public static class Measures
         return length;
     }
 
-    /// <summary>Die Länge bzw. der Umfang; 0 für Punkte und Multipunkte.</summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>The length or perimeter; 0 for points and multipoints.</summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static double Length(this IGeometry2D geometry)
     {
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));
@@ -86,10 +86,10 @@ public static class Measures
         };
     }
 
-    /// <summary>Der Envelope; <see cref="Envelope2D.Empty"/> für eine leere Geometrie.</summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>The envelope; <see cref="Envelope2D.Empty"/> for an empty geometry.</summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static Envelope2D Envelope(this IGeometry2D geometry)
     {
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));
@@ -108,13 +108,13 @@ public static class Measures
     }
 
     /// <summary>
-    /// Der Schwerpunkt als Wert, ohne Z; <c>null</c> für eine leere Geometrie.
-    /// Flächen werden flächengewichtet, Linien längengewichtet, Punkte gemittelt; hat eine Geometrie
-    /// keine Fläche bzw. Länge, fällt die Berechnung auf die nächst niedrigere Dimension zurück (wie JTS).
+    /// The centroid as a value, without Z; <c>null</c> for an empty geometry.
+    /// Areas are area-weighted, lines length-weighted, points averaged; if a geometry has
+    /// no area or length, the computation falls back to the next lower dimension (as in JTS).
     /// </summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static Coordinate? Centroid(this IGeometry2D geometry)
     {
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));
@@ -133,13 +133,13 @@ public static class Measures
     }
 
     /// <summary>
-    /// Der kleinste Abstand zweier Geometrien; 0, wenn sie sich schneiden oder eine in der Fläche der
-    /// anderen liegt. <see cref="double.NaN"/>, wenn eine der beiden leer ist (bewusste Abweichung von NTS, ADR 0012).
+    /// The smallest distance between two geometries; 0 if they intersect or one lies in the area of the
+    /// other. <see cref="double.NaN"/> if either is empty (deliberate deviation from NTS, ADR 0012).
     /// </summary>
-    /// <param name="a">Die erste Geometrie.</param>
-    /// <param name="b">Die zweite Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="a"/> oder <paramref name="b"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException">Eine Geometrie ist keine bekannte Geometrie-Art.</exception>
+    /// <param name="a">The first geometry.</param>
+    /// <param name="b">The second geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="a"/> or <paramref name="b"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException">A geometry is not a known geometry kind.</exception>
     public static double Distance(this IGeometry2D a, IGeometry2D b)
     {
         GeometryAccess.EnsureKnown(a, nameof(a));
@@ -205,7 +205,7 @@ public static class Measures
         return area == 0 ? null : new Coordinate(cx / area, cy / area);
     }
 
-    /// <summary>Vorzeichenbehaftete Fläche und Schwerpunkt eines Rings (Dreiecksfächer relativ zum ersten Punkt).</summary>
+    /// <summary>Signed area and centroid of a ring (triangle fan relative to the first point).</summary>
     private static (double Area, double X, double Y) RingCentroid(Coordinate[] closed)
     {
         double x0 = closed[0].X, y0 = closed[0].Y, area2 = 0, sx = 0, sy = 0;

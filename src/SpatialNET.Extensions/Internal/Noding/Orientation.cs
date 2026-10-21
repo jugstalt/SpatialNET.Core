@@ -3,9 +3,9 @@ using System.Numerics;
 namespace SpatialNET.Internal.Noding;
 
 /// <summary>
-/// Exaktes Orientierungsprädikat orient2d (ADR 0005): erst ein Gleitkomma-Filter mit Shewchuks
-/// Fehlerschranke, nur bei unsicherem Vorzeichen exakte Rechnung. Das Ergebnis ist immer das exakte
-/// Vorzeichen der Determinante der Eingabe-Doubles.
+/// Exact orientation predicate orient2d (ADR 0005): first a floating-point filter with Shewchuk's
+/// error bound, exact computation only if the sign is uncertain. The result is always the exact
+/// sign of the determinant of the input doubles.
 /// </summary>
 internal static class Orientation
 {
@@ -13,7 +13,7 @@ internal static class Orientation
     private const double Epsilon = 1.1102230246251565e-16;
     private const double ErrorBound = (3.0 + 16.0 * Epsilon) * Epsilon;
 
-    /// <summary>+1, wenn c links von a→b liegt, −1 rechts, 0 kollinear – exakt.</summary>
+    /// <summary>+1 if c lies to the left of a→b, −1 to the right, 0 collinear – exact.</summary>
     public static int Orient2D(double ax, double ay, double bx, double by, double cx, double cy)
     {
         double acx = ax - cx, bcy = by - cy, acy = ay - cy, bcx = bx - cx;
@@ -68,7 +68,7 @@ internal static class Orientation
 
     public static int Orient2D(Coordinate a, Coordinate b, Coordinate c) => Orient2D(a.X, a.Y, b.X, b.Y, c.X, c.Y);
 
-    /// <summary>Exakte Determinante über ganze Zahlen: jedes Double ist m·2^e.</summary>
+    /// <summary>Exact determinant over integers: every double is m·2^e.</summary>
     internal static int Exact(double ax, double ay, double bx, double by, double cx, double cy)
     {
         Span<double> values = [ax, ay, bx, by, cx, cy];
@@ -98,12 +98,12 @@ internal static class Orientation
         return det.Sign;
     }
 
-    /// <summary>Zerlegt ein endliches Double exakt in Mantisse und Exponent: value = mantissa · 2^exponent.</summary>
+    /// <summary>Splits a finite double exactly into mantissa and exponent: value = mantissa · 2^exponent.</summary>
     internal static (BigInteger Mantissa, int Exponent) Decompose(double value)
     {
         if (!double.IsFinite(value))
         {
-            throw new ArgumentOutOfRangeException(nameof(value), value, "Koordinaten müssen endlich sein.");
+            throw new ArgumentOutOfRangeException(nameof(value), value, "Coordinates must be finite.");
         }
 
         long bits = BitConverter.DoubleToInt64Bits(value);

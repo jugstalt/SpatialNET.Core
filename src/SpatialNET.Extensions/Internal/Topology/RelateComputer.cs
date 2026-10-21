@@ -3,9 +3,9 @@ using SpatialNET.Internal.Noding;
 namespace SpatialNET.Internal.Topology;
 
 /// <summary>
-/// DE-9IM (ADR 0013): exakter planarer Graph beider Geometrien ohne Gitter; jede Masche (Dimension 2), Kante (1)
-/// und jeder Knoten (0) bekommt seine Lage Inneres/Rand/Äußeres zu a und b; der Matrixeintrag ist die höchste
-/// Dimension je Lagekombination. Flächen nach Even-Odd (ADR 0003), Linienränder nach Mod-2.
+/// DE-9IM (ADR 0013): exact planar graph of both geometries without a grid; each face (dimension 2), edge (1)
+/// and node (0) gets its position interior/boundary/exterior with respect to a and b; the matrix entry is the highest
+/// dimension per combination of positions. Areas by even-odd (ADR 0003), line boundaries by mod-2.
 /// </summary>
 internal static class RelateComputer
 {
@@ -218,7 +218,7 @@ internal static class RelateComputer
         }
     }
 
-    /// <summary>Exaktes Noding: echte Kreuzungen als rationale Punkte, Berührungen und Überlappungen über die Endpunkte.</summary>
+    /// <summary>Exact noding: proper crossings as rational points, touches and overlaps via the end points.</summary>
     private static void Node(List<Seg> segments, List<(int Operand, Coordinate C, HPoint H)> points)
     {
         var order = segments.OrderBy(s => s.MinX).ToArray();
@@ -258,7 +258,7 @@ internal static class RelateComputer
         }
     }
 
-    /// <summary>Endpunkte und Teilungspunkte entlang der Segmentrichtung, ohne Doppelte.</summary>
+    /// <summary>End points and split points along the segment direction, without duplicates.</summary>
     private static List<HPoint> Sorted(Seg s)
     {
         var all = new List<HPoint>(s.Splits.Count + 2) { s.HP, s.HQ };

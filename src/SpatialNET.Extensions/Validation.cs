@@ -3,61 +3,61 @@ using SpatialNET.Internal.Noding;
 
 namespace SpatialNET;
 
-/// <summary>Art eines Gültigkeitsbefunds (ADR 0003/0012).</summary>
+/// <summary>Kind of a validity finding (ADR 0003/0012).</summary>
 public enum ValidationIssueKind
 {
-    /// <summary>Ringe kreuzen sich bzw. ein Ring kreuzt oder überlagert sich selbst.</summary>
+    /// <summary>Rings cross each other, or a ring crosses or overlaps itself.</summary>
     SelfIntersection,
 
-    /// <summary>Ein Ring berührt sich selbst in einem Punkt (z. B. „invertiertes Loch“).</summary>
+    /// <summary>A ring touches itself at a point (e.g. an "inverted hole").</summary>
     RingSelfTouch,
 
-    /// <summary>Ein Ring ohne Fläche (weniger als 3 verschiedene Punkte oder alle Punkte kollinear).</summary>
+    /// <summary>A ring without area (fewer than 3 distinct points or all points collinear).</summary>
     DegenerateRing,
 
-    /// <summary>Eine Koordinate ist <c>NaN</c> oder unendlich.</summary>
+    /// <summary>A coordinate is <c>NaN</c> or infinite.</summary>
     InvalidCoordinate,
 
-    /// <summary>Ein Pfad mit weniger als 2 verschiedenen Punkten.</summary>
+    /// <summary>A path with fewer than 2 distinct points.</summary>
     TooFewPoints,
 
-    /// <summary>Zwei Ringe überlagern sich entlang einer Kante.</summary>
+    /// <summary>Two rings overlap along an edge.</summary>
     OverlappingShells,
 
-    /// <summary>Ringe berühren sich so, dass die Fläche in getrennte Teile zerfällt (z. B. zwei Berührpunkte desselben Ringpaars).</summary>
+    /// <summary>Rings touch in such a way that the area falls apart into separate parts (e.g. two touch points of the same ring pair).</summary>
     DisconnectedInterior,
 }
 
-/// <summary>Ein Gültigkeitsbefund mit Ort.</summary>
-/// <param name="Kind">Die Art des Befunds.</param>
-/// <param name="Location">Der Ort (Schnitt- bzw. Berührpunkt, betroffener Vertex).</param>
+/// <summary>A validity finding with its location.</summary>
+/// <param name="Kind">The kind of finding.</param>
+/// <param name="Location">The location (intersection or touch point, affected vertex).</param>
 public readonly record struct ValidationIssue(ValidationIssueKind Kind, Coordinate Location);
 
-/// <summary>Das Ergebnis einer Gültigkeitsprüfung.</summary>
-/// <param name="Issues">Alle Befunde; leer bei gültiger Geometrie.</param>
+/// <summary>The result of a validity check.</summary>
+/// <param name="Issues">All findings; empty for a valid geometry.</param>
 public sealed record ValidationResult(IReadOnlyList<ValidationIssue> Issues)
 {
-    /// <summary>Ob die Geometrie gültig ist.</summary>
+    /// <summary>Whether the geometry is valid.</summary>
     public bool IsValid => Issues.Count == 0;
 }
 
 /// <summary>
-/// Gültigkeit nach ADR 0003: Fläche nach Even-Odd, OGC-Regeln für Kreuzungen und Berührungen. Ein fehlender
-/// Schlusspunkt und die Ring-Orientierung sind ohne Bedeutung; ein Ring in einem Loch ist eine Insel, kein Fehler.
-/// Entscheidungen sind exakt (orient2d).
+/// Validity according to ADR 0003: area by even-odd, OGC rules for crossings and touches. A missing
+/// closing point and the ring orientation are irrelevant; a ring in a hole is an island, not an error.
+/// Decisions are exact (orient2d).
 /// </summary>
 public static class Validation
 {
-    /// <summary>Ob die Geometrie gültig ist.</summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>Whether the geometry is valid.</summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static bool IsValid(this IGeometry2D geometry) => geometry.Validate().IsValid;
 
-    /// <summary>Prüft die Gültigkeit und liefert alle Befunde mit Ort.</summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>Checks validity and returns all findings with their location.</summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static ValidationResult Validate(this IGeometry2D geometry)
     {
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));
@@ -216,7 +216,7 @@ public static class Validation
         }
     }
 
-    /// <summary>Ob sich zwei Ringe im Berührpunkt <paramref name="p"/> kreuzen (Richtungen wechseln sich im Winkel ab).</summary>
+    /// <summary>Whether two rings cross at the touch point <paramref name="p"/> (directions alternate by angle).</summary>
     private static bool CrossAt(Coordinate[] ring1, Coordinate[] ring2, Coordinate p)
     {
         if (Directions(ring1, p) is not { } d1 || Directions(ring2, p) is not { } d2)
@@ -234,7 +234,7 @@ public static class Validation
         return all[0].Item2 != all[1].Item2 && all[1].Item2 != all[2].Item2 && all[2].Item2 != all[3].Item2;
     }
 
-    /// <summary>Die Nachbarpunkte eines geschlossenen Rings um <paramref name="p"/> (Vertex oder Punkt im Segment).</summary>
+    /// <summary>The neighbor points of a closed ring around <paramref name="p"/> (vertex or point on a segment).</summary>
     private static (Coordinate Prev, Coordinate Next)? Directions(Coordinate[] closed, Coordinate p)
     {
         int n = closed.Length - 1;
@@ -257,7 +257,7 @@ public static class Validation
         return null;
     }
 
-    /// <summary>Exakter Winkelvergleich zweier Richtungen um <paramref name="o"/> (Halbebene, dann orient2d).</summary>
+    /// <summary>Exact angle comparison of two directions around <paramref name="o"/> (half-plane, then orient2d).</summary>
     private static int CompareAngle(Coordinate o, Coordinate a, Coordinate b)
     {
         int ha = Half(o, a), hb = Half(o, b);
@@ -346,7 +346,7 @@ public static class Validation
         return new Coordinate(a.A.X + t * rx, a.A.Y + t * ry);
     }
 
-    /// <summary>Entfernt aufeinanderfolgende doppelte Punkte (bei Ringen bleibt der Schlusspunkt).</summary>
+    /// <summary>Removes consecutive duplicate points (for rings the closing point is kept).</summary>
     private static Coordinate[] Compact(Coordinate[] points, bool closed)
     {
         var result = new List<Coordinate>(points.Length);

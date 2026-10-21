@@ -4,28 +4,28 @@ using SpatialNET.Internal.Noding;
 
 namespace SpatialNET;
 
-/// <summary>Optionen für <see cref="OffsetCurves.OffsetCurve(IPolyline2D, double, OffsetOptions?, IGeometryFactory?, double?)"/> (ADR 0006).</summary>
+/// <summary>Options for <see cref="OffsetCurves.OffsetCurve(IPolyline2D, double, OffsetOptions?, IGeometryFactory?, double?)"/> (ADR 0006).</summary>
 public sealed record OffsetOptions
 {
-    /// <summary>Die Standard-Optionen.</summary>
+    /// <summary>The default options.</summary>
     public static OffsetOptions Default { get; } = new();
 
-    /// <summary>Ecken an der Außenseite; Standard <see cref="JoinStyle.Round"/>.</summary>
+    /// <summary>Corners on the outside; default <see cref="JoinStyle.Round"/>.</summary>
     public JoinStyle JoinStyle { get; init; } = JoinStyle.Round;
 
-    /// <summary>Segmente je Viertelkreis; Standard 8.</summary>
+    /// <summary>Segments per quarter circle; default 8.</summary>
     public int QuadrantSegments { get; init; } = 8;
 
-    /// <summary>Größte Sehnenabweichung der Bögen; gesetzt hat sie Vorrang vor <see cref="QuadrantSegments"/>.</summary>
+    /// <summary>Largest chord deviation of the arcs; if set, it takes precedence over <see cref="QuadrantSegments"/>.</summary>
     public double? ArcTolerance { get; init; }
 
-    /// <summary>Mitre-Limit; Standard 5.</summary>
+    /// <summary>Mitre limit; default 5.</summary>
     public double MitreLimit { get; init; } = 5;
 
-    /// <summary>Faktor der Eingabe-Vereinfachung; Standard 0,01.</summary>
+    /// <summary>Factor of the input simplification; default 0.01.</summary>
     public double SimplifyFactor { get; init; } = 0.01;
 
-    /// <summary>Teilstücke zu einem Pfad verbinden (JTS „joined“); Standard aus.</summary>
+    /// <summary>Join the pieces into one path (JTS "joined"); default off.</summary>
     public bool Joined { get; init; }
 
     internal BufferOptions ToBuffer() => new()
@@ -40,22 +40,22 @@ public sealed record OffsetOptions
 }
 
 /// <summary>
-/// Offset-Kurven nach dem Muster von JTS OffsetCurve (ADR 0006): Buffer mit flachen Enden, Roh-Offset der Seite,
-/// Abgleich mit dem Buffer-Rand. Das Ergebnis liegt garantiert auf dem Buffer-Rand und ist bei Engstellen eine
-/// Polylinie mit mehreren Pfaden. Z wird auf dem nächsten Quellsegment interpoliert.
+/// Offset curves following JTS OffsetCurve (ADR 0006): buffer with flat ends, raw offset of the side,
+/// matched against the buffer boundary. The result is guaranteed to lie on the buffer boundary and, at narrow
+/// spots, is a polyline with several paths. Z is interpolated on the nearest source segment.
 /// </summary>
 public static class OffsetCurves
 {
     private const double MatchDistanceFactor = 10000;
 
-    /// <summary>Die Offset-Kurve einer Polylinie; positive Distanz links, negative rechts der Laufrichtung.</summary>
-    /// <param name="polyline">Die Polylinie.</param>
-    /// <param name="distance">Die Distanz.</param>
-    /// <param name="options">Die Optionen; <c>null</c> = <see cref="OffsetOptions.Default"/>.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <param name="gridSize">Die Gitterweite; <c>null</c> = Kaskade.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polyline"/> ist <c>null</c>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Distanz nicht endlich oder ungültige Optionen.</exception>
+    /// <summary>The offset curve of a polyline; positive distance to the left, negative to the right of the direction of travel.</summary>
+    /// <param name="polyline">The polyline.</param>
+    /// <param name="distance">The distance.</param>
+    /// <param name="options">The options; <c>null</c> = <see cref="OffsetOptions.Default"/>.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <param name="gridSize">The grid size; <c>null</c> = cascade (global default, otherwise automatic).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polyline"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Distance not finite or invalid options.</exception>
     public static IPolyline2D OffsetCurve(this IPolyline2D polyline, double distance, OffsetOptions? options = null,
         IGeometryFactory? factory = null, double? gridSize = null)
     {
@@ -80,16 +80,16 @@ public static class OffsetCurves
     }
 
     /// <summary>
-    /// Die Offset-Kurve eines Polygons: der Rand von <c>Buffer(distance)</c> als geschlossene Pfade – positiv außen,
-    /// negativ innen, unabhängig von der Ring-Orientierung.
+    /// The offset curve of a polygon: the boundary of <c>Buffer(distance)</c> as closed paths – positive outside,
+    /// negative inside, regardless of ring orientation.
     /// </summary>
-    /// <param name="polygon">Das Polygon.</param>
-    /// <param name="distance">Die Distanz.</param>
-    /// <param name="options">Die Optionen; <c>null</c> = <see cref="OffsetOptions.Default"/>.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <param name="gridSize">Die Gitterweite; <c>null</c> = Kaskade.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> ist <c>null</c>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Distanz nicht endlich oder ungültige Optionen.</exception>
+    /// <param name="polygon">The polygon.</param>
+    /// <param name="distance">The distance.</param>
+    /// <param name="options">The options; <c>null</c> = <see cref="OffsetOptions.Default"/>.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <param name="gridSize">The grid size; <c>null</c> = cascade (global default, otherwise automatic).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Distance not finite or invalid options.</exception>
     public static IPolyline2D OffsetCurve(this IPolygon2D polygon, double distance, OffsetOptions? options = null,
         IGeometryFactory? factory = null, double? gridSize = null)
     {
@@ -283,7 +283,7 @@ public static class OffsetCurves
         return [new(a.X + nx, a.Y + ny), new(b.X + nx, b.Y + ny)];
     }
 
-    /// <summary>Z je Punkt vom nächsten Quellsegment interpoliert (nur, wenn die Quelle Z trägt).</summary>
+    /// <summary>Z per point interpolated from the nearest source segment (only if the source carries Z).</summary>
     private static Coordinate[] WithZ(Coordinate[] curve, IReadOnlyList<Coordinate[]> sources, bool supportsZ)
     {
         if (!supportsZ || !sources.Any(s => s.Any(c => c.HasZ)))

@@ -6,9 +6,9 @@ namespace SpatialNET.Internal.Overlay;
 internal enum OverlayOp { Intersection, Union, Difference, SymDifference }
 
 /// <summary>
-/// Overlay-Kern (ADR 0005): Snap-Rounding aller Kanten, planarer Graph über Gitterpunkten, Windungszahl je
-/// Operand und Masche, Füllregel → innen/außen, Auswahl nach Operation, Aufbau von Teilflächen, Pfaden bzw.
-/// Punkten. Strict-Semantik: das Ergebnis hat genau die vom Aufrufer verlangte Dimension.
+/// Overlay core (ADR 0005): snap rounding of all edges, planar graph over grid points, winding number per
+/// operand and face, fill rule → inside/outside, selection by operation, construction of parts, paths or
+/// points. Strict semantics: the result has exactly the dimension requested by the caller.
 /// </summary>
 internal sealed class OverlayEngine
 {
@@ -28,13 +28,13 @@ internal sealed class OverlayEngine
     {
     }
 
-    /// <summary>Overlay zweier Flächen mit Envelope-Vorfilter (<see cref="RingClipper"/>).</summary>
-    /// <param name="a">Erster Operand.</param>
-    /// <param name="b">Zweiter Operand.</param>
-    /// <param name="grid">Das Gitter.</param>
-    /// <param name="fillRule">Füllregel.</param>
-    /// <param name="clip">Rechteck je Operand, auf das seine Ringe reduziert werden (null = keins).</param>
-    /// <param name="resultBox">Bereich, der das Ergebnis sicher enthält; nur Kanten darin werden ausgewählt.</param>
+    /// <summary>Overlay of two areas with envelope prefilter (<see cref="RingClipper"/>).</summary>
+    /// <param name="a">First operand.</param>
+    /// <param name="b">Second operand.</param>
+    /// <param name="grid">The grid.</param>
+    /// <param name="fillRule">Fill rule.</param>
+    /// <param name="clip">Rectangle per operand to which its rings are reduced (null = none).</param>
+    /// <param name="resultBox">Region that safely contains the result; only edges inside it are selected.</param>
     public OverlayEngine(IGeometry2D a, IGeometry2D? b, GridModel grid, FillRule fillRule, Envelope2D?[] clip, Envelope2D resultBox)
         : this([a, b], grid, [fillRule, fillRule], extraLines: null, clip)
     {
@@ -43,11 +43,11 @@ internal sealed class OverlayEngine
 
     private readonly (double MinX, double MinY, double MaxX, double MaxY)? _resultBox;
 
-    /// <param name="operands">Bis zu zwei Operanden.</param>
-    /// <param name="grid">Das Gitter.</param>
-    /// <param name="fill">Füllregel je Operand.</param>
-    /// <param name="extraLines">Zusätzliche Ringe/Pfade je Operand mit eigener Orientierung (z. B. Roh-Offsets des Buffers).</param>
-    /// <param name="clip">Optional: Rechteck je Operand für den Envelope-Vorfilter der Ringe.</param>
+    /// <param name="operands">Up to two operands.</param>
+    /// <param name="grid">The grid.</param>
+    /// <param name="fill">Fill rule per operand.</param>
+    /// <param name="extraLines">Additional rings/paths per operand with their own orientation (e.g. raw offsets of the buffer).</param>
+    /// <param name="clip">Optional: rectangle per operand for the envelope prefilter of the rings.</param>
     public OverlayEngine(IGeometry2D?[] operands, GridModel grid, FillRule[] fill, List<(Coordinate[] Path, int Operand, bool Area)>? extraLines,
         Envelope2D?[]? clip = null)
     {
@@ -154,7 +154,7 @@ internal sealed class OverlayEngine
         _ => a != b,
     };
 
-    /// <summary>Lage einer Kante (über Halbkante 2e) zur Fläche des Operanden: 0 außen, 1 Rand, 2 innen.</summary>
+    /// <summary>Position of an edge (via half-edge 2e) relative to the area of the operand: 0 outside, 1 boundary, 2 inside.</summary>
     public int EdgeAreaLocation(int e, int operand)
     {
         bool left = InsideLeft(2 * e, operand), right = InsideRight(2 * e, operand);
@@ -163,7 +163,7 @@ internal sealed class OverlayEngine
 
     // ---------- Flächen ----------
 
-    /// <summary>Teilflächen der Masche-Auswahl <paramref name="inResult"/> (für die Masche links einer Halbkante).</summary>
+    /// <summary>Parts of the face selection <paramref name="inResult"/> (for the face to the left of a half-edge).</summary>
     public List<PolygonPart> Areas(Func<int, bool> inResult)
     {
         var selected = new bool[Graph.HalfEdgeCount];
@@ -175,7 +175,7 @@ internal sealed class OverlayEngine
         return BuildAreas(selected);
     }
 
-    /// <summary>Ob die Kante im Ergebnisbereich liegt (immer, ohne Envelope-Vorfilter); Artefakte des Vorfilters liegen außerhalb.</summary>
+    /// <summary>Whether the edge lies in the result region (always, without envelope prefilter); prefilter artifacts lie outside.</summary>
     private bool InResultBox(int e)
     {
         if (_resultBox is not { } box) return true;
@@ -185,7 +185,7 @@ internal sealed class OverlayEngine
             && Math.Min(a.Y, b.Y) >= box.MinY && Math.Max(a.Y, b.Y) <= box.MaxY;
     }
 
-    /// <summary>Teilflächen aus ausgewählten Halbkanten (Ergebnis links): Maschen verfolgen, an Mehrfachknoten trennen, Löcher zuordnen.</summary>
+    /// <summary>Parts from selected half-edges (result on the left): follow faces, split at multiple nodes, assign holes.</summary>
     public List<PolygonPart> BuildAreas(bool[] selected)
     {
         var used = new bool[Graph.HalfEdgeCount];
@@ -291,7 +291,7 @@ internal sealed class OverlayEngine
         return sum;
     }
 
-    /// <summary>Ob der (nicht kreuzende) Ring <paramref name="inner"/> in <paramref name="outer"/> liegt: ein Vertex, der nicht auf dem Rand liegt.</summary>
+    /// <summary>Whether the (non-crossing) ring <paramref name="inner"/> lies in <paramref name="outer"/>: a vertex that is not on the boundary.</summary>
     private static bool ContainsRing(GridPoint[] outer, GridPoint[] inner)
     {
         foreach (var p in inner)
@@ -303,7 +303,7 @@ internal sealed class OverlayEngine
         return false;
     }
 
-    /// <summary>Lage eines Gitterpunkts zu einem geschlossenen Gitterring: 0 außen, 1 Rand, 2 innen – exakt.</summary>
+    /// <summary>Position of a grid point relative to a closed grid ring: 0 outside, 1 boundary, 2 inside – exact.</summary>
     internal static int Locate(GridPoint p, GridPoint[] closed)
     {
         bool inside = false;
@@ -327,8 +327,8 @@ internal sealed class OverlayEngine
     // ---------- Linien ----------
 
     /// <summary>
-    /// Ausgewählte Kanten zu Pfaden. Verbunden wird nur an reinen Zwischen-Vertices (Grad 2 im ganzen Graph,
-    /// kein Pfad-Endpunkt einer Eingabe) – wie JTS OverlayNG; an Noding-Knoten beginnt ein neuer Pfad.
+    /// Selected edges into paths. Joining happens only at pure intermediate vertices (degree 2 in the whole graph,
+    /// not a path end point of an input) – as in JTS OverlayNG; a new path starts at noding nodes.
     /// </summary>
     public List<ReadOnlyMemory<Coordinate>> Lines(Func<int, bool> selectEdge)
     {
@@ -403,13 +403,13 @@ internal sealed class OverlayEngine
 
     // ---------- Punkte ----------
 
-    /// <summary>Gerundete, eindeutige Punkte des Operanden.</summary>
+    /// <summary>Rounded, distinct points of the operand.</summary>
     public IEnumerable<(GridPoint Grid, Coordinate Original)> Points(int operand) =>
         _points[operand].Where(c => double.IsFinite(c.X) && double.IsFinite(c.Y))
             .Select(c => (_grid.Round(c), c))
             .DistinctBy(p => p.Item1);
 
-    /// <summary>Ob ein Gitterpunkt in der Abschlussmenge (Inneres oder Rand) des Operanden liegt.</summary>
+    /// <summary>Whether a grid point lies in the closure (interior or boundary) of the operand.</summary>
     public bool Covers(int operand, GridPoint p)
     {
         switch (_dimension[operand])
@@ -462,7 +462,7 @@ internal sealed class OverlayEngine
 
     private Dictionary<GridPoint, double>? _z;
 
-    /// <summary>Z an einem Knoten: aus dem ersten Operanden, sonst aus dem zweiten (ADR 0005); NaN = keines.</summary>
+    /// <summary>Z at a node: from the first operand, otherwise from the second (ADR 0005); NaN = none.</summary>
     public double ZAt(GridPoint p)
     {
         if (_z is null)

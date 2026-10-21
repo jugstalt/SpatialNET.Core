@@ -4,12 +4,12 @@ using SpatialNET.Internal.Noding;
 namespace SpatialNET;
 
 /// <summary>
-/// Eine für wiederholte Prädikate vorbereitete Geometrie (ADR 0013): Schnappschuss der Koordinaten plus
-/// Segment-Index. Spätere Änderungen am Host-Objekt wirken nicht. Die Ergebnisse sind identisch mit den
-/// nicht vorbereiteten Prädikaten; schnelle Wege gibt es für <see cref="Intersects"/>/<see cref="Disjoint"/>
-/// und Punkt-in-Fläche, alles andere läuft über das exakte <see cref="Relations.Relate(IGeometry2D, IGeometry2D)"/>.
+/// A geometry prepared for repeated predicates (ADR 0013): a snapshot of the coordinates plus a
+/// segment index. Later changes to the host object have no effect. Results are identical to the
+/// unprepared predicates; fast paths exist for <see cref="Intersects"/>/<see cref="Disjoint"/>
+/// and point-in-area, everything else goes through the exact <see cref="Relations.Relate(IGeometry2D, IGeometry2D)"/>.
 /// </summary>
-/// <remarks>Nicht thread-sicher; je Thread eine eigene Instanz vorbereiten.</remarks>
+/// <remarks>Not thread-safe; prepare one instance per thread.</remarks>
 public sealed class PreparedGeometry
 {
     private readonly Envelope2D _envelope;
@@ -39,15 +39,15 @@ public sealed class PreparedGeometry
         _index = new SegmentIndex(segments, _envelope);
     }
 
-    /// <summary>Der Schnappschuss der vorbereiteten Geometrie.</summary>
+    /// <summary>The snapshot of the prepared geometry.</summary>
     public IGeometry2D Geometry { get; }
 
-    /// <summary>Wie <see cref="Relations.Intersects"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.Intersects"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool Intersects(IGeometry2D other) => !Disjoint(other);
 
-    /// <summary>Wie <see cref="Relations.Disjoint"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.Disjoint"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool Disjoint(IGeometry2D other)
     {
         GeometryAccess.EnsureKnown(other, nameof(other));
@@ -95,8 +95,8 @@ public sealed class PreparedGeometry
         return true;
     }
 
-    /// <summary>Wie <see cref="Relations.Contains"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.Contains"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool Contains(IGeometry2D other)
     {
         GeometryAccess.EnsureKnown(other, nameof(other));
@@ -105,8 +105,8 @@ public sealed class PreparedGeometry
         return Geometry.Contains(other);
     }
 
-    /// <summary>Wie <see cref="Relations.Covers"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.Covers"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool Covers(IGeometry2D other)
     {
         GeometryAccess.EnsureKnown(other, nameof(other));
@@ -115,8 +115,8 @@ public sealed class PreparedGeometry
         return Geometry.Covers(other);
     }
 
-    /// <summary>Wie <see cref="Relations.Within"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.Within"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool Within(IGeometry2D other)
     {
         GeometryAccess.EnsureKnown(other, nameof(other));
@@ -124,8 +124,8 @@ public sealed class PreparedGeometry
         return Geometry.Within(other);
     }
 
-    /// <summary>Wie <see cref="Relations.CoveredBy"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.CoveredBy"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool CoveredBy(IGeometry2D other)
     {
         GeometryAccess.EnsureKnown(other, nameof(other));
@@ -133,8 +133,8 @@ public sealed class PreparedGeometry
         return Geometry.CoveredBy(other);
     }
 
-    /// <summary>Wie <see cref="Relations.Touches"/>.</summary>
-    /// <param name="other">Die andere Geometrie.</param>
+    /// <summary>Like <see cref="Relations.Touches"/>.</summary>
+    /// <param name="other">The other geometry.</param>
     public bool Touches(IGeometry2D other)
     {
         GeometryAccess.EnsureKnown(other, nameof(other));
@@ -152,7 +152,7 @@ public sealed class PreparedGeometry
         _ => [],
     };
 
-    /// <summary>Je Ring, Pfad bzw. Punkt der vorbereiteten Geometrie ein Punkt.</summary>
+    /// <summary>One point per ring, path or point of the prepared geometry.</summary>
     private IEnumerable<Coordinate> ComponentPoints() => Geometry switch
     {
         IPoint2D p => [p.ToCoordinate()],
@@ -170,7 +170,7 @@ public sealed class PreparedGeometry
     private bool IsIncludedIn(Envelope2D e) =>
         _envelope.MinX >= e.MinX && _envelope.MaxX <= e.MaxX && _envelope.MinY >= e.MinY && _envelope.MaxY <= e.MaxY;
 
-    /// <summary>Punkt in Fläche (Even-Odd) über den Index: Strahl nach links, halboffene Regel, exakt.</summary>
+    /// <summary>Point in area (even-odd) via the index: ray to the left, half-open rule, exact.</summary>
     private Location LocateInArea(Coordinate p)
     {
         bool inside = false;
@@ -189,13 +189,13 @@ public sealed class PreparedGeometry
     }
 }
 
-/// <summary>Vorbereitung für wiederholte Prädikate (ADR 0013).</summary>
+/// <summary>Preparation for repeated predicates (ADR 0013).</summary>
 public static class Preparation
 {
-    /// <summary>Bereitet die Geometrie für wiederholte Prädikate vor; die Koordinaten werden kopiert.</summary>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>Prepares the geometry for repeated predicates; the coordinates are copied.</summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static PreparedGeometry Prepare(this IGeometry2D geometry)
     {
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));

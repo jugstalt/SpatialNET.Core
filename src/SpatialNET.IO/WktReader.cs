@@ -2,14 +2,14 @@ using System.Globalization;
 
 namespace SpatialNET.IO;
 
-/// <summary>Rekursiver Parser für WKT; erzeugt Geometrien über die Factory.</summary>
+/// <summary>Recursive parser for WKT; creates geometries through the factory.</summary>
 internal sealed class WktReader(string text, IGeometryFactory factory)
 {
     private enum Dim { Unknown, XY, Z, M, ZM }
 
     private int _pos;
 
-    /// <summary>Liest genau eine Geometrie; eine GeometryCollection wird flachgeklopft, wenn <paramref name="flatten"/> gesetzt ist.</summary>
+    /// <summary>Reads exactly one geometry; a GeometryCollection is flattened if <paramref name="flatten"/> is set.</summary>
     public List<IGeometry2D> ReadDocument(bool flatten)
     {
         var result = new List<IGeometry2D>();
@@ -17,7 +17,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
         SkipWhitespace();
         if (_pos < text.Length)
         {
-            throw Error("Unerwarteter Text nach dem Ende der Geometrie");
+            throw Error("Unexpected text after the end of the geometry");
         }
 
         return result;
@@ -64,7 +64,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
                 if (!flatten)
                 {
                     throw new NotSupportedException(
-                        "GEOMETRYCOLLECTION wird als Einzelgeometrie nicht unterstützt (ADR 0009); Wkt.ReadAll liest sie als Liste.");
+                        "GEOMETRYCOLLECTION is not supported as a single geometry (ADR 0009); Wkt.ReadAll reads it as a list.");
                 }
 
                 if (TryEmpty()) return;
@@ -79,7 +79,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
 
             default:
                 _pos = start;
-                throw Error($"Unbekannter Geometrie-Typ '{type}'");
+                throw Error($"Unknown geometry type '{type}'");
         }
     }
 
@@ -140,7 +140,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
         int expected = dim switch { Dim.XY => 2, Dim.Z or Dim.M => 3, Dim.ZM => 4, _ => -1 };
         if (values.Count < 2 || values.Count > 4 || (expected > 0 && values.Count != expected))
         {
-            throw Error($"Koordinate mit {values.Count} Werten passt nicht zur Dimension {dim}");
+            throw Error($"Coordinate with {values.Count} values does not match dimension {dim}");
         }
 
         // Ohne Dimensionsangabe: 3 Werte = Z, 4 Werte = ZM. M wird verworfen (ADR 0009).
@@ -160,7 +160,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
         if (!double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
         {
             _pos = start;
-            throw Error($"Ungültige Zahl '{token}'");
+            throw Error($"Invalid number '{token}'");
         }
 
         return value;
@@ -180,7 +180,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
                 case "M": return Dim.M;
                 case "ZM": return Dim.ZM;
                 case "EMPTY": _pos = start; return Dim.Unknown;
-                default: _pos = start; throw Error("Erwartet Z, M, ZM, EMPTY oder '('");
+                default: _pos = start; throw Error("Expected Z, M, ZM, EMPTY or '('");
             }
         }
 
@@ -215,7 +215,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
 
         if (_pos == start)
         {
-            throw Error("Erwartet ein Schlüsselwort");
+            throw Error("Expected a keyword");
         }
 
         return text[start.._pos].ToUpperInvariant();
@@ -225,7 +225,7 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
     {
         if (!TryConsume(c))
         {
-            throw Error($"Erwartet '{c}'");
+            throw Error($"Expected '{c}'");
         }
     }
 
@@ -252,6 +252,6 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
     private FormatException Error(string message)
     {
         string found = _pos < text.Length ? $"'{text[_pos]}'" : "Ende des Textes";
-        return new FormatException($"Ungültiges WKT an Position {_pos} ({found}): {message}.");
+        return new FormatException($"Invalid WKT at position {_pos} ({found}): {message}.");
     }
 }

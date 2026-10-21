@@ -1,96 +1,96 @@
 namespace SpatialNET;
 
 /// <summary>
-/// Gemeinsamer Basistyp aller Geometrien: Punkt, Multipunkt, Polylinie und Polygon.
-/// Pfade und Ringe sind Teile einer Geometrie und selbst keine Geometrie (ADR 0002).
+/// Common base type of all geometries: point, multipoint, polyline and polygon.
+/// Paths and rings are parts of a geometry and are not geometries themselves (ADR 0002).
 /// </summary>
 /// <remarks>
-/// Alle Geometrie-Interfaces sind nur lesend. Weitere Member wie Envelope, Fläche oder
-/// IsEmpty gibt es als Extension-Methoden, damit sie nicht mit gleichnamigen Membern
-/// der Host-Geometrien kollidieren.
+/// All geometry interfaces are read-only. Further members such as envelope, area or
+/// IsEmpty are provided as extension methods so that they do not collide with members
+/// of the same name on host geometries.
 /// </remarks>
 public interface IGeometry2D { }
 
-/// <summary>Ein Punkt in der Ebene.</summary>
+/// <summary>A point in the plane.</summary>
 public interface IPoint2D : IGeometry2D
 {
-    /// <summary>Die X-Koordinate (Rechtswert).</summary>
+    /// <summary>The X coordinate (easting).</summary>
     double X { get; }
 
-    /// <summary>Die Y-Koordinate (Hochwert).</summary>
+    /// <summary>The Y coordinate (northing).</summary>
     double Y { get; }
 }
 
 /// <summary>
-/// Ein Punkt mit Höhe. Algorithmen interpolieren Z an neuen Knoten, wenn die beteiligten
-/// Punkte <see cref="IPoint3D"/> sind; 3D gibt es nur am Punkt (ADR 0002).
+/// A point with a height. Algorithms interpolate Z at new vertices if the points involved
+/// are <see cref="IPoint3D"/>; 3D exists only on points (ADR 0002).
 /// </summary>
 public interface IPoint3D : IPoint2D
 {
-    /// <summary>Die Z-Koordinate (Höhe).</summary>
+    /// <summary>The Z coordinate (height).</summary>
     double Z { get; }
 }
 
 /// <summary>
-/// Eine geordnete Folge von Punkten; gemeinsame Basis von <see cref="IPath2D"/>,
-/// <see cref="IRing2D"/> und <see cref="IMultiPoint2D"/>.
+/// An ordered sequence of points; common base of <see cref="IPath2D"/>,
+/// <see cref="IRing2D"/> and <see cref="IMultiPoint2D"/>.
 /// </summary>
 /// <remarks>
-/// Der Zugriff erfolgt über <see cref="PointCount"/> und den Indexer. Für LINQ und
-/// <c>foreach</c> bietet SpatialNET.Extensions eine Listen-Sicht (<c>AsList()</c>);
-/// eine Implementierung darf zusätzlich <see cref="IReadOnlyList{T}"/> umsetzen (ADR 0002).
+/// Access is through <see cref="PointCount"/> and the indexer. For LINQ and
+/// <c>foreach</c>, SpatialNET.Extensions offers a list view (<c>AsList()</c>);
+/// an implementation may additionally implement <see cref="IReadOnlyList{T}"/> (ADR 0002).
 /// </remarks>
 public interface IPointCollection2D
 {
-    /// <summary>Die Anzahl der Punkte.</summary>
+    /// <summary>The number of points.</summary>
     int PointCount { get; }
 
-    /// <summary>Der Punkt an der Position <paramref name="index"/>.</summary>
-    /// <param name="index">Nullbasierte Position, kleiner als <see cref="PointCount"/>.</param>
+    /// <summary>The point at position <paramref name="index"/>.</summary>
+    /// <param name="index">Zero-based position, less than <see cref="PointCount"/>.</param>
     IPoint2D this[int index] { get; }
 }
 
-/// <summary>Ein Pfad: ein Linienzug als Teil einer <see cref="IPolyline2D"/>.</summary>
+/// <summary>A path: a line string as part of an <see cref="IPolyline2D"/>.</summary>
 public interface IPath2D : IPointCollection2D { }
 
 /// <summary>
-/// Ein Ring: ein geschlossener Pfad als Teil eines <see cref="IPolygon2D"/>.
+/// A ring: a closed path as part of an <see cref="IPolygon2D"/>.
 /// </summary>
 /// <remarks>
-/// Der Schlusspunkt (gleich dem Startpunkt) darf wiederholt werden oder fehlen.
-/// Die Orientierung ist ohne Bedeutung; ob ein Ring Außenring oder Loch ist,
-/// ergibt sich aus seiner Lage im Polygon (ADR 0003).
+/// The closing point (equal to the start point) may be repeated or omitted.
+/// The orientation is irrelevant; whether a ring is a shell or a hole
+/// follows from its position within the polygon (ADR 0003).
 /// </remarks>
 public interface IRing2D : IPath2D { }
 
-/// <summary>Eine Menge von Punkten als eine Geometrie.</summary>
+/// <summary>A set of points as one geometry.</summary>
 public interface IMultiPoint2D : IGeometry2D, IPointCollection2D { }
 
-/// <summary>Eine Polylinie aus einem oder mehreren Pfaden (entspricht MultiLineString).</summary>
+/// <summary>A polyline made of one or more paths (corresponds to MultiLineString).</summary>
 public interface IPolyline2D : IGeometry2D
 {
-    /// <summary>Die Anzahl der Pfade.</summary>
+    /// <summary>The number of paths.</summary>
     int PathCount { get; }
 
-    /// <summary>Der Pfad an der Position <paramref name="index"/>.</summary>
-    /// <param name="index">Nullbasierte Position, kleiner als <see cref="PathCount"/>.</param>
+    /// <summary>The path at position <paramref name="index"/>.</summary>
+    /// <param name="index">Zero-based position, less than <see cref="PathCount"/>.</param>
     IPath2D this[int index] { get; }
 }
 
 /// <summary>
-/// Ein Polygon als flache Liste von Ringen, die zusammen eine oder mehrere Teilflächen
-/// beschreiben (entspricht MultiPolygon).
+/// A polygon as a flat list of rings that together describe one or more parts
+/// (corresponds to MultiPolygon).
 /// </summary>
 /// <remarks>
-/// Die Fläche ist nach der Even-Odd-Regel über alle Ringe definiert; Außenringe und Löcher
-/// werden nicht markiert, sondern aus der Verschachtelung ermittelt (ADR 0003).
+/// The area is defined over all rings by the even-odd rule; shells and holes
+/// are not marked but derived from nesting (ADR 0003).
 /// </remarks>
 public interface IPolygon2D : IGeometry2D
 {
-    /// <summary>Die Anzahl der Ringe.</summary>
+    /// <summary>The number of rings.</summary>
     int RingCount { get; }
 
-    /// <summary>Der Ring an der Position <paramref name="index"/>.</summary>
-    /// <param name="index">Nullbasierte Position, kleiner als <see cref="RingCount"/>.</param>
+    /// <summary>The ring at position <paramref name="index"/>.</summary>
+    /// <param name="index">Zero-based position, less than <see cref="RingCount"/>.</param>
     IRing2D this[int index] { get; }
 }

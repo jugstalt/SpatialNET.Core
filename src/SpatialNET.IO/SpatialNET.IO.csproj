@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>WKT- und GeoJSON-Lesen und -Schreiben für SpatialNET-Geometrien.</Description>
+    <Description>Reading and writing WKT and GeoJSON for SpatialNET geometries.</Description>
   </PropertyGroup>
 
   <ItemGroup>

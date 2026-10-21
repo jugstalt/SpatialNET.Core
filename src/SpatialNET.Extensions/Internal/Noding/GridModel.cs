@@ -2,14 +2,14 @@ using System.Numerics;
 
 namespace SpatialNET.Internal.Noding;
 
-/// <summary>Ein Punkt auf dem Gitter in ganzzahligen Gittereinheiten; Orientierung darauf ist exakt (Int128).</summary>
+/// <summary>A point on the grid in integer grid units; orientation on it is exact (Int128).</summary>
 internal readonly record struct GridPoint(long X, long Y) : IComparable<GridPoint>, Topology.IExactPoint<GridPoint>
 {
     public static int CompareX(GridPoint a, GridPoint b) => a.X.CompareTo(b.X);
 
     public static int CompareY(GridPoint a, GridPoint b) => a.Y.CompareTo(b.Y);
 
-    /// <summary>+1, wenn c links von a→b liegt, −1 rechts, 0 kollinear – exakt.</summary>
+    /// <summary>+1 if c lies to the left of a→b, −1 to the right, 0 collinear – exact.</summary>
     public static int Orient(GridPoint a, GridPoint b, GridPoint c)
     {
         Int128 det = (Int128)(b.X - a.X) * (c.Y - a.Y) - (Int128)(b.Y - a.Y) * (c.X - a.X);
@@ -20,12 +20,12 @@ internal readonly record struct GridPoint(long X, long Y) : IComparable<GridPoin
 }
 
 /// <summary>
-/// Das Gitter, auf das Overlays ihre Ergebnisse runden (ADR 0005). Gitterweite aus der Kaskade
-/// <c>gridSize</c> → <see cref="SpatialNET.Precision.DefaultGridSize"/> → automatisch aus der Koordinatengröße.
+/// The grid to which overlays round their results (ADR 0005). Grid size from the cascade
+/// <c>gridSize</c> → <see cref="SpatialNET.Precision.DefaultGridSize"/> → automatic from the coordinate magnitude.
 /// </summary>
 internal sealed class GridModel
 {
-    /// <summary>Größter erlaubter Betrag in Gittereinheiten (lässt Platz für exakte Int128-Produkte).</summary>
+    /// <summary>Largest permitted magnitude in grid units (leaves room for exact Int128 products).</summary>
     private const double MaxUnits = 4e18;
 
     private readonly double _inverse; // 1 / Size, exakt ganzzahlig für Size < 1 (Zehnerpotenz)
@@ -34,7 +34,7 @@ internal sealed class GridModel
     {
         if (!double.IsFinite(size) || size <= 0)
         {
-            throw new ArgumentOutOfRangeException("gridSize", size, "Die Gitterweite muss endlich und größer als 0 sein.");
+            throw new ArgumentOutOfRangeException("gridSize", size, "The grid size must be finite and greater than 0.");
         }
 
         Size = size;
@@ -43,7 +43,7 @@ internal sealed class GridModel
 
     public double Size { get; }
 
-    /// <summary>Löst die Gitterweite-Kaskade auf; die automatische Weite nutzt alle Eingaben (a ∩ b nutzt dasselbe Gitter wie b ∩ a).</summary>
+    /// <summary>Resolves the grid size cascade; the automatic size uses all inputs (a ∩ b uses the same grid as b ∩ a).</summary>
     public static GridModel Resolve(double? gridSize, params IGeometry2D?[] inputs)
     {
         if (gridSize is { } explicitSize)
@@ -70,7 +70,7 @@ internal sealed class GridModel
         return new GridModel(AutoSize(max));
     }
 
-    /// <summary>max|Koordinate| · 1e-12, abgerundet auf eine Zehnerpotenz (etwa 12 signifikante Stellen).</summary>
+    /// <summary>max|coordinate| · 1e-12, rounded down to a power of ten (about 12 significant digits).</summary>
     public static double AutoSize(double maxAbs)
     {
         if (maxAbs <= 0)
@@ -82,27 +82,27 @@ internal sealed class GridModel
         return exponent < 0 ? 1 / Math.Pow(10, -exponent) : Math.Pow(10, exponent);
     }
 
-    /// <summary>Wert in kontinuierlichen Gittereinheiten.</summary>
+    /// <summary>Value in continuous grid units.</summary>
     public double ToUnits(double value)
     {
         double units = _inverse > 0 ? value * _inverse : value / Size;
         if (!(Math.Abs(units) <= MaxUnits))
         {
             throw new ArgumentOutOfRangeException("gridSize", Size,
-                $"Die Gitterweite {Size} ist für die Koordinate {value} zu klein bzw. die Koordinate ist nicht endlich.");
+                $"The grid size {Size} is too small for the coordinate {value}, or the coordinate is not finite.");
         }
 
         return units;
     }
 
-    /// <summary>Rundet auf den nächsten Gitterpunkt; halbe Einheiten nach oben (floor(x + ½)), wie JTS/NTS.</summary>
+    /// <summary>Rounds to the nearest grid point; half units upwards (floor(x + ½)), as in JTS/NTS.</summary>
     public static long RoundUnits(double units) => (long)Math.Floor(units + 0.5);
 
     public GridPoint Round(Coordinate c) => new(RoundUnits(ToUnits(c.X)), RoundUnits(ToUnits(c.Y)));
 
     /// <summary>
-    /// Rundet den exakten Schnittpunkt der Geraden p0p1 und q0q1 (Segmente kreuzen sich echt) auf das Gitter.
-    /// Rechnet rational über die exakten Werte der Doubles, damit die Rundung nicht vom Rechenweg abhängt.
+    /// Rounds the exact intersection point of the lines p0p1 and q0q1 (segments cross properly) to the grid.
+    /// Computes rationally over the exact values of the doubles, so that the rounding does not depend on the order of computation.
     /// </summary>
     public GridPoint RoundExactIntersection(Coordinate p0, Coordinate p1, Coordinate q0, Coordinate q1)
     {
@@ -127,7 +127,7 @@ internal sealed class GridModel
         return new GridPoint(RoundRational(xNum, den, minE), RoundRational(yNum, den, minE));
     }
 
-    /// <summary>Rundet (num / den) · 2^exponent in Gittereinheiten: floor(x + ½), exakt.</summary>
+    /// <summary>Rounds (num / den) · 2^exponent to grid units: floor(x + ½), exact.</summary>
     private long RoundRational(BigInteger num, BigInteger den, int exponent)
     {
         if (exponent >= 0) num <<= exponent;

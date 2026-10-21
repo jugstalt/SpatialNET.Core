@@ -107,7 +107,7 @@ public class WktReadTests
     {
         var ex = Assert.Throws<FormatException>(() => Wkt.Read(wkt, F));
 
-        Assert.Contains($"Position {position}", ex.Message);
+        Assert.Contains($"position {position}", ex.Message);
     }
 
     [Fact]

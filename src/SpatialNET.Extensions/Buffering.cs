@@ -5,79 +5,79 @@ using SpatialNET.Internal.Overlay;
 
 namespace SpatialNET;
 
-/// <summary>Form der Ecken an der Außenseite (ADR 0006).</summary>
+/// <summary>Shape of the corners on the outside (ADR 0006).</summary>
 public enum JoinStyle
 {
-    /// <summary>Kreisbogen.</summary>
+    /// <summary>Circular arc.</summary>
     Round,
 
-    /// <summary>Spitze (Schnitt der Offset-Linien), begrenzt durch <see cref="BufferOptions.MitreLimit"/>.</summary>
+    /// <summary>Mitre (intersection of the offset lines), limited by <see cref="BufferOptions.MitreLimit"/>.</summary>
     Mitre,
 
-    /// <summary>Gerade Verbindung der Offset-Enden.</summary>
+    /// <summary>Straight connection of the offset ends.</summary>
     Bevel,
 }
 
-/// <summary>Form der Linienenden (ADR 0006).</summary>
+/// <summary>Shape of the line ends (ADR 0006).</summary>
 public enum CapStyle
 {
-    /// <summary>Halbkreis.</summary>
+    /// <summary>Semicircle.</summary>
     Round,
 
-    /// <summary>Gerade am Endpunkt abgeschnitten.</summary>
+    /// <summary>Cut off straight at the end point.</summary>
     Flat,
 
-    /// <summary>Um die Distanz verlängert und gerade abgeschnitten.</summary>
+    /// <summary>Extended by the distance and cut off straight.</summary>
     Square,
 }
 
-/// <summary>Optionen für <see cref="Buffering.Buffer"/>; Defaults wie JTS (ADR 0006).</summary>
+/// <summary>Options for <see cref="Buffering.Buffer"/>; defaults as in JTS (ADR 0006).</summary>
 public sealed record BufferOptions
 {
-    /// <summary>Die Standard-Optionen.</summary>
+    /// <summary>The default options.</summary>
     public static BufferOptions Default { get; } = new();
 
-    /// <summary>Ecken an der Außenseite; Standard <see cref="JoinStyle.Round"/>.</summary>
+    /// <summary>Corners on the outside; default <see cref="JoinStyle.Round"/>.</summary>
     public JoinStyle JoinStyle { get; init; } = JoinStyle.Round;
 
-    /// <summary>Linienenden; Standard <see cref="CapStyle.Round"/>.</summary>
+    /// <summary>Line ends; default <see cref="CapStyle.Round"/>.</summary>
     public CapStyle CapStyle { get; init; } = CapStyle.Round;
 
-    /// <summary>Segmente je Viertelkreis; Standard 8.</summary>
+    /// <summary>Segments per quarter circle; default 8.</summary>
     public int QuadrantSegments { get; init; } = 8;
 
-    /// <summary>Größte Sehnenabweichung der Bögen in Karteneinheiten; gesetzt hat sie Vorrang vor <see cref="QuadrantSegments"/>.</summary>
+    /// <summary>Largest chord deviation of the arcs in map units; if set, it takes precedence over <see cref="QuadrantSegments"/>.</summary>
     public double? ArcTolerance { get; init; }
 
-    /// <summary>Größtes Verhältnis Spitzenabstand / Distanz bei <see cref="JoinStyle.Mitre"/>; Standard 5.</summary>
+    /// <summary>Largest ratio of mitre distance to distance for <see cref="JoinStyle.Mitre"/>; default 5.</summary>
     public double MitreLimit { get; init; } = 5;
 
-    /// <summary>Faktor der Eingabe-Vereinfachung (· |Distanz|); Standard 0,01, 0 = aus.</summary>
+    /// <summary>Factor of the input simplification (× |distance|); default 0.01, 0 = off.</summary>
     public double SimplifyFactor { get; init; } = 0.01;
 
-    /// <summary>Nur eine Seite von Linien puffern (positiv links, negativ rechts), flache Enden.</summary>
+    /// <summary>Buffer only one side of lines (positive left, negative right), flat ends.</summary>
     public bool SingleSided { get; init; }
 }
 
-/// <summary>Buffer als Roh-Offset + Union mit <see cref="FillRule.Positive"/> (ADR 0006).</summary>
+/// <summary>Buffer as raw offset + union with <see cref="FillRule.Positive"/> (ADR 0006).</summary>
 public static class Buffering
 {
     /// <summary>
-    /// Der Buffer: alle Punkte im Abstand ≤ |<paramref name="distance"/>| (bzw. für negative Distanz die um |d| nach
-    /// innen verkleinerte Fläche). Ergebnisse sind 2D und gültig.
+    /// The buffer: all points within a distance ≤ |<paramref name="distance"/>| (for a negative distance, the area
+    /// shrunk inwards by |d|). Results are 2D and valid.
     /// </summary>
     /// <remarks>
-    /// Polygon mit d = 0 → per Even-Odd normalisierte Eingabe; vollständig erodiert → leer; Punkt/Linie mit d ≤ 0 →
-    /// leer (außer einseitig). Ungültige Eingaben werden nach Even-Odd interpretiert.
+    /// Polygon with d = 0 → input normalized by even-odd; completely eroded → empty; point/line with d ≤ 0 →
+    /// empty (except one-sided). Invalid input is interpreted by even-odd.
     /// </remarks>
-    /// <param name="geometry">Die Geometrie.</param>
-    /// <param name="distance">Die Distanz in Karteneinheiten.</param>
-    /// <param name="options">Die Optionen; <c>null</c> = <see cref="BufferOptions.Default"/>.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <param name="gridSize">Die Gitterweite; <c>null</c> = Kaskade.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> ist <c>null</c>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Distanz nicht endlich oder ungültige Optionen.</exception>
-    /// <exception cref="NotSupportedException"><paramref name="geometry"/> ist keine bekannte Geometrie-Art.</exception>
+    /// <param name="geometry">The geometry.</param>
+    /// <param name="distance">The distance in map units.</param>
+    /// <param name="options">The options; <c>null</c> = <see cref="BufferOptions.Default"/>.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <param name="gridSize">The grid size; <c>null</c> = cascade (global default, otherwise automatic).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Distance not finite or invalid options.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
     public static IPolygon2D Buffer(this IGeometry2D geometry, double distance, BufferOptions? options = null,
         IGeometryFactory? factory = null, double? gridSize = null)
     {
@@ -89,7 +89,7 @@ public static class Buffering
         return f.CreatePolygon(parts.Select(Flat).ToArray(), geometry);
     }
 
-    /// <summary>Die Teilflächen des Buffers (außen gegen den Uhrzeigersinn) – auch für OffsetCurve.</summary>
+    /// <summary>The parts of the buffer (shell counter-clockwise) – also used by OffsetCurve.</summary>
     internal static List<PolygonPart> Parts(IGeometry2D geometry, double distance, BufferOptions options, GridModel grid)
     {
         if (GeometryAccess.IsEmpty(geometry))
@@ -153,7 +153,7 @@ public static class Buffering
         }
     }
 
-    /// <summary>Ob ein Ring bei Abstand <paramref name="r"/> vollständig erodiert (Envelope schmaler als 2r, wie JTS).</summary>
+    /// <summary>Whether a ring is completely eroded at distance <paramref name="r"/> (envelope narrower than 2r, as in JTS).</summary>
     private static bool ErodedCompletely(Coordinate[] ring, double r)
     {
         double minX = ring.Min(c => c.X), maxX = ring.Max(c => c.X), minY = ring.Min(c => c.Y), maxY = ring.Max(c => c.Y);
@@ -167,14 +167,14 @@ public static class Buffering
     internal static void Validate(double distance, BufferOptions options)
     {
         if (!double.IsFinite(distance))
-            throw new ArgumentOutOfRangeException(nameof(distance), distance, "Die Distanz muss endlich sein.");
+            throw new ArgumentOutOfRangeException(nameof(distance), distance, "The distance must be finite.");
         if (options.QuadrantSegments < 1)
-            throw new ArgumentOutOfRangeException(nameof(options), options.QuadrantSegments, "QuadrantSegments muss ≥ 1 sein.");
+            throw new ArgumentOutOfRangeException(nameof(options), options.QuadrantSegments, "QuadrantSegments must be ≥ 1.");
         if (!(options.MitreLimit > 0) || !double.IsFinite(options.MitreLimit))
-            throw new ArgumentOutOfRangeException(nameof(options), options.MitreLimit, "MitreLimit muss endlich und > 0 sein.");
+            throw new ArgumentOutOfRangeException(nameof(options), options.MitreLimit, "MitreLimit must be finite and > 0.");
         if (!(options.SimplifyFactor >= 0) || !double.IsFinite(options.SimplifyFactor))
-            throw new ArgumentOutOfRangeException(nameof(options), options.SimplifyFactor, "SimplifyFactor muss endlich und ≥ 0 sein.");
+            throw new ArgumentOutOfRangeException(nameof(options), options.SimplifyFactor, "SimplifyFactor must be finite and ≥ 0.");
         if (options.ArcTolerance is { } tol && (!(tol > 0) || !double.IsFinite(tol)))
-            throw new ArgumentOutOfRangeException(nameof(options), tol, "ArcTolerance muss endlich und > 0 sein.");
+            throw new ArgumentOutOfRangeException(nameof(options), tol, "ArcTolerance must be finite and > 0.");
     }
 }

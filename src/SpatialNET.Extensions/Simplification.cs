@@ -2,22 +2,22 @@ using SpatialNET.Internal;
 
 namespace SpatialNET;
 
-/// <summary>Vereinfachung nach Douglas-Peucker (ADR 0012).</summary>
+/// <summary>Simplification by Douglas-Peucker (ADR 0012).</summary>
 public static class Simplification
 {
     /// <summary>
-    /// Vereinfacht jeden Pfad nach Douglas-Peucker: Ein Vertex bleibt, wenn er weiter als
-    /// <paramref name="tolerance"/> von der Sehne entfernt ist. Anfangs- und Endpunkt bleiben erhalten; die
-    /// verbleibenden Vertices sind unverändert (inklusive Z). Mit <paramref name="preserveTopology"/> entstehen
-    /// keine neuen Kreuzungen zwischen oder innerhalb der Pfade (wie JTS TopologyPreservingSimplifier).
+    /// Simplifies each path by Douglas-Peucker: a vertex is kept if it is farther than
+    /// <paramref name="tolerance"/> from the chord. Start and end point are kept; the
+    /// remaining vertices are unchanged (including Z). With <paramref name="preserveTopology"/> no new
+    /// crossings arise between or within the paths (as in JTS TopologyPreservingSimplifier).
     /// </summary>
-    /// <param name="polyline">Die Polylinie.</param>
-    /// <param name="tolerance">Die Toleranz in Karteneinheiten, ≥ 0.</param>
-    /// <param name="preserveTopology">Topologieerhaltend vereinfachen.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polyline"/> ist <c>null</c>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> ist negativ oder nicht endlich.</exception>
-    /// <exception cref="InvalidOperationException">Keine Factory verfügbar.</exception>
+    /// <param name="polyline">The polyline.</param>
+    /// <param name="tolerance">The tolerance in map units, ≥ 0.</param>
+    /// <param name="preserveTopology">Simplify while preserving topology.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polyline"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or not finite.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
     public static IPolyline2D Simplify(this IPolyline2D polyline, double tolerance, bool preserveTopology = false, IGeometryFactory? factory = null)
     {
         ArgumentNullException.ThrowIfNull(polyline);
@@ -33,18 +33,18 @@ public static class Simplification
     }
 
     /// <summary>
-    /// Vereinfacht die Ringe des Polygons nach Douglas-Peucker (auch der Ring-Startpunkt darf entfallen); Ringe mit
-    /// weniger als 4 Punkten fallen weg. Das Ergebnis wird über das Overlay normalisiert und ist immer gültig
-    /// (ADR 0003/0012). Mit <paramref name="preserveTopology"/> gehen keine Ringe verloren und es entstehen keine
-    /// Kreuzungen (wie JTS TopologyPreservingSimplifier).
+    /// Simplifies the rings of the polygon by Douglas-Peucker (the ring start point may also be dropped); rings with
+    /// fewer than 4 points are dropped. The result is normalized by the overlay and is always valid
+    /// (ADR 0003/0012). With <paramref name="preserveTopology"/> no rings are lost and no
+    /// crossings arise (as in JTS TopologyPreservingSimplifier).
     /// </summary>
-    /// <param name="polygon">Das Polygon.</param>
-    /// <param name="tolerance">Die Toleranz in Karteneinheiten, ≥ 0.</param>
-    /// <param name="preserveTopology">Topologieerhaltend vereinfachen.</param>
-    /// <param name="factory">Die Factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
-    /// <param name="gridSize">Die Gitterweite der Normalisierung; <c>null</c> = Kaskade.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> ist <c>null</c>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> ist negativ oder nicht endlich.</exception>
+    /// <param name="polygon">The polygon.</param>
+    /// <param name="tolerance">The tolerance in map units, ≥ 0.</param>
+    /// <param name="preserveTopology">Simplify while preserving topology.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <param name="gridSize">The grid size of the normalization; <c>null</c> = cascade (global default, otherwise automatic).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="polygon"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or not finite.</exception>
     public static IPolygon2D Simplify(this IPolygon2D polygon, double tolerance, bool preserveTopology = false, IGeometryFactory? factory = null, double? gridSize = null)
     {
         ArgumentNullException.ThrowIfNull(polygon);
@@ -83,11 +83,11 @@ public static class Simplification
     {
         if (!double.IsFinite(tolerance) || tolerance < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "Die Toleranz muss endlich und ≥ 0 sein.");
+            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "The tolerance must be finite and ≥ 0.");
         }
     }
 
-    /// <summary>Douglas-Peucker für einen geschlossenen Ring; der Startpunkt darf entfallen (wie JTS ≥ 1.18).</summary>
+    /// <summary>Douglas-Peucker for a closed ring; the start point may be dropped (as in JTS ≥ 1.18).</summary>
     internal static Coordinate[] DouglasPeuckerRing(Coordinate[] closed, double tolerance)
     {
         var result = DouglasPeucker(closed, tolerance).ToList();
@@ -134,7 +134,7 @@ public static class Simplification
         public double Z => c.Z;
     }
 
-    /// <summary>Douglas-Peucker über eine Koordinatenfolge, iterativ (kein Stack-Überlauf bei langen Pfaden).</summary>
+    /// <summary>Douglas-Peucker over a coordinate sequence, iterative (no stack overflow for long paths).</summary>
     internal static Coordinate[] DouglasPeucker(Coordinate[] path, double tolerance)
     {
         if (path.Length <= 2)

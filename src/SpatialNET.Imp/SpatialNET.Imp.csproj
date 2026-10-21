@@ -3,7 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>Referenz-Implementierung der SpatialNET-Geometrie-Interfaces samt Geometrie-Factory.</Description>
+    <Description>Reference implementation of the SpatialNET geometry interfaces including a geometry factory.</Description>
   </PropertyGroup>
 
   <ItemGroup>

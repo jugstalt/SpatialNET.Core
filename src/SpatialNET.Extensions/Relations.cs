@@ -4,8 +4,8 @@ using SpatialNET.Internal.Topology;
 namespace SpatialNET;
 
 /// <summary>
-/// Die DE-9IM-Schnittmatrix: Dimension des Schnitts von Innerem (I), Rand (B) und Äußerem (E) zweier Geometrien;
-/// −1 bedeutet leer („F“).
+/// The DE-9IM intersection matrix: dimension of the intersection of interior (I), boundary (B) and exterior (E) of two geometries;
+/// −1 means empty ("F").
 /// </summary>
 public readonly struct IntersectionMatrix : IEquatable<IntersectionMatrix>
 {
@@ -13,37 +13,37 @@ public readonly struct IntersectionMatrix : IEquatable<IntersectionMatrix>
 
     internal IntersectionMatrix(int[] values) => _values = values;
 
-    /// <summary>Inneres(a) ∩ Inneres(b).</summary>
+    /// <summary>Interior(a) ∩ Interior(b).</summary>
     public int II => _values[0];
-    /// <summary>Inneres(a) ∩ Rand(b).</summary>
+    /// <summary>Interior(a) ∩ Boundary(b).</summary>
     public int IB => _values[1];
-    /// <summary>Inneres(a) ∩ Äußeres(b).</summary>
+    /// <summary>Interior(a) ∩ Exterior(b).</summary>
     public int IE => _values[2];
-    /// <summary>Rand(a) ∩ Inneres(b).</summary>
+    /// <summary>Boundary(a) ∩ Interior(b).</summary>
     public int BI => _values[3];
-    /// <summary>Rand(a) ∩ Rand(b).</summary>
+    /// <summary>Boundary(a) ∩ Boundary(b).</summary>
     public int BB => _values[4];
-    /// <summary>Rand(a) ∩ Äußeres(b).</summary>
+    /// <summary>Boundary(a) ∩ Exterior(b).</summary>
     public int BE => _values[5];
-    /// <summary>Äußeres(a) ∩ Inneres(b).</summary>
+    /// <summary>Exterior(a) ∩ Interior(b).</summary>
     public int EI => _values[6];
-    /// <summary>Äußeres(a) ∩ Rand(b).</summary>
+    /// <summary>Exterior(a) ∩ Boundary(b).</summary>
     public int EB => _values[7];
-    /// <summary>Äußeres(a) ∩ Äußeres(b).</summary>
+    /// <summary>Exterior(a) ∩ Exterior(b).</summary>
     public int EE => _values[8];
 
     /// <summary>
-    /// Prüft gegen ein DE-9IM-Muster aus 9 Zeichen: <c>T</c> (nicht leer), <c>F</c> (leer), <c>*</c> (beliebig),
-    /// <c>0</c>/<c>1</c>/<c>2</c> (genau diese Dimension).
+    /// Checks against a DE-9IM pattern of 9 characters: <c>T</c> (not empty), <c>F</c> (empty), <c>*</c> (any),
+    /// <c>0</c>/<c>1</c>/<c>2</c> (exactly this dimension).
     /// </summary>
-    /// <param name="pattern">Das Muster, z. B. <c>T*F**F***</c>.</param>
-    /// <exception cref="ArgumentException">Das Muster hat nicht 9 gültige Zeichen.</exception>
+    /// <param name="pattern">The pattern, e.g. <c>T*F**F***</c>.</param>
+    /// <exception cref="ArgumentException">The pattern does not consist of 9 valid characters.</exception>
     public bool Matches(string pattern)
     {
         ArgumentNullException.ThrowIfNull(pattern);
         if (pattern.Length != 9)
         {
-            throw new ArgumentException("Ein DE-9IM-Muster hat genau 9 Zeichen.", nameof(pattern));
+            throw new ArgumentException("A DE-9IM pattern has exactly 9 characters.", nameof(pattern));
         }
 
         for (int i = 0; i < 9; i++)
@@ -56,7 +56,7 @@ public readonly struct IntersectionMatrix : IEquatable<IntersectionMatrix>
                 '0' => _values[i] == 0,
                 '1' => _values[i] == 1,
                 '2' => _values[i] == 2,
-                _ => throw new ArgumentException($"Ungültiges Zeichen '{pattern[i]}' im DE-9IM-Muster.", nameof(pattern)),
+                _ => throw new ArgumentException($"Invalid character '{pattern[i]}' in DE-9IM pattern.", nameof(pattern)),
             };
             if (!ok) return false;
         }
@@ -64,7 +64,7 @@ public readonly struct IntersectionMatrix : IEquatable<IntersectionMatrix>
         return true;
     }
 
-    /// <summary>Die Matrix als 9 Zeichen (z. B. <c>212101212</c>), zeilenweise I, B, E.</summary>
+    /// <summary>The matrix as 9 characters (e.g. <c>212101212</c>), row by row I, B, E.</summary>
     public override string ToString() => string.Concat(_values.Select(v => v < 0 ? "F" : v.ToString()));
 
     /// <inheritdoc />
@@ -76,25 +76,25 @@ public readonly struct IntersectionMatrix : IEquatable<IntersectionMatrix>
     /// <inheritdoc />
     public override int GetHashCode() => ToString().GetHashCode(StringComparison.Ordinal);
 
-    /// <summary>Gleichheit.</summary>
+    /// <summary>Equality.</summary>
     public static bool operator ==(IntersectionMatrix a, IntersectionMatrix b) => a.Equals(b);
 
-    /// <summary>Ungleichheit.</summary>
+    /// <summary>Inequality.</summary>
     public static bool operator !=(IntersectionMatrix a, IntersectionMatrix b) => !a.Equals(b);
 }
 
 /// <summary>
-/// Räumliche Prädikate nach DE-9IM (ADR 0013): exakt auf den Eingabekoordinaten, ohne Gitter. Flächen nach
-/// Even-Odd (ADR 0003), Linienränder nach Mod-2. Ist eine Geometrie leer, ist nur <see cref="Disjoint"/> wahr.
-/// Bei ungültigen Eingaben deterministisch und ohne Exception, aber ohne Zusage gegenseitiger Konsistenz.
+/// Spatial predicates based on DE-9IM (ADR 0013): exact on the input coordinates, without a grid. Areas by
+/// even-odd (ADR 0003), line boundaries by mod-2. If a geometry is empty, only <see cref="Disjoint"/> is true.
+/// Invalid input is handled deterministically and without exceptions, but without any guarantee of mutual consistency.
 /// </summary>
 public static class Relations
 {
-    /// <summary>Die DE-9IM-Schnittmatrix von <paramref name="a"/> und <paramref name="b"/>.</summary>
-    /// <param name="a">Die erste Geometrie.</param>
-    /// <param name="b">Die zweite Geometrie.</param>
-    /// <exception cref="ArgumentNullException">Eine Geometrie ist <c>null</c>.</exception>
-    /// <exception cref="NotSupportedException">Eine Geometrie ist keine bekannte Geometrie-Art.</exception>
+    /// <summary>The DE-9IM intersection matrix of <paramref name="a"/> and <paramref name="b"/>.</summary>
+    /// <param name="a">The first geometry.</param>
+    /// <param name="b">The second geometry.</param>
+    /// <exception cref="ArgumentNullException">A geometry is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException">A geometry is not a known geometry kind.</exception>
     public static IntersectionMatrix Relate(this IGeometry2D a, IGeometry2D b)
     {
         GeometryAccess.EnsureKnown(a, nameof(a));
@@ -102,16 +102,16 @@ public static class Relations
         return new IntersectionMatrix(RelateComputer.Compute(a, b));
     }
 
-    /// <summary>Ob die Schnittmatrix dem DE-9IM-Muster entspricht.</summary>
-    /// <param name="a">Die erste Geometrie.</param>
-    /// <param name="b">Die zweite Geometrie.</param>
-    /// <param name="pattern">Das Muster aus 9 Zeichen (<c>T F * 0 1 2</c>).</param>
+    /// <summary>Whether the intersection matrix matches the DE-9IM pattern.</summary>
+    /// <param name="a">The first geometry.</param>
+    /// <param name="b">The second geometry.</param>
+    /// <param name="pattern">The pattern of 9 characters (<c>T F * 0 1 2</c>).</param>
     public static bool Relate(this IGeometry2D a, IGeometry2D b, string pattern) => a.Relate(b).Matches(pattern);
 
-    /// <summary>Ob sich die Geometrien in mindestens einem Punkt treffen.</summary>
+    /// <summary>Whether the geometries meet in at least one point.</summary>
     public static bool Intersects(this IGeometry2D a, IGeometry2D b) => !a.Disjoint(b);
 
-    /// <summary>Ob die Geometrien keinen Punkt gemeinsam haben (<c>FF*FF****</c>); wahr, wenn eine leer ist.</summary>
+    /// <summary>Whether the geometries share no point (<c>FF*FF****</c>); true if one is empty.</summary>
     public static bool Disjoint(this IGeometry2D a, IGeometry2D b)
     {
         GeometryAccess.EnsureKnown(a, nameof(a));
@@ -125,13 +125,13 @@ public static class Relations
         return new PreparedGeometry(a).Disjoint(b);
     }
 
-    /// <summary>Ob <paramref name="b"/> in <paramref name="a"/> liegt und ein Inneres gemeinsam haben (<c>T*****FF*</c>).</summary>
+    /// <summary>Whether <paramref name="b"/> lies in <paramref name="a"/> and they share an interior (<c>T*****FF*</c>).</summary>
     public static bool Contains(this IGeometry2D a, IGeometry2D b) => NonEmpty(a, b) && a.Relate(b).Matches("T*****FF*");
 
-    /// <summary>Ob <paramref name="a"/> in <paramref name="b"/> liegt (<c>T*F**F***</c>).</summary>
+    /// <summary>Whether <paramref name="a"/> lies in <paramref name="b"/> (<c>T*F**F***</c>).</summary>
     public static bool Within(this IGeometry2D a, IGeometry2D b) => NonEmpty(a, b) && a.Relate(b).Matches("T*F**F***");
 
-    /// <summary>Ob kein Punkt von <paramref name="b"/> außerhalb von <paramref name="a"/> liegt; Randpunkte zählen mit.</summary>
+    /// <summary>Whether no point of <paramref name="b"/> lies outside <paramref name="a"/>; boundary points count.</summary>
     public static bool Covers(this IGeometry2D a, IGeometry2D b)
     {
         if (!NonEmpty(a, b)) return false;
@@ -139,10 +139,10 @@ public static class Relations
         return m.EI < 0 && m.EB < 0 && (m.II >= 0 || m.IB >= 0 || m.BI >= 0 || m.BB >= 0);
     }
 
-    /// <summary>Ob kein Punkt von <paramref name="a"/> außerhalb von <paramref name="b"/> liegt; Randpunkte zählen mit.</summary>
+    /// <summary>Whether no point of <paramref name="a"/> lies outside <paramref name="b"/>; boundary points count.</summary>
     public static bool CoveredBy(this IGeometry2D a, IGeometry2D b) => b.Covers(a);
 
-    /// <summary>Ob sich die Geometrien nur in Randpunkten treffen.</summary>
+    /// <summary>Whether the geometries meet only in boundary points.</summary>
     public static bool Touches(this IGeometry2D a, IGeometry2D b)
     {
         if (!NonEmpty(a, b)) return false;
@@ -150,7 +150,7 @@ public static class Relations
         return m.II < 0 && (m.IB >= 0 || m.BI >= 0 || m.BB >= 0);
     }
 
-    /// <summary>Ob sich die Geometrien „kreuzen“ (OGC; abhängig von den Dimensionen).</summary>
+    /// <summary>Whether the geometries "cross" (OGC; depends on the dimensions).</summary>
     public static bool Crosses(this IGeometry2D a, IGeometry2D b)
     {
         if (!NonEmpty(a, b)) return false;
@@ -161,7 +161,7 @@ public static class Relations
         return da == 1 && m.Matches("0********");
     }
 
-    /// <summary>Ob sich gleichdimensionale Geometrien teilweise überlappen.</summary>
+    /// <summary>Whether geometries of equal dimension partly overlap.</summary>
     public static bool Overlaps(this IGeometry2D a, IGeometry2D b)
     {
         if (!NonEmpty(a, b)) return false;
@@ -170,7 +170,7 @@ public static class Relations
         return a.Relate(b).Matches(da == 1 ? "1*T***T**" : "T*T***T**");
     }
 
-    /// <summary>Ob die Geometrien topologisch gleich sind (<c>T*F**FFF*</c>); falsch, wenn eine leer ist.</summary>
+    /// <summary>Whether the geometries are topologically equal (<c>T*F**FFF*</c>); false if one is empty.</summary>
     public static bool EqualsTopo(this IGeometry2D a, IGeometry2D b) => NonEmpty(a, b) && a.Relate(b).Matches("T*F**FFF*");
 
     private static bool NonEmpty(IGeometry2D a, IGeometry2D b)

@@ -1,18 +1,18 @@
 namespace SpatialNET.Internal.Topology;
 
-/// <summary>Eine Eingabekante für den Graph: Richtung a→b, Beiträge je Operand.</summary>
-/// <param name="A">Anfangspunkt.</param>
-/// <param name="B">Endpunkt.</param>
+/// <summary>An input edge for the graph: direction a→b, contributions per operand.</summary>
+/// <param name="A">Start point.</param>
+/// <param name="B">End point.</param>
 /// <param name="Operand">0 = a, 1 = b.</param>
-/// <param name="Winding">Beitrag zur Windungszahl in Richtung a→b (Ringkanten: +1; Linien: 0).</param>
-/// <param name="Line">1, wenn die Kante zu einer Linie des Operanden gehört.</param>
-/// <param name="Source">Freie Herkunftsnummer (z. B. für Z beim Overlay), −1 = keine.</param>
+/// <param name="Winding">Contribution to the winding number in direction a→b (ring edges: +1; lines: 0).</param>
+/// <param name="Line">1 if the edge belongs to a line of the operand.</param>
+/// <param name="Source">Free origin number (e.g. for Z in the overlay), −1 = none.</param>
 internal readonly record struct GraphInput<T>(T A, T B, int Operand, int Winding, int Line, int Source) where T : struct, IExactPoint<T>;
 
 /// <summary>
-/// Planarer Graph über genodeten Kanten mit exakten Punkten (ADR 0005): zusammengeführte Kanten, Halbkanten
-/// mit Winkelordnung, Maschen-Nachfolger und Windungszahl je Operand für die Masche links jeder Halbkante.
-/// Halbkante 2e läuft Nodes[A]→Nodes[B] der Kante e (A &lt; B lexikographisch), 2e+1 zurück.
+/// Planar graph over noded edges with exact points (ADR 0005): merged edges, half-edges
+/// with angular order, face successors and winding number per operand for the face to the left of each half-edge.
+/// Half-edge 2e runs Nodes[A]→Nodes[B] of edge e (A &lt; B lexicographically), 2e+1 back.
 /// </summary>
 internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
 {
@@ -89,18 +89,18 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
 
     public static int Twin(int h) => h ^ 1;
 
-    /// <summary>Nachfolger in der Masche links von h: die Halbkante am Kopf, die im Uhrzeigersinn direkt nach Twin(h) kommt.</summary>
+    /// <summary>Successor in the face to the left of h: the half-edge at the head that comes directly after Twin(h) in clockwise order.</summary>
     public int Next(int h) => _next[h];
 
     public IReadOnlyList<int> Outgoing(int node) => _outgoing[node];
 
-    /// <summary>Beitrag der Halbkante zur Windungszahl (Querung von rechts nach links).</summary>
+    /// <summary>Contribution of the half-edge to the winding number (crossing from right to left).</summary>
     public int Winding(int h, int operand) => (h & 1) == 0 ? Edges[h >> 1].Winding[operand] : -Edges[h >> 1].Winding[operand];
 
-    /// <summary>Windungszahl des Operanden in der Masche links von h.</summary>
+    /// <summary>Winding number of the operand in the face to the left of h.</summary>
     public int LeftWinding(int h, int operand) => _leftWinding[h, operand];
 
-    /// <summary>Windungszahl des Operanden in der Masche rechts von h.</summary>
+    /// <summary>Winding number of the operand in the face to the right of h.</summary>
     public int RightWinding(int h, int operand) => _leftWinding[h ^ 1, operand];
 
     private void Link()
@@ -132,8 +132,8 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
     }
 
     /// <summary>
-    /// Windungszahlen: je Zusammenhangskomponente ein exakter Strahl nach links vom tiefsten linken Knoten
-    /// gegen die übrigen Komponenten, dann Weitergabe über Maschen (Next) und Kanten (Twin).
+    /// Winding numbers: per connected component one exact ray to the left from the lowest leftmost node
+    /// against the other components, then propagation across faces (Next) and edges (Twin).
     /// </summary>
     private void ComputeWinding()
     {
@@ -199,9 +199,9 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
     }
 
     /// <summary>
-    /// Windungszahl des Operanden an einem Punkt knapp links oberhalb von <paramref name="p"/>, gezählt über alle
-    /// Kanten außerhalb der Komponente <paramref name="excluded"/> (−1 = alle), die einen Strahl nach links kreuzen.
-    /// Kandidaten sind nur die Kanten, deren Y-Bereich die Höhe von <paramref name="p"/> enthält (Segmentbaum).
+    /// Winding number of the operand at a point just left above <paramref name="p"/>, counted over all
+    /// edges outside the component <paramref name="excluded"/> (−1 = all) that cross a ray to the left.
+    /// Candidates are only the edges whose Y range contains the height of <paramref name="p"/> (segment tree).
     /// </summary>
     public int RayWinding(T p, int operand, int[]? component = null, int excluded = -1)
     {
@@ -229,9 +229,9 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
     private YIndex? _yIndex;
 
     /// <summary>
-    /// Segmentbaum über die sortierten, verschiedenen Y-Werte der Knoten: jede Kante mit Windungsbeitrag liegt in
-    /// O(log n) Baumknoten ihres halboffenen Y-Bereichs [unten, oben); eine Abfrage liefert genau die Kanten,
-    /// deren Bereich die Höhe enthält. Generisch über <see cref="IExactPoint{T}.CompareY"/>, ohne Rundung.
+    /// Segment tree over the sorted, distinct Y values of the nodes: every edge with a winding contribution lies in
+    /// O(log n) tree nodes of its half-open Y range [bottom, top); a query returns exactly the edges
+    /// whose range contains the height. Generic over <see cref="IExactPoint{T}.CompareY"/>, without rounding.
     /// </summary>
     private sealed class YIndex
     {
@@ -265,7 +265,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
             }
         }
 
-        /// <summary>Erste Position mit Y ≥ p.Y.</summary>
+        /// <summary>First position with Y ≥ p.Y.</summary>
         private int LowerBound(T p)
         {
             int lo = 0, hi = _ys.Length;
@@ -279,7 +279,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
             return lo;
         }
 
-        /// <summary>Kante in die Blätter <paramref name="from"/>..<paramref name="to"/> (inklusive) eintragen.</summary>
+        /// <summary>Enter the edge into the leaves <paramref name="from"/>..<paramref name="to"/> (inclusive).</summary>
         private void Insert(int from, int to, int edge)
         {
             for (int l = from + _size, r = to + _size + 1; l < r; l >>= 1, r >>= 1)
@@ -289,7 +289,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
             }
         }
 
-        /// <summary>Kanten, deren Y-Bereich [unten, oben) die Höhe von <paramref name="p"/> enthält (Obermenge, genau geprüft wird beim Aufrufer).</summary>
+        /// <summary>Edges whose Y range [bottom, top) contains the height of <paramref name="p"/> (superset, exact check is up to the caller).</summary>
         public IEnumerable<int> Stab(T p)
         {
             int i = LowerBound(p);
