@@ -1,0 +1,7 @@
+{
+  "n/a": {
+    "degenerate-ring": "Linien haben keine Ringe.",
+    "hole-touch": "Linien haben keine Löcher.",
+    "nested": "Linien haben keine Löcher und Inseln."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Linie mit Knick",
+  "tags": [
+    "playground"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "b": "POINT (5 3)"
+}

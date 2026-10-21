@@ -1,0 +1,9 @@
+{
+  "name": "Von größer als bis kehrt das Stück um",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "params": {
+    "from": 15,
+    "to": 5
+  }
+}

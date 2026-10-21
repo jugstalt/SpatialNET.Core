@@ -1,0 +1,8 @@
+{
+  "name": "Länge hinter dem Ende wird begrenzt",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "params": {
+    "distance": 1000
+  }
+}

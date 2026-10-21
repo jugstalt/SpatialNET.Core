@@ -21,6 +21,9 @@ public class PlaygroundCompletenessTests
         ["Prepare"] = "Optimierung für wiederholte Prädikate; im Playground identisch zu den Prädikaten",
         ["ToSpatialIndex"] = "Datenstruktur (ADR 0014), kein Algorithmus mit Geometrie-Ergebnis",
         ["Query"] = "Abfrage auf einer Datenstruktur (ADR 0014), kein Algorithmus mit Geometrie-Ergebnis",
+        ["InterpolateByM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
+        ["ProjectToM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
+        ["SubstringByM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
     };
 
     [Theory]

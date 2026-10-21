@@ -1,0 +1,10 @@
+{
+  "name": "UTM-Koordinaten",
+  "tags": [
+    "large-coords"
+  ],
+  "a": "LINESTRING (500000.123 5000000.456, 500100.5 5000100.25, 500200 5000050)",
+  "params": {
+    "distance": 150
+  }
+}

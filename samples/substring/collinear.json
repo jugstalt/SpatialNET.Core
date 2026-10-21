@@ -1,0 +1,11 @@
+{
+  "name": "Linie läuft auf sich zurück",
+  "tags": [
+    "collinear-overlap"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 5 0)",
+  "params": {
+    "from": 3,
+    "to": 12
+  }
+}

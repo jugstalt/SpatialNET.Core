@@ -41,6 +41,10 @@ _Avoid_: MultiLineString, Linie
 Eine Geometrie aus einem oder mehreren Ringen, die zusammen eine oder mehrere Flächen beschreiben.
 _Avoid_: MultiPolygon, Fläche
 
+**Lineare Referenzierung**:
+Das Ansprechen einer Position auf einer Linie über ihre Länge entlang der Linie oder über ihren M-Wert.
+_Avoid_: Linear Referencing, Routing
+
 **M-Wert**:
 Ein Wert, den ein Punkt zusätzlich zu seiner Lage trägt (z.B. die Strecke entlang einer Straße); er wird mitgeführt, aber nie in eine Berechnung einbezogen.
 _Avoid_: Measure, Messwert

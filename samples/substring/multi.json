@@ -1,0 +1,11 @@
+{
+  "name": "Zwei Pfade hintereinander",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTILINESTRING ((0 0, 10 0), (20 0, 20 10))",
+  "params": {
+    "from": 5,
+    "to": 15
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Längen werden begrenzt",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "params": {
+    "from": 0,
+    "to": 1000
+  }
+}

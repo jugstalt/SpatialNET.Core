@@ -1,0 +1,8 @@
+{
+  "name": "Höhen werden interpoliert",
+  "tags": [
+    "z"
+  ],
+  "a": "LINESTRING Z (0 0 0, 10 0 10, 10 10 30)",
+  "b": "POINT (10 4)"
+}

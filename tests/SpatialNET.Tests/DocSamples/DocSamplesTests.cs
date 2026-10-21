@@ -68,6 +68,26 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void LinearReferencing()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: linear-referencing
+        var road = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 100, 10 0 200, 10 10 250)");
+
+        Coordinate? at15 = road.Interpolate(15);        // (10 5), M = 225: M is interpolated, too
+        double position = road.Project(new Coordinate(4, 3)); // 4: the nearest point is (4 0)
+        Coordinate? km = road.InterpolateByM(150);      // (5 0): where the line first reaches M = 150
+        IPolyline2D piece = road.SubstringByM(150, 225); // from (5 0) via (10 0) to (10 5)
+        // --- end
+
+        Assert.Equal(new Coordinate(10, 5, M: 225), at15);
+        Assert.Equal(4, position);
+        Assert.Equal(new Coordinate(5, 0, M: 150), km);
+        Assert.Equal("LINESTRING M (5 0 150, 10 0 200, 10 5 225)", piece.ToWkt());
+    }
+
+    [Fact]
     public void ReadingAndWriting()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

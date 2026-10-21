@@ -1,0 +1,8 @@
+{
+  "name": "Linie endet im Startpunkt",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10, 0 0)",
+  "b": "POINT (0 0)"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Winzige Segmente",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "LINESTRING (0 0, 0.000000001 0, 1 0.000000001)",
+  "params": {
+    "distance": 0.5
+  }
+}

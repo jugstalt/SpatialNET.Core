@@ -15,6 +15,7 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | part (polygon part) | Teilfläche | A shell together with the holes that lie directly in it; an island in a hole is a part of its own (`PolygonPart`) |
 | polyline | Polylinie | A geometry of one or more paths (corresponds to MultiLineString) |
 | polygon | Polygon | A geometry of one or more rings that together describe one or more areas (corresponds to MultiPolygon) |
+| linear referencing | lineare Referenzierung | Addressing a position on a line by its length along the line or by its M value (`Interpolate`, `Project`, `Substring` and their `...ByM` variants) |
 | measure (M) | M-Wert | A value that a point carries in addition to its position (for example the distance along a road); carried and interpolated like Z, never used in a computation (`IPointM`) |
 | envelope | Envelope | The axis-aligned rectangle that encloses a geometry (`Envelope2D`) |
 | reference implementation | Referenz-Implementierung | The implementation of the geometry interfaces in `SpatialNET.Imp`, meant for tests, the playground and hosts without geometries of their own |

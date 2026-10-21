@@ -121,3 +121,18 @@ public sealed class SimplifyAlgorithm() : PlaygroundAlgorithm("simplify", "Simpl
         IPolyline2D line => line.Simplify(p.Number("tolerance"), p.Bool("preserveTopology"), f),
         _ => throw new NotSupportedException("Simplify braucht eine Linie oder ein Polygon."),
     });
+
+// ---------- Lineare Referenzierung (ADR 0017) ----------
+
+public sealed class InterpolateAlgorithm() : PlaygroundAlgorithm("interpolate", "Interpolate", "Lineare Referenzierung",
+    [In.A(In.Lines, "Linie")], [P.Distance(10, "Länge entlang der Linie")],
+    (i, p, _, _) => ((IPolyline2D)i["a"]).Interpolate(p.Number("distance")));
+
+public sealed class ProjectAlgorithm() : PlaygroundAlgorithm("project", "Project", "Lineare Referenzierung",
+    [In.A(In.Lines, "Linie"), In.B(["Point"], "Punkt")], [],
+    (i, _, _, _) => ((IPolyline2D)i["a"]).Project((IPoint2D)i["b"]));
+
+public sealed class SubstringAlgorithm() : PlaygroundAlgorithm("substring", "Substring", "Lineare Referenzierung",
+    [In.A(In.Lines, "Linie")],
+    [new("from", "Von (Länge)", "number", 0.0, "kbs"), new("to", "Bis (Länge)", "number", 10.0, "kbs")],
+    (i, p, f, _) => ((IPolyline2D)i["a"]).Substring(p.Number("from"), p.Number("to"), f));

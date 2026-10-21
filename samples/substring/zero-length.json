@@ -1,0 +1,11 @@
+{
+  "name": "Gleiche Längen ergeben ein leeres Ergebnis",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "params": {
+    "from": 5,
+    "to": 5
+  },
+  "expected": "LINESTRING EMPTY",
+  "divergence": "NTS liefert eine Linie der Länge 0; bei SpatialNET ist ein Stück ohne Länge leer (ADR 0017)."
+}

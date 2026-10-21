@@ -1,0 +1,6 @@
+{
+  "name": "Punkt vor dem Anfang liegt bei Länge 0",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0, 10 10)",
+  "b": "POINT (-5 -5)"
+}

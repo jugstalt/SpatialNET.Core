@@ -1,0 +1,11 @@
+{
+  "name": "Leere Linie",
+  "tags": [
+    "empty"
+  ],
+  "a": "LINESTRING EMPTY",
+  "params": {
+    "from": 0,
+    "to": 10
+  }
+}

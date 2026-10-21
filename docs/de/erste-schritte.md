@@ -98,6 +98,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Abgeleitete Geometrien | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Prädikate | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
+| Lineare Referenzierung | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Gültigkeit | `IsValid`, `Validate` |
 | Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
