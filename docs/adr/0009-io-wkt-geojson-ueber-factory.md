@@ -8,7 +8,7 @@ SpatialNET.IO reads and writes **WKT** and **GeoJSON** and creates all geometrie
 
 - **Type mapping:** POINT → `IPoint2D`, MULTIPOINT → `IMultiPoint2D`, (MULTI)LINESTRING → `IPolyline2D`, (MULTI)POLYGON → `IPolygon2D` with parts. The leanest type is written, e.g. POLYGON for a single part.
 - **GeometryCollection:** reading a single geometry throws a `NotSupportedException`. In `ReadAll`, or for a `FeatureCollection`, it is flattened. `POINT EMPTY` is read as an empty `IMultiPoint2D` and written as `MULTIPOINT EMPTY`.
-- **Z/M/CRS:** Z is read. M is silently dropped. A CRS (including the GeoJSON `crs` member of 2008) is ignored.
+- **Z/M/CRS:** Z is read. M is silently dropped *(superseded in part by [ADR 0015](0015-m-werte-mitgefuehrt-nicht-ausgewertet.md): WKT will read and write M)*. A CRS (including the GeoJSON `crs` member of 2008) is ignored.
 - **Writing Z** via `ZMode`:
   - `Auto` (default): Z is written if the points are `IPoint3D` and at least one Z is ≠ 0 and not NaN. This is necessary because the hosts always deliver `IPoint3D` with Z = 0.
   - `Always` / `Never`.
@@ -24,6 +24,6 @@ SpatialNET.IO reads and writes **WKT** and **GeoJSON** and creates all geometrie
 
 ## Considered Options
 
-- WKB in v1 (postponed: no consumer, can be added later without a break)
+- WKB in v1 (postponed: no consumer, can be added later without a break; planned after M values, see [ADR 0015](0015-m-werte-mitgefuehrt-nicht-ausgewertet.md))
 - Feature model with properties (rejected: new domain concept, belongs to the hosts)
 - IO on Core only, hole grouping rebuilt (rejected: duplicated logic)
