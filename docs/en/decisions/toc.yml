@@ -30,3 +30,5 @@
   href: ../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md
 - name: "0016 WKB: read ISO and EWKB, write ISO, through the factory"
   href: ../../adr/0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.md
+- name: "0017 Linear referencing: by length and by M, first hit along the line, values instead of geometries"
+  href: ../../adr/0017-lineare-referenzierung-laenge-und-m-erster-treffer.md
