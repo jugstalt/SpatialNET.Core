@@ -1,0 +1,26 @@
+- name: "0001 Eigene Algorithmen, keine fremde Geometrie-Engine"
+  href: ../../adr/0001-eigene-algorithmen-ohne-geometrie-engine.de.md
+- name: "0002 Geometrie-Interfaces: Count + Indexer, flache Ringliste, Z nur am Punkt"
+  href: ../../adr/0002-geometrie-interfaces-count-indexer-flache-ringe.de.md
+- name: "0003 Löcher: Even-Odd in der Eingabe, Teilflächen im Ergebnis"
+  href: ../../adr/0003-loecher-even-odd-ergebnisse-als-teilflaechen.de.md
+- name: "0004 Geometrie-Factory: koordinatenbasiert, optionaler Parameter mit globalem Default"
+  href: ../../adr/0004-geometrie-factory-koordinatenbasiert-optional-mit-default.de.md
+- name: "0005 Overlay: OverlayNG-artige Pipeline mit Windungszahlen und Snap-Rounding"
+  href: ../../adr/0005-overlay-winding-number-snap-rounding.de.md
+- name: "0006 Buffer als Roh-Offset + Union(Positive), OffsetCurve nach JTS-Muster"
+  href: ../../adr/0006-buffer-roh-offset-union-positive-offsetcurve-jts.de.md
+- name: "0007 Cut: flache Liste der Teile, Unberührtes bleibt zusammen und ungerundet"
+  href: ../../adr/0007-cut-flache-teilliste-unberuehrtes-bleibt-zusammen.de.md
+- name: "0008 Teststrategie: gemeinsame WKT-Fixtures, NTS-Orakel zur Laufzeit, zwei Implementierungen"
+  href: ../../adr/0008-teststrategie-fixtures-nts-orakel.de.md
+- name: "0009 SpatialNET.IO: WKT und GeoJSON über die Factory, nur Geometrien"
+  href: ../../adr/0009-io-wkt-geojson-ueber-factory.de.md
+- name: "0010 Playground-Projektion: serverseitig mit Proj4Net, Standard Auto-UTM, Distanzen in KBS-Einheiten"
+  href: ../../adr/0010-playground-projektion-serverseitig-auto-utm.de.md
+- name: "0011 Playground: „Karte zuerst“, Minimal API ohne Frontend-Build, UI aus expliziten Algorithmus-Deskriptoren"
+  href: ../../adr/0011-playground-karte-zuerst-deskriptor-registry.de.md
+- name: "0012 API-Signaturen: typisierte Overloads, Werte statt Geometrien für punktförmige Maße, feste Exception-Regeln"
+  href: ../../adr/0012-api-signaturen-typisierte-overloads.de.md
+- name: "0013 Prädikate: volles DE-9IM, öffentliches Relate, Prepared-Geometrien als Schnappschuss"
+  href: ../../adr/0013-praedikate-de9im-relate-prepared.de.md

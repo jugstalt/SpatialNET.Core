@@ -1,0 +1,6 @@
+- name: Start
+  href: index.md
+- name: Entscheidungen
+  href: decisions/
+- name: Recherche (GitHub)
+  href: https://github.com/jugstalt/SpatialNET.Core/tree/main/research

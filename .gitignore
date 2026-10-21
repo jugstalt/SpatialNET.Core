@@ -19,3 +19,9 @@ Thumbs.db
 
 # BenchmarkDotNet
 BenchmarkDotNet.Artifacts/
+
+# DocFX
+docs/_site/
+docs/obj/
+docs/en/api/*
+!docs/en/api/index.md

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "build": {
+    "content": [
+      { "src": "de", "files": ["**/*.{md,yml}"] },
+      { "src": "adr", "files": ["*.md"], "dest": "decisions" }
+    ],
+    "output": "_site/de",
+    "globalMetadata": {
+      "_appTitle": "SpatialNET",
+      "_appFooter": "SpatialNET &middot; Apache-2.0 &middot; <a href=\"https://github.com/jugstalt/SpatialNET.Core\">GitHub</a> &middot; <a href=\"../en/index.html\">English</a> &middot; <a href=\"../en/api/index.html\">API (EN)</a>",
+      "_enableSearch": true,
+      "_lang": "de"
+    },
+    "template": ["default", "modern"],
+    "markdownEngineName": "markdig"
+  }
+}

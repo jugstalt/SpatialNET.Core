@@ -1,0 +1,26 @@
+- name: "0001 Own algorithms, no third-party geometry engine"
+  href: ../../adr/0001-eigene-algorithmen-ohne-geometrie-engine.md
+- name: "0002 Geometry interfaces: count + indexer, flat ring list, Z only on the point"
+  href: ../../adr/0002-geometrie-interfaces-count-indexer-flache-ringe.md
+- name: "0003 Holes: even-odd on input, parts in the result"
+  href: ../../adr/0003-loecher-even-odd-ergebnisse-als-teilflaechen.md
+- name: "0004 Geometry factory: coordinate-based, optional parameter with a global default"
+  href: ../../adr/0004-geometrie-factory-koordinatenbasiert-optional-mit-default.md
+- name: "0005 Overlay: OverlayNG-style pipeline with winding numbers and snap rounding"
+  href: ../../adr/0005-overlay-winding-number-snap-rounding.md
+- name: "0006 Buffer as raw offset + union(Positive), OffsetCurve after the JTS pattern"
+  href: ../../adr/0006-buffer-roh-offset-union-positive-offsetcurve-jts.md
+- name: "0007 Cut: flat list of pieces, untouched parts stay together and unrounded"
+  href: ../../adr/0007-cut-flache-teilliste-unberuehrtes-bleibt-zusammen.md
+- name: "0008 Test strategy: shared WKT fixtures, NTS oracle at run time, two implementations"
+  href: ../../adr/0008-teststrategie-fixtures-nts-orakel.md
+- name: "0009 SpatialNET.IO: WKT and GeoJSON via the factory, geometries only"
+  href: ../../adr/0009-io-wkt-geojson-ueber-factory.md
+- name: "0010 Playground projection: server-side with Proj4Net, default auto-UTM, distances in CRS units"
+  href: ../../adr/0010-playground-projektion-serverseitig-auto-utm.md
+- name: "0011 Playground: \"map first\", minimal API without a frontend build, UI from explicit algorithm descriptors"
+  href: ../../adr/0011-playground-karte-zuerst-deskriptor-registry.md
+- name: "0012 API signatures: typed overloads, values instead of geometries for point-like measures, fixed exception rules"
+  href: ../../adr/0012-api-signaturen-typisierte-overloads.md
+- name: "0013 Predicates: full DE-9IM, public Relate, prepared geometries as a snapshot"
+  href: ../../adr/0013-praedikate-de9im-relate-prepared.md

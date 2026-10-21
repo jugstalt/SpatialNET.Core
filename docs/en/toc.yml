@@ -1,0 +1,8 @@
+- name: Home
+  href: index.md
+- name: API reference
+  href: api/
+- name: Decisions
+  href: decisions/
+- name: Research (GitHub)
+  href: https://github.com/jugstalt/SpatialNET.Core/tree/main/research

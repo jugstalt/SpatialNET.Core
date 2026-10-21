@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [
+            "SpatialNET.Core/*.csproj",
+            "SpatialNET.Extensions/*.csproj",
+            "SpatialNET.Imp/*.csproj",
+            "SpatialNET.IO/*.csproj"
+          ]
+        }
+      ],
+      "dest": "en/api",
+      "outputFormat": "apiPage"
+    }
+  ],
+  "build": {
+    "content": [
+      { "src": "en", "files": ["**/*.{md,yml}"] },
+      { "src": "adr", "files": ["*.md"], "dest": "decisions" }
+    ],
+    "output": "_site/en",
+    "globalMetadata": {
+      "_appTitle": "SpatialNET",
+      "_appFooter": "SpatialNET &middot; Apache-2.0 &middot; <a href=\"https://github.com/jugstalt/SpatialNET.Core\">GitHub</a> &middot; <a href=\"../de/index.html\">Deutsch</a>",
+      "_enableSearch": true,
+      "_lang": "en"
+    },
+    "template": ["default", "modern"],
+    "markdownEngineName": "markdig"
+  }
+}
