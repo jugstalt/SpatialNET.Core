@@ -20,7 +20,7 @@ jobs:
     env:
       SPATIALNET_PROPERTY_ITER: ${{ inputs.iterations || '10000' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
