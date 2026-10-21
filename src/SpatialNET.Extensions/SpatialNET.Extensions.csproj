@@ -15,6 +15,8 @@
     <!-- Teilflächen-Bildung wird von IO (Writer) mitgenutzt; die Tests prüfen interne Bausteine direkt. -->
     <InternalsVisibleTo Include="SpatialNET.IO" />
     <InternalsVisibleTo Include="SpatialNET.Tests" />
+    <!-- Die Benchmarks vergleichen den öffentlichen Index mit dem internen Segment-Gitter (ADR 0014). -->
+    <InternalsVisibleTo Include="SpatialNET.Benchmarks" />
   </ItemGroup>
 
 </Project>
