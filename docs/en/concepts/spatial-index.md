@@ -46,6 +46,29 @@ The index only knows **envelopes**. `Query` returns the items whose envelope tou
 
 `Nearest(point, k)` returns up to `k` items, ascending by distance. By default the distance is the one from the point to the item's **envelope** (0 inside), which is exact only for rectangles. For geometries, pass the exact distance as a delegate; it must never be smaller than the envelope distance, which holds for any real geometry inside its envelope. Items at equal distance keep their input order, so results are deterministic.
 
+## Joining two indexes
+
+`Join` finds all pairs of an item of one index and an item of another whose envelopes meet, by walking both trees together, so that whole subtrees that cannot meet are skipped ([ADR 0021](../../adr/0021-spatial-join-doppelbaum-nur-vorfilter.md)). Like `Query` it is a pre-filter on envelopes; the exact test is yours:
+
+```csharp
+var parcels = parcelGeometries.ToSpatialIndex();
+var zones = zoneGeometries.ToSpatialIndex();
+
+// which parcels meet which flood zone? Envelope candidates first, then the exact test:
+var hits = parcels.Join(zones).Where(p => p.Left.Intersects(p.Right));
+
+// all overlapping pairs within one layer: every pair once, never a parcel with itself
+var overlaps = parcels.SelfJoin().Where(p => p.First.Overlaps(p.Second));
+
+// pairs that are close: the envelopes are widened by 5 map units
+var near = parcels.Join(zones, distance: 5);
+```
+
+- **`SelfJoin` returns every unordered pair once**, never an entry with itself. A loop of `Query` calls cannot do that: it returns every pair twice, and every item with itself.
+- `distance` widens the envelopes of one side; it stays an envelope test, not an exact distance.
+- The order of the pairs is not specified. The result can be enumerated more than once, and any number of threads may join the same indexes.
+- Measured: for large, evenly spread sets `Join` is about twice as fast as a loop of queries; for small or very dense sets it is on a par, because the number of pairs dominates.
+
 ## Rules
 
 - **Empty envelopes** (`Envelope2D.Empty`, the envelope of an empty geometry) are skipped when building and are not counted in `Count`. An empty query envelope returns nothing.

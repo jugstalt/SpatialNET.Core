@@ -68,6 +68,36 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void SpatialJoin()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+        var parcelGeometries = new[]
+        {
+            Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
+            Wkt.Read<IPolygon2D>("POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))"),
+        };
+        var zoneGeometries = new[] { Wkt.Read<IPolygon2D>("POLYGON((12 12, 20 12, 20 20, 12 20, 12 12))") };
+
+        // --- snippet: spatial-join
+        var parcels = parcelGeometries.ToSpatialIndex();
+        var zones = zoneGeometries.ToSpatialIndex();
+
+        // which parcels meet which flood zone? Envelope candidates first, then the exact test:
+        var hits = parcels.Join(zones).Where(p => p.Left.Intersects(p.Right));
+
+        // all overlapping pairs within one layer: every pair once, never a parcel with itself
+        var overlaps = parcels.SelfJoin().Where(p => p.First.Overlaps(p.Second));
+
+        // pairs that are close: the envelopes are widened by 5 map units
+        var near = parcels.Join(zones, distance: 5);
+        // --- end
+
+        Assert.Single(hits);
+        Assert.Single(overlaps);
+        Assert.Equal(2, near.Count());
+    }
+
+    [Fact]
     public void MakeValidBowtie()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

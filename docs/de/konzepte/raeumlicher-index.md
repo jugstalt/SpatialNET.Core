@@ -46,6 +46,29 @@ Der Index kennt nur **Envelopes**. `Query` liefert die Elemente, deren Envelope 
 
 `Nearest(point, k)` liefert bis zu `k` Elemente, aufsteigend nach Abstand. Standardmäßig ist der Abstand der vom Punkt zum **Envelope** des Elements (0 innerhalb), was nur für Rechtecke exakt ist. Für Geometrien übergibst du den exakten Abstand als Delegate; er darf nie kleiner sein als der Envelope-Abstand, was für jede echte Geometrie innerhalb ihres Envelopes gilt. Elemente mit gleichem Abstand behalten ihre Eingabereihenfolge, die Ergebnisse sind also deterministisch.
 
+## Zwei Indizes verbinden
+
+`Join` findet alle Paare aus einem Eintrag des einen und einem Eintrag eines anderen Index, deren Envelopes sich treffen, indem es beide Bäume gemeinsam durchläuft und ganze Teilbäume überspringt, die sich nicht treffen können ([ADR 0021](../../adr/0021-spatial-join-doppelbaum-nur-vorfilter.de.md)). Wie `Query` ist es ein Vorfilter auf Envelopes; der exakte Test ist Ihrer:
+
+```csharp
+var parcels = parcelGeometries.ToSpatialIndex();
+var zones = zoneGeometries.ToSpatialIndex();
+
+// welche Flurstücke treffen welche Hochwasserzone? Erst Envelope-Kandidaten, dann der exakte Test:
+var hits = parcels.Join(zones).Where(p => p.Left.Intersects(p.Right));
+
+// alle sich überlappenden Paare innerhalb einer Ebene: jedes Paar einmal, nie ein Flurstück mit sich selbst
+var overlaps = parcels.SelfJoin().Where(p => p.First.Overlaps(p.Second));
+
+// nahe Paare: die Envelopes werden um 5 Karteneinheiten geweitet
+var near = parcels.Join(zones, distance: 5);
+```
+
+- **`SelfJoin` liefert jedes ungeordnete Paar einmal**, nie einen Eintrag mit sich selbst. Eine Schleife aus `Query`-Aufrufen kann das nicht: Sie liefert jedes Paar zweimal und jedes Objekt mit sich selbst.
+- `distance` weitet die Envelopes einer Seite; es bleibt ein Envelope-Test, kein exakter Abstand.
+- Die Reihenfolge der Paare ist nicht festgelegt. Das Ergebnis lässt sich mehrfach aufzählen, und beliebig viele Threads dürfen dieselben Indizes joinen.
+- Gemessen: Bei großen, gleichmäßig verteilten Mengen ist `Join` etwa doppelt so schnell wie eine Schleife aus Abfragen; bei kleinen oder sehr dichten Mengen liegt es gleichauf, weil die Zahl der Paare überwiegt.
+
 ## Regeln
 
 - **Leere Envelopes** (`Envelope2D.Empty`, der Envelope einer leeren Geometrie) werden beim Bauen übersprungen und zählen nicht in `Count`. Ein leerer Abfrage-Envelope liefert nichts.

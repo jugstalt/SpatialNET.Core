@@ -1,0 +1,30 @@
+# Spatial Join: Paare zweier Indizes im gemeinsamen Durchlauf, nur Envelopes
+
+`SpatialIndex<T>` bekommt zwei Methoden, die ADR 0014 als eigenes Thema zurückgestellt hat: **`Join`** (alle Paare aus einem Eintrag des einen und einem Eintrag eines anderen Index, deren Envelopes sich treffen) und **`SelfJoin`** (alle Paare verschiedener Einträge innerhalb eines Index). Beide durchlaufen die Bäume **gemeinsam**, sodass ein Paar von Teilbäumen, deren Envelopes sich nicht treffen, als Ganzes übersprungen wird. Wie in ADR 0014 ist das ein **Vorfilter nur auf Envelopes**: Der exakte Test auf den Geometrien bleibt beim Aufrufer (`.Where(p => p.Left.Intersects(p.Right))`), eine Prädikat-Abkürzung gibt es nicht. Die Struktur bleibt unveränderlich und thread-sicher, und `SelfJoin` ist der eigentliche Gewinn: Er liefert jedes sich überlappende Paar einmal, was eine Schleife aus Abfragen nicht kann.
+
+*English version: [0021-spatial-join-doppelbaum-nur-vorfilter.md](0021-spatial-join-doppelbaum-nur-vorfilter.md)*
+
+## Consequences
+
+- **Ort:** Instanzmethoden von `SpatialIndex<T>` in `SpatialNET.Extensions` (die Klasse wird `partial`). Kein neues Paket. Für die Package Validation ist das nur eine Ergänzung.
+- **API:**
+  - `Join<TOther>(SpatialIndex<TOther> other, double distance = 0)` liefert `IEnumerable<(T Left, TOther Right)>`; `Join<TOther>(other, ICollection<(T, TOther)> results, double distance = 0)` fügt die Paare einer Sammlung hinzu, die dem Aufrufer gehört und nicht geleert wird.
+  - `SelfJoin(double distance = 0)` liefert `IEnumerable<(T First, T Second)>`: jedes **ungeordnete** Paar **verschiedener Einträge** einmal. Nie ein Eintrag mit sich selbst, nie `(a, b)` und `(b, a)` zugleich; welcher von beiden `First` ist, ist nicht festgelegt. Einträge mit gleicher Nutzlast sind verschiedene Einträge und bilden Paare.
+  - `Join` mit dem Index selbst ist erlaubt und liefert jedes geordnete Paar, auch jeden Eintrag mit sich selbst; das ist die schlichte Definition eines Joins, und `SelfJoin` ist der Aufruf für die eindeutigen Paare.
+- **Abstand:** `distance` (endlich, nicht negativ) weitet die Envelopes einer Seite vor dem Vergleich um diesen Wert auf; das Paar wird geliefert, wenn die Lücke zwischen den Envelopes in beiden Achsen höchstens `distance` beträgt. Das ist weiterhin nur ein Envelope-Test und kein Abstandsprädikat, wie „within distance d“ in ADR 0014. Ein negativer, `NaN`- oder unendlicher Wert wirft `ArgumentOutOfRangeException` (ADR 0012).
+- **Ergebnis:** jedes passende Paar genau einmal, in **keiner bestimmten Reihenfolge**, wie bei `Query`. Wer eine Reihenfolge braucht, sortiert. Leere Indizes ergeben keine Paare. `null` wirft `ArgumentNullException`. Die Aufzählung ist träge und wiederholbar.
+- **Thread-Sicherheit:** Beide Indizes sind unveränderlich, ein Join nutzt nur lokalen Zustand. Beliebig viele Threads dürfen dieselben Instanzen joinen, auch gleichzeitig.
+- **Algorithmus:** ein Stapel von Knotenpaaren, beginnend mit den beiden Wurzeln. Ein Paar entfällt, wenn sich die Envelopes (um `distance` geweitet) nicht treffen; zwei Blätter werden Eintrag für Eintrag verglichen; sonst werden die Kinder gepaart. Bei `SelfJoin` werden nur Paare `(x, y)` mit `x ≤ y` besucht, jedes ungeordnete Knotenpaar also einmal, und innerhalb eines Blatts wird Eintrag `i` nur mit `j > i` gepaart.
+- **Gemessen:** `SpatialJoinBenchmarks` (Einzellauf `--quick-join`; die zweite Menge ist die erste, leicht verschoben) zeigt, dass der Gewinn echt, aber bescheiden ist und von den Daten abhängt. Bei 100.000 gleichmäßig verteilten Einträgen braucht `Join` 46 ms gegen 100 ms für eine Schleife aus `Query`-Aufrufen (2,2-mal schneller), `SelfJoin` 22 ms; bei 1.000 Einträgen oder bei 100.000 Einträgen in dichten Haufen, wo die Zahl der Paare überwiegt (1,4 Millionen), liegt `Join` gleichauf mit der Schleife (168 ms gegen 187 ms). `Join` ist also eine Bequemlichkeit mit Beschleunigung für große, gleichmäßig verteilte Mengen; `SelfJoin` ist die Methode, die etwas Neues bietet.
+- **Tests (ADR 0008):** Orakel sind Brute Force über alle Paare und eine Schleife aus NTS-`STRtree`-Abfragen (mit um den Abstand geweitetem Envelope). Property-Tests (CsCheck) decken zufällige Mengen aus Punkten, Linien und Rechtecken auf einem groben Raster (viele sich berührende und gleiche Envelopes) ab, mit verschiedenen Knotenkapazitäten für die beiden Seiten, Abständen einschließlich 0, der Sammlungs-Überladung, `SelfJoin` (jedes Paar einmal, nie mit sich selbst), einem Join mit dem Index selbst, gleichen Nutzlasten, verschiedenen Nutzlasttypen, leerer und `null`-Eingabe, ungültigen Abständen und parallelen Joins. Fixtures passen nicht, weil der Index kein Geometrie-Ergebnis hat.
+- **Playground und Dokumentation:** Der Playground ist nicht betroffen (Instanzmethoden einer Datenstruktur, wie `Query`); ein Abschnitt in der Konzeptseite zum räumlichen Index zeigt `Join` mit einem anschließenden exakten `.Where`.
+
+## Considered Options
+
+- Eine Prädikat-Abkürzung wie `Join(other, predicate)` oder `IntersectingPairs()` (verworfen: eine zweite API für Prädikate, wie in ADR 0014; `.Where` genügt und zeigt, was der exakte Test ist)
+- Extension-Methoden auf `IEnumerable` von Geometrien, die die Indizes bauen (verworfen: Der Aufrufer hat die Indizes meist schon, und sie zu bauen ist `ToSpatialIndex()`)
+- Paare in festgelegter Reihenfolge liefern (verworfen: Sortieren kostet jeden Aufrufer, und `Query` ist ebenfalls ungeordnet; eine Ordnung ist eine Zeile)
+- `SelfJoin` liefert geordnete Paare (verworfen: Jedes Paar käme zweimal vor, und genau das macht die Schleife aus Abfragen unbrauchbar)
+- Gleiche-Nutzlast-Zwillinge im `SelfJoin` ausschließen (verworfen: Zwei Einträge sind zwei Einträge; wer Zwillinge ignorieren will, filtert auf der Nutzlast)
+- Ein Join mit exaktem Abstand (verworfen: Das ist ein Geometrie-Prädikat, ADR 0014; `distance` weitet nur Envelopes)
+- Ein paralleler Join (verworfen für jetzt: Der gemessene Gewinn ist bescheiden, und Determinismus und Einfachheit gehen vor)

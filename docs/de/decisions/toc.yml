@@ -38,3 +38,5 @@
   href: ../../adr/0019-mess-und-punkt-helfer-werte-statt-geometrien.de.md
 - name: "0020 MakeValid: Even-Odd-Normalisierung über den Overlay-Kern, keine gemischten Dimensionen"
   href: ../../adr/0020-makevalid-even-odd-normalisierung.de.md
+- name: "0021 Spatial Join: Paare zweier Indizes im gemeinsamen Durchlauf, nur Envelopes"
+  href: ../../adr/0021-spatial-join-doppelbaum-nur-vorfilter.de.md

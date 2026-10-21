@@ -13,7 +13,7 @@ namespace SpatialNET;
 /// <para>Thread-safe: after construction the instance is immutable and every query uses only local state,
 /// so any number of threads may query the same instance.</para>
 /// </remarks>
-public sealed class SpatialIndex<T>
+public sealed partial class SpatialIndex<T>
 {
     /// <summary>The default maximum number of children per node.</summary>
     public const int DefaultNodeCapacity = 16;
