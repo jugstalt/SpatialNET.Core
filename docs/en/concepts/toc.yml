@@ -1,0 +1,12 @@
+- name: The geometry model
+  href: geometry-model.md
+- name: Overlays, fill rules and the grid
+  href: overlay-and-grid.md
+- name: Predicates and DE-9IM
+  href: predicates.md
+- name: Buffer and offset curves
+  href: buffer-and-offset.md
+- name: Simplify, convex hull and validation
+  href: simplify-and-validation.md
+- name: Cut
+  href: cut.md

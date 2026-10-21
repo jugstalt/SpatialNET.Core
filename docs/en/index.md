@@ -4,6 +4,7 @@ SpatialNET is a .NET library for planar spatial computations that works exclusiv
 
 - **[Getting started](getting-started.md)**: install, first program, options and precision, reading and writing, the playground.
 - **[Host integration](host-integration.md)**: implement the geometry interfaces and the geometry factory in your own GIS application.
+- **[Concepts](concepts/geometry-model.md)**: the geometry model, overlays and the grid, predicates, buffer and offset curves, simplify and validation, cut.
 - **[Glossary](glossary.md)**: the terms used in code and documentation, English and German.
 - **[API reference](api/index.md)**: generated from the XML comments.
 - **[Decisions](decisions/toc.yml)**: the architecture decision records, the reasoning behind the design.

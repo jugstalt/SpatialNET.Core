@@ -10,8 +10,13 @@ namespace SpatialNET.Tests.DocSamples;
 public sealed class DocSamplesTests : IDisposable
 {
     private readonly IGeometryFactory? _savedFactory = GeometryFactory.Default;
+    private readonly double? _savedGridSize = Precision.DefaultGridSize;
 
-    public void Dispose() => GeometryFactory.Default = _savedFactory;
+    public void Dispose()
+    {
+        GeometryFactory.Default = _savedFactory;
+        Precision.DefaultGridSize = _savedGridSize;
+    }
 
     [Fact]
     public void QuickStart()
@@ -75,6 +80,143 @@ public sealed class DocSamplesTests : IDisposable
 
         Assert.Single(all);
         Assert.IsAssignableFrom<IPolyline2D>(all[0]);
+    }
+
+    [Fact]
+    public void ConceptFillRule()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: concept-fillrule
+        // Two partially overlapping shells in one polygon: invalid by the OGC rules.
+        var overlapping = Wkt.Read<IPolygon2D>(
+            "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(5 5, 15 5, 15 15, 5 15, 5 5))");
+
+        Console.WriteLine(overlapping.IsValid());                            // False
+        Console.WriteLine(overlapping.Union(overlapping).Area());            // 150 - even-odd: the overlap becomes a hole
+        Console.WriteLine(overlapping.Union(overlapping, FillRule.NonZero).Area()); // 175 - the overlap is merged
+        // --- end
+
+        Assert.False(overlapping.IsValid());
+        Assert.Equal(150, overlapping.Union(overlapping).Area());
+        Assert.Equal(175, overlapping.Union(overlapping, FillRule.NonZero).Area());
+    }
+
+    [Fact]
+    public void ConceptGrid()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: concept-grid
+        var strip = Wkt.Read<IPolygon2D>("POLYGON((0 1, 10 1, 10 5, 0 5, 0 1))");
+        var triangle = Wkt.Read<IPolygon2D>("POLYGON((0 0, 1 3, -1 3, 0 0))");
+
+        // Automatic grid (here 1e-11): the intersection point (1/3, 1) is rounded very finely.
+        Console.WriteLine(strip.Intersection(triangle).ToWkt());                  // POLYGON ((0 1, 0.33333333333 1, 1 3, 0 3, 0 1))
+
+        // Explicit grid of 0.01 map units.
+        Console.WriteLine(strip.Intersection(triangle, gridSize: 0.01).ToWkt());  // POLYGON ((0 1, 0.33 1, 1 3, 0 3, 0 1))
+
+        // Global default for all overlays that do not pass a grid size.
+        Precision.DefaultGridSize = 0.01;
+        // --- end
+
+        Precision.DefaultGridSize = null;
+        Assert.Equal("POLYGON ((0 1, 0.33333333333 1, 1 3, 0 3, 0 1))", strip.Intersection(triangle).ToWkt());
+        Assert.Equal("POLYGON ((0 1, 0.33 1, 1 3, 0 3, 0 1))", strip.Intersection(triangle, gridSize: 0.01).ToWkt());
+    }
+
+    [Fact]
+    public void ConceptPredicates()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: concept-predicates
+        var square = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+        var edge = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 10 0)"); // lies on the boundary of the square
+
+        Console.WriteLine(square.Contains(edge)); // False - DE-9IM: no point of the edge lies in the interior
+        Console.WriteLine(square.Covers(edge));   // True  - boundary points count
+        Console.WriteLine(square.Touches(edge));  // True
+        Console.WriteLine(square.Relate(edge));   // FF2101FF2
+        // --- end
+
+        Assert.False(square.Contains(edge));
+        Assert.True(square.Covers(edge));
+        Assert.True(square.Touches(edge));
+        Assert.Equal("FF2101FF2", square.Relate(edge).ToString());
+    }
+
+    [Fact]
+    public void ConceptBufferAndOffset()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: concept-buffer
+        var line = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 10 0)");
+        var square = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+
+        // A buffer around a line with flat ends: a 10 x 4 rectangle.
+        Console.WriteLine(line.Buffer(2, new BufferOptions { CapStyle = CapStyle.Flat }).Area()); // 40
+
+        // Round corners (default) versus mitre corners.
+        Console.WriteLine(Math.Round(square.Buffer(1).Area(), 2));                                         // 143.12
+        Console.WriteLine(square.Buffer(1, new BufferOptions { JoinStyle = JoinStyle.Mitre }).Area());      // 144
+
+        // A negative distance shrinks a polygon.
+        Console.WriteLine(square.Buffer(-2).ToWkt()); // POLYGON ((2 2, 8 2, 8 8, 2 8, 2 2))
+
+        // Offset curves: positive distance to the left, negative to the right of the direction of travel.
+        Console.WriteLine(line.OffsetCurve(2).ToWkt());  // LINESTRING (0 2, 10 2)
+        Console.WriteLine(line.OffsetCurve(-2).ToWkt()); // LINESTRING (0 -2, 10 -2)
+        // --- end
+
+        Assert.Equal(40, line.Buffer(2, new BufferOptions { CapStyle = CapStyle.Flat }).Area());
+        Assert.Equal(143.12, Math.Round(square.Buffer(1).Area(), 2));
+        Assert.Equal(144, square.Buffer(1, new BufferOptions { JoinStyle = JoinStyle.Mitre }).Area());
+        Assert.Equal("POLYGON ((2 2, 8 2, 8 8, 2 8, 2 2))", square.Buffer(-2).ToWkt());
+        Assert.Equal("LINESTRING (0 2, 10 2)", line.OffsetCurve(2).ToWkt());
+        Assert.Equal("LINESTRING (0 -2, 10 -2)", line.OffsetCurve(-2).ToWkt());
+    }
+
+    [Fact]
+    public void ConceptSimplifyValidateCut()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: concept-simplify
+        var noisy = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 1 0.1, 2 -0.1, 3 0.05, 4 0)");
+        Console.WriteLine(noisy.Simplify(0.5).ToWkt()); // LINESTRING (0 0, 4 0)
+        // --- end
+
+        // --- snippet: concept-validate
+        var bowtie = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 10, 10 0, 0 10, 0 0))");
+        Console.WriteLine(bowtie.IsValid()); // False
+
+        foreach (var issue in bowtie.Validate().Issues)
+        {
+            Console.WriteLine($"{issue.Kind} at {issue.Location.X} {issue.Location.Y}"); // SelfIntersection at 5 5
+        }
+        // --- end
+
+        // --- snippet: concept-cut
+        var square = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+        var cutter = Wkt.Read<IPolyline2D>("LINESTRING(5 -1, 5 11)");
+
+        IReadOnlyList<IPolygon2D> pieces = square.Cut(cutter);
+
+        Console.WriteLine(pieces.Count);      // 2
+        Console.WriteLine(pieces[0].Area());  // 50
+        // --- end
+
+        Assert.Equal("LINESTRING (0 0, 4 0)", noisy.Simplify(0.5).ToWkt());
+        Assert.False(bowtie.IsValid());
+        var found = Assert.Single(bowtie.Validate().Issues);
+        Assert.Equal(ValidationIssueKind.SelfIntersection, found.Kind);
+        Assert.Equal((5, 5), (found.Location.X, found.Location.Y));
+        Assert.Equal(2, pieces.Count);
+        Assert.Equal(50, pieces[0].Area());
+        Assert.Equal(50, pieces[1].Area());
     }
 
     [Fact]

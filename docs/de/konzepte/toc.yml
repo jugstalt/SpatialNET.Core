@@ -1,0 +1,12 @@
+- name: Das Geometriemodell
+  href: geometriemodell.md
+- name: Overlays, Füllregeln und das Gitter
+  href: overlay-und-gitter.md
+- name: Prädikate und DE-9IM
+  href: praedikate.md
+- name: Buffer und Offset-Kurven
+  href: buffer-und-offset.md
+- name: Vereinfachen, konvexe Hülle und Validierung
+  href: vereinfachen-und-validieren.md
+- name: Cut
+  href: cut.md

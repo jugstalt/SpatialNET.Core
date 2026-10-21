@@ -45,6 +45,7 @@ Hosts implementieren die Interfaces an ihren eigenen Geometrieklassen und stelle
 ## Dokumentation
 
 - [Erste Schritte](docs/de/erste-schritte.md) und [Host-Anbindung](docs/de/host-anbindung.md)
+- [Konzepte](docs/de/konzepte/geometriemodell.md): Geometriemodell, [Overlays und Gitter](docs/de/konzepte/overlay-und-gitter.md), [Prädikate](docs/de/konzepte/praedikate.md), [Buffer und Offset](docs/de/konzepte/buffer-und-offset.md), [Vereinfachen und Validieren](docs/de/konzepte/vereinfachen-und-validieren.md), [Cut](docs/de/konzepte/cut.md)
 - [Glossar](docs/de/glossar.md) (Begriffe Deutsch ↔ Englisch)
 - API-Referenz: aus den XML-Kommentaren mit DocFX generiert (nur Englisch), Build mit `docs/build.ps1` (siehe [docs/de/erste-schritte.md](docs/de/erste-schritte.md#die-dokumentation-bauen))
 - [Architekturentscheidungen (ADRs)](docs/adr/) – die Begründungen hinter dem Design (Englisch, mit deutschen Fassungen)

@@ -4,8 +4,8 @@ The documentation is bilingual: English is the leading language, German is the s
 
 | Folder | Contents |
 |---|---|
-| [`en/`](en/) | English pages (getting started, host integration, glossary); `en/api/` receives the generated API reference |
-| [`de/`](de/) | German pages (Erste Schritte, Host-Anbindung, Glossar) |
+| [`en/`](en/) | English pages (getting started, host integration, concepts, glossary); `en/api/` receives the generated API reference |
+| [`de/`](de/) | German pages (Erste Schritte, Host-Anbindung, Konzepte, Glossar) |
 | [`adr/`](adr/) | Architecture decision records, `NNNN-slug.md` (English) and `NNNN-slug.de.md` (German) |
 
 The pages of both languages are maintained together: a change to a page changes its counterpart in the same commit. The API reference is generated from the XML comments and exists in English only.
