@@ -12,7 +12,7 @@ internal enum OverlayOp { Intersection, Union, Difference, SymDifference }
 /// </summary>
 internal sealed class OverlayEngine
 {
-    private readonly record struct Source(GridPoint A, GridPoint B, double ZA, double ZB, int Operand, int String);
+    private readonly record struct Source(GridPoint A, GridPoint B, double ZA, double ZB, double MA, double MB, int Operand, int String);
 
     private readonly GridModel _grid;
     private readonly FillRule[] _fill;
@@ -116,7 +116,7 @@ internal sealed class OverlayEngine
         foreach (var e in noded)
         {
             bool area = areaString[e.Source.Index];
-            _sources.Add(new Source(e.A, e.B, e.ZA, e.ZB, e.Source.Operand, e.Source.Index));
+            _sources.Add(new Source(e.A, e.B, e.ZA, e.ZB, e.MA, e.MB, e.Source.Operand, e.Source.Index));
             input.Add(new GraphInput<GridPoint>(e.A, e.B, e.Source.Operand, area ? 1 : 0, area ? 0 : 1, _sources.Count - 1));
         }
 
@@ -454,13 +454,14 @@ internal sealed class OverlayEngine
 
     public int Dimension(int operand) => _dimension[operand];
 
-    // ---------- Koordinaten mit Z ----------
+    // ---------- Koordinaten mit Z und M ----------
 
-    private Coordinate[] ToCoordinates(GridPoint[] ring) => ring.Select(p => _grid.ToCoordinate(p, ZAt(p))).ToArray();
+    private Coordinate[] ToCoordinates(GridPoint[] ring) => ring.Select(p => _grid.ToCoordinate(p, ZAt(p), MAt(p))).ToArray();
 
-    private Coordinate ToCoordinate(int node) => _grid.ToCoordinate(Graph.Nodes[node], ZAt(Graph.Nodes[node]));
+    private Coordinate ToCoordinate(int node) => _grid.ToCoordinate(Graph.Nodes[node], ZAt(Graph.Nodes[node]), MAt(Graph.Nodes[node]));
 
     private Dictionary<GridPoint, double>? _z;
+    private Dictionary<GridPoint, double>? _m;
 
     /// <summary>Z at a node: from the first operand, otherwise from the second (ADR 0005); NaN = none.</summary>
     public double ZAt(GridPoint p)
@@ -476,5 +477,21 @@ internal sealed class OverlayEngine
         }
 
         return _z.TryGetValue(p, out double z) ? z : double.NaN;
+    }
+
+    /// <summary>M at a node: from the first operand, otherwise from the second, like Z (ADR 0015); NaN = none.</summary>
+    public double MAt(GridPoint p)
+    {
+        if (_m is null)
+        {
+            _m = [];
+            foreach (var s in _sources.OrderBy(s => s.Operand))
+            {
+                if (!double.IsNaN(s.MA)) _m.TryAdd(s.A, s.MA);
+                if (!double.IsNaN(s.MB)) _m.TryAdd(s.B, s.MB);
+            }
+        }
+
+        return _m.TryGetValue(p, out double m) ? m : double.NaN;
     }
 }

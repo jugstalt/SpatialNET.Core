@@ -42,7 +42,7 @@ public sealed record OffsetOptions
 /// <summary>
 /// Offset curves following JTS OffsetCurve (ADR 0006): buffer with flat ends, raw offset of the side,
 /// matched against the buffer boundary. The result is guaranteed to lie on the buffer boundary and, at narrow
-/// spots, is a polyline with several paths. Z is interpolated on the nearest source segment.
+/// spots, is a polyline with several paths. Z and M are interpolated on the nearest source segment.
 /// </summary>
 public static class OffsetCurves
 {
@@ -72,7 +72,7 @@ public static class OffsetCurves
             var path = Rings.Coordinates(polyline[i]);
             foreach (var curve in PathCurve(path, distance, options, bufferOptions, grid))
             {
-                result.Add(WithZ(curve, [path], f.SupportsZ));
+                result.Add(WithZM(curve, [path], f));
             }
         }
 
@@ -106,7 +106,7 @@ public static class OffsetCurves
         {
             foreach (var ring in part.Holes.ToArray().Prepend(part.Shell))
             {
-                paths.Add(WithZ(ring.ToArray(), sources, f.SupportsZ));
+                paths.Add(WithZM(ring.ToArray(), sources, f));
             }
         }
 
@@ -283,31 +283,42 @@ public static class OffsetCurves
         return [new(a.X + nx, a.Y + ny), new(b.X + nx, b.Y + ny)];
     }
 
-    /// <summary>Z per point interpolated from the nearest source segment (only if the source carries Z).</summary>
-    private static Coordinate[] WithZ(Coordinate[] curve, IReadOnlyList<Coordinate[]> sources, bool supportsZ)
+    /// <summary>
+    /// Z and M per point, each interpolated from the nearest source segment whose ends carry it (only if the
+    /// factory supports it, ADR 0015).
+    /// </summary>
+    private static Coordinate[] WithZM(Coordinate[] curve, IReadOnlyList<Coordinate[]> sources, IGeometryFactory f)
     {
-        if (!supportsZ || !sources.Any(s => s.Any(c => c.HasZ)))
+        bool useZ = f.SupportsZ && sources.Any(s => s.Any(c => c.HasZ));
+        bool useM = f.SupportsM && sources.Any(s => s.Any(c => c.HasM));
+        if (!useZ && !useM)
         {
             return curve.Select(c => new Coordinate(c.X, c.Y)).ToArray();
         }
 
         return curve.Select(c =>
         {
-            double best = double.PositiveInfinity, z = double.NaN;
+            double bestZ = double.PositiveInfinity, bestM = double.PositiveInfinity, z = double.NaN, m = double.NaN;
             foreach (var s in sources)
             {
                 for (int i = 1; i < s.Length; i++)
                 {
                     double d = Segments.PointDistance(c, s[i - 1], s[i]);
-                    if (d < best && s[i - 1].HasZ && s[i].HasZ)
+                    if (useZ && d < bestZ && s[i - 1].HasZ && s[i].HasZ)
                     {
-                        best = d;
+                        bestZ = d;
                         z = s[i - 1].Z + Fraction(s[i - 1], s[i], c) * (s[i].Z - s[i - 1].Z);
+                    }
+
+                    if (useM && d < bestM && s[i - 1].HasM && s[i].HasM)
+                    {
+                        bestM = d;
+                        m = s[i - 1].M + Fraction(s[i - 1], s[i], c) * (s[i].M - s[i - 1].M);
                     }
                 }
             }
 
-            return new Coordinate(c.X, c.Y, z);
+            return new Coordinate(c.X, c.Y, z, m);
         }).ToArray();
     }
 

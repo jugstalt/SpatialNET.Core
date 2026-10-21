@@ -11,9 +11,11 @@ internal sealed record SegmentString(Coordinate[] Points, int Operand, int Index
 /// <param name="B">End node.</param>
 /// <param name="ZA">Interpolated height at <paramref name="A"/> (NaN = none).</param>
 /// <param name="ZB">Interpolated height at <paramref name="B"/> (NaN = none).</param>
+/// <param name="MA">Interpolated measure at <paramref name="A"/> (NaN = none).</param>
+/// <param name="MB">Interpolated measure at <paramref name="B"/> (NaN = none).</param>
 /// <param name="Source">The input point sequence.</param>
 /// <param name="Segment">Index of the original segment in <paramref name="Source"/>.</param>
-internal readonly record struct NodedEdge(GridPoint A, GridPoint B, double ZA, double ZB, SegmentString Source, int Segment);
+internal readonly record struct NodedEdge(GridPoint A, GridPoint B, double ZA, double ZB, double MA, double MB, SegmentString Source, int Segment);
 
 /// <summary>
 /// Snap-rounding noder (Hobby 1999, after JTS SnapRoundingNoder; ADR 0005): hot pixels are all rounded
@@ -65,7 +67,7 @@ internal static class SnapRoundingNoder
             var p = source[seg.Index];
             var q = source[seg.Index + 1];
             GridPoint? previous = null;
-            double previousZ = double.NaN;
+            double previousZ = double.NaN, previousM = double.NaN;
             foreach (var (t, pixel) in hits)
             {
                 if (previous == pixel)
@@ -75,13 +77,18 @@ internal static class SnapRoundingNoder
 
                 double tz = Math.Clamp(t, 0, 1);
                 double z = p.HasZ && q.HasZ ? p.Z + tz * (q.Z - p.Z) : double.NaN;
+                // The segment's own end points keep their M even if the other end has none (ADR 0015).
+                double m = double.IsNegativeInfinity(t) ? p.M
+                    : double.IsPositiveInfinity(t) ? q.M
+                    : p.HasM && q.HasM ? p.M + tz * (q.M - p.M) : double.NaN;
                 if (previous is { } prev)
                 {
-                    result.Add(new NodedEdge(prev, pixel, previousZ, z, seg.Source, seg.Index));
+                    result.Add(new NodedEdge(prev, pixel, previousZ, z, previousM, m, seg.Source, seg.Index));
                 }
 
                 previous = pixel;
                 previousZ = z;
+                previousM = m;
             }
         }
 

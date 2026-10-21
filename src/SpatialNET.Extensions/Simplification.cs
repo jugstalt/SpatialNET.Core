@@ -8,7 +8,7 @@ public static class Simplification
     /// <summary>
     /// Simplifies each path by Douglas-Peucker: a vertex is kept if it is farther than
     /// <paramref name="tolerance"/> from the chord. Start and end point are kept; the
-    /// remaining vertices are unchanged (including Z). With <paramref name="preserveTopology"/> no new
+    /// remaining vertices are unchanged (including Z and M). With <paramref name="preserveTopology"/> no new
     /// crossings arise between or within the paths (as in JTS TopologyPreservingSimplifier).
     /// </summary>
     /// <param name="polyline">The polyline.</param>
@@ -29,7 +29,7 @@ public static class Simplification
             ? new TopologyPreservingSimplifier(tolerance).Simplify(paths.Select(p => (p, false)).ToList())
             : paths.Select(p => DouglasPeucker(p, tolerance)).ToList();
 
-        return f.CreatePolyline(simplified.Select(p => (ReadOnlyMemory<Coordinate>)Z(p, f)).ToArray(), polyline);
+        return f.CreatePolyline(simplified.Select(p => (ReadOnlyMemory<Coordinate>)GeometryAccess.Restrict(p, f)).ToArray(), polyline);
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public static class Simplification
         var grid = Internal.Noding.GridModel.Resolve(gridSize, polygon);
         var engine = new Internal.Overlay.OverlayEngine(raw, null, grid);
         var result = engine.Areas(h => engine.InsideLeft(h, 0));
-        return f.CreatePolygon(result.Select(p => f.SupportsZ ? p : FlatPart(p)).ToArray(), polygon);
+        return f.CreatePolygon(result.Select(p => GeometryAccess.Restrict(p, f)).ToArray(), polygon);
     }
 
     internal static void EnsureTolerance(double tolerance)
@@ -101,13 +101,6 @@ public static class Simplification
         return result.ToArray();
     }
 
-    private static Coordinate[] Z(Coordinate[] path, IGeometryFactory f) =>
-        f.SupportsZ ? path : path.Select(c => new Coordinate(c.X, c.Y)).ToArray();
-
-    private static PolygonPart FlatPart(PolygonPart p) =>
-        new(p.Shell.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray(),
-            p.Holes.ToArray().Select(h => (ReadOnlyMemory<Coordinate>)h.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray()).ToArray());
-
     private sealed class RingPolygon(Coordinate[][] rings) : IPolygon2D
     {
         private readonly IRing2D[] _rings = rings.Select(r => (IRing2D)new RingPoints(r)).ToArray();
@@ -118,20 +111,7 @@ public static class Simplification
     private sealed class RingPoints(Coordinate[] points) : IRing2D
     {
         public int PointCount => points.Length;
-        public IPoint2D this[int index] => points[index].HasZ ? new P3(points[index]) : new P2(points[index]);
-    }
-
-    private sealed class P2(Coordinate c) : IPoint2D
-    {
-        public double X => c.X;
-        public double Y => c.Y;
-    }
-
-    private sealed class P3(Coordinate c) : IPoint3D
-    {
-        public double X => c.X;
-        public double Y => c.Y;
-        public double Z => c.Z;
+        public IPoint2D this[int index] => GeometryAccess.PointOf(points[index]);
     }
 
     /// <summary>Douglas-Peucker over a coordinate sequence, iterative (no stack overflow for long paths).</summary>

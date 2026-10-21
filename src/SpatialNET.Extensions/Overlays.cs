@@ -6,8 +6,8 @@ namespace SpatialNET;
 /// Overlay operations (ADR 0005/0012): snap rounding to the grid size (<c>gridSize</c> →
 /// <see cref="Precision.DefaultGridSize"/> → automatic), winding numbers with a selectable <see cref="FillRule"/>,
 /// strict semantics (results are dimension-homogeneous, touch and collapse remnants are dropped). Results are
-/// valid, rings closed, shells counter-clockwise; Z at new vertices is interpolated on the
-/// original segment, at crossings the Z of the first operand applies.
+/// valid, rings closed, shells counter-clockwise; Z and M (ADR 0015) at new vertices are interpolated on the
+/// original segment, at crossings the Z and M of the first operand apply.
 /// </summary>
 /// <remarks>
 /// Typed overloads return the exact result type; the general <see cref="IGeometry2D"/> overload

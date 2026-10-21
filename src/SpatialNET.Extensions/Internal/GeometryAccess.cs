@@ -4,7 +4,52 @@ namespace SpatialNET.Internal;
 internal static class GeometryAccess
 {
     public static Coordinate ToCoordinate(this IPoint2D p) =>
-        p is IPoint3D p3 ? new Coordinate(p.X, p.Y, p3.Z) : new Coordinate(p.X, p.Y);
+        new(p.X, p.Y, p is IPoint3D p3 ? p3.Z : double.NaN, p is IPointM pm ? pm.M : double.NaN);
+
+    /// <summary>The coordinate without the dimensions that the factory does not support (<c>SupportsZ</c>, <c>SupportsM</c>).</summary>
+    public static Coordinate Restrict(Coordinate c, IGeometryFactory f) =>
+        new(c.X, c.Y, f.SupportsZ ? c.Z : double.NaN, f.SupportsM ? c.M : double.NaN);
+
+    public static Coordinate[] Restrict(Coordinate[] coordinates, IGeometryFactory f) =>
+        f.SupportsZ && f.SupportsM ? coordinates : coordinates.Select(c => Restrict(c, f)).ToArray();
+
+    public static PolygonPart Restrict(PolygonPart part, IGeometryFactory f) =>
+        f.SupportsZ && f.SupportsM
+            ? part
+            : new(Restrict(part.Shell.ToArray(), f),
+                part.Holes.ToArray().Select(h => (ReadOnlyMemory<Coordinate>)Restrict(h.ToArray(), f)).ToArray());
+
+    /// <summary>A read-only point for a coordinate that exposes Z and M only if the coordinate carries them.</summary>
+    public static IPoint2D PointOf(Coordinate c) => (c.HasZ, c.HasM) switch
+    {
+        (false, false) => new CoordinatePoint(c),
+        (true, false) => new CoordinatePointZ(c),
+        (false, true) => new CoordinatePointM(c),
+        _ => new CoordinatePointZM(c),
+    };
+
+    private class CoordinatePoint(Coordinate coordinate) : IPoint2D
+    {
+        protected Coordinate Value { get; } = coordinate;
+        public double X => Value.X;
+        public double Y => Value.Y;
+    }
+
+    private sealed class CoordinatePointZ(Coordinate c) : CoordinatePoint(c), IPoint3D
+    {
+        public double Z => Value.Z;
+    }
+
+    private sealed class CoordinatePointM(Coordinate c) : CoordinatePoint(c), IPointM
+    {
+        public double M => Value.M;
+    }
+
+    private sealed class CoordinatePointZM(Coordinate c) : CoordinatePoint(c), IPoint3D, IPointM
+    {
+        public double Z => Value.Z;
+        public double M => Value.M;
+    }
 
     /// <summary>Throws for <c>null</c> or an unknown geometry kind (ADR 0012).</summary>
     public static void EnsureKnown(IGeometry2D geometry, string paramName)

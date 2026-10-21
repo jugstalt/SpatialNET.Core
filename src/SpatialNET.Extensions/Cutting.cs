@@ -8,7 +8,7 @@ namespace SpatialNET;
 /// Cut according to ADR 0007: a flat list of the pieces without left/right. Cut pieces are one element each;
 /// all untouched parts or paths together form one element and keep their original coordinates
 /// (without snap rounding). If nothing is cut, the list contains exactly one element. The cutting line is
-/// not extended; Z at intersection points is interpolated on the original segment (ADR 0005).
+/// not extended; Z and M at intersection points are interpolated on the original segment (ADR 0005, ADR 0015).
 /// </summary>
 public static class Cutting
 {
@@ -51,7 +51,7 @@ public static class Cutting
 
             foreach (var piece in pieces)
             {
-                result.Add(f.CreatePolygon([f.SupportsZ ? piece : StripZ(piece)], polygon));
+                result.Add(f.CreatePolygon([GeometryAccess.Restrict(piece, f)], polygon));
             }
         }
 
@@ -110,8 +110,8 @@ public static class Cutting
             for (int i = 0; i < edges.Count; i++)
             {
                 var e = edges[i];
-                if (current.Count == 0) current.Add(grid.ToCoordinate(e.A, e.ZA));
-                current.Add(grid.ToCoordinate(e.B, e.ZB));
+                if (current.Count == 0) current.Add(grid.ToCoordinate(e.A, e.ZA, e.MA));
+                current.Add(grid.ToCoordinate(e.B, e.ZB, e.MB));
                 bool last = i == edges.Count - 1;
                 if (!last && cutNodes.Contains(e.B))
                 {
@@ -130,7 +130,7 @@ public static class Cutting
 
             foreach (var piece in pieces)
             {
-                var coordinates = f.SupportsZ ? piece.ToArray() : piece.Select(c => new Coordinate(c.X, c.Y)).ToArray();
+                var coordinates = GeometryAccess.Restrict(piece.ToArray(), f);
                 result.Add(f.CreatePolyline([coordinates], polyline));
             }
         }
@@ -154,25 +154,9 @@ public static class Cutting
 
     private sealed class PartRing(Coordinate[] coordinates) : IRing2D
     {
-        private readonly IPoint2D[] _points = coordinates.Select(c => c.HasZ ? new PartPoint3(c) : (IPoint2D)new PartPoint(c)).ToArray();
+        private readonly IPoint2D[] _points = coordinates.Select(GeometryAccess.PointOf).ToArray();
         public int PointCount => _points.Length;
         public IPoint2D this[int index] => _points[index];
     }
 
-    private sealed class PartPoint(Coordinate c) : IPoint2D
-    {
-        public double X => c.X;
-        public double Y => c.Y;
-    }
-
-    private sealed class PartPoint3(Coordinate c) : IPoint3D
-    {
-        public double X => c.X;
-        public double Y => c.Y;
-        public double Z => c.Z;
-    }
-
-    private static PolygonPart StripZ(PolygonPart part) =>
-        new(part.Shell.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray(),
-            part.Holes.ToArray().Select(h => (ReadOnlyMemory<Coordinate>)h.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray()).ToArray());
 }

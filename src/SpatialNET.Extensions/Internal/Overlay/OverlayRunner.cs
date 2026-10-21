@@ -86,7 +86,7 @@ internal static class OverlayRunner
         }
 
         var parts = engine.Areas(h => OverlayEngine.Apply(op, engine.InsideLeft(h, 0), engine.InsideLeft(h, 1)));
-        return f.CreatePolygon(f.SupportsZ ? parts.ToArray() : parts.Select(StripZ).ToArray(), a);
+        return f.CreatePolygon(parts.Select(p => GeometryAccess.Restrict(p, f)).ToArray(), a);
     }
 
     public static IPolyline2D Lines(OverlayOp op, IGeometry2D a, IGeometry2D? b, FillRule fill, IGeometryFactory? factory, double? gridSize)
@@ -114,7 +114,7 @@ internal static class OverlayRunner
         }
 
         var paths = engine.Lines(Select);
-        return f.CreatePolyline(f.SupportsZ ? paths.ToArray() : paths.Select(p => (ReadOnlyMemory<Coordinate>)StripZ(p.ToArray())).ToArray(), a);
+        return f.CreatePolyline(paths.Select(p => (ReadOnlyMemory<Coordinate>)GeometryAccess.Restrict(p.ToArray(), f)).ToArray(), a);
     }
 
     public static IMultiPoint2D Points(OverlayOp op, IGeometry2D a, IGeometry2D b, FillRule fill, IGeometryFactory? factory, double? gridSize)
@@ -128,10 +128,10 @@ internal static class OverlayRunner
         switch (op)
         {
             case OverlayOp.Intersection:
-                result.AddRange(pointsA.Where(p => engine.Covers(1, p.Grid)).Select(p => grid.ToCoordinate(p.Grid, p.Original.Z)));
+                result.AddRange(pointsA.Where(p => engine.Covers(1, p.Grid)).Select(p => grid.ToCoordinate(p.Grid, p.Original.Z, p.Original.M)));
                 break;
             case OverlayOp.Difference:
-                result.AddRange(pointsA.Where(p => !engine.Covers(1, p.Grid)).Select(p => grid.ToCoordinate(p.Grid, p.Original.Z)));
+                result.AddRange(pointsA.Where(p => !engine.Covers(1, p.Grid)).Select(p => grid.ToCoordinate(p.Grid, p.Original.Z, p.Original.M)));
                 break;
             default:
                 var pointsB = engine.Points(1).ToList();
@@ -139,12 +139,12 @@ internal static class OverlayRunner
                 var setB = pointsB.Select(p => p.Grid).ToHashSet();
                 var all = pointsA.Concat(pointsB).DistinctBy(p => p.Grid);
                 result.AddRange(all.Where(p => op == OverlayOp.Union || setA.Contains(p.Grid) != setB.Contains(p.Grid))
-                    .Select(p => grid.ToCoordinate(p.Grid, p.Original.Z)));
+                    .Select(p => grid.ToCoordinate(p.Grid, p.Original.Z, p.Original.M)));
                 break;
         }
 
         var coordinates = result.ToArray();
-        return f.CreateMultiPoint(f.SupportsZ ? coordinates : StripZ(coordinates), a);
+        return f.CreateMultiPoint(GeometryAccess.Restrict(coordinates, f), a);
     }
 
     /// <summary>
@@ -179,9 +179,4 @@ internal static class OverlayRunner
     }
 
     private static Envelope2D Expand(Envelope2D e, double m) => new(e.MinX - m, e.MinY - m, e.MaxX + m, e.MaxY + m);
-
-    private static Coordinate[] StripZ(Coordinate[] coordinates) => coordinates.Select(c => new Coordinate(c.X, c.Y)).ToArray();
-
-    private static PolygonPart StripZ(PolygonPart part) =>
-        new(StripZ(part.Shell.ToArray()), part.Holes.ToArray().Select(h => (ReadOnlyMemory<Coordinate>)StripZ(h.ToArray())).ToArray());
 }

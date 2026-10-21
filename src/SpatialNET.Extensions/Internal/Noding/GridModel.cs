@@ -153,5 +153,5 @@ internal sealed class GridModel
 
     public double FromUnits(long units) => _inverse > 0 ? units / _inverse : units * Size;
 
-    public Coordinate ToCoordinate(GridPoint p, double z = double.NaN) => new(FromUnits(p.X), FromUnits(p.Y), z);
+    public Coordinate ToCoordinate(GridPoint p, double z = double.NaN, double m = double.NaN) => new(FromUnits(p.X), FromUnits(p.Y), z, m);
 }
