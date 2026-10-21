@@ -1,0 +1,69 @@
+# SpatialNET
+
+*[Deutsche Fassung](README.de.md)*
+
+SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures.
+
+- **Own algorithms, no third-party engine.** Everything is implemented in-house; there is no dependency on NetTopologySuite, Clipper or similar ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.md)). NetTopologySuite appears only in the test project, as a comparison oracle.
+- **Interfaces instead of geometry classes.** The algorithms are extension methods on small read-only interfaces (`IPolygon2D`, `IPolyline2D`, …), so existing GIS software such as gView or WebGIS can use them through its own geometry classes. Results are created through a geometry factory that the host provides.
+- **Robust by construction.** Overlays snap-round to a grid and use exact predicates; results are valid by construction ([ADR 0005](docs/adr/0005-overlay-winding-number-snap-rounding.md)).
+
+## Packages
+
+| Package | Contents |
+|---|---|
+| `SpatialNET.Core` | Geometry interfaces, value types (`Coordinate`, `Envelope2D`), geometry factory contract |
+| `SpatialNET.Extensions` | The algorithms as extension methods: overlays, buffer, offset curve, cut, simplify, predicates and `Relate`, `IsValid`/`Validate`, `Prepare`, measures |
+| `SpatialNET.Imp` | Reference implementation of the geometry interfaces and the factory, for tests, tools and hosts without geometries of their own |
+| `SpatialNET.IO` | WKT and GeoJSON reading and writing through the geometry factory |
+
+## Quick start
+
+> SpatialNET is a pre-release (0.1.0) and has not been published to NuGet yet. For now, clone the repository and reference the projects; the package names above are the planned NuGet IDs.
+
+```csharp
+using SpatialNET;
+using SpatialNET.Imp;
+using SpatialNET.IO;
+
+// Once at startup: the factory that algorithms use to create their results.
+GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+var a = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+var b = Wkt.Read<IPolygon2D>("POLYGON((5 5, 15 5, 15 15, 5 15, 5 5))");
+
+IPolygon2D overlap = a.Intersection(b);
+
+Console.WriteLine(overlap.ToWkt());          // POLYGON ((10 5, 10 10, 5 10, 5 5, 10 5))
+Console.WriteLine(overlap.Area());           // 25
+Console.WriteLine(a.Intersects(b));          // True
+Console.WriteLine(a.Buffer(1).Area() > 100); // True
+```
+
+Hosts implement the interfaces on their own geometry classes and provide their own factory, see [Host integration](docs/en/host-integration.md).
+
+## Documentation
+
+- [Getting started](docs/en/getting-started.md) and [host integration](docs/en/host-integration.md)
+- [Glossary](docs/en/glossary.md) (English ↔ German terms)
+- API reference: generated from the XML comments with DocFX, build it with `docs/build.ps1` (see [docs/en/getting-started.md](docs/en/getting-started.md#building-the-documentation))
+- [Architecture decision records](docs/adr/) – the reasoning behind the design (English, with German versions)
+- [Research notes](research/) on the algorithm choices
+
+## Playground
+
+An interactive web application for trying the algorithms on a map (ASP.NET Core + Leaflet):
+
+```bash
+dotnet run --project src/SpatialNET.Playground
+```
+
+Then open `http://localhost:5003`. The sample geometries come from [samples/](samples/README.md), the same fixtures the tests use.
+
+## Quality
+
+The test suite (xUnit, about 6,350 tests) compares every algorithm against NetTopologySuite as an oracle on shared fixtures and runs each fixture against the reference implementation and against a deliberately awkward host-style implementation ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). Benchmarks are in [benchmarks/](benchmarks/).
+
+## License
+
+SpatialNET is licensed under the [Apache License 2.0](LICENSE). Third-party components, algorithm sources and test data are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

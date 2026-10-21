@@ -1,77 +1,77 @@
 # Third-Party Notices
 
-SpatialNET steht unter der [Apache License 2.0](LICENSE). Die Bibliotheken `SpatialNET.Core`,
-`SpatialNET.Extensions`, `SpatialNET.Imp` und `SpatialNET.IO` haben keine Laufzeit-Abhängigkeiten zu
-Fremdbibliotheken. Dieses Dokument nennt fremde Bestandteile im Repository, Vorlagen für Algorithmen und
-die Abhängigkeiten des Playgrounds.
+SpatialNET is licensed under the [Apache License 2.0](LICENSE). The libraries `SpatialNET.Core`,
+`SpatialNET.Extensions`, `SpatialNET.Imp` and `SpatialNET.IO` have no runtime dependencies on third-party
+libraries. This document lists third-party components in the repository, templates for algorithms and the
+dependencies of the playground.
 
-## Fremde Dateien im Repository
+## Third-party files in the repository
 
 ### Leaflet 1.9.4
 
-- Ort: `src/SpatialNET.Playground/wwwroot/lib/leaflet/` (unverändert aus dem npm-Paket `leaflet`)
-- Lizenz: BSD 2-Clause, Copyright (c) 2010-2023, Volodymyr Agafonkin; Copyright (c) 2010-2011, CloudMade
-- Lizenztext: [`lib/leaflet/LICENSE`](src/SpatialNET.Playground/wwwroot/lib/leaflet/LICENSE)
-- Projekt: <https://leafletjs.com>
+- Location: `src/SpatialNET.Playground/wwwroot/lib/leaflet/` (unmodified from the npm package `leaflet`)
+- License: BSD 2-Clause, Copyright (c) 2010-2023, Volodymyr Agafonkin; Copyright (c) 2010-2011, CloudMade
+- License text: [`lib/leaflet/LICENSE`](src/SpatialNET.Playground/wwwroot/lib/leaflet/LICENSE)
+- Project: <https://leafletjs.com>
 
 ### Leaflet-Geoman 2.17.0
 
-- Ort: `src/SpatialNET.Playground/wwwroot/lib/leaflet-geoman/` (unverändert aus dem npm-Paket `@geoman-io/leaflet-geoman-free`)
-- Lizenz: MIT, Copyright (c) 2017 Sumit Kumar
-- Lizenztext: [`lib/leaflet-geoman/LICENSE`](src/SpatialNET.Playground/wwwroot/lib/leaflet-geoman/LICENSE)
-- Projekt: <https://github.com/geoman-io/leaflet-geoman>
+- Location: `src/SpatialNET.Playground/wwwroot/lib/leaflet-geoman/` (unmodified from the npm package `@geoman-io/leaflet-geoman-free`)
+- License: MIT, Copyright (c) 2017 Sumit Kumar
+- License text: [`lib/leaflet-geoman/LICENSE`](src/SpatialNET.Playground/wwwroot/lib/leaflet-geoman/LICENSE)
+- Project: <https://github.com/geoman-io/leaflet-geoman>
 
-### JTS-Testsuites (Testdaten)
+### JTS test suites (test data)
 
-- Ort: `samples/external/jts/` – Eingaben aus den JTS-XML-Testsuites
-  (`modules/tests/src/test/resources/testxml/general`), per `tools/SpatialNET.CorpusConverter` umgewandelt
-- Lizenz: Eclipse Distribution License 1.0, Copyright (c) 2007, Eclipse Foundation, Inc. and its licensors
-- Lizenztext: [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt)
-- Projekt: <https://github.com/locationtech/jts>
+- Location: `samples/external/jts/` – inputs from the JTS XML test suites
+  (`modules/tests/src/test/resources/testxml/general`), converted with `tools/SpatialNET.CorpusConverter`
+- License: Eclipse Distribution License 1.0, Copyright (c) 2007, Eclipse Foundation, Inc. and its licensors
+- License text: [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt)
+- Project: <https://github.com/locationtech/jts>
 
-### polygon-clipping (Testdaten)
+### polygon-clipping (test data)
 
-- Ort: `samples/external/polygon-clipping/` – End-to-End-Fälle aus `test/end-to-end`, per
-  `tools/SpatialNET.CorpusConverter` umgewandelt
-- Lizenz: MIT, Copyright (c) 2018 Mike Fogel; Teile aus martinez Copyright (c) 2016 Alexander Milevski
-- Lizenztext: [`samples/external/polygon-clipping/LICENSE.md`](samples/external/polygon-clipping/LICENSE.md)
-- Projekt: <https://github.com/mfogel/polygon-clipping>
+- Location: `samples/external/polygon-clipping/` – end-to-end cases from `test/end-to-end`, converted with
+  `tools/SpatialNET.CorpusConverter`
+- License: MIT, Copyright (c) 2018 Mike Fogel; parts from martinez Copyright (c) 2016 Alexander Milevski
+- License text: [`samples/external/polygon-clipping/LICENSE.md`](samples/external/polygon-clipping/LICENSE.md)
+- Project: <https://github.com/mfogel/polygon-clipping>
 
-## Vorlagen für Algorithmen
+## Templates for algorithms
 
 ### JTS Topology Suite
 
-Mehrere Algorithmen folgen in Aufbau und Verhalten der JTS Topology Suite, unter anderem Snap-Rounding-Noder,
-OverlayNG (Overlay-Kern, RingClipper), Offset-/Buffer-Konstruktion (OffsetCurveBuilder,
-BufferInputLineSimplifier) und TopologyPreservingSimplifier. Die Stellen sind im Quellcode mit „wie JTS“ bzw.
-„Muster JTS“ gekennzeichnet.
+Several algorithms follow the JTS Topology Suite in structure and behavior, among them the snap-rounding noder,
+OverlayNG (overlay core, RingClipper), offset/buffer construction (OffsetCurveBuilder,
+BufferInputLineSimplifier) and TopologyPreservingSimplifier. The places are marked in the source code with
+"as in JTS" or "after JTS" ("wie JTS" / "Muster JTS" in the German inline comments).
 
-- Lizenz: JTS ist dual lizenziert unter Eclipse Public License 2.0 und Eclipse Distribution License 1.0;
-  SpatialNET bezieht sich auf die Eclipse Distribution License 1.0
-- Copyright (c) Vivid Solutions, Inc. und weitere JTS-Mitwirkende
-- Lizenztext: wie [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt)
-- Projekt: <https://github.com/locationtech/jts>
+- License: JTS is dual-licensed under the Eclipse Public License 2.0 and the Eclipse Distribution License 1.0;
+  SpatialNET relies on the Eclipse Distribution License 1.0
+- Copyright (c) Vivid Solutions, Inc. and further JTS contributors
+- License text: same as [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt)
+- Project: <https://github.com/locationtech/jts>
 
-### Wissenschaftliche Verfahren (ohne Lizenzpflicht, zur Quellenangabe)
+### Scientific methods (no license obligation, cited for attribution)
 
 - J. R. Shewchuk: *Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates*,
-  Discrete & Computational Geometry 18, 1997 – Fehlerschranken des Orientierungsprädikats `orient2d`.
+  Discrete & Computational Geometry 18, 1997 – error bounds of the orientation predicate `orient2d`.
 - J. D. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13, 1999 –
-  Snap-Rounding.
+  snap rounding.
 - D. H. Douglas, T. K. Peucker: *Algorithms for the reduction of the number of points required to represent a
-  digitized line or its caricature*, The Canadian Cartographer 10, 1973 – Linienvereinfachung.
+  digitized line or its caricature*, The Canadian Cartographer 10, 1973 – line simplification.
 
 ## Playground
 
-Der Playground (`src/SpatialNET.Playground`) ist ein Entwicklungswerkzeug und kein Teil der Bibliotheken.
-Zusätzlich zu Leaflet und Leaflet-Geoman nutzt er:
+The playground (`src/SpatialNET.Playground`) is a development tool and not part of the libraries.
+In addition to Leaflet and Leaflet-Geoman it uses:
 
 - **Proj4Net.Core** 2.26.2401 (NuGet) – Apache License 2.0
-- **OpenStreetMap-Kacheln** – © OpenStreetMap-Mitwirkende, Daten unter der Open Database License (ODbL);
-  der Hinweis wird in der Karte angezeigt. <https://www.openstreetmap.org/copyright>
+- **OpenStreetMap tiles** – © OpenStreetMap contributors, data under the Open Database License (ODbL);
+  the attribution is shown in the map. <https://www.openstreetmap.org/copyright>
 
-## Nur für Entwicklung
+## Development only
 
-Folgende Pakete werden nur für Tests, Benchmarks und Werkzeuge per NuGet geladen und nicht mit SpatialNET
-ausgeliefert: NetTopologySuite (BSD-3-Clause, Test-Orakel und Benchmark-Vergleich), xUnit, CsCheck,
+The following packages are loaded via NuGet only for tests, benchmarks and tools and are not shipped with
+SpatialNET: NetTopologySuite (BSD-3-Clause, test oracle and benchmark comparison), xUnit, CsCheck,
 coverlet, Microsoft.NET.Test.Sdk, Microsoft.AspNetCore.Mvc.Testing, BenchmarkDotNet.

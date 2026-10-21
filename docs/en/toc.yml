@@ -1,5 +1,11 @@
 - name: Home
   href: index.md
+- name: Getting started
+  href: getting-started.md
+- name: Host integration
+  href: host-integration.md
+- name: Glossary
+  href: glossary.md
 - name: API reference
   href: api/
 - name: Decisions

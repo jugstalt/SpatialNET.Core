@@ -1,10 +1,12 @@
 # SpatialNET
 
-SpatialNET ist eine Bibliothek für planare räumliche Berechnungen, die ausschließlich über Interfaces arbeitet, damit bestehende GIS-Software sie über ihre eigenen Geometrieklassen nutzen kann.
+SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen, die ausschließlich über Interfaces arbeitet, damit bestehende GIS-Software sie über ihre eigenen Geometrieklassen nutzen kann. Die Algorithmen sind selbst implementiert: Overlays, Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße.
 
-- **API-Referenz**: aus den XML-Kommentaren generiert, nur auf Englisch, siehe API reference (Link in der Fußzeile).
-- **Entwurfsentscheidungen**: die Architecture Decision Records stehen unter [Entscheidungen](decisions/toc.yml).
-- **Recherche**: Hintergründe zur Algorithmenwahl unter [Recherche](https://github.com/jugstalt/SpatialNET.Core/tree/main/research).
+- **[Erste Schritte](erste-schritte.md)**: Installation, erstes Programm, Optionen und Genauigkeit, Lesen und Schreiben, der Playground.
+- **[Host-Anbindung](host-anbindung.md)**: die Geometrie-Interfaces und die Geometrie-Factory in der eigenen GIS-Anwendung umsetzen.
+- **[Glossar](glossar.md)**: die Begriffe in Code und Dokumentation, Deutsch und Englisch.
+- **API-Referenz**: aus den XML-Kommentaren generiert, nur auf Englisch (Link in der Fußzeile).
+- **[Entscheidungen](decisions/toc.yml)**: die Architecture Decision Records, die Begründungen hinter dem Design.
+- **[Recherche](https://github.com/jugstalt/SpatialNET.Core/tree/main/research)**: Hintergründe zur Algorithmenwahl.
 
-> Diese Seite ist im Aufbau. Das Benutzerhandbuch (Einstieg, Host-Anbindung, Konzepte) folgt.
-
+SpatialNET ist eine Vorabversion (0.1.0) und noch nicht auf NuGet veröffentlicht. Der Quelltext liegt auf [GitHub](https://github.com/jugstalt/SpatialNET.Core) unter der Apache License 2.0.

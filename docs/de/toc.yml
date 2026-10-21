@@ -1,5 +1,11 @@
 - name: Start
   href: index.md
+- name: Erste Schritte
+  href: erste-schritte.md
+- name: Host-Anbindung
+  href: host-anbindung.md
+- name: Glossar
+  href: glossar.md
 - name: Entscheidungen
   href: decisions/
 - name: Recherche (GitHub)
