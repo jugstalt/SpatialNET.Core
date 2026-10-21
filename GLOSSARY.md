@@ -91,6 +91,10 @@ _Avoid_: Parallele, Versatzlinie, Offset-Linie
 Die Regel, nach der ein Algorithmus aus der Windungszahl eines Punktes entscheidet, ob er zur Fläche einer Eingabe gehört (EvenOdd, NonZero, Positive, Negative).
 _Avoid_: Fill-Mode, Polygon-Regel
 
+**Gültig machen**:
+Das Reparieren einer ungültigen Geometrie: Ein Polygon wird nach der Even-Odd-Regel neu aufgebaut, seine Fläche bleibt dabei erhalten.
+_Avoid_: Fixen, Bereinigen
+
 **Gitterweite**:
 Der Abstand des Rasters in Karteneinheiten, auf das ein Overlay alle Koordinaten seines Ergebnisses rundet.
 _Avoid_: Toleranz, Präzision, Epsilon, Scale

@@ -161,3 +161,7 @@ public sealed class DensifyAlgorithm() : PlaygroundAlgorithm("densify", "Densify
 
 public sealed class ReverseAlgorithm() : PlaygroundAlgorithm("reverse", "Reverse", "Konstruktion",
     [In.A(In.Lines, "Linie")], [], (i, _, f, _) => ((IPolyline2D)i["a"]).Reverse(f));
+
+public sealed class MakeValidAlgorithm() : PlaygroundAlgorithm("makeValid", "MakeValid", "Prüfung",
+    [In.A(In.Any)], [P.FillRule, P.GridSize],
+    (i, p, f, g) => i["a"].MakeValid(p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g));

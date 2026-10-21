@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- `MakeValid` (ADR 0020): repairs a polygon by even-odd normalisation through the overlay core (not the OGC `ST_MakeValid`), and cleans polylines and points of non-finite and duplicate points. Playground entry.
+
 ## [0.4.0-preview.1] - 2026-10-21
 
 ### Added

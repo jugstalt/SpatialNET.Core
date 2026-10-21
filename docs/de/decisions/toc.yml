@@ -36,3 +36,5 @@
   href: ../../adr/0018-unionall-kaskadiert-gemeinsames-gitter.de.md
 - name: "0019 Mess- und Punkt-Helfer: nächste Punkte, Abstandstest, Punkt auf der Fläche, Rand, Verdichten, Umkehren"
   href: ../../adr/0019-mess-und-punkt-helfer-werte-statt-geometrien.de.md
+- name: "0020 MakeValid: Even-Odd-Normalisierung über den Overlay-Kern, keine gemischten Dimensionen"
+  href: ../../adr/0020-makevalid-even-odd-normalisierung.de.md

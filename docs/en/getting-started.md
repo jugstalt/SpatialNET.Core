@@ -99,7 +99,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Predicates | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
 | Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
 | Linear referencing | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
-| Validity | `IsValid`, `Validate` |
+| Validity | `IsValid`, `Validate`, `MakeValid` |
 | Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
 | Constructions | `Boundary`, `Densify`, `Reverse` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |

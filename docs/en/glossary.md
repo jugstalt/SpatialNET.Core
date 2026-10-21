@@ -32,6 +32,7 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | offset curve | Offset-Kurve | A polyline at a fixed distance from a line (to the left for a positive distance) or from the boundary of a polygon (outside for a positive distance) |
 | fill rule | Füllregel | The rule by which an algorithm decides from the winding number of a point whether it belongs to the area of an input (`FillRule`: EvenOdd, NonZero, Positive, Negative) |
 | grid size | Gitterweite | The spacing, in map units, of the grid to which an overlay rounds all coordinates of its result (`gridSize`) |
+| make valid | gültig machen | Repairing an invalid geometry: a polygon by even-odd normalisation through the overlay core (`MakeValid`) |
 | winding number | Windungszahl | How often the boundary of an input winds around a point; the fill rule turns it into inside/outside |
 | snap rounding | Snap-Rounding | Rounding of constructed intersection points to the grid in a way that keeps the topology consistent |
 | even-odd rule | Even-Odd-Regel | A point is inside if it lies within an odd number of rings; the default for all inputs |

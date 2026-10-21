@@ -44,4 +44,21 @@ foreach (var issue in bowtie.Validate().Issues)
 | `OverlappingShells` | Two rings overlap along an edge |
 | `DisconnectedInterior` | Rings touch in such a way that the area falls apart into separate parts (for example two touch points of the same ring pair) |
 
-Not errors: a **missing closing point**, the **ring orientation**, and a **ring inside a hole** (that is an island). To repair invalid input, run it through an overlay with the right fill rule, for example `Union` with `FillRule.NonZero` ([Overlays, fill rules and the grid](overlay-and-grid.md)).
+Not errors: a **missing closing point**, the **ring orientation**, and a **ring inside a hole** (that is an island). To repair invalid input, use `MakeValid` (below).
+
+## Repair: MakeValid
+
+`MakeValid` turns an invalid geometry into a valid one ([ADR 0020](../../adr/0020-makevalid-even-odd-normalisierung.md)). For a polygon it is **even-odd normalisation** through the overlay core, the same self-union that `Simplify` runs: the area the input has under the fill rule is exactly the area of the result. Crossing, overlapping and touching rings dissolve, holes, islands and parts arise from the overlay, rings without area are dropped.
+
+```csharp
+var bowtie = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 10, 10 0, 0 10, 0 0))");
+
+bowtie.IsValid();                  // false
+IPolygon2D valid = bowtie.MakeValid();  // two triangles, valid
+```
+
+- **It is not the OGC `ST_MakeValid`.** Results are dimension-homogeneous, and there is no geometry collection, so collapsed remnants are not kept as lines.
+- **It runs on the grid** ([overlays](overlay-and-grid.md)): the result lies on the grid, also the parts that were valid before. To leave valid input untouched, check `IsValid()` first. `FillRule.NonZero` merges overlapping shells instead of making the overlap a hole.
+- **Polylines** lose non-finite points, consecutive duplicate points and paths with fewer than two distinct points; crossing lines are valid. **Points** lose non-finite ones; duplicates stay. Lines and points are not rounded.
+- The result is always a new geometry from the factory, and `MakeValid(MakeValid(g))` is the same geometry again.
+

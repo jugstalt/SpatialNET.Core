@@ -44,4 +44,21 @@ foreach (var issue in bowtie.Validate().Issues)
 | `OverlappingShells` | Zwei Ringe überlagern sich entlang einer Kante |
 | `DisconnectedInterior` | Ringe berühren sich so, dass die Fläche in getrennte Teile zerfällt (z. B. zwei Berührpunkte desselben Ringpaars) |
 
-Keine Fehler sind: ein **fehlender Schlusspunkt**, die **Ring-Orientierung** und ein **Ring in einem Loch** (das ist eine Insel). Ungültige Eingaben repariert man, indem man sie durch ein Overlay mit der passenden Füllregel schickt, z. B. `Union` mit `FillRule.NonZero` ([Overlays, Füllregeln und das Gitter](overlay-und-gitter.md)).
+Keine Fehler sind: ein **fehlender Schlusspunkt**, die **Ring-Orientierung** und ein **Ring in einem Loch** (das ist eine Insel). Um ungültige Eingaben zu reparieren, gibt es `MakeValid` (unten).
+
+## Reparatur: MakeValid
+
+`MakeValid` verwandelt eine ungültige Geometrie in eine gültige ([ADR 0020](../../adr/0020-makevalid-even-odd-normalisierung.de.md)). Bei einem Polygon ist das die **Even-Odd-Normalisierung** über den Overlay-Kern, dieselbe Selbst-Union, die `Simplify` ausführt: Die Fläche, die die Eingabe unter der Füllregel hat, ist genau die Fläche des Ergebnisses. Sich kreuzende, überlappende und berührende Ringe lösen sich auf, Löcher, Inseln und Teilflächen entstehen aus dem Overlay, Ringe ohne Fläche entfallen.
+
+```csharp
+var bowtie = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 10, 10 0, 0 10, 0 0))");
+
+bowtie.IsValid();                  // false
+IPolygon2D valid = bowtie.MakeValid();  // zwei Dreiecke, gültig
+```
+
+- **Es ist nicht das OGC-`ST_MakeValid`.** Ergebnisse sind dimensionshomogen, und eine Geometry-Collection gibt es nicht, kollabierte Reste bleiben also nicht als Linien erhalten.
+- **Es läuft auf dem Gitter** ([Overlays](overlay-und-gitter.md)): Das Ergebnis liegt auf dem Gitter, auch die Teile, die vorher gültig waren. Wer gültige Eingaben unberührt lassen will, prüft vorher `IsValid()`. `FillRule.NonZero` verschmilzt überlappende Außenringe, statt die Überlappung zum Loch zu machen.
+- **Polylinien** verlieren nicht endliche Punkte, aufeinanderfolgende doppelte Punkte und Pfade mit weniger als zwei verschiedenen Punkten; sich kreuzende Linien sind gültig. **Punkte** verlieren nicht endliche; Duplikate bleiben. Linien und Punkte werden nicht gerundet.
+- Das Ergebnis ist immer eine neue Geometrie aus der Factory, und `MakeValid(MakeValid(g))` ist wieder dieselbe Geometrie.
+

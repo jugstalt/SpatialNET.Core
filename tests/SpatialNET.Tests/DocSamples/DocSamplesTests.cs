@@ -68,6 +68,23 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void MakeValidBowtie()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: make-valid
+        var bowtie = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 10, 10 0, 0 10, 0 0))");
+
+        bool before = bowtie.IsValid();                  // false
+        IPolygon2D valid = bowtie.MakeValid();           // two triangles, valid
+        // --- end
+
+        Assert.False(before);
+        Assert.True(valid.IsValid());
+        Assert.Equal(50, valid.Area(), 6);
+    }
+
+    [Fact]
     public void MeasuresAndConstructions()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;
