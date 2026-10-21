@@ -32,6 +32,22 @@ public interface IPoint3D : IPoint2D
 }
 
 /// <summary>
+/// A point with a measure (M). Algorithms carry M and interpolate it at new vertices if the points
+/// involved are <see cref="IPointM"/>, but never compute with it (ADR 0015). It is independent of
+/// <see cref="IPoint3D"/>: a point may implement either or both.
+/// </summary>
+/// <remarks>
+/// An implementation reports its <see cref="M"/> as valid, including 0; <see cref="double.NaN"/> means
+/// "no M" for this point. A host that cannot tell "no M" from 0 must not implement this interface on that
+/// type, but on an M-capable subclass or wrapper used where the geometry has M.
+/// </remarks>
+public interface IPointM : IPoint2D
+{
+    /// <summary>The measure.</summary>
+    double M { get; }
+}
+
+/// <summary>
 /// An ordered sequence of points; common base of <see cref="IPath2D"/>,
 /// <see cref="IRing2D"/> and <see cref="IMultiPoint2D"/>.
 /// </summary>

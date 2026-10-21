@@ -20,6 +20,7 @@ public readonly record struct PolygonPart(
 /// <item>Buffers that are passed in are copied and not referenced after the call.</item>
 /// <item>Empty input (0 points, paths or parts) produces empty geometries, never <c>null</c>.</item>
 /// <item>Z may be dropped; if <see cref="SupportsZ"/> is <c>false</c>, algorithms produce no Z at all.</item>
+/// <item>M may be dropped; if <see cref="SupportsM"/> is <c>false</c>, algorithms produce no M at all.</item>
 /// </list>
 /// <para>The <c>source</c> parameter is the algorithm's primary input geometry (or <c>null</c>);
 /// the host can take metadata such as the spatial reference from it.</para>
@@ -28,6 +29,12 @@ public interface IGeometryFactory
 {
     /// <summary>Whether the created geometries are meant to carry Z.</summary>
     bool SupportsZ { get; }
+
+    /// <summary>
+    /// Whether the created geometries are meant to carry M (ADR 0015). The default is <c>false</c>,
+    /// so that existing host factories keep compiling and receive no M.
+    /// </summary>
+    bool SupportsM => false;
 
     /// <summary>Creates a point.</summary>
     /// <param name="coordinate">The coordinate.</param>

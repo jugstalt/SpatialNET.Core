@@ -7,8 +7,12 @@ namespace SpatialNET;
 /// <param name="X">The X coordinate (easting).</param>
 /// <param name="Y">The Y coordinate (northing).</param>
 /// <param name="Z">The height; <see cref="double.NaN"/> means "no Z".</param>
-public readonly record struct Coordinate(double X, double Y, double Z = double.NaN)
+/// <param name="M">The measure; <see cref="double.NaN"/> means "no M". M is carried and interpolated like Z but never influences a computation (ADR 0015).</param>
+public readonly record struct Coordinate(double X, double Y, double Z = double.NaN, double M = double.NaN)
 {
     /// <summary>Whether the coordinate carries a height.</summary>
     public bool HasZ => !double.IsNaN(Z);
+
+    /// <summary>Whether the coordinate carries a measure.</summary>
+    public bool HasM => !double.IsNaN(M);
 }
