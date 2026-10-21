@@ -62,6 +62,6 @@ Console.WriteLine(line.OffsetCurve(-2).ToWkt()); // LINESTRING (0 -2, 10 -2)
 - **Polygone:** Eine positive Distanz geht nach außen, eine negative nach innen, **unabhängig von der Ring-Orientierung**. Das Ergebnis ist der Rand von `Buffer(d)` als geschlossene Pfade.
 - **Zusage:** Das Ergebnis liegt auf dem Rand des Buffers. Das folgt dem Ansatz von JTS `OffsetCurve`: ein Buffer mit flachen Enden, der Roh-Offset der gewünschten Seite und der Abgleich mit dem Buffer-Rand. Hat der Offset mehrere getrennte Abschnitte (Engstellen, Selbstschnitte der Eingabe), ist das Ergebnis eine Polylinie mit mehreren Pfaden.
 - **`Joined`:** `OffsetOptions.Joined` verbindet die Teilstücke zu einem Pfad; dieser darf sich dann selbst schneiden.
-- **Z:** Offset-Kurven interpolieren Z auf dem zugehörigen Quellsegment, wenn die Factory Z unterstützt.
+- **Z und M:** Offset-Kurven interpolieren Z und M auf dem zugehörigen Quellsegment, wenn die Factory sie unterstützt. `Buffer` erzeugt beides nicht.
 
 `OffsetOptions` hat dieselben Join-, Bogen-, Mitre- und Vereinfachungs-Optionen wie `BufferOptions`, dazu `Joined`.

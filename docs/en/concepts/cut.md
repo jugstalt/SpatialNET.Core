@@ -33,4 +33,4 @@ A polyline is split at every contact with the cutting line: a crossing, a touch 
 
 - **All paths of the cutting line cut**, so several cuts in one call are possible. There is no options class.
 - **The cutting line is not extended.** A snap tolerance that extends the line to the boundary, as editing tools do, is the business of the tool, not of the library.
-- Z at intersection points is interpolated on the original segment.
+- Z and M at intersection points are interpolated on the original segment.

@@ -2,6 +2,18 @@
 
 All notable changes to SpatialNET are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). All four packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`) share one version.
 
+## [Unreleased]
+
+### Added
+
+- M values (ADR 0015): `Coordinate.M`/`HasM`, the geometry interface `IPointM` and `IGeometryFactory.SupportsM` (default `false`). Overlays, `Cut`, `Simplify` and `OffsetCurve` carry M and interpolate it at new vertices like Z; `Buffer` and `ConvexHull` produce none. M never influences a computation.
+- WKT reads and writes `M` and `ZM` (`WktOptions.MMode`); GeoJSON stays without M.
+- Reference implementation: `PointM`, `Point3DM` and `ImpGeometryFactory(supportsZ, supportsM)`.
+
+### Changed
+
+- Breaking (pre-release): `Coordinate` has a fourth parameter `M`; its constructor and `Deconstruct` change.
+
 ## [0.2.0-preview.1] - 2026-10-21
 
 ### Added

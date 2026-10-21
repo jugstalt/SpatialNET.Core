@@ -41,6 +41,7 @@ justification in `samples/<algorithm>/_catalog.json`: `{ "n/a": { "z": "justific
 | `near-coincident` | distances in the ULP range |
 | `large-coords` | coordinates ≥ 1e6 (UTM-like) |
 | `z` | 3D input |
+| `m` | input with M values (the result must not depend on M, ADR 0015) |
 | `multi` | several parts or paths |
 | `nested` | island in a hole |
 

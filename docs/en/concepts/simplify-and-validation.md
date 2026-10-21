@@ -9,7 +9,7 @@ var noisy = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 1 0.1, 2 -0.1, 3 0.05, 4 0)")
 Console.WriteLine(noisy.Simplify(0.5).ToWkt()); // LINESTRING (0 0, 4 0)
 ```
 
-- **Polylines:** each path is simplified; the start and end point stay, and the remaining vertices are unchanged (including Z).
+- **Polylines:** each path is simplified; the start and end point stay, and the remaining vertices are unchanged (including Z and M).
 - **Polygons:** each ring is simplified; the start point of a ring may be dropped as well, and rings that end up with fewer than 4 points are dropped. The result is normalized by the overlay and is therefore **always valid** (see [The geometry model](geometry-model.md)).
 - **`preserveTopology: true`** uses a topology-preserving variant after the pattern of JTS `TopologyPreservingSimplifier`: no new crossings arise between or within the paths, and no rings are lost.
 - `tolerance` is in map units and must be finite and ≥ 0.

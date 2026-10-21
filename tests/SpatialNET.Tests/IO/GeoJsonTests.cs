@@ -8,6 +8,27 @@ using SpatialNET.Tests.Oracle;
 
 namespace SpatialNET.Tests.IO;
 
+public class GeoJsonMTests
+{
+    [Fact]
+    public void GeoJson_has_no_M_on_writing()
+    {
+        var polygon = Wkt.Read("POLYGON ZM ((0 0 1 10, 10 0 2 20, 10 10 3 30, 0 0 1 10))", ImpGeometryFactory.Instance);
+
+        var json = polygon.ToGeoJson();
+
+        Assert.Equal("""{"type":"Polygon","coordinates":[[[0,0,1],[10,0,2],[10,10,3],[0,0,1]]]}""", json);
+    }
+
+    [Fact]
+    public void A_fourth_position_element_is_not_read_as_M()
+    {
+        var p = GeoJson.Read("""{"type":"Point","coordinates":[1,2,3,4]}""", ImpGeometryFactory.Instance);
+
+        Assert.IsNotAssignableFrom<IPointM>(p);
+    }
+}
+
 public class GeoJsonReadTests
 {
     private static readonly IGeometryFactory F = ImpGeometryFactory.Instance;

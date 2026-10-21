@@ -6,6 +6,59 @@ using ForeignGeometryFactory = SpatialNET.Tests.Foreign.ForeignGeometryFactory;
 
 namespace SpatialNET.Tests.IO;
 
+public class WktMTests
+{
+    private static readonly IGeometryFactory F = ImpGeometryFactory.Instance;
+
+    [Theory]
+    [InlineData("POINT M (1 2 3)")]
+    [InlineData("POINT ZM (1 2 3 4)")]
+    [InlineData("MULTIPOINT M ((1 2 3), (4 5 6))")]
+    [InlineData("LINESTRING M (0 0 0, 1 1 5)")]
+    [InlineData("LINESTRING ZM (0 0 1 0, 1 1 2 5)")]
+    [InlineData("POLYGON M ((0 0 1, 10 0 2, 10 10 3, 0 10 4, 0 0 1))")]
+    [InlineData("MULTIPOLYGON ZM (((0 0 1 5, 10 0 2 6, 10 10 3 7, 0 0 1 5)), ((20 20 0 1, 30 20 0 2, 30 30 0 3, 20 20 0 1)))")]
+    public void Round_trips_M_and_ZM(string wkt)
+    {
+        var geometry = Wkt.Read(wkt, F);
+
+        Assert.Equal(wkt, geometry.ToWkt());
+    }
+
+    [Fact]
+    public void Writes_NaN_for_points_without_M_if_others_have_it()
+    {
+        var line = F.CreatePolyline([new Coordinate[] { new(0, 0, M: 1), new(1, 1) }], null);
+
+        var wkt = line.ToWkt();
+
+        Assert.Equal("LINESTRING M (0 0 1, 1 1 NaN)", wkt);
+        Assert.False(Internal.GeometryAccess.ToCoordinate(((IPolyline2D)Wkt.Read(wkt, F))[0][1]).HasM);
+    }
+
+    [Fact]
+    public void M_of_zero_is_written()
+    {
+        Assert.Equal("POINT M (1 2 0)", Wkt.Read("POINT M (1 2 0)", F).ToWkt());
+    }
+
+    [Fact]
+    public void MMode_Never_leaves_M_out()
+    {
+        var geometry = Wkt.Read("LINESTRING ZM (0 0 1 0, 1 1 2 5)", F);
+
+        Assert.Equal("LINESTRING Z (0 0 1, 1 1 2)", geometry.ToWkt(new WktOptions { MMode = MMode.Never }));
+        Assert.Equal("LINESTRING (0 0, 1 1)", geometry.ToWkt(new WktOptions { MMode = MMode.Never, ZMode = ZMode.Never }));
+    }
+
+    [Fact]
+    public void Without_M_nothing_changes()
+    {
+        Assert.Equal("POINT (1 2)", Wkt.Read("POINT (1 2)", F).ToWkt());
+        Assert.Equal("POINT Z (1 2 3)", Wkt.Read("POINT Z (1 2 3)", F).ToWkt());
+    }
+}
+
 public class WktReadTests
 {
     private static readonly IGeometryFactory F = ImpGeometryFactory.Instance;
@@ -27,15 +80,44 @@ public class WktReadTests
     [InlineData("POINT (1 2 3)", 3d)]
     [InlineData("POINT ZM (1 2 3 4)", 3d)]
     [InlineData("POINT (1 2 3 4)", 3d)]
-    public void Reads_Z_and_drops_M(string wkt, double z)
+    public void Reads_Z(string wkt, double z)
     {
         Assert.Equal(z, Assert.IsAssignableFrom<IPoint3D>(Wkt.Read(wkt, F)).Z);
     }
 
-    [Fact]
-    public void Drops_M_without_Z()
+    [Theory]
+    [InlineData("POINT M (1 2 3)", 3d)]
+    [InlineData("POINT ZM (1 2 3 4)", 4d)]
+    [InlineData("POINT (1 2 3 4)", 4d)]
+    [InlineData("POINT M (1 2 0)", 0d)]
+    public void Reads_M(string wkt, double m)
     {
-        Assert.IsNotAssignableFrom<IPoint3D>(Wkt.Read("POINT M (1 2 3)", F));
+        Assert.Equal(m, Assert.IsAssignableFrom<IPointM>(Wkt.Read(wkt, F)).M);
+    }
+
+    [Fact]
+    public void Reads_M_without_Z()
+    {
+        var p = Wkt.Read("POINT M (1 2 3)", F);
+
+        Assert.IsNotAssignableFrom<IPoint3D>(p);
+        Assert.Equal(new Coordinate(1, 2, M: 3), Internal.GeometryAccess.ToCoordinate((IPoint2D)p));
+    }
+
+    [Fact]
+    public void M_is_dropped_if_the_factory_does_not_support_it()
+    {
+        var p = Wkt.Read("POINT ZM (1 2 3 4)", new ImpGeometryFactory(supportsZ: true, supportsM: false));
+
+        Assert.Equal(3, Assert.IsAssignableFrom<IPoint3D>(p).Z);
+        Assert.IsNotAssignableFrom<IPointM>(p);
+    }
+
+    [Fact]
+    public void Rejects_a_coordinate_that_does_not_match_the_M_dimension()
+    {
+        Assert.Throws<FormatException>(() => Wkt.Read("POINT M (1 2)", F));
+        Assert.Throws<FormatException>(() => Wkt.Read("POINT ZM (1 2 3)", F));
     }
 
     [Fact]

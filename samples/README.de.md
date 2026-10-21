@@ -41,6 +41,7 @@ Jeder Algorithmus braucht mindestens einen Fall je Tag. Trifft ein Tag fachlich 
 | `near-coincident` | Abstände im ULP-Bereich |
 | `large-coords` | Koordinaten ≥ 1e6 (UTM-artig) |
 | `z` | 3D-Eingaben |
+| `m` | Eingaben mit M-Werten (das Ergebnis darf nicht von M abhängen, ADR 0015) |
 | `multi` | mehrere Teilflächen bzw. Pfade |
 | `nested` | Insel im Loch |
 

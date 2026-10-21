@@ -11,7 +11,7 @@ SpatialNET rechnet auf einer kleinen Menge lesender Interfaces. Diese Seite besc
 | `IPolyline2D` | ein oder mehrere Pfade | LineString / MultiLineString |
 | `IPolygon2D` | eine flache Liste von Ringen | Polygon / MultiPolygon |
 
-Pfade und Ringe sind Teile einer Geometrie und selbst keine Geometrien. Eine Geometry-Collection gibt es nicht: Ergebnisse sind dimensionshomogen. 3D gibt es nur am Punkt (`IPoint3D`); Algorithmen interpolieren Z an neuen Vertices, wenn die beteiligten Punkte es tragen.
+Pfade und Ringe sind Teile einer Geometrie und selbst keine Geometrien. Eine Geometry-Collection gibt es nicht: Ergebnisse sind dimensionshomogen. 3D gibt es nur am Punkt (`IPoint3D`); Algorithmen interpolieren Z an neuen Vertices, wenn die beteiligten Punkte es tragen. Ein Punkt kann zusätzlich einen Messwert tragen (`IPointM`, M): Er wird wie Z mitgeführt und interpoliert, beeinflusst aber nie eine Berechnung ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)).
 
 ## Polygone: eine flache Ringliste
 

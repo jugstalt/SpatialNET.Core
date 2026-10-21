@@ -14,13 +14,13 @@ SpatialNET bekommt **M-Werte** (ein Messwert an einem Stützpunkt, zum Beispiel 
 - **Interpolation:**
   - An einem neuen Stützpunkt stammt M vom **Quellsegment** der Ergebniskante, linear nach dem Parameter entlang des Segments, genau wie Z im Noder. Treffen mehrere Kanten in einem Gitterpixel zusammen, gewinnt die erste in der deterministischen Ordnung des Noders.
   - M wird **nur interpoliert, wenn beide Enden des Segments M haben**. Sonst hat der neue Stützpunkt kein M. Es wird nichts geraten, und 0 wird nie eingesetzt.
-  - Ursprüngliche Stützpunkte behalten ihr M.
+  - Ursprüngliche Stützpunkte behalten ihr M, auch wenn das andere Ende des Segments keines hat (der Noder übernimmt das M der eigenen Endpunkte des Segments direkt). Z folgt weiter der älteren Regel aus ADR 0005 und wird von diesem ADR nicht geändert.
 - **Algorithmen:** Overlays (`Intersection`, `Union`, `Difference`, `SymDifference`), `Cut`, `Simplify` und `OffsetCurve` tragen M wie Z. `Buffer` und `ConvexHull` erzeugen kein M, so wie `Buffer` kein Z erzeugt (ADR 0006). `Centroid` liefert ein `Coordinate?` ohne M (wie ohne Z, ADR 0012). Prädikate und Maße ignorieren M.
 - **IO:** WKT liest und schreibt `M` und `ZM` (`POINT M (1 2 3)`, `POINT ZM (1 2 3 4)`). GeoJSON bleibt ohne M, damit Exporte Standard bleiben (RFC 7946); wer M braucht, nutzt WKT und später WKB.
 - **Tests (ADR 0008):** Das NTS-Orakel interpoliert M in Overlays nicht, daher wird M nicht gegen es geprüft. Stattdessen:
   - handgeschriebene Erwartungen (ursprüngliches M bleibt erhalten, M an neuen Stützpunkten liegt zwischen den Enden des Quellsegments, kein M, wenn ein Ende keines hat);
   - ein **Invarianten-Property-Test**: Dieselbe Operation mit und ohne M liefert identisches X/Y (und Z). Das ist die stärkste Garantie, dass M die Berechnung nie beeinflusst, und braucht kein Orakel;
-  - `[Covers]` bekommt einen neuen Pflicht-Tag `M`; die Fremd-Host-Geometrien bekommen eine M-Variante.
+  - ein neuer Pflicht-Fixture-Tag `m` (je Algorithmus eine `m.json`: Eingabe mit M, X/Y wird wie bei `z` gegen das Orakel verglichen); die Fremd-Implementierung läuft diese Fixtures ebenfalls, verwirft aber M, weil ihre Punkte nie `IPointM` implementieren. Die M-fähigen Testgeometrien für die Durchreich-Tests sind getrennt (`tests/SpatialNET.Tests/MValues`).
 - **Auslieferung:** in drei Etappen (ADR und Core; Extensions und Tests; IO, Dokumentation), aber **ein Release** (`0.3.0-preview.1`), damit kein Zwischenstand mit halbem M auf NuGet landet.
 - **Folgearbeiten, die davon abhängen:** WKB (Lesen ISO und EWKB, Schreiben ISO) und Linear Referencing (`Interpolate`, `Project`, `Substring` nach Länge, dazu `...ByM`-Varianten). Jedes bekommt einen eigenen ADR.
 

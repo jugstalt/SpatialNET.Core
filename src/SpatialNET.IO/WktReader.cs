@@ -143,9 +143,16 @@ internal sealed class WktReader(string text, IGeometryFactory factory)
             throw Error($"Coordinate with {values.Count} values does not match dimension {dim}");
         }
 
-        // Ohne Dimensionsangabe: 3 Werte = Z, 4 Werte = ZM. M wird verworfen (ADR 0009).
-        bool hasZ = dim is Dim.Z or Dim.ZM || (dim == Dim.Unknown && values.Count >= 3);
-        return hasZ ? new Coordinate(values[0], values[1], values[2]) : new Coordinate(values[0], values[1]);
+        // Without a dimension tag: 3 values = Z, 4 values = ZM (ADR 0015).
+        return dim switch
+        {
+            Dim.M => new Coordinate(values[0], values[1], M: values[2]),
+            Dim.ZM => new Coordinate(values[0], values[1], values[2], values[3]),
+            Dim.Z => new Coordinate(values[0], values[1], values[2]),
+            _ when values.Count == 4 => new Coordinate(values[0], values[1], values[2], values[3]),
+            _ when values.Count == 3 => new Coordinate(values[0], values[1], values[2]),
+            _ => new Coordinate(values[0], values[1]),
+        };
     }
 
     private double ReadNumber()

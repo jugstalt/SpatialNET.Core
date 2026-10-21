@@ -5,16 +5,28 @@ namespace SpatialNET.Imp;
 /// all coordinates are copied into new, immutable objects.
 /// </summary>
 /// <param name="supportsZ">
-/// Whether coordinates with a height are created as <see cref="Point3D"/>. If <c>false</c>, only
-/// <see cref="Point"/> without Z is created.
+/// Whether coordinates with a height are created as <see cref="Point3D"/>. If <c>false</c>, no Z is created.
 /// </param>
-public sealed class ImpGeometryFactory(bool supportsZ = true) : IGeometryFactory
+/// <param name="supportsM">
+/// Whether coordinates with a measure are created as <see cref="PointM"/> or <see cref="Point3DM"/>
+/// (ADR 0015). If <c>false</c>, no M is created.
+/// </param>
+public sealed class ImpGeometryFactory(bool supportsZ, bool supportsM) : IGeometryFactory
 {
-    /// <summary>A shared instance with Z support.</summary>
+    /// <summary>A shared instance with Z and M support.</summary>
     public static ImpGeometryFactory Instance { get; } = new();
+
+    /// <summary>Creates a factory with the given Z support and with M support.</summary>
+    /// <param name="supportsZ">Whether Z is created.</param>
+    public ImpGeometryFactory(bool supportsZ = true) : this(supportsZ, true)
+    {
+    }
 
     /// <inheritdoc />
     public bool SupportsZ { get; } = supportsZ;
+
+    /// <inheritdoc />
+    public bool SupportsM { get; } = supportsM;
 
     /// <inheritdoc />
     public IPoint2D CreatePoint(Coordinate coordinate, IGeometry2D? source) => ToPoint(coordinate);
@@ -52,7 +64,13 @@ public sealed class ImpGeometryFactory(bool supportsZ = true) : IGeometryFactory
     }
 
     private IPoint2D ToPoint(Coordinate c) =>
-        SupportsZ && c.HasZ ? new Point3D(c.X, c.Y, c.Z) : new Point(c.X, c.Y);
+        (SupportsZ && c.HasZ, SupportsM && c.HasM) switch
+        {
+            (true, true) => new Point3DM(c.X, c.Y, c.Z, c.M),
+            (true, false) => new Point3D(c.X, c.Y, c.Z),
+            (false, true) => new PointM(c.X, c.Y, c.M),
+            _ => new Point(c.X, c.Y),
+        };
 
     private IPoint2D[] ToPoints(ReadOnlySpan<Coordinate> coordinates)
     {

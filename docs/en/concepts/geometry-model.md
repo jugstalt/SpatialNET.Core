@@ -11,7 +11,7 @@ SpatialNET computes on a small set of read-only interfaces. This page describes 
 | `IPolyline2D` | one or more paths | LineString / MultiLineString |
 | `IPolygon2D` | a flat list of rings | Polygon / MultiPolygon |
 
-Paths and rings are parts of a geometry and are not geometries themselves. There is no geometry collection: results are dimension-homogeneous. 3D exists only on points (`IPoint3D`); algorithms interpolate Z at new vertices if the points involved carry it.
+Paths and rings are parts of a geometry and are not geometries themselves. There is no geometry collection: results are dimension-homogeneous. 3D exists only on points (`IPoint3D`); algorithms interpolate Z at new vertices if the points involved carry it. A point may also carry a measure (`IPointM`, M): it is carried and interpolated like Z but never influences a computation ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md)).
 
 ## Polygons: a flat list of rings
 

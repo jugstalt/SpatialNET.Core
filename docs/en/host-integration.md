@@ -17,6 +17,7 @@ All interfaces are read-only and minimal ([ADR 0002](../adr/0002-geometrie-inter
 | `IGeometry2D` | – | Empty base type of all geometries |
 | `IPoint2D` | `X`, `Y` | A point |
 | `IPoint3D : IPoint2D` | `Z` | A point with height; 3D exists only on points |
+| `IPointM : IPoint2D` | `M` | A point with a measure; independent of `IPoint3D`, a point may implement both |
 | `IPointCollection2D` | `PointCount`, indexer | Ordered points; base of the following three |
 | `IPath2D : IPointCollection2D` | – | A path (line string), part of a polyline |
 | `IRing2D : IPath2D` | – | A closed path, part of a polygon |
@@ -30,6 +31,7 @@ Things to know:
 - **No `IReadOnlyList<T>` on purpose.** Point sequences use `PointCount` plus an indexer. This avoids a second `IEnumerable<T>` on classes that already enumerate their points, which would make LINQ ambiguous. For LINQ and `foreach`, `SpatialNET.Extensions` offers list views: `points.AsList()`, `polyline.AsList()`, `polygon.AsList()`. A host may additionally implement `IReadOnlyList<T>` and is then passed through directly.
 - **Further members** such as envelope, area or `IsEmpty` are not part of the interfaces. They are extension methods, so they do not collide with members of the same name on the host classes.
 - **Z.** Algorithms interpolate Z at new vertices if the points involved are `IPoint3D`. Hosts that always carry a height simply return `Z = 0`.
+- **M.** Algorithms carry M and interpolate it at new vertices (like Z) if the points involved are `IPointM`; they never compute with it ([ADR 0015](../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md)). A class that implements `IPointM` reports its `M` as valid, including 0; `NaN` means "no M". A host that cannot tell "no M" from 0 (for example a point class that always stores `M = 0`) must **not** implement `IPointM` on that class, but on an M-capable subclass or wrapper that it uses where the geometry has M.
 - **Empty geometries** are geometries with 0 points, paths or rings.
 
 Implementing the interfaces is usually a few lines per class: either directly on the host classes, or – if the host has its own interfaces – on those, using default interface members for indexers whose return type differs. A minimal host looks like this:
@@ -65,6 +67,7 @@ Algorithms never construct geometries themselves. They hand coordinates to the f
 | Member | Creates |
 |---|---|
 | `SupportsZ` | – (whether created geometries are meant to carry Z) |
+| `SupportsM` | – (whether created geometries are meant to carry M; default member, `false`) |
 | `CreatePoint(Coordinate, source)` | a point |
 | `CreateMultiPoint(ReadOnlySpan<Coordinate>, source)` | a multipoint; empty without coordinates |
 | `CreatePolyline(ReadOnlySpan<ReadOnlyMemory<Coordinate>>, source)` | a polyline from paths; empty without paths |
@@ -78,6 +81,7 @@ The contract for implementations:
 - **Copy buffers.** Passed buffers must not be referenced after the call.
 - **Empty means empty.** Empty input produces empty geometries, never `null`.
 - **Z may be dropped.** If `SupportsZ` is `false`, algorithms produce no Z at all.
+- **M may be dropped.** If `SupportsM` is `false` (the default of the interface), algorithms produce no M at all.
 - **`source`** is the primary input geometry of the algorithm (or `null`). The host can take metadata such as the spatial reference from it, without SpatialNET knowing it.
 
 Results are dimension-homogeneous, so there is no `CreateGeometryCollection`. A host without a class for some kind (here: multipoint and polyline) can throw `NotSupportedException` in the corresponding method; algorithms that would need it then fail clearly instead of returning something else.

@@ -62,6 +62,6 @@ Console.WriteLine(line.OffsetCurve(-2).ToWkt()); // LINESTRING (0 -2, 10 -2)
 - **Polygons:** a positive distance is outwards and a negative distance inwards, **regardless of ring orientation**. The result is the boundary of `Buffer(d)` as closed paths.
 - **Guarantee:** the result lies on the boundary of the buffer. This follows the JTS `OffsetCurve` approach: a buffer with flat ends, the raw offset of the desired side, and a match against the buffer boundary. Where the offset has several disjoint sections (narrow places, self-intersections of the input), the result is a polyline with several paths.
 - **`Joined`:** `OffsetOptions.Joined` connects the pieces into one path; that path may then intersect itself.
-- **Z:** offset curves interpolate Z on the corresponding source segment if the factory supports Z.
+- **Z and M:** offset curves interpolate Z and M on the corresponding source segment if the factory supports them. `Buffer` produces neither.
 
 `OffsetOptions` has the same join, arc, mitre and simplify options as `BufferOptions`, plus `Joined`.

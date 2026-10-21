@@ -41,6 +41,10 @@ _Avoid_: MultiLineString, Linie
 Eine Geometrie aus einem oder mehreren Ringen, die zusammen eine oder mehrere Flächen beschreiben.
 _Avoid_: MultiPolygon, Fläche
 
+**M-Wert**:
+Ein Wert, den ein Punkt zusätzlich zu seiner Lage trägt (z.B. die Strecke entlang einer Straße); er wird mitgeführt, aber nie in eine Berechnung einbezogen.
+_Avoid_: Measure, Messwert
+
 **Envelope**:
 Das achsenparallele Rechteck, das eine Geometrie umschließt.
 _Avoid_: Bounding Box, Extent, BBox

@@ -1,0 +1,8 @@
+{
+  "name": "Mit M-Werten (XY wie ohne M)",
+  "tags": [
+    "m"
+  ],
+  "a": "POLYGON ZM ((0 0 0 0, 10 0 10 10, 10 10 20 30, 0 10 10 20, 0 0 0 0))",
+  "b": "LINESTRING (-1 5, 11 5)"
+}

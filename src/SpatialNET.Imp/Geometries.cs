@@ -28,6 +28,36 @@ public sealed class Point3D(double x, double y, double z) : Point(x, y), IPoint3
     public override string ToString() => $"({X} {Y} {Z})";
 }
 
+/// <summary>An immutable point with a measure (M), without height (ADR 0015).</summary>
+/// <param name="x">The X coordinate.</param>
+/// <param name="y">The Y coordinate.</param>
+/// <param name="m">The measure.</param>
+public sealed class PointM(double x, double y, double m) : Point(x, y), IPointM
+{
+    /// <inheritdoc />
+    public double M { get; } = m;
+
+    /// <inheritdoc />
+    public override string ToString() => $"({X} {Y} M{M})";
+}
+
+/// <summary>An immutable point with height and measure (ADR 0015).</summary>
+/// <param name="x">The X coordinate.</param>
+/// <param name="y">The Y coordinate.</param>
+/// <param name="z">The height.</param>
+/// <param name="m">The measure.</param>
+public sealed class Point3DM(double x, double y, double z, double m) : Point(x, y), IPoint3D, IPointM
+{
+    /// <inheritdoc />
+    public double Z { get; } = z;
+
+    /// <inheritdoc />
+    public double M { get; } = m;
+
+    /// <inheritdoc />
+    public override string ToString() => $"({X} {Y} {Z} M{M})";
+}
+
 /// <summary>Common base of the immutable point sequences.</summary>
 public abstract class PointSequence : IPointCollection2D
 {

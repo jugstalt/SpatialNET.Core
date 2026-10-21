@@ -17,6 +17,7 @@ Alle Interfaces sind lesend und minimal ([ADR 0002](../adr/0002-geometrie-interf
 | `IGeometry2D` | – | Leerer Basistyp aller Geometrien |
 | `IPoint2D` | `X`, `Y` | Ein Punkt |
 | `IPoint3D : IPoint2D` | `Z` | Ein Punkt mit Höhe; 3D gibt es nur am Punkt |
+| `IPointM : IPoint2D` | `M` | Ein Punkt mit Messwert; unabhängig von `IPoint3D`, ein Punkt darf beide implementieren |
 | `IPointCollection2D` | `PointCount`, Indexer | Geordnete Punkte; Basis der nächsten drei |
 | `IPath2D : IPointCollection2D` | – | Ein Pfad (Linienzug), Teil einer Polylinie |
 | `IRing2D : IPath2D` | – | Ein geschlossener Pfad, Teil eines Polygons |
@@ -30,6 +31,7 @@ Wichtig zu wissen:
 - **Bewusst kein `IReadOnlyList<T>`.** Punktfolgen nutzen `PointCount` und einen Indexer. So gibt es kein zweites `IEnumerable<T>` an Klassen, die ihre Punkte schon aufzählen und bei denen LINQ sonst mehrdeutig würde. Für LINQ und `foreach` bietet `SpatialNET.Extensions` Listen-Sichten: `points.AsList()`, `polyline.AsList()`, `polygon.AsList()`. Ein Host darf zusätzlich `IReadOnlyList<T>` implementieren und wird dann direkt durchgereicht.
 - **Weitere Member** wie Envelope, Fläche oder `IsEmpty` gehören nicht in die Interfaces. Sie sind Extension-Methoden und kollidieren deshalb nicht mit gleichnamigen Membern der Host-Klassen.
 - **Z.** Algorithmen interpolieren Z an neuen Knoten, wenn die beteiligten Punkte `IPoint3D` sind. Hosts, die immer eine Höhe führen, liefern einfach `Z = 0`.
+- **M.** Algorithmen führen M mit und interpolieren es an neuen Knoten (wie Z), wenn die beteiligten Punkte `IPointM` sind; sie rechnen nie damit ([ADR 0015](../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)). Eine Klasse, die `IPointM` implementiert, meldet ihr `M` als gültig, auch 0; `NaN` heißt „kein M“. Ein Host, der „kein M“ nicht von 0 unterscheiden kann (zum Beispiel eine Punktklasse, die immer `M = 0` speichert), darf `IPointM` **nicht** auf dieser Klasse implementieren, sondern auf einer M-fähigen Unterklasse oder einem Wrapper, den er dort einsetzt, wo die Geometrie M hat.
 - **Leere Geometrien** sind Geometrien mit 0 Punkten, Pfaden bzw. Ringen.
 
 Die Interfaces zu implementieren sind meist wenige Zeilen je Klasse: entweder direkt an den Host-Klassen oder – wenn der Host eigene Interfaces hat – an diesen, mit Default-Interface-Membern für Indexer mit abweichendem Rückgabetyp. Ein minimaler Host sieht so aus:
@@ -65,6 +67,7 @@ Algorithmen konstruieren Geometrien nie selbst. Sie übergeben Koordinaten an di
 | Member | Erzeugt |
 |---|---|
 | `SupportsZ` | – (ob erzeugte Geometrien Z tragen sollen) |
+| `SupportsM` | – (ob erzeugte Geometrien M tragen sollen; Default-Member, `false`) |
 | `CreatePoint(Coordinate, source)` | einen Punkt |
 | `CreateMultiPoint(ReadOnlySpan<Coordinate>, source)` | einen Multipunkt; ohne Koordinaten einen leeren |
 | `CreatePolyline(ReadOnlySpan<ReadOnlyMemory<Coordinate>>, source)` | eine Polylinie aus Pfaden; ohne Pfade eine leere |
@@ -78,6 +81,7 @@ Der Vertrag für Implementierungen:
 - **Puffer kopieren.** Übergebene Puffer dürfen nach dem Aufruf nicht mehr referenziert werden.
 - **Leer heißt leer.** Leere Eingaben erzeugen leere Geometrien, nie `null`.
 - **Z darf verworfen werden.** Bei `SupportsZ == false` liefern Algorithmen gar kein Z.
+- **M darf verworfen werden.** Bei `SupportsM == false` (dem Standard des Interfaces) liefern Algorithmen gar kein M.
 - **`source`** ist die primäre Eingabe-Geometrie des Algorithmus (oder `null`). Daraus kann der Host Metadaten wie die Spatial Reference übernehmen, ohne dass SpatialNET sie kennt.
 
 Ergebnisse sind dimensionshomogen, deshalb gibt es kein `CreateGeometryCollection`. Hat ein Host für eine Art keine Klasse (hier: Multipunkt und Polylinie), kann er in der jeweiligen Methode eine `NotSupportedException` werfen; Algorithmen, die sie bräuchten, scheitern dann deutlich, statt etwas anderes zurückzugeben.

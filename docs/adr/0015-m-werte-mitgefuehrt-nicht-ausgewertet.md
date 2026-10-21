@@ -14,13 +14,13 @@ SpatialNET gets **M values** (a measure attached to a vertex, for example the di
 - **Interpolation:**
   - At a new vertex, M comes from the **source segment** of the result edge, linearly by the parameter along it, exactly as Z does in the noder. If several edges meet in one grid pixel, the first one in the noder's deterministic order wins.
   - M is interpolated **only if both ends of the segment have M**. Otherwise the new vertex has no M. Nothing is guessed, and 0 is never substituted.
-  - Original vertices keep their M.
+  - Original vertices keep their M, even if the other end of the segment has none (the noder takes the segment's own end points' M directly). Z still follows the older rule of ADR 0005 and is not changed by this ADR.
 - **Algorithms:** overlays (`Intersection`, `Union`, `Difference`, `SymDifference`), `Cut`, `Simplify` and `OffsetCurve` carry M like Z. `Buffer` and `ConvexHull` produce no M, just as `Buffer` produces no Z (ADR 0006). `Centroid` returns a `Coordinate?` without M (as without Z, ADR 0012). Predicates and measures ignore M.
 - **IO:** WKT reads and writes `M` and `ZM` (`POINT M (1 2 3)`, `POINT ZM (1 2 3 4)`). GeoJSON stays without M, so that exports remain standard (RFC 7946); whoever needs M uses WKT and, later, WKB.
 - **Tests (ADR 0008):** the NTS oracle does not interpolate M in overlays, so M is not checked against it. Instead:
   - hand-written expectations (original M is kept, M at new vertices lies between the ends of the source segment, no M if an end has none);
   - a **invariant property test**: the same operation with and without M yields identical X/Y (and Z). This is the strongest guarantee that M never affects the computation and needs no oracle;
-  - `[Covers]` gets a new mandatory tag `M`; the foreign host geometries get an M variant.
+  - a new mandatory fixture tag `m` (one `m.json` per algorithm: input with M, X/Y compared against the oracle as for `z`); the foreign implementation runs these fixtures too, but drops M because its points never implement `IPointM`. The M-capable test geometries for the propagation tests are separate (`tests/SpatialNET.Tests/MValues`).
 - **Delivery:** in three stages (ADR and core; extensions and tests; IO, documentation), but **one release** (`0.3.0-preview.1`), so that no intermediate state with half an M lands on NuGet.
 - **Follow-ups that depend on this:** WKB (reading ISO and EWKB, writing ISO) and linear referencing (`Interpolate`, `Project`, `Substring` by length, plus `...ByM` variants). Each gets its own ADR.
 

@@ -33,4 +33,4 @@ Eine Polylinie wird an jedem Kontakt mit der Schnittlinie zerlegt: bei einer Kre
 
 - **Alle Pfade der Schnittlinie schneiden**, mehrere Schnitte in einem Aufruf sind also möglich. Es gibt keine Optionen-Klasse.
 - **Die Schnittlinie wird nicht verlängert.** Eine Fangtoleranz, die die Linie bis zum Rand verlängert, wie Editierwerkzeuge sie umsetzen, ist Sache des Werkzeugs, nicht der Bibliothek.
-- Z an Schnittpunkten wird auf dem Originalsegment interpoliert.
+- Z und M an Schnittpunkten werden auf dem Originalsegment interpoliert.

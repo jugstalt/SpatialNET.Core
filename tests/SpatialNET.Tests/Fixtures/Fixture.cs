@@ -47,7 +47,7 @@ public static class FixtureCatalog
     public static readonly string[] RequiredTags =
     [
         "empty", "degenerate-ring", "collinear-overlap", "vertex-touch", "hole-touch", "self-crossing",
-        "near-coincident", "large-coords", "z", "multi", "nested",
+        "near-coincident", "large-coords", "z", "m", "multi", "nested",
     ];
 
     private static readonly JsonSerializerOptions Json = new()

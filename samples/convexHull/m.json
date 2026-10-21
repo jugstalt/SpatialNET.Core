@@ -1,0 +1,7 @@
+{
+  "name": "Mit M-Werten (XY wie ohne M)",
+  "tags": [
+    "m"
+  ],
+  "a": "LINESTRING ZM (0 0 1 0, 10 0 2 10, 5 8 3 21)"
+}

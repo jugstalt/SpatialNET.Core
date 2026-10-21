@@ -9,7 +9,7 @@ var noisy = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 1 0.1, 2 -0.1, 3 0.05, 4 0)")
 Console.WriteLine(noisy.Simplify(0.5).ToWkt()); // LINESTRING (0 0, 4 0)
 ```
 
-- **Polylinien:** Jeder Pfad wird vereinfacht; Anfangs- und Endpunkt bleiben, die übrigen Vertices sind unverändert (inklusive Z).
+- **Polylinien:** Jeder Pfad wird vereinfacht; Anfangs- und Endpunkt bleiben, die übrigen Vertices sind unverändert (inklusive Z und M).
 - **Polygone:** Jeder Ring wird vereinfacht; auch der Startpunkt eines Rings darf entfallen, und Ringe, die weniger als 4 Punkte behalten, fallen weg. Das Ergebnis wird über das Overlay normalisiert und ist deshalb **immer gültig** (siehe [Das Geometriemodell](geometriemodell.md)).
 - **`preserveTopology: true`** nutzt eine topologieerhaltende Variante nach dem Muster von JTS `TopologyPreservingSimplifier`: Es entstehen keine neuen Kreuzungen zwischen oder innerhalb der Pfade, und es gehen keine Ringe verloren.
 - `tolerance` gilt in Karteneinheiten und muss endlich und ≥ 0 sein.

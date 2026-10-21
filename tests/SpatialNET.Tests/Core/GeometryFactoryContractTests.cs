@@ -80,6 +80,19 @@ public abstract class GeometryFactoryContractTests
     }
 
     [Fact]
+    public void Keeps_M_when_M_is_supported()
+    {
+        if (!Factory.SupportsM)
+        {
+            return; // M may be dropped if SupportsM = false (ADR 0015).
+        }
+
+        var p = Factory.CreatePoint(new Coordinate(1, 2, M: 0), null);
+
+        Assert.Equal(0, Assert.IsAssignableFrom<IPointM>(p).M);
+    }
+
+    [Fact]
     public void Is_thread_safe()
     {
         var results = new IMultiPoint2D[1000];

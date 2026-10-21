@@ -14,6 +14,16 @@ public enum ZMode
     Never,
 }
 
+/// <summary>How M is handled when writing (ADR 0015).</summary>
+public enum MMode
+{
+    /// <summary>M is written if at least one point carries a measure; points without M get <c>NaN</c>.</summary>
+    Auto,
+
+    /// <summary>M is never written.</summary>
+    Never,
+}
+
 /// <summary>Options for writing WKT.</summary>
 public sealed record WktOptions
 {
@@ -22,6 +32,9 @@ public sealed record WktOptions
 
     /// <summary>How Z is written; default <see cref="ZMode.Auto"/>.</summary>
     public ZMode ZMode { get; init; } = ZMode.Auto;
+
+    /// <summary>How M is written; default <see cref="MMode.Auto"/>.</summary>
+    public MMode MMode { get; init; } = MMode.Auto;
 }
 
 /// <summary>
@@ -31,7 +44,7 @@ public sealed record WktOptions
 /// <remarks>
 /// Type mapping: POINT → <see cref="IPoint2D"/>, POINT EMPTY and MULTIPOINT → <see cref="IMultiPoint2D"/>,
 /// (MULTI)LINESTRING → <see cref="IPolyline2D"/>, (MULTI)POLYGON → <see cref="IPolygon2D"/>.
-/// M values are dropped; numbers are invariant and may also be <c>NaN</c>/<c>Infinity</c>.
+/// M is read and written (<c>POINT M</c>, <c>POINT ZM</c>); numbers are invariant and may also be <c>NaN</c>/<c>Infinity</c>.
 /// </remarks>
 public static class Wkt
 {
