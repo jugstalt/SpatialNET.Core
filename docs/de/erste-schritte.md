@@ -77,12 +77,15 @@ string matrix = a.Relate(b).ToString(); // "212101212"
 
 ## Lesen und Schreiben
 
-`SpatialNET.IO` liest und schreibt WKT und GeoJSON ([ADR 0009](../adr/0009-io-wkt-geojson-ueber-factory.de.md)):
+`SpatialNET.IO` liest und schreibt WKT, GeoJSON und WKB ([ADR 0009](../adr/0009-io-wkt-geojson-ueber-factory.de.md), [ADR 0016](../adr/0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.de.md)):
 
 ```csharp
 IGeometry2D g = Wkt.Read("LINESTRING(0 0, 10 10)");
 string json = g.ToGeoJson();
 IReadOnlyList<IGeometry2D> all = GeoJson.ReadAll(json); // auch FeatureCollection
+
+byte[] wkb = g.ToWkb();                                 // ISO-WKB, Little Endian
+IGeometry2D fromWkb = Wkb.Read(wkb);                    // ISO und EWKB
 ```
 
 Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactory.Default`). Syntaktisch korrekte, aber geometrisch ungültige Geometrien werden unverändert akzeptiert.
@@ -97,7 +100,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
 | Gültigkeit | `IsValid`, `Validate` |
 | Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance` |
-| Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson` |
+| Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 Signaturen, Parameter und Exceptions jeder Methode stehen in der API-Referenz (Englisch), die aus den XML-Kommentaren generiert wird.
 

@@ -77,12 +77,15 @@ string matrix = a.Relate(b).ToString(); // "212101212"
 
 ## Reading and writing
 
-`SpatialNET.IO` reads and writes WKT and GeoJSON ([ADR 0009](../adr/0009-io-wkt-geojson-ueber-factory.md)):
+`SpatialNET.IO` reads and writes WKT, GeoJSON and WKB ([ADR 0009](../adr/0009-io-wkt-geojson-ueber-factory.md), [ADR 0016](../adr/0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.md)):
 
 ```csharp
 IGeometry2D g = Wkt.Read("LINESTRING(0 0, 10 10)");
 string json = g.ToGeoJson();
 IReadOnlyList<IGeometry2D> all = GeoJson.ReadAll(json); // also FeatureCollection
+
+byte[] wkb = g.ToWkb();                                 // ISO WKB, little endian
+IGeometry2D fromWkb = Wkb.Read(wkb);                    // ISO and EWKB
 ```
 
 Reading always goes through the factory (parameter `factory`, otherwise `GeometryFactory.Default`). Geometries that are syntactically correct but geometrically invalid are accepted unchanged.
@@ -97,7 +100,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest` |
 | Validity | `IsValid`, `Validate` |
 | Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance` |
-| Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson` |
+| Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 The signatures, parameters and exceptions of every method are in the API reference, which is generated from the XML comments.
 

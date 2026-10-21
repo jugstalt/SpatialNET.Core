@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- WKB reading and writing in `SpatialNET.IO` (ADR 0016): `Wkb.Read`/`Read<T>`/`ReadAll` accept ISO WKB and EWKB in either byte order, `ToWkb` writes ISO WKB (little endian) with Z and M. An SRID is read and discarded; curves are not supported.
+
 ## [0.3.0-preview.1] - 2026-10-21
 
 ### Added

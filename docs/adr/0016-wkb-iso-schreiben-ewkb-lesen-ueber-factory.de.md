@@ -13,6 +13,7 @@
   - Keine Stream-, Hex- oder Text-Überladungen. Wer einen `Stream` oder Hex-String hat, wandelt ihn vorher um; das hält die Oberfläche klein und lässt sich ohne Bruch erweitern.
 - **Lesen:**
   - **Formate:** ISO-WKB (Typcodes 1–6 sowie 1000/2000/3000 für Z/M/ZM) und EWKB (Flag-Bits `0x80000000` Z, `0x40000000` M, `0x20000000` SRID). Beide Byte-Reihenfolgen. Sie wird je Geometrie-Header gelesen, auch verschachtelte Teile einer Multi-Geometrie dürfen verschieden sein.
+  - **Gemischte Codes** werden akzeptiert: ISO-Dimensionscodes zusammen mit dem SRID-Flag, wie NTS sie schreibt.
   - **Typen:** Point, LineString, Polygon, MultiPoint, MultiLineString und MultiPolygon werden wie bei WKT abgebildet (ADR 0009): Punkt auf `IPoint2D`, ein Punkt mit NaN-Koordinaten (die WKB-Form von `POINT EMPTY`) und MultiPoint auf `IMultiPoint2D`, Linien auf `IPolyline2D`, Flächen auf `IPolygon2D`.
   - **GeometryCollection** wird von `Read` mit `NotSupportedException` abgelehnt und von `ReadAll` flachgeklopft, genau wie bei WKT und GeoJSON. Eine Geometry-Collection gibt es im Modell nicht (ADR 0002).
   - **Kurven** (CircularString, CompoundCurve, CurvePolygon, MultiCurve, MultiSurface), andere Flächenarten, TIN und Dreiecke werfen `NotSupportedException`. Die Hosts linearisieren Kurven selbst (Karte #1), und der Typcode steht in der Meldung.

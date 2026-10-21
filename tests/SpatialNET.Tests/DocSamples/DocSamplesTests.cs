@@ -76,10 +76,14 @@ public sealed class DocSamplesTests : IDisposable
         IGeometry2D g = Wkt.Read("LINESTRING(0 0, 10 10)");
         string json = g.ToGeoJson();
         IReadOnlyList<IGeometry2D> all = GeoJson.ReadAll(json); // also FeatureCollection
+
+        byte[] wkb = g.ToWkb();                                 // ISO WKB, little endian
+        IGeometry2D fromWkb = Wkb.Read(wkb);                    // ISO and EWKB
         // --- end
 
         Assert.Single(all);
         Assert.IsAssignableFrom<IPolyline2D>(all[0]);
+        Assert.Equal("LINESTRING (0 0, 10 10)", fromWkb.ToWkt());
     }
 
     [Fact]

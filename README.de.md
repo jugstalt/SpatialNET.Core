@@ -15,7 +15,7 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overla
 | `SpatialNET.Core` | Geometrie-Interfaces, Wert-Typen (`Coordinate`, `Envelope2D`), Vertrag der Geometrie-Factory |
 | `SpatialNET.Extensions` | Die Algorithmen als Extension-Methoden: Overlays, Buffer, Offset-Kurve, Cut, Simplify, Prädikate und `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, Maße |
 | `SpatialNET.Imp` | Referenz-Implementierung der Geometrie-Interfaces und der Factory, für Tests, Werkzeuge und Hosts ohne eigene Geometrien |
-| `SpatialNET.IO` | WKT und GeoJSON lesen und schreiben, über die Geometrie-Factory |
+| `SpatialNET.IO` | WKT, GeoJSON und WKB lesen und schreiben, über die Geometrie-Factory |
 
 ## Schnellstart
 

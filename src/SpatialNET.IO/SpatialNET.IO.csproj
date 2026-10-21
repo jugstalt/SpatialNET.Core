@@ -4,7 +4,7 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <Description>Reading and writing WKT and GeoJSON for SpatialNET geometries.</Description>
+    <Description>Reading and writing WKT, GeoJSON and WKB for SpatialNET geometries.</Description>
   </PropertyGroup>
 
   <ItemGroup>
