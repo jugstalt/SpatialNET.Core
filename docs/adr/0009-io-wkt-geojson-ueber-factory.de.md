@@ -24,6 +24,6 @@ SpatialNET.IO liest und schreibt **WKT** und **GeoJSON** und erzeugt beim Lesen 
 
 ## Considered Options
 
-- WKB in v1 (verschoben: kein Abnehmer, lässt sich ohne Bruch nachrüsten; geplant nach den M-Werten, siehe [ADR 0015](0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md))
+- WKB in v1 (verschoben: kein Abnehmer, lässt sich ohne Bruch nachrüsten; aufgehoben durch [ADR 0016](0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.de.md))
 - Feature-Modell mit Properties (verworfen: neues Domänenkonzept, gehört zu den Hosts)
 - IO nur auf Core, Hole-Gruppierung nachgebaut (verworfen: doppelte Logik)

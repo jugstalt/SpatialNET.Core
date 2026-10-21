@@ -24,6 +24,6 @@ SpatialNET.IO reads and writes **WKT** and **GeoJSON** and creates all geometrie
 
 ## Considered Options
 
-- WKB in v1 (postponed: no consumer, can be added later without a break; planned after M values, see [ADR 0015](0015-m-werte-mitgefuehrt-nicht-ausgewertet.md))
+- WKB in v1 (postponed: no consumer, can be added later without a break; lifted by [ADR 0016](0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.md))
 - Feature model with properties (rejected: new domain concept, belongs to the hosts)
 - IO on Core only, hole grouping rebuilt (rejected: duplicated logic)

@@ -28,3 +28,5 @@
   href: ../../adr/0014-oeffentlicher-raeumlicher-index-statisch-str.md
 - name: "0015 M values: carried and interpolated like Z, never evaluated by the geometry algorithms"
   href: ../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md
+- name: "0016 WKB: read ISO and EWKB, write ISO, through the factory"
+  href: ../../adr/0016-wkb-iso-schreiben-ewkb-lesen-ueber-factory.md
