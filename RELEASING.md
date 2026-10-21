@@ -28,7 +28,8 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
 2. **Make sure `main` is green.** Everything that should be in the release is merged, and the [CI workflow](.github/workflows/ci.yml) is green on the latest commit of `main`.
 3. **Update the changelog.** In [`CHANGELOG.md`](CHANGELOG.md), rename the heading `[Unreleased]` to the new version and date, for example `## [0.1.0-preview.2] - 2026-11-03`, and add a fresh, empty `## [Unreleased]` section above it.
 4. **Optional – raise `VersionPrefix`.** If the new version has a higher `MAJOR.MINOR.PATCH` than the one in [`Directory.Build.props`](Directory.Build.props) (for example `0.1.0` → `0.2.0`), change `VersionPrefix` as well, so that local builds are not older than the last release. This does not affect the published packages.
-5. **Commit and push** to `main` (directly or via a pull request) and wait for CI to turn green:
+5. **Move the package validation baseline** (only if the previous release is already on nuget.org, which it should be). Set `PackageValidationBaselineVersion` in [`Directory.Build.props`](Directory.Build.props) to the version you released **last**, so that the next pack checks the API against it – see [API compatibility check](#api-compatibility-check).
+6. **Commit and push** to `main` (directly or via a pull request) and wait for CI to turn green:
 
    ```bash
    git add CHANGELOG.md Directory.Build.props
@@ -36,7 +37,7 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
    git push origin main
    ```
 
-6. **Tag that commit and push the tag.** Check that you are on the latest `main` first:
+7. **Tag that commit and push the tag.** Check that you are on the latest `main` first:
 
    ```bash
    git checkout main
@@ -45,9 +46,9 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
    git push origin v0.1.0-preview.2
    ```
 
-7. **Approve and watch the workflow.** Open the *Release* run in the Actions tab. If you required a reviewer for the environment `nuget`, approve the run there. The workflow builds, runs the tests, packs the libraries (with symbol packages), pushes them to nuget.org and creates a GitHub release with the packages attached and generated release notes.
-8. **Verify.** On nuget.org, each of the four packages shows the new version, the README and the license. On GitHub, the release is marked as a pre-release if the version has a suffix. New versions can take a few minutes to appear in the nuget.org search.
-9. **Polish the GitHub release notes** if needed (Releases → edit), for example by pasting the matching section of the changelog.
+8. **Approve and watch the workflow.** Open the *Release* run in the Actions tab. If you required a reviewer for the environment `nuget`, approve the run there. The workflow builds, runs the tests, packs the libraries (with symbol packages), pushes them to nuget.org and creates a GitHub release with the packages attached and generated release notes.
+9. **Verify.** On nuget.org, each of the four packages shows the new version, the README and the license. On GitHub, the release is marked as a pre-release if the version has a suffix. New versions can take a few minutes to appear in the nuget.org search.
+10. **Polish the GitHub release notes** if needed (Releases → edit), for example by pasting the matching section of the changelog.
 
 ## If something goes wrong
 
@@ -70,6 +71,15 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
 - **GitHub:** add the API key as the secret `NUGET_API_KEY` of the environment `nuget` (Settings → Environments). Requiring a reviewer for that environment makes every release a deliberate approval.
 - **GitHub Pages:** in Settings → Pages, set the source to "GitHub Actions" so that [`.github/workflows/docs.yml`](.github/workflows/docs.yml) can publish the documentation.
 
-## After the first stable release
+## API compatibility check
 
-Enable package validation (`<EnablePackageValidation>true</EnablePackageValidation>` together with `<PackageValidationBaselineVersion>`) so that breaking API changes between releases are caught at pack time.
+Package validation is enabled in the four library projects (`EnablePackageValidation`). When the packages are packed – in CI, in the release workflow and locally with `dotnet pack` – the public API is compared with the published package named by `PackageValidationBaselineVersion` in [`Directory.Build.props`](Directory.Build.props). A breaking change fails the pack; the baseline package is downloaded from nuget.org, so packing needs network access.
+
+- **After each release,** set the baseline to the version you just released (step 5 above), so that the following pack compares against it.
+- **If a breaking change is intended** (allowed before 1.0 in a minor version, otherwise only in a new major version), generate a suppression file once and commit it:
+
+  ```bash
+  dotnet pack SpatialNET.sln -c Release -p:ApiCompatGenerateSuppressionFile=true
+  ```
+
+  The suppressions are written next to the project files (`CompatibilitySuppressions.xml`) and can be removed again after the next release moves the baseline.

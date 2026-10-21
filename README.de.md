@@ -65,6 +65,10 @@ Dann `http://localhost:5003` öffnen. Die Beispielgeometrien stammen aus [sample
 
 Die Testsuite (xUnit, rund 6.350 Tests) vergleicht jeden Algorithmus mit NetTopologySuite als Orakel auf gemeinsamen Fixtures und lässt jedes Fixture gegen die Referenz-Implementierung und gegen eine absichtlich unbequeme, host-artige Implementierung laufen ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.de.md)). Benchmarks liegen in [benchmarks/](benchmarks/).
 
+## Mitwirken
+
+Siehe [CONTRIBUTING.de.md](CONTRIBUTING.de.md) zu Bauen, Testen und dem Inhalt eines Pull Requests; Releases sind in [RELEASING.md](RELEASING.md) beschrieben (Englisch). Änderungen stehen im [Changelog](CHANGELOG.md).
+
 ## Lizenz
 
 SpatialNET steht unter der [Apache License 2.0](LICENSE). Fremde Bestandteile, Vorlagen für Algorithmen und Testdaten sind in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) aufgeführt (Englisch).

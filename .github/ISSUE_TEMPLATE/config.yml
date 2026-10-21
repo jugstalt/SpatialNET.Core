@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://jugstalt.github.io/SpatialNET.Core/
+    about: Getting started, host integration, concepts and the API reference.

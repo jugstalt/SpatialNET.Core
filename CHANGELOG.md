@@ -6,6 +6,15 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- API compatibility check against the last published version at pack time (package validation).
+- Contribution guide, issue and pull request templates.
+
+## [0.1.0-preview.1] - 2026-10-21
+
+First pre-release.
+
+### Added
+
 - Geometry interfaces, value types (`Coordinate`, `Envelope2D`) and the geometry factory contract (`SpatialNET.Core`).
 - Algorithms as extension methods (`SpatialNET.Extensions`): overlays (`Intersection`, `Union`, `Difference`, `SymDifference`) with winding numbers, selectable fill rules and snap rounding to a grid; `Buffer` and `OffsetCurve`; `Cut`; `Simplify` (optionally topology-preserving); `ConvexHull`; spatial predicates with full DE-9IM and `Relate`; `Prepare()`; `IsValid`/`Validate`; measures (`Area`, `Length`, `Envelope`, `Centroid`, `Distance`).
 - Reference implementation of the geometry interfaces and the factory (`SpatialNET.Imp`).
@@ -13,3 +22,6 @@ All notable changes to SpatialNET are documented in this file. The format follow
 - Playground: an interactive web application (ASP.NET Core + Leaflet) to try the algorithms on a map.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
+
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.1.0-preview.1...HEAD
+[0.1.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/releases/tag/v0.1.0-preview.1

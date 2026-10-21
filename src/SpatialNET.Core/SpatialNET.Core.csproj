@@ -3,6 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnablePackageValidation>true</EnablePackageValidation>
     <Description>Read-only geometry interfaces, value types and the factory contract of SpatialNET.</Description>
   </PropertyGroup>
 

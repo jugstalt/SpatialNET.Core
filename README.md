@@ -65,6 +65,10 @@ Then open `http://localhost:5003`. The sample geometries come from [samples/](sa
 
 The test suite (xUnit, about 6,350 tests) compares every algorithm against NetTopologySuite as an oracle on shared fixtures and runs each fixture against the reference implementation and against a deliberately awkward host-style implementation ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). Benchmarks are in [benchmarks/](benchmarks/).
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for building, testing and what a pull request contains; releases are described in [RELEASING.md](RELEASING.md). Changes are listed in the [changelog](CHANGELOG.md).
+
 ## License
 
 SpatialNET is licensed under the [Apache License 2.0](LICENSE). Third-party components, algorithm sources and test data are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

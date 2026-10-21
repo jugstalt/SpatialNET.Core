@@ -31,6 +31,12 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <!-- API-Kompatibilitätsprüfung beim Packen (EnablePackageValidation in den Bibliotheksprojekten) gegen die zuletzt
+       veröffentlichte Version. Nach jedem Release auf die neue Version setzen, siehe RELEASING.md. -->
+  <PropertyGroup>
+    <PackageValidationBaselineVersion>0.1.0-preview.1</PackageValidationBaselineVersion>
+  </PropertyGroup>
+
   <!-- Die README liegt im Paket, sobald sie im Wurzelordner existiert. -->
   <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)README.md')">
     <PackageReadmeFile>README.md</PackageReadmeFile>
