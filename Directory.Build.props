@@ -8,7 +8,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
     <!-- Vorab-Version; Versionierung und Release-Pipeline sind noch offen (Karte #1, Build/CI). -->
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>0.2.0</VersionPrefix>
   </PropertyGroup>
 
   <!-- Paket-Metadaten; packbar sind nur die Bibliotheken (IsPackable im jeweiligen Projekt). -->
