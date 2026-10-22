@@ -101,13 +101,13 @@ function showResult(result, error) {
     case 'bool':
       html = `<div class="value">${result.value ? 'true' : 'false'}</div>`;
       if (typeof result.distance === 'number') html += `<div class="muted">Abstand A–B: ${fmtSmall(result.distance)}${u}</div>`;
-      if (result.withinTolerance !== null && result.withinTolerance !== undefined) {
-        html += `<div class="muted">Abstand ≤ Toleranz: <b>${result.withinTolerance ? 'ja' : 'nein'}</b></div>`;
-      }
-
       if (result.nearlyTouching) {
         html += '<div class="warn">Die Geometrien liegen praktisch aufeinander, aber nicht exakt: Prädikate rechnen exakt auf den Koordinaten. '
           + 'Ein gezeichneter Punkt „auf“ einer Linie liegt rechnerisch fast nie genau darauf. Für „ungefähr“ dient IsWithinDistance.</div>';
+      }
+
+      if (result.alternative) {
+        html += `<div class="muted">Mit Toleranz t: <code>${escape(result.alternative)}</code></div>`;
       }
 
       break;

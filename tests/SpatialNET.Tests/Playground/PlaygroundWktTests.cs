@@ -142,15 +142,30 @@ public class PlaygroundWktTests(WebApplicationFactory<Program> factory) : IClass
         Assert.False(far["nearlyTouching"]!.GetValue<bool>());
     }
 
-    [Fact]
-    public async Task The_tolerance_only_informs_and_never_changes_the_predicate()
+    [Theory]
+    [InlineData("intersects", "a.IsWithinDistance(b, t)")]
+    [InlineData("disjoint", "!a.IsWithinDistance(b, t)")]
+    [InlineData("contains", "a.Buffer(t).Contains(b)")]
+    [InlineData("within", "b.Buffer(t).Contains(a)")]
+    [InlineData("covers", "a.Buffer(t).Covers(b)")]
+    [InlineData("coveredBy", "b.Buffer(t).Covers(a)")]
+    [InlineData("equalsTopo", "a.HausdorffDistance(b) <= t")]
+    public async Task A_predicate_names_the_alternative_with_a_tolerance(string algorithm, string alternative)
     {
-        var (_, within) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (3.3 0.99)", b = Line }, @params = new { tolerance = 1e-9 }, local = true });
-        Assert.False(within["value"]!.GetValue<bool>()); // still exact
-        Assert.True(within["withinTolerance"]!.GetValue<bool>());
+        var (_, body) = await Post("/api/run", new { algorithm, wkt = new { a = "POINT (3.3 0.99)", b = Line }, local = true });
 
-        var (_, outside) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (5 5)", b = Line }, @params = new { tolerance = 1.0 }, local = true });
-        Assert.False(outside["withinTolerance"]!.GetValue<bool>());
+        Assert.Equal(alternative, body["alternative"]!.GetValue<string>());
+        Assert.False(body.ContainsKey("withinTolerance"));
+    }
+
+    [Fact]
+    public async Task Touches_overlaps_and_crosses_name_their_alternative_too_and_empty_input_has_no_distance()
+    {
+        foreach (var algorithm in new[] { "touches", "overlaps", "crosses" })
+        {
+            var (_, body) = await Post("/api/run", new { algorithm, wkt = new { a = "POINT (3.3 0.99)", b = Line }, local = true });
+            Assert.False(string.IsNullOrWhiteSpace(body["alternative"]!.GetValue<string>()), algorithm);
+        }
 
         var (_, empty) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT EMPTY", b = Line }, local = true });
         Assert.Null(empty["distance"]);

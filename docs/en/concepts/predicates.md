@@ -91,7 +91,7 @@ Notes on the table:
 - `Crosses` and `Relate` have no simple counterpart: a crossing or a DE-9IM matrix is a statement about the interiors, and "almost crossing" has no single meaning. Ask for what you mean: `IsWithinDistance` for "they meet", and `NearestPoints` for where.
 - To make *data* exact instead of the question tolerant, round it once to a grid on import (`ReducePrecision(0.01)`). That makes vertices that lie within a cell identical, which helps where geometries meet at vertices, but it does not help a point on the middle of a segment ([Measures and constructions](measures-and-constructions.md)).
 
-The [playground](../getting-started.md#the-playground) shows the distance next to every predicate for this reason, takes a tolerance as a hint, and says so when a `false` is only a rounding difference.
+The [playground](../getting-started.md#the-playground) shows the distance next to every predicate for this reason, names the alternative with a tolerance below it, and says so when a `false` is only a rounding difference.
 
 ## Repeated predicates: `Prepare()`
 

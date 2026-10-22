@@ -21,7 +21,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
-- Playground: every predicate shows the distance of its inputs and takes an optional tolerance that tells whether they are within it, and a note says when a `false` is only a rounding difference (a point drawn "on" a line is rarely exactly on it). The predicates stay exact.
+- Playground: every predicate shows the distance of its inputs and, below it, the call that asks with a tolerance (`IsWithinDistance`, `Buffer`, …), and a note says when a `false` is only a rounding difference (a point drawn "on" a line is rarely exactly on it). The predicates stay exact; the library has no global tolerance.
 - `DelaunayTriangles`, `ConcaveHull` and `ConcaveHullByRatio` (ADR 0029): the Delaunay triangulation of the vertices of a geometry (a flat list of triangles, with exact predicates), and a concave hull that takes triangles away from its border. Playground entries for all three.
 - Playground: WKT with Z and M. Every input has a WKT field, every result shows its WKT with a copy button, `POST /api/convert` converts between WKT and GeoJSON, the projection keeps Z and M, and `InterpolateByM`, `ProjectToM` and `SubstringByM` are available with the examples that carry M.
 - The public API is tracked with `Microsoft.CodeAnalysis.PublicApiAnalyzers` (`PublicAPI.Shipped.txt` holds the API of `v0.4.0-preview.1`, `PublicAPI.Unshipped.txt` the changes since), and `tools/ship-public-api.ps1` moves the entries at release time. ADR 0028 records the criteria for version 1.0.

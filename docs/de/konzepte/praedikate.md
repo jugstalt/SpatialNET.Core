@@ -91,7 +91,7 @@ Anmerkungen zur Tabelle:
 - `Crosses` und `Relate` haben kein einfaches Gegenstück: Eine Kreuzung oder eine DE-9IM-Matrix ist eine Aussage über die Inneren, und „fast kreuzen“ hat keine einheitliche Bedeutung. Fragen Sie nach dem, was Sie meinen: `IsWithinDistance` für „sie treffen sich“ und `NearestPoints` für „wo“.
 - Um die *Daten* exakt zu machen statt die Frage tolerant, runden Sie sie einmal beim Einlesen auf ein Gitter (`ReducePrecision(0.01)`). Das macht Stützpunkte, die in einer Zelle liegen, identisch, was hilft, wo Geometrien an Stützpunkten zusammenstoßen, aber es hilft nicht bei einem Punkt mitten auf einem Segment ([Maße und Konstruktionen](masse-und-konstruktionen.md)).
 
-Der [Playground](../erste-schritte.md#der-playground) zeigt deshalb neben jedem Prädikat den Abstand, nimmt eine Toleranz als Hinweis und sagt es, wenn ein `false` nur eine Rundungsdifferenz ist.
+Der [Playground](../erste-schritte.md#der-playground) zeigt deshalb neben jedem Prädikat den Abstand, nennt darunter die Alternative mit Toleranz und sagt es, wenn ein `false` nur eine Rundungsdifferenz ist.
 
 ## Wiederholte Prädikate: `Prepare()`
 

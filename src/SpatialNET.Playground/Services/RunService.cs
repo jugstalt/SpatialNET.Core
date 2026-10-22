@@ -157,8 +157,8 @@ public sealed class RunService
                     ["kind"] = "bool",
                     ["value"] = r.Value,
                     ["distance"] = double.IsFinite(r.Distance) ? r.Distance : null,
-                    ["withinTolerance"] = r.WithinTolerance,
                     ["nearlyTouching"] = r.NearlyTouching,
+                    ["alternative"] = r.Alternative,
                 };
 
             case bool b:

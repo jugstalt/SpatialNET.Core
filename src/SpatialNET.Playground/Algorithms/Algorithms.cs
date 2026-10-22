@@ -37,39 +37,37 @@ public sealed class ValidateAlgorithm() : PlaygroundAlgorithm("validate", "Valid
 public sealed class RelateAlgorithm() : PlaygroundAlgorithm("relate", "Relate (DE-9IM)", "Prädikate", [In.A(In.Any, "A"), In.B(In.Any)], [], (i, _, _, _) => i["a"].Relate(i["b"]));
 
 /// <summary>
-/// Ergebnis eines Prädikats samt Abstand der Eingaben. Ein Prädikat rechnet exakt: Ein gezeichneter Punkt, der optisch auf einer Linie
-/// liegt, liegt rechnerisch fast nie genau darauf. Der Abstand zeigt, ob ein „false“ nur an der Rundung der Koordinaten liegt.
+/// Ergebnis eines Prädikats samt Abstand der Eingaben und der Alternative mit Toleranz. Ein Prädikat rechnet exakt: Ein gezeichneter
+/// Punkt, der optisch auf einer Linie liegt, liegt rechnerisch fast nie genau darauf. Der Abstand zeigt, ob ein „false“ nur an der
+/// Rundung der Koordinaten liegt; die Alternative nennt, wie man in der Bibliothek mit einer Toleranz fragt.
 /// </summary>
 /// <param name="Value">Das Ergebnis des Prädikats.</param>
 /// <param name="Distance">Der Abstand der beiden Eingaben (<c>NaN</c>, wenn eine leer ist).</param>
-/// <param name="WithinTolerance">Ob der Abstand höchstens die angegebene Toleranz beträgt; <c>null</c> ohne Toleranz.</param>
 /// <param name="NearlyTouching">Ob der Abstand größer als 0, aber nur um Rundungsgröße ist.</param>
-public sealed record PredicateResult(bool Value, double Distance, bool? WithinTolerance, bool NearlyTouching);
+/// <param name="Alternative">Der Aufruf mit einer Toleranz <c>t</c> (Text; die Bibliothek hat keine globale Toleranz).</param>
+public sealed record PredicateResult(bool Value, double Distance, bool NearlyTouching, string Alternative);
 
-public abstract class PredicateAlgorithm(string id, string name, Func<IGeometry2D, IGeometry2D, bool> predicate)
-    : PlaygroundAlgorithm(id, name, "Prädikate", [In.A(In.Any, "A"), In.B(In.Any)],
-        [new("tolerance", "Toleranz (nur Hinweis, das Prädikat bleibt exakt)", "number", null, "kbs")],
-        (i, p, _, _) =>
+public abstract class PredicateAlgorithm(string id, string name, Func<IGeometry2D, IGeometry2D, bool> predicate, string alternative)
+    : PlaygroundAlgorithm(id, name, "Prädikate", [In.A(In.Any, "A"), In.B(In.Any)], [],
+        (i, _, _, _) =>
         {
             var (a, b) = (i["a"], i["b"]);
             double distance = a.Distance(b);
             double scale = new[] { a.Envelope(), b.Envelope() }.Where(e => !e.IsEmpty)
                 .SelectMany(e => new[] { e.MinX, e.MinY, e.MaxX, e.MaxY }).Select(Math.Abs).Append(1).Max();
-            return new PredicateResult(predicate(a, b), distance,
-                p.OptionalNumber("tolerance") is { } tolerance && !double.IsNaN(distance) ? distance <= tolerance : null,
-                distance > 0 && distance <= 1e-9 * scale);
+            return new PredicateResult(predicate(a, b), distance, distance > 0 && distance <= 1e-9 * scale, alternative);
         });
 
-public sealed class IntersectsAlgorithm() : PredicateAlgorithm("intersects", "Intersects", (a, b) => a.Intersects(b));
-public sealed class DisjointAlgorithm() : PredicateAlgorithm("disjoint", "Disjoint", (a, b) => a.Disjoint(b));
-public sealed class ContainsAlgorithm() : PredicateAlgorithm("contains", "Contains", (a, b) => a.Contains(b));
-public sealed class WithinAlgorithm() : PredicateAlgorithm("within", "Within", (a, b) => a.Within(b));
-public sealed class TouchesAlgorithm() : PredicateAlgorithm("touches", "Touches", (a, b) => a.Touches(b));
-public sealed class CoversAlgorithm() : PredicateAlgorithm("covers", "Covers", (a, b) => a.Covers(b));
-public sealed class CoveredByAlgorithm() : PredicateAlgorithm("coveredBy", "CoveredBy", (a, b) => a.CoveredBy(b));
-public sealed class CrossesAlgorithm() : PredicateAlgorithm("crosses", "Crosses", (a, b) => a.Crosses(b));
-public sealed class OverlapsAlgorithm() : PredicateAlgorithm("overlaps", "Overlaps", (a, b) => a.Overlaps(b));
-public sealed class EqualsTopoAlgorithm() : PredicateAlgorithm("equalsTopo", "EqualsTopo", (a, b) => a.EqualsTopo(b));
+public sealed class IntersectsAlgorithm() : PredicateAlgorithm("intersects", "Intersects", (a, b) => a.Intersects(b), "a.IsWithinDistance(b, t)");
+public sealed class DisjointAlgorithm() : PredicateAlgorithm("disjoint", "Disjoint", (a, b) => a.Disjoint(b), "!a.IsWithinDistance(b, t)");
+public sealed class ContainsAlgorithm() : PredicateAlgorithm("contains", "Contains", (a, b) => a.Contains(b), "a.Buffer(t).Contains(b)");
+public sealed class WithinAlgorithm() : PredicateAlgorithm("within", "Within", (a, b) => a.Within(b), "b.Buffer(t).Contains(a)");
+public sealed class TouchesAlgorithm() : PredicateAlgorithm("touches", "Touches", (a, b) => a.Touches(b), "a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b)  (Flächen)");
+public sealed class CoversAlgorithm() : PredicateAlgorithm("covers", "Covers", (a, b) => a.Covers(b), "a.Buffer(t).Covers(b)");
+public sealed class CoveredByAlgorithm() : PredicateAlgorithm("coveredBy", "CoveredBy", (a, b) => a.CoveredBy(b), "b.Buffer(t).Covers(a)");
+public sealed class CrossesAlgorithm() : PredicateAlgorithm("crosses", "Crosses", (a, b) => a.Crosses(b), "keine einfache Entsprechung: IsWithinDistance für „sie treffen sich“, NearestPoints für „wo“");
+public sealed class OverlapsAlgorithm() : PredicateAlgorithm("overlaps", "Overlaps", (a, b) => a.Overlaps(b), "a.Buffer(-t).Intersects(b.Buffer(-t)) && !a.Buffer(t).Covers(b) && !b.Buffer(t).Covers(a)  (Flächen)");
+public sealed class EqualsTopoAlgorithm() : PredicateAlgorithm("equalsTopo", "EqualsTopo", (a, b) => a.EqualsTopo(b), "a.HausdorffDistance(b) <= t");
 
 // ---------- Overlay ----------
 
