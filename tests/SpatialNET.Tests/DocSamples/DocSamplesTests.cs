@@ -68,6 +68,21 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void Polygonize()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: polygonize
+        var lines = Wkt.Read<IPolyline2D>("MULTILINESTRING ((0 0, 10 0, 10 10, 0 10, 0 0), (0 0, 10 10), (0 10, 10 0))");
+
+        IReadOnlyList<IPolygon2D> faces = lines.Polygonize();   // four triangles of area 25
+        // --- end
+
+        Assert.Equal(4, faces.Count);
+        Assert.All(faces, f => Assert.Equal(25, f.Area(), 6));
+    }
+
+    [Fact]
     public void LocateAndClip()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

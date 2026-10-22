@@ -89,6 +89,20 @@ var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Sel
 
 `UnionAll` exists for polygons (with a `FillRule`), polylines and multipoints, and for geometries of equal dimension in general. Each input is read under the fill rule as in `Union`, empty inputs are skipped, and mixed dimensions throw `NotSupportedException`. It orders the inputs by their envelopes and unites them in small groups, level by level, so that neighbours meet early. **All steps use one grid**, resolved once over all inputs, so the grouping can change the result only by about one grid cell. The same sequence always gives the identical result; a different order gives the same area up to that tolerance.
 
+## From lines to areas: Polygonize
+
+`Polygonize` turns a polyline into the **areas it encloses** ([ADR 0023](../../adr/0023-linemerge-und-polygonize.md)): every bounded face of the arrangement of the lines becomes a polygon, which together with `Cut` gives a complete subdivision by lines.
+
+```csharp
+var lines = Wkt.Read<IPolyline2D>("MULTILINESTRING ((0 0, 10 0, 10 10, 0 10, 0 0), (0 0, 10 10), (0 10, 10 0))");
+
+IReadOnlyList<IPolygon2D> faces = lines.Polygonize();   // four triangles of area 25
+```
+
+- The lines are **noded first** on the grid, like in `Union`, so they need not be prepared; overlapping duplicates collapse into one edge.
+- Every face is a polygon of its own, in a flat list as for `Cut`: a face with the lines inside it as holes, an island in a hole a face of its own. Adjacent faces share their edge but are separate polygons; a face that touches itself at a vertex gives one polygon per lobe.
+- **Dangles** (a line with a free end) and **bridges** (a line that has the same face on both sides) enclose nothing and are dropped without cutting a face. The unbounded outer face is never returned.
+
 ## Clipping to a rectangle
 
 `Clip` cuts a geometry to a rectangle, the case of tiles and viewports ([ADR 0022](../../adr/0022-locate-envelope-helfer-und-clip.md)). It is the intersection with the **closed** rectangle (the border belongs to it), with two fast paths:

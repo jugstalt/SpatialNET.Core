@@ -34,6 +34,8 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | grid size | Gitterweite | The spacing, in map units, of the grid to which an overlay rounds all coordinates of its result (`gridSize`) |
 | location | Lage | Where a point lies relative to a geometry: inside, on the boundary or outside (`Locate`, `Location`) |
 | clip | zuschneiden | Cutting a geometry to a rectangle (`Clip`) |
+| polygonize | polygonisieren | Turning lines into the areas they enclose: every bounded face of the arrangement of the lines becomes a polygon (`Polygonize`) |
+| line merge | Linien verbinden | Joining the paths of a polyline where exactly two path ends meet (`LineMerge`) |
 | make valid | gültig machen | Repairing an invalid geometry: a polygon by even-odd normalisation through the overlay core (`MakeValid`) |
 | winding number | Windungszahl | How often the boundary of an input winds around a point; the fill rule turns it into inside/outside |
 | snap rounding | Snap-Rounding | Rounding of constructed intersection points to the grid in a way that keeps the topology consistent |

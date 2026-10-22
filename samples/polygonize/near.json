@@ -1,0 +1,7 @@
+{
+  "name": "Der Ring schließt erst innerhalb des Gitters",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "LINESTRING (0 0, 10 0, 10 10, 0 10, 0.000000000001 0.000000000001)"
+}

@@ -94,7 +94,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 
 | Area | Methods (extension methods in the namespace `SpatialNET`) |
 |---|---|
-| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference`, `Clip` |
+| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference`, `Clip`, `Polygonize` |
 | Position of a point | `Locate` (`Location`), also on `PreparedGeometry` |
 | Derived geometries | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Predicates | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
@@ -102,7 +102,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Linear referencing | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Validity | `IsValid`, `Validate`, `MakeValid` |
 | Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
-| Constructions | `Boundary`, `Densify`, `Reverse` |
+| Constructions | `Boundary`, `Densify`, `Reverse`, `LineMerge` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 The signatures, parameters and exceptions of every method are in the API reference, which is generated from the XML comments.

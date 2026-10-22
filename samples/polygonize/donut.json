@@ -1,0 +1,7 @@
+{
+  "name": "Zwei verschachtelte Ringe: Ring und Insel",
+  "tags": [
+    "nested"
+  ],
+  "a": "MULTILINESTRING ((0 0, 20 0, 20 20, 0 20, 0 0), (5 5, 15 5, 15 15, 5 15, 5 5))"
+}

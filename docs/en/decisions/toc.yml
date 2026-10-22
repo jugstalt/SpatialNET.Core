@@ -42,3 +42,7 @@
   href: ../../adr/0021-spatial-join-doppelbaum-nur-vorfilter.md
 - name: "0022 Locate, envelope helpers and rectangle clip"
   href: ../../adr/0022-locate-envelope-helfer-und-clip.md
+- name: "0023 LineMerge and Polygonize"
+  href: ../../adr/0023-linemerge-und-polygonize.md
+- name: "0024 PreparedGeometry thread-safe, with distance"
+  href: ../../adr/0024-prepared-geometry-thread-sicher-und-distanz.md

@@ -204,6 +204,32 @@ public static class Constructions
         return result.ToArray();
     }
 
+    // ---------- LineMerge ----------
+
+    /// <summary>
+    /// Joins the paths of a polyline where exactly two path ends meet (exact equality of X and Y, ADR 0023); a cycle of paths becomes
+    /// one closed path. It does not node: crossing lines stay as they are. Paths of fewer than two distinct points are dropped.
+    /// </summary>
+    /// <param name="line">The polyline.</param>
+    /// <param name="directed">
+    /// <c>false</c>: a path is reversed where needed, and the direction of the first path in the input order prevails.
+    /// <c>true</c>: two paths are joined only if the end of one is the start of the other.
+    /// </param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
+    public static IPolyline2D LineMerge(this IPolyline2D line, bool directed = false, IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        var f = GeometryFactory.Resolve(factory);
+
+        var paths = Enumerable.Range(0, line.PathCount).Select(i => Rings.Coordinates(line[i]))
+            .Where(p => p.Any(c => !Rings.SameXY(c, p[0]))).ToList();
+        var merged = LineMerger.Merge(paths, directed)
+            .Select(p => (ReadOnlyMemory<Coordinate>)GeometryAccess.Restrict(p, f)).ToArray();
+        return f.CreatePolyline(merged, line);
+    }
+
     // ---------- Reverse ----------
 
     /// <summary>Reverses every path and the order of the paths: the same line, traversed backwards.</summary>

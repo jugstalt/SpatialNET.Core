@@ -82,6 +82,36 @@ public class AlgorithmStressTests
     }
 
     [StressFact]
+    public void Prepared_answers_equal_the_unprepared_ones_when_shared_by_threads()
+    {
+        Gen.Select(ValidPolygon, Points(1, 4), Line).Run(t =>
+        {
+            var (polygon, points, line) = t;
+            var prepared = polygon.Prepare();
+            var probes = points.Select(c => (IGeometry2D)F.CreatePoint(c, null)).Append(line).ToArray();
+            var expected = probes.Select(g => (polygon.Intersects(g), polygon.Distance(g))).ToArray();
+            var expectedLocate = points.Select(polygon.Locate).ToArray();
+            var failures = new System.Collections.Concurrent.ConcurrentBag<string>();
+
+            Parallel.For(0, 4, _ =>
+            {
+                for (int i = 0; i < probes.Length; i++)
+                {
+                    if (prepared.Intersects(probes[i]) != expected[i].Item1) failures.Add($"Intersects {i}");
+                    if (Math.Abs(prepared.Distance(probes[i]) - expected[i].Item2) > 1e-9 * (1 + expected[i].Item2) && !(double.IsNaN(expected[i].Item2) && double.IsNaN(prepared.Distance(probes[i])))) failures.Add($"Distance {i}");
+                }
+
+                for (int i = 0; i < points.Length; i++)
+                {
+                    if (prepared.Locate(points[i]) != expectedLocate[i]) failures.Add($"Locate {i}");
+                }
+            });
+
+            Assert.True(failures.IsEmpty, string.Join(", ", failures.Distinct()) + ": " + RawWkt(polygon));
+        });
+    }
+
+    [StressFact]
     public void MakeValid_gives_a_valid_polygon_with_the_even_odd_area()
     {
         DirtyPolygon.Run(polygon =>
@@ -182,6 +212,62 @@ public class AlgorithmStressTests
             Assert.True(a.Intersects(b) == !a.Disjoint(b), "Intersects/Disjoint" + where);
             Assert.True(a.Contains(b) == b.Within(a), "Contains/Within" + where);
             Assert.True(a.Intersects(b) == (ab[0] != 'F' || ab[1] != 'F' || ab[3] != 'F' || ab[4] != 'F'), "Intersects/matrix" + where);
+        });
+    }
+
+    private static readonly Gen<Coordinate[][]> GridSegments =
+        Gen.Select(Gen.Int[0, 10], Gen.Int[0, 10], Gen.Int[0, 10], Gen.Int[0, 10])
+            .Where(t => (t.Item1, t.Item2) != (t.Item3, t.Item4))
+            .Select(t => new[] { new Coordinate(t.Item1, t.Item2), new Coordinate(t.Item3, t.Item4) })
+            .Array[2, 30];
+
+    [StressFact]
+    public void Polygonize_agrees_with_the_NTS_Polygonizer_and_its_faces_are_valid_and_disjoint()
+    {
+        GridSegments.Run(paths =>
+        {
+            var line = F.CreatePolyline(paths.Select(p => (ReadOnlyMemory<Coordinate>)p).ToArray(), null);
+
+            var faces = line.Polygonize(F, 1e-6);
+
+            Assert.All(faces, f => Assert.True(f.IsValid()));
+            SpatialNET.Tests.Construction.PolygonizeFixtureTests.AssertSameFaces(faces, SpatialNET.Tests.Construction.PolygonizeFixtureTests.NtsFaces(Nts.ToNts(line), 1e-6), 1e-6);
+            for (int i = 0; i < faces.Count; i++)
+            {
+                for (int j = i + 1; j < faces.Count; j++)
+                {
+                    Assert.True(faces[i].Intersection(faces[j], factory: F, gridSize: 1e-6).Area() <= 1e-6, "faces overlap");
+                }
+            }
+        });
+    }
+
+    [StressFact]
+    public void Polygonize_of_dirty_lines_gives_valid_disjoint_faces_within_the_union_of_the_lines_hull()
+    {
+        Line.Run(line =>
+        {
+            var faces = line.Polygonize(F, Grid);
+
+            Assert.All(faces, f => Assert.True(f.IsValid(), "face"));
+            double total = faces.Sum(f => f.Area());
+            Assert.True(faces.Count == 0 || total <= line.ConvexHull(F).Area() + AreaTolerance(line), "faces larger than the hull of the lines");
+        });
+    }
+
+    [StressFact]
+    public void LineMerge_agrees_with_the_NTS_LineMerger()
+    {
+        GridSegments.Run(paths =>
+        {
+            var line = F.CreatePolyline(paths.Select(p => (ReadOnlyMemory<Coordinate>)p).ToArray(), null);
+            var merged = line.LineMerge(factory: F);
+
+            var merger = new NetTopologySuite.Operation.Linemerge.LineMerger();
+            merger.Add(Nts.ToNts(line));
+
+            Assert.Equal(SpatialNET.Tests.Construction.LineForms.Of(merger.GetMergedLineStrings().Cast<LineString>()), SpatialNET.Tests.Construction.LineForms.Of(merged));
+            Assert.Equal(line.Length(), merged.Length(), 1e-9);
         });
     }
 

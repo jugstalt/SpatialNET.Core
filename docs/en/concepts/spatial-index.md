@@ -75,4 +75,4 @@ var near = parcels.Join(zones, distance: 5);
 - **Invalid values** throw `ArgumentOutOfRangeException`: an envelope that is partly NaN, infinite or has `Min > Max`, a non-finite point, `k < 1`, a node capacity below 2 ([ADR 0012](../../adr/0012-api-signaturen-typisierte-overloads.md)). Points and zero-width envelopes (lines) are valid.
 - **Duplicates** are kept; each item is an entry of its own. The payload may be `null`.
 - **Snapshot.** The input is copied when the index is built; later changes to the source collection have no effect ([ADR 0013](../../adr/0013-praedikate-de9im-relate-prepared.md)). If you index host geometries, remember that the index holds their envelopes from the moment of building: after a geometry moves, rebuild.
-- **Thread safety.** Queries are safe in parallel. This differs from `PreparedGeometry`, which is not thread-safe.
+- **Thread safety.** Queries are safe in parallel. `PreparedGeometry` is built on this index and is thread-safe as well (ADR 0024).

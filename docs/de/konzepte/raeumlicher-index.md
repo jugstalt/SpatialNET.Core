@@ -75,4 +75,4 @@ var near = parcels.Join(zones, distance: 5);
 - **Ungültige Werte** werfen `ArgumentOutOfRangeException`: ein teilweise NaN-, unendlicher oder `Min > Max`-Envelope, ein nicht endlicher Punkt, `k < 1`, eine Knotenkapazität unter 2 ([ADR 0012](../../adr/0012-api-signaturen-typisierte-overloads.de.md)). Punkte und Envelopes mit Breite 0 (Linien) sind gültig.
 - **Duplikate** bleiben erhalten, jedes Element ist ein eigener Eintrag. Die Nutzlast darf `null` sein.
 - **Schnappschuss.** Die Eingabe wird beim Bauen kopiert; spätere Änderungen an der Quellsammlung haben keine Wirkung ([ADR 0013](../../adr/0013-praedikate-de9im-relate-prepared.de.md)). Wenn du Host-Geometrien indizierst, beachte, dass der Index deren Envelopes vom Zeitpunkt des Bauens hält: Wurde eine Geometrie verschoben, baust du neu.
-- **Thread-Sicherheit.** Abfragen sind parallel sicher. Das unterscheidet den Index von `PreparedGeometry`, die nicht thread-sicher ist.
+- **Thread-Sicherheit.** Abfragen sind parallel sicher. `PreparedGeometry` baut auf diesem Index auf und ist ebenfalls thread-sicher (ADR 0024).

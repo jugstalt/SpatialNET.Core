@@ -1,0 +1,7 @@
+{
+  "name": "Zwei Quadrate berühren sich in einer Ecke",
+  "tags": [
+    "vertex-touch"
+  ],
+  "a": "MULTILINESTRING ((0 0, 10 0, 10 10, 0 10, 0 0), (10 10, 20 10, 20 20, 10 20, 10 10))"
+}

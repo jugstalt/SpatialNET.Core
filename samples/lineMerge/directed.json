@@ -1,0 +1,10 @@
+{
+  "name": "Gerichtet: nur Ende an Anfang wird verbunden",
+  "tags": [],
+  "a": "MULTILINESTRING ((0 0, 1 1), (1 1, 2 0), (3 3, 2 0))",
+  "params": {
+    "directed": true
+  },
+  "expected": "MULTILINESTRING ((0 0, 1 1, 2 0), (3 3, 2 0))",
+  "divergence": "Der NTS-LineMerger kennt keine Richtung; der Soll-Wert ist von Hand bestimmt (ADR 0023)."
+}

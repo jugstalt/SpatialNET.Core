@@ -1,0 +1,6 @@
+{
+  "n/a": {
+    "degenerate-ring": "Linien haben keine Ringe im Sinne dieses Tags; ein entarteter Ring wäre ein Pfad aus gleichen Punkten (siehe Randfälle in LinearReferencing/MakeValid).",
+    "hole-touch": "Linien haben keine Löcher; ein Loch, das den Rand berührt, entsteht aus der Brücke (Fixture bridge)."
+  }
+}

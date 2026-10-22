@@ -1,0 +1,7 @@
+{
+  "name": "Sich selbst kreuzender Ring: zwei Dreiecke",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "LINESTRING (0 0, 10 10, 10 0, 0 10, 0 0)"
+}

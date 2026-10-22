@@ -9,13 +9,14 @@ namespace SpatialNET;
 /// unprepared predicates; fast paths exist for <see cref="Intersects"/>/<see cref="Disjoint"/>
 /// and point-in-area, everything else goes through the exact <see cref="Relations.Relate(IGeometry2D, IGeometry2D)"/>.
 /// </summary>
-/// <remarks>Not thread-safe; prepare one instance per thread.</remarks>
+/// <remarks>Thread-safe after construction: the snapshot and the index are immutable, and every method uses only local state (ADR 0024).</remarks>
 public sealed class PreparedGeometry
 {
     private readonly Envelope2D _envelope;
     private readonly bool _isArea;
     private readonly bool _isEmpty;
-    private readonly SegmentIndex _index;
+    private readonly (Coordinate A, Coordinate B)[] _segments;
+    private readonly SpatialIndex<int> _index;
     private readonly List<Coordinate[]> _rings = [];
 
     internal PreparedGeometry(IGeometry2D geometry)
@@ -36,7 +37,8 @@ public sealed class PreparedGeometry
         var segments = Geometry is IPolygon2D
             ? _rings.Where(r => !Rings.IsDegenerate(r)).SelectMany(r => r.Zip(r.Skip(1))).ToList()
             : GeometryAccess.Segments(Geometry).ToList();
-        _index = new SegmentIndex(segments, _envelope);
+        _segments = segments.ToArray();
+        _index = new SpatialIndex<int>(_segments.Select((s, i) => (new Envelope2D(Math.Min(s.A.X, s.B.X), Math.Min(s.A.Y, s.B.Y), Math.Max(s.A.X, s.B.X), Math.Max(s.A.Y, s.B.Y)), i)));
     }
 
     /// <summary>The snapshot of the prepared geometry.</summary>
@@ -59,6 +61,149 @@ public sealed class PreparedGeometry
         return _isArea ? LocateInArea(point) : Locations.LocateCore(Geometry, point);
     }
 
+    /// <summary>
+    /// Like <see cref="Measures.Distance(IGeometry2D, IGeometry2D)"/>: 0 if the geometries intersect, <see cref="double.NaN"/> if either is
+    /// empty (ADR 0024).
+    /// </summary>
+    /// <param name="other">The other geometry.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="other"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="other"/> is not a known geometry kind.</exception>
+    public double Distance(IGeometry2D other)
+    {
+        GeometryAccess.EnsureKnown(other, nameof(other));
+        if (_isEmpty || GeometryAccess.IsEmpty(other))
+        {
+            return double.NaN;
+        }
+
+        return Disjoint(other) ? Nearest(other).Distance : 0;
+    }
+
+    /// <summary>
+    /// Like <see cref="Measures.IsWithinDistance(IGeometry2D, IGeometry2D, double)"/>: whether the distance is at most
+    /// <paramref name="distance"/>; <c>false</c> if either geometry is empty (ADR 0024).
+    /// </summary>
+    /// <param name="other">The other geometry.</param>
+    /// <param name="distance">The distance; finite and not negative.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="other"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="distance"/> is negative, <c>NaN</c> or infinite.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="other"/> is not a known geometry kind.</exception>
+    public bool IsWithinDistance(IGeometry2D other, double distance)
+    {
+        GeometryAccess.EnsureKnown(other, nameof(other));
+        if (!double.IsFinite(distance) || distance < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(distance), distance, "The distance must be finite and not negative.");
+        }
+
+        if (_isEmpty || GeometryAccess.IsEmpty(other) || !_envelope.Expand(distance).Intersects(other.Envelope()))
+        {
+            return false;
+        }
+
+        if (!Disjoint(other))
+        {
+            return true;
+        }
+
+        foreach (var (c, d) in GeometryAccess.Segments(other))
+        {
+            var window = new Envelope2D(Math.Min(c.X, d.X), Math.Min(c.Y, d.Y), Math.Max(c.X, d.X), Math.Max(c.Y, d.Y)).Expand(distance);
+            foreach (int i in _index.Query(window))
+            {
+                if (Segments.Distance(_segments[i].A, _segments[i].B, c, d) <= distance)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Like <see cref="Measures.NearestPoints(IGeometry2D, IGeometry2D)"/>, with the point on the prepared geometry first. The distance of the
+    /// pair is the same; among equally near pairs the pair may differ from the unprepared result (ADR 0024).
+    /// </summary>
+    /// <param name="other">The other geometry.</param>
+    /// <returns>The pair, or <c>null</c> if either geometry is empty.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="other"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="other"/> is not a known geometry kind.</exception>
+    public (Coordinate OnPrepared, Coordinate OnOther)? NearestPoints(IGeometry2D other)
+    {
+        GeometryAccess.EnsureKnown(other, nameof(other));
+        if (_isEmpty || GeometryAccess.IsEmpty(other))
+        {
+            return null;
+        }
+
+        if (!Disjoint(other))
+        {
+            return Geometry.NearestPoints(other); // intersecting: the point where they meet, found by the exact computation
+        }
+
+        var nearest = Nearest(other);
+        return (nearest.OnPrepared, nearest.OnOther);
+    }
+
+    /// <summary>
+    /// The nearest points of two disjoint geometries. For segments that do not intersect, the nearest pair has a vertex of one of them
+    /// at one end: every vertex of the other geometry is looked up in the index (an upper bound), then the vertices of the prepared
+    /// geometry within that bound of the other geometry are checked against its segments.
+    /// </summary>
+    private (double Distance, Coordinate OnPrepared, Coordinate OnOther) Nearest(IGeometry2D other)
+    {
+        var otherSegments = GeometryAccess.Segments(other).ToArray();
+        if (_segments.Length == 0 || otherSegments.Any(s => !IsFinite(s.A) || !IsFinite(s.B)))
+        {
+            var pair = Geometry.NearestPoints(other)!.Value;
+            return (Rings.Distance(pair.OnA, pair.OnB), pair.OnA, pair.OnB);
+        }
+
+        double best = double.PositiveInfinity;
+        (int Own, int Other) pair2 = (0, 0);
+        for (int j = 0; j < otherSegments.Length; j++)
+        {
+            foreach (var v in new[] { otherSegments[j].A, otherSegments[j].B })
+            {
+                int i = _index.Nearest(v, 1, (k, q) => Segments.PointDistance(q, _segments[k].A, _segments[k].B))[0];
+                double d = Segments.PointDistance(v, _segments[i].A, _segments[i].B);
+                if (d < best)
+                {
+                    best = d;
+                    pair2 = (i, j);
+                }
+            }
+        }
+
+        var window = other.Envelope().Expand(best);
+        foreach (int i in _index.Query(window))
+        {
+            foreach (var u in new[] { _segments[i].A, _segments[i].B })
+            {
+                if (!window.Contains(u))
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < otherSegments.Length; j++)
+                {
+                    double d = Segments.PointDistance(u, otherSegments[j].A, otherSegments[j].B);
+                    if (d < best)
+                    {
+                        best = d;
+                        pair2 = (i, j);
+                    }
+                }
+            }
+        }
+
+        var (own, theirs) = (_segments[pair2.Own], otherSegments[pair2.Other]);
+        return Segments.Nearest(own.A, own.B, theirs.A, theirs.B);
+    }
+
+    private static bool IsFinite(Coordinate c) => double.IsFinite(c.X) && double.IsFinite(c.Y);
+
     /// <summary>Like <see cref="Relations.Intersects"/>.</summary>
     /// <param name="other">The other geometry.</param>
     public bool Intersects(IGeometry2D other) => !Disjoint(other);
@@ -80,9 +225,9 @@ public sealed class PreparedGeometry
             : GeometryAccess.Segments(other);
         foreach (var (a, b) in otherSegments)
         {
-            foreach (int i in _index.Query(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y)))
+            foreach (int i in _index.Query(new Envelope2D(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y))))
             {
-                var (p, q) = _index[i];
+                var (p, q) = _segments[i];
                 if (Segments.Intersects(p, q, a, b))
                 {
                     return false;
@@ -190,10 +335,15 @@ public sealed class PreparedGeometry
     /// <summary>Point in area (even-odd) via the index: ray to the left, half-open rule, exact.</summary>
     private Location LocateInArea(Coordinate p)
     {
-        bool inside = false;
-        foreach (int i in _index.Query(_envelope.MinX, p.Y, p.X, p.Y))
+        if (!_envelope.Contains(p))
         {
-            var (a, b) = _index[i];
+            return Location.Outside; // the area lies in its envelope; also keeps the query envelope below valid
+        }
+
+        bool inside = false;
+        foreach (int i in _index.Query(new Envelope2D(_envelope.MinX, p.Y, p.X, p.Y)))
+        {
+            var (a, b) = _segments[i];
             if (Segments.IsOnSegment(p, a, b)) return Location.Boundary;
             var (lo, hi) = a.Y <= b.Y ? (a, b) : (b, a);
             if (lo.Y <= p.Y && hi.Y > p.Y && Orientation.Orient2D(lo, hi, p) < 0)

@@ -1,0 +1,5 @@
+{
+  "name": "Lose Enden entfallen",
+  "tags": [],
+  "a": "MULTILINESTRING ((0 0, 10 0, 10 10, 0 10, 0 0), (10 5, 15 5), (0 5, 3 5))"
+}

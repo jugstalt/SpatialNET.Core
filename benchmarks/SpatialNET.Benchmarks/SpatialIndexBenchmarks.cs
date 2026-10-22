@@ -103,67 +103,6 @@ public class SpatialIndexBenchmarks
     }
 }
 
-/// <summary>
-/// Decides whether the internal grid <c>SegmentIndex</c> of <c>PreparedGeometry</c> may be replaced by
-/// <see cref="SpatialIndex{T}"/> (ADR 0014): the segments of a ring with N vertices, probed with small
-/// envelopes as the predicates do.
-/// </summary>
-[MemoryDiagnoser]
-public class SegmentIndexBenchmarks
-{
-    private (Coordinate A, Coordinate B)[] _segments = null!;
-    private Envelope2D[] _queries = null!;
-    private Envelope2D _extent;
-    private SegmentIndex _grid = null!;
-    private SpatialIndex<int> _tree = null!;
-
-    [Params(Layout.Uniform, Layout.Clustered)]
-    public Layout Layout { get; set; }
-
-    [Params(1_000, 100_000)]
-    public int N { get; set; }
-
-    [GlobalSetup]
-    public void Setup()
-    {
-        (_segments, _extent, _queries) = IndexInputs.Segments(Layout, N);
-        _grid = new SegmentIndex(_segments, _extent);
-        _tree = Tree();
-    }
-
-    [Benchmark]
-    public object GridBuild() => new SegmentIndex(_segments, _extent);
-
-    [Benchmark]
-    public SpatialIndex<int> TreeBuild() => Tree();
-
-    [Benchmark]
-    public int GridQuery()
-    {
-        int hits = 0;
-        foreach (var q in _queries) hits += _grid.Query(q.MinX, q.MinY, q.MaxX, q.MaxY).Count;
-        return hits;
-    }
-
-    [Benchmark]
-    public int TreeQuery()
-    {
-        int hits = 0;
-        var list = new List<int>();
-        foreach (var q in _queries)
-        {
-            list.Clear();
-            _tree.Query(q, list);
-            hits += list.Count;
-        }
-
-        return hits;
-    }
-
-    private SpatialIndex<int> Tree() => new(_segments.Select((s, i) =>
-        (new Envelope2D(Math.Min(s.A.X, s.B.X), Math.Min(s.A.Y, s.B.Y), Math.Max(s.A.X, s.B.X), Math.Max(s.A.Y, s.B.Y)), i)));
-}
-
 internal static class IndexInputs
 {
     private const double Size = 10_000;

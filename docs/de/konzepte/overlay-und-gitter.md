@@ -89,6 +89,20 @@ var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Sel
 
 `UnionAll` gibt es für Polygone (mit `FillRule`), Polylinien und Multipunkte sowie allgemein für Geometrien gleicher Dimension. Jede Eingabe wird wie bei `Union` unter der Füllregel gelesen, leere Eingaben werden übersprungen, gemischte Dimensionen werfen `NotSupportedException`. Die Eingaben werden nach ihren Envelopes geordnet und in kleinen Gruppen Ebene für Ebene vereinigt, damit sich Nachbarn früh treffen. **Alle Schritte nutzen ein Gitter**, das einmal über alle Eingaben aufgelöst wird; die Gruppierung kann das Ergebnis deshalb nur um etwa eine Gitterzelle verändern. Dieselbe Folge liefert immer das identische Ergebnis; eine andere Reihenfolge liefert dieselbe Fläche bis auf diese Toleranz.
 
+## Von Linien zu Flächen: Polygonize
+
+`Polygonize` macht aus einer Polylinie die **Flächen, die sie umschließt** ([ADR 0023](../../adr/0023-linemerge-und-polygonize.de.md)): Jede beschränkte Fläche der Anordnung der Linien wird zu einem Polygon, was zusammen mit `Cut` eine vollständige Zerlegung durch Linien ergibt.
+
+```csharp
+var lines = Wkt.Read<IPolyline2D>("MULTILINESTRING ((0 0, 10 0, 10 10, 0 10, 0 0), (0 0, 10 10), (0 10, 10 0))");
+
+IReadOnlyList<IPolygon2D> faces = lines.Polygonize();   // vier Dreiecke mit Fläche 25
+```
+
+- Die Linien werden **zuerst genodet**, auf dem Gitter wie bei `Union`, müssen also nicht vorbereitet sein; sich überlappende Doppelungen fallen zu einer Kante zusammen.
+- Jede Fläche ist ein eigenes Polygon, in einer flachen Liste wie bei `Cut`: eine Fläche mit den Linien in ihrem Inneren als Löchern, eine Insel in einem Loch eine eigene Fläche. Benachbarte Flächen teilen ihre Kante, sind aber getrennte Polygone; eine Fläche, die sich an einem Stützpunkt selbst berührt, ergibt ein Polygon je Lappen.
+- **Dangles** (eine Linie mit freiem Ende) und **Brücken** (eine Linie, die auf beiden Seiten dieselbe Fläche hat) umschließen nichts und entfallen, ohne eine Fläche zu zerschneiden. Die unbeschränkte äußere Fläche wird nie geliefert.
+
 ## Zuschneiden auf ein Rechteck
 
 `Clip` schneidet eine Geometrie auf ein Rechteck zu, der Fall von Kacheln und Ausschnitten ([ADR 0022](../../adr/0022-locate-envelope-helfer-und-clip.de.md)). Es ist der Schnitt mit dem **geschlossenen** Rechteck (der Rand gehört dazu), mit zwei Schnellpfaden:

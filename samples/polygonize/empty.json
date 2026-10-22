@@ -1,0 +1,7 @@
+{
+  "name": "Leere Polylinie",
+  "tags": [
+    "empty"
+  ],
+  "a": "MULTILINESTRING EMPTY"
+}

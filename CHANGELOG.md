@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Changed
+
+- `PreparedGeometry` is now thread-safe after construction (ADR 0024): its segment index is the immutable `SpatialIndex<int>`. Preparing and querying small polygons is somewhat slower (about a millisecond or less per polygon), large polygons are on a par or faster.
+
 ### Fixed
 
 - The point-in-ring test (used by `Locate`, `Distance`, `NearestPoints`, `IsWithinDistance` and the nesting of rings) decided a point within about 1e-80 of an edge by a floating-point crossing; the side is now decided exactly (orient2d), like in the prepared geometry (found by a stress test).
@@ -15,6 +19,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- `PreparedGeometry.Distance`, `IsWithinDistance` and `NearestPoints` (ADR 0024), with the same results as the unprepared methods.
+- `LineMerge` (ADR 0023): joins the paths of a polyline where exactly two path ends meet (exact, optionally directed). `Polygonize` (ADR 0023): the areas a polyline encloses, one polygon per bounded face, noded on the grid. Playground entries for both.
 - `Locate` and the public `Location` enum (ADR 0022): where a point lies relative to a geometry (inside, boundary, outside), exact like the predicates; also `PreparedGeometry.Locate`.
 - `Clip` (ADR 0022): a geometry cut to a closed rectangle, with fast paths (completely inside: a copy without rounding, no contact: empty). Playground entry.
 - Helpers on `Envelope2D` (`Intersects`, `Contains`, `Union`, `Intersection`, `Expand`, `Center`) and `Envelope2D.ToPolygon`.

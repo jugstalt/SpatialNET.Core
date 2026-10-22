@@ -171,3 +171,13 @@ public sealed class ClipAlgorithm() : PlaygroundAlgorithm("clip", "Clip", "Overl
     [new("minX", "Min X", "number", 0.0, "kbs"), new("minY", "Min Y", "number", 0.0, "kbs"),
      new("maxX", "Max X", "number", 100.0, "kbs"), new("maxY", "Max Y", "number", 100.0, "kbs"), P.GridSize],
     (i, p, f, g) => i["a"].Clip(new Envelope2D(p.Number("minX"), p.Number("minY"), p.Number("maxX"), p.Number("maxY")), f, p.OptionalNumber("gridSize") ?? g));
+
+// ---------- LineMerge und Polygonize (ADR 0023) ----------
+
+public sealed class LineMergeAlgorithm() : PlaygroundAlgorithm("lineMerge", "LineMerge", "Konstruktion",
+    [In.A(In.Lines, "Linie")], [new("directed", "Gerichtet", "bool", false)],
+    (i, p, f, _) => ((IPolyline2D)i["a"]).LineMerge(p.Bool("directed"), f));
+
+public sealed class PolygonizeAlgorithm() : PlaygroundAlgorithm("polygonize", "Polygonize", "Overlay",
+    [In.A(In.Lines, "Linien")], [P.GridSize],
+    (i, p, f, g) => ((IPolyline2D)i["a"]).Polygonize(f, p.OptionalNumber("gridSize") ?? g).Cast<IGeometry2D>().ToList());

@@ -1,0 +1,7 @@
+{
+  "name": "Sich kreuzende Pfade werden verbunden, nicht genodet",
+  "tags": [
+    "self-crossing"
+  ],
+  "a": "MULTILINESTRING ((0 0, 10 10), (10 10, 10 0), (10 0, 0 10))"
+}

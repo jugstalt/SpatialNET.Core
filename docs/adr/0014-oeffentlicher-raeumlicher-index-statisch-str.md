@@ -21,10 +21,10 @@ SpatialNET gets a small **public spatial index**, `SpatialIndex<T>` in `SpatialN
   - Partly NaN, infinite or `Min > Max` envelopes throw `ArgumentOutOfRangeException`, as do an invalid query envelope, a non-finite point, `k < 1` and `nodeCapacity < 2` (rules of ADR 0012). An empty query envelope returns nothing. A `distance` delegate that returns NaN throws `InvalidOperationException`.
   - Points and zero-width envelopes (lines) are valid.
 - **Duplicates and order:** duplicates are kept, each item is an entry of its own. The order of `Query` results is unspecified; `Nearest` is ordered. `T` may be `null`. The input is copied (snapshot, ADR 0013).
-- **Thread safety:** after construction the instance is immutable and every query uses only local state. Any number of threads may query the same instance. This is the difference to the not thread-safe `PreparedGeometry` and `SegmentIndex`.
-- **`SegmentIndex` is kept.** The benchmark `SegmentIndexBenchmarks` (segments of a ring, small probe envelopes as in the predicates) shows no gain for the tree: the grid builds faster (up to twice as fast at 100,000 segments for clustered data), and the queries are on par (within about 25 % either way, the tree slightly ahead only for small clustered inputs). A replacement would add risk to the predicates without a gain. It can be revisited if `PreparedGeometry` is ever made thread-safe.
+- **Thread safety:** after construction the instance is immutable and every query uses only local state. Any number of threads may query the same instance. `PreparedGeometry` is built on it and thread-safe as well (ADR 0024).
+- **`SegmentIndex` was kept at first, and replaced later.** The benchmark showed no gain for the tree at the time (the grid built faster and the queries were on par), so the internal grid index stayed. ADR 0024 replaced it by this tree to make `PreparedGeometry` thread-safe, accepting a slower preparation for small polygons.
 - **Tests (ADR 0008):** oracles are brute force (exact, including the order of ties) and the NTS `STRtree` (range queries and nearest distances). Property tests (CsCheck) cover random sets with duplicates, points, lines and many equal distances, node capacities from 2 to 20, empty and invalid input, and parallel queries. Fixtures do not apply, because the index has no geometry result; `[Covers]` tests take their place.
-- **Benchmarks:** `SpatialIndexBenchmarks` (build, query, nearest against brute force and the NTS `STRtree`, 1k to 1M items, uniform and clustered) and `SegmentIndexBenchmarks`. A one-shot run shows the build at 1M items about two to three times faster than the NTS `STRtree` and the range queries on a par or faster.
+- **Benchmarks:** `SpatialIndexBenchmarks` (build, query, nearest against brute force and the NTS `STRtree`, 1k to 1M items, uniform and clustered). A one-shot run shows the build at 1M items about two to three times faster than the NTS `STRtree` and the range queries on a par or faster.
 
 ## Considered Options
 
@@ -33,5 +33,5 @@ SpatialNET gets a small **public spatial index**, `SpatialIndex<T>` in `SpatialN
 - Index of geometries only (rejected: callers often index ids or records; geometries are covered by the helper)
 - A predicate shortcut such as `Query(geometry, predicate)` (rejected: a second API for predicates; `.Where` is enough)
 - A grid index as the public structure (rejected: depends on the distribution of the data; STR adapts to it)
-- Replacing the internal `SegmentIndex` (rejected: no gain in the benchmark)
+- Replacing the internal `SegmentIndex` (rejected then for lack of a gain; done later in ADR 0024 for thread safety)
 - A new package for the index (rejected: `SpatialNET.Extensions` is the home of algorithms; one more package is not worth it)

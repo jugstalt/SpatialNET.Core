@@ -1,0 +1,5 @@
+{
+  "name": "Ein Pfad läuft gegen die Richtung",
+  "tags": [],
+  "a": "MULTILINESTRING ((0 0, 1 1), (2 0, 1 1))"
+}

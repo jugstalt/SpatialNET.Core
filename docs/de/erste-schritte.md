@@ -94,7 +94,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 
 | Bereich | Methoden (Extension-Methoden im Namespace `SpatialNET`) |
 |---|---|
-| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference`, `Clip` |
+| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference`, `Clip`, `Polygonize` |
 | Lage eines Punktes | `Locate` (`Location`), auch auf `PreparedGeometry` |
 | Abgeleitete Geometrien | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Prädikate | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
@@ -102,7 +102,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Lineare Referenzierung | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Gültigkeit | `IsValid`, `Validate`, `MakeValid` |
 | Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
-| Konstruktionen | `Boundary`, `Densify`, `Reverse` |
+| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 Signaturen, Parameter und Exceptions jeder Methode stehen in der API-Referenz (Englisch), die aus den XML-Kommentaren generiert wird.

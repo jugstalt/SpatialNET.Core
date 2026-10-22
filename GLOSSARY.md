@@ -99,6 +99,14 @@ _Avoid_: Position, Location
 Das Abschneiden einer Geometrie an einem Rechteck; der Rand des Rechtecks gehört zum Ergebnis.
 _Avoid_: Clippen, Ausschneiden
 
+**Polygonisieren**:
+Das Umwandeln von Linien in die Flächen, die sie umschließen: Jede beschränkte Fläche der Anordnung der Linien wird zu einem Polygon.
+_Avoid_: Flächenbildung, Polygonizer
+
+**Linien verbinden**:
+Das Verbinden der Pfade einer Polylinie dort, wo genau zwei Pfadenden zusammentreffen.
+_Avoid_: Line Merge, Zusammenfügen
+
 **Gültig machen**:
 Das Reparieren einer ungültigen Geometrie: Ein Polygon wird nach der Even-Odd-Regel neu aufgebaut, seine Fläche bleibt dabei erhalten.
 _Avoid_: Fixen, Bereinigen

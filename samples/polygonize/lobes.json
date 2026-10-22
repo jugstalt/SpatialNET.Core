@@ -1,0 +1,5 @@
+{
+  "name": "Ein Ring berührt sich selbst: ein Polygon je Lappen",
+  "tags": [],
+  "a": "LINESTRING (0 0, 10 0, 5 5, 10 10, 0 10, 5 5, 0 0)"
+}

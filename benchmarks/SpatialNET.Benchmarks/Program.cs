@@ -6,51 +6,9 @@ using SpatialNET.Imp;
 
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks            → BenchmarkDotNet
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick → grobe Stoppuhr-Messung
-// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-index → dasselbe für den räumlichen Index (ADR 0014)
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-unionall → UnionAll gegen das Falten von Union (ADR 0018)
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-prepared → PreparedGeometry (ADR 0024)
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-join → Join und SelfJoin gegen die Schleife aus Abfragen (ADR 0021)
-if (args.Contains("--quick-index"))
-{
-    foreach (var layout in Enum.GetValues<Layout>())
-    {
-        foreach (int n in new[] { 1_000, 100_000 })
-        {
-            var (segments, extent, queries) = IndexInputs.Segments(layout, n);
-            var grid = new SpatialNET.Internal.SegmentIndex(segments, extent);
-            var tree = new SpatialIndex<int>(segments.Select((s, i) =>
-                (new Envelope2D(Math.Min(s.A.X, s.B.X), Math.Min(s.A.Y, s.B.Y), Math.Max(s.A.X, s.B.X), Math.Max(s.A.Y, s.B.Y)), i)));
-            var list = new List<int>();
-            Console.WriteLine($"{layout,-9} N={n,7}  build grid {Measure(() => new SpatialNET.Internal.SegmentIndex(segments, extent)),8:F2} ms  " +
-                              $"tree {Measure(() => new SpatialIndex<int>(segments.Select((s, i) => (new Envelope2D(Math.Min(s.A.X, s.B.X), Math.Min(s.A.Y, s.B.Y), Math.Max(s.A.X, s.B.X), Math.Max(s.A.Y, s.B.Y)), i)))),8:F2} ms  " +
-                              $"| {queries.Length} queries: grid {Measure(() => { foreach (var q in queries) grid.Query(q.MinX, q.MinY, q.MaxX, q.MaxY); }),8:F3} ms  " +
-                              $"tree {Measure(() => { foreach (var q in queries) { list.Clear(); tree.Query(q, list); } }),8:F3} ms");
-        }
-    }
-
-    return;
-}
-
-if (args.Contains("--quick-join"))
-{
-    foreach (var layout in Enum.GetValues<Layout>())
-    {
-        foreach (int n in new[] { 1_000, 100_000 })
-        {
-            var left = IndexInputs.Create(layout, n).Boxes;
-            var right = IndexInputs.Create(layout, n).Boxes.Select(e => new Envelope2D(e.MinX + 37, e.MinY + 19, e.MaxX + 37, e.MaxY + 19)).ToArray();
-            var leftIndex = new SpatialIndex<int>(left.Select((e, i) => (e, i)));
-            var rightIndex = new SpatialIndex<int>(right.Select((e, i) => (e, i)));
-            var results = new List<int>();
-            var pairs = new List<(int, int)>();
-            Console.WriteLine($"{layout,-9} N={n,7}  loop of queries {Measure(() => { foreach (var box in right) { results.Clear(); leftIndex.Query(box, results); } }),9:F2} ms  " +
-                              $"Join {Measure(() => { pairs.Clear(); leftIndex.Join(rightIndex, pairs); }),9:F2} ms  " +
-                              $"SelfJoin {Measure(() => { foreach (var _ in leftIndex.SelfJoin()) { } }),9:F2} ms  ({pairs.Count} pairs)");
-        }
-    }
-
-    return;
-}
-
 if (args.Contains("--quick-unionall"))
 {
     GeometryFactory.Default = ImpGeometryFactory.Instance;
