@@ -60,5 +60,5 @@ IPolygon2D valid = bowtie.MakeValid();  // two triangles, valid
 - **It is not the OGC `ST_MakeValid`.** Results are dimension-homogeneous, and there is no geometry collection, so collapsed remnants are not kept as lines.
 - **It runs on the grid** ([overlays](overlay-and-grid.md)): the result lies on the grid, also the parts that were valid before. To leave valid input untouched, check `IsValid()` first. `FillRule.NonZero` merges overlapping shells instead of making the overlap a hole.
 - **Polylines** lose non-finite points, consecutive duplicate points and paths with fewer than two distinct points; crossing lines are valid. **Points** lose non-finite ones; duplicates stay. Lines and points are not rounded.
-- The result is always a new geometry from the factory, and `MakeValid(MakeValid(g))` is the same geometry again.
+- The result is always a new geometry from the factory, and `MakeValid(MakeValid(g))` is the same geometry again up to the grid (running it twice can bend an edge of a very thin sliver by about one grid cell).
 

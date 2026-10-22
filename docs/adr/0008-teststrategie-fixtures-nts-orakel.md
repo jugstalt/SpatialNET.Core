@@ -10,6 +10,7 @@ Test cases live as **one JSON file per case** under `samples/<algorithm>/`. They
   - `…FixtureTests`: `[Theory]` over all fixtures against the oracle
   - `…ContractTests`: empty inputs, missing `GeometryFactory.Default`, `SupportsZ`, Z, invalid options, bit-exactly untouched parts for Cut
   - `…PropertyTests`: invariants with **CsCheck**
+  - **Stress tests** (`tests/SpatialNET.Tests/Stress`, category `Stress`, `tools/stress.ps1`, weekly workflow `stress-tests.yml`): many random, deliberately dirty inputs per algorithm (values far below the grid, tenths with a tiny error, self-intersections), checked against invariants (valid results, area identities of the overlays, `Locate` of the prepared and the unprepared geometry) and, where NTS means the same, against NTS. They run only with `SPATIALNET_STRESS=1` and take minutes. NTS is no oracle for offsets below its floating-point resolution (it gives up with topology exceptions or polygonizes slivers wrongly), so those tests restrict their values; the invariant tests keep the dirty values. A failing case prints a CsCheck seed; the minimal case becomes a regular regression test.
 - **Factory contract test:** thread safety, no reference to passed buffers, empty geometries, `SupportsZ`. Tests always pass the factory explicitly.
 - **Tolerances** centrally in `OracleAssert`:
   - Area and length relative 1e-9, symmetric difference ≤ 1e-9·area(expected)

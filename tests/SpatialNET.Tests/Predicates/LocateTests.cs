@@ -137,6 +137,18 @@ public class LocateTests
     }
 
     [Fact]
+    public void A_point_a_hair_outside_a_vertex_is_decided_exactly()
+    {
+        // Found by a stress test: the edge from (-36 0) to (-31.4 -46) crosses the ray 1e-80 to the right of the point, which a
+        // floating-point crossing computation rounds to the point itself; the exact test counts it, so the point is outside.
+        var triangle = G("POLYGON ((-30 9, -36 0, -31.4 -46, -30 9))");
+
+        Assert.Equal(Location.Outside, triangle.Locate(C(-36, -9.862E-80)));
+        Assert.Equal(Location.Outside, triangle.Prepare().Locate(C(-36, -9.862E-80)));
+        Assert.Equal(Location.Boundary, triangle.Locate(C(-36, 0)));
+    }
+
+    [Fact]
     public void Invalid_arguments_throw()
     {
         var square = G("POLYGON ((0 0, 1 0, 1 1, 0 0))");

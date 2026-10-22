@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Fixed
 
+- The point-in-ring test (used by `Locate`, `Distance`, `NearestPoints`, `IsWithinDistance` and the nesting of rings) decided a point within about 1e-80 of an edge by a floating-point crossing; the side is now decided exactly (orient2d), like in the prepared geometry (found by a stress test).
 - Snap rounding: a crossing that lies within rounding error of a pixel border could be routed through its hot pixel by only one of the two segments, so that output edges crossed (found by a stress test, very rare). Both segments now pass through the pixel of their crossing.
 - A vertex no longer loses its Z in overlays, `Cut`, `Simplify` and `OffsetCurve` when the other end of its only segment has none; the end points of a segment keep their own Z, as they already did for M.
 - `ConvexHull` now respects `SupportsZ` of the factory.

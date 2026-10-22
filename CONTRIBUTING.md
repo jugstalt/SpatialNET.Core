@@ -13,7 +13,7 @@ dotnet build SpatialNET.sln
 dotnet test tests/SpatialNET.Tests
 ```
 
-Warnings are errors. The tests (about 6,350) take roughly 20 seconds. The property-based tests (CsCheck) run with their default iteration count; to run them harder, set `SPATIALNET_PROPERTY_ITER`, for example to `10000`. CI additionally checks a coverage threshold (see `.github/scripts/check-coverage.ps1`) and builds the documentation.
+Warnings are errors. The tests (about 6,350) take roughly 20 seconds. The property-based tests (CsCheck) run with their default iteration count; to run them harder, set `SPATIALNET_PROPERTY_ITER`, for example to `10000`. The **stress tests** (random, deliberately dirty inputs per algorithm, minutes long) are skipped by default; run them with `./tools/stress.ps1` or `SPATIALNET_STRESS=1` (see [ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). CI additionally checks a coverage threshold (see `.github/scripts/check-coverage.ps1`) and builds the documentation.
 
 ## Principles
 

@@ -80,13 +80,12 @@ internal static class Rings
                 return Location.Boundary;
             }
 
-            if ((a.Y > p.Y) != (b.Y > p.Y))
+            // Ray to the left with the half-open rule lo.Y <= p.Y < hi.Y; the side is decided exactly (orient2d), not by
+            // computing the crossing in floating point, which cannot tell a crossing 1e-80 away from p.X from p.X itself.
+            var (lo, hi) = a.Y <= b.Y ? (a, b) : (b, a);
+            if (lo.Y <= p.Y && hi.Y > p.Y && Noding.Orientation.Orient2D(lo, hi, p) < 0)
             {
-                double x = a.X + (p.Y - a.Y) * (b.X - a.X) / (b.Y - a.Y);
-                if (p.X < x)
-                {
-                    inside = !inside;
-                }
+                inside = !inside;
             }
         }
 
