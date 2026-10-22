@@ -50,7 +50,7 @@ internal static class SnapRoundingNoder
             }
         }
 
-        AddIntersectionPixels(segments, hotPixels, grid);
+        var crossings = AddIntersectionPixels(segments, hotPixels, grid);
 
         var pixels = hotPixels.ToArray();
         Array.Sort(pixels);
@@ -61,6 +61,7 @@ internal static class SnapRoundingNoder
         {
             hits.Clear();
             CollectPixels(seg, pixels, hits);
+            AddCrossingPixels(seg, crossings, hits);
             hits.Sort((a, b) => a.T.CompareTo(b.T));
 
             var source = seg.Source.Points;
@@ -97,9 +98,15 @@ internal static class SnapRoundingNoder
         return result;
     }
 
-    /// <summary>Proper crossings (detected exactly via orient2d) are added as hot pixels.</summary>
-    private static void AddIntersectionPixels(List<Segment> segments, HashSet<GridPoint> hotPixels, GridModel grid)
+    /// <summary>
+    /// Proper crossings (detected exactly via orient2d) are added as hot pixels. The pixel of a crossing is also recorded for both
+    /// segments: the exact intersection lies in it by definition, while the floating-point test of <c>Touches</c> can miss it
+    /// when the crossing lies within rounding error of the pixel border; without the record, a segment could bypass the hot pixel
+    /// that the other one is routed through, and the output edges would cross.
+    /// </summary>
+    private static Dictionary<(int String, int Segment), List<GridPoint>> AddIntersectionPixels(List<Segment> segments, HashSet<GridPoint> hotPixels, GridModel grid)
     {
+        var crossings = new Dictionary<(int String, int Segment), List<GridPoint>>();
         var order = segments.OrderBy(s => s.MinX).ToArray();
         var active = new List<Segment>();
         foreach (var s in order)
@@ -125,10 +132,49 @@ internal static class SnapRoundingNoder
                 // eigentliche Kreuzung; Endpunkt-Berührungen und Überlappungen liefern Vertices (schon Hot Pixels).
                 // Der Schnittpunkt wird exakt (rational) bestimmt und dann gerundet. Die Orientierungen werden
                 // nur so weit ausgewertet, bis eine Seite keine echte Trennung zeigt (früher Abbruch).
-                hotPixels.Add(grid.RoundExactIntersection(p0, p1, q0, q1));
+                var pixel = grid.RoundExactIntersection(p0, p1, q0, q1);
+                hotPixels.Add(pixel);
+                Record(crossings, a, pixel);
+                Record(crossings, s, pixel);
             }
 
             active.Add(s);
+        }
+
+        return crossings;
+
+        static void Record(Dictionary<(int String, int Segment), List<GridPoint>> crossings, Segment segment, GridPoint pixel)
+        {
+            var key = (segment.Source.Index, segment.Index);
+            if (!crossings.TryGetValue(key, out var list))
+            {
+                crossings[key] = list = [];
+            }
+
+            list.Add(pixel);
+        }
+    }
+
+    /// <summary>Adds the pixels of the crossings of the segment as pass-through points (see <see cref="AddIntersectionPixels"/>).</summary>
+    private static void AddCrossingPixels(Segment seg, Dictionary<(int String, int Segment), List<GridPoint>> crossings, List<(double, GridPoint)> hits)
+    {
+        if (!crossings.TryGetValue((seg.Source.Index, seg.Index), out var pixels))
+        {
+            return;
+        }
+
+        var startPixel = new GridPoint(GridModel.RoundUnits(seg.X0), GridModel.RoundUnits(seg.Y0));
+        var endPixel = new GridPoint(GridModel.RoundUnits(seg.X1), GridModel.RoundUnits(seg.Y1));
+        double dx = seg.X1 - seg.X0, dy = seg.Y1 - seg.Y0, len2 = dx * dx + dy * dy;
+        foreach (var pixel in pixels)
+        {
+            if (pixel == startPixel || pixel == endPixel)
+            {
+                continue;
+            }
+
+            double t = len2 == 0 ? 0 : ((pixel.X - seg.X0) * dx + (pixel.Y - seg.Y0) * dy) / len2;
+            hits.Add((t, pixel));
         }
     }
 

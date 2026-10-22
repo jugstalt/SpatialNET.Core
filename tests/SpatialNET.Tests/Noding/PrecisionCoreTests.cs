@@ -161,6 +161,31 @@ public class SnapRoundingNoderTests
     }
 
     [Fact]
+    public void A_crossing_within_rounding_error_of_a_pixel_border_routes_both_segments_through_its_hot_pixel()
+    {
+        // Found by a stress test (seed fIa1vp2Hfn67): the exact crossing lies about 1e-23 below and left of the corner (107.5, 97.5),
+        // so its hot pixel is (107, 97), while the floating-point test sees the corner and assigns the point to the next pixel.
+        var a = new[] { new Coordinate(43, 6.343E-66), new Coordinate(-7.097E-24, 13) };
+        var b = new[] { new Coordinate(-5.616E-44, -1), new Coordinate(42, 41) };
+
+        var edges = Node([a, b], 0.1).Select(e => (e.A, e.B)).Distinct().ToArray();
+
+        for (int i = 0; i < edges.Length; i++)
+        {
+            for (int j = i + 1; j < edges.Length; j++)
+            {
+                var (p, q) = edges[i];
+                var (r, s) = edges[j];
+                bool proper = GridPoint.Orient(p, q, r) * GridPoint.Orient(p, q, s) < 0
+                              && GridPoint.Orient(r, s, p) * GridPoint.Orient(r, s, q) < 0;
+                Assert.False(proper, $"Edges {p}-{q} and {r}-{s} cross.");
+            }
+        }
+
+        Assert.Contains(new GridPoint(107, 97), edges.SelectMany(e => new[] { e.A, e.B }));
+    }
+
+    [Fact]
     public void Z_is_interpolated_on_the_original_segment()
     {
         var path = new[] { new Coordinate(0, 0, 0), new Coordinate(10, 0, 100) };

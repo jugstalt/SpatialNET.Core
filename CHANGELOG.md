@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Fixed
 
+- Snap rounding: a crossing that lies within rounding error of a pixel border could be routed through its hot pixel by only one of the two segments, so that output edges crossed (found by a stress test, very rare). Both segments now pass through the pixel of their crossing.
 - A vertex no longer loses its Z in overlays, `Cut`, `Simplify` and `OffsetCurve` when the other end of its only segment has none; the end points of a segment keep their own Z, as they already did for M.
 - `ConvexHull` now respects `SupportsZ` of the factory.
 - The documentation of `Union` and `UnionAll` for polylines no longer claims "maximal paths": a path is cut where different input lines meet or end (behaviour unchanged).
