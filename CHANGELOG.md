@@ -19,6 +19,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- Documentation: a Cookbook (`docs/en/cookbook.md`, `docs/de/rezepte.md`) with ten tested recipes, and new sections in Host integration on threads and mutable geometries, units and the grid, errors and edge cases, choosing the right tool, reading and writing, and a checklist.
 - `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid` and `ReducePrecision` (ADR 0027): remove holes and parts below a size, round to a grid (may leave a polygon invalid), and reduce precision with a valid result. Playground entries for all four.
 - `MinimumRotatedRectangle`, `MinimumBoundingCircle` (with the value type `Circle`) and `Polylabel` (ADR 0026): the tightest rectangle and the smallest circle around a geometry, and the best place for a label in a polygon. Playground entries for all three. `ConcaveHull` is deferred.
 - `Translate`, `Scale`, `Rotate` and `Transform` (ADR 0025): coordinate transformations for every geometry kind, keeping Z and M and the orientation of polygon rings. `IsSimple`, `IsClosed`, `IsRing` and `EqualsExact`: checks about the form of a geometry. `HausdorffDistance`: the discrete Hausdorff distance. Playground entries for all of them except `Transform`.

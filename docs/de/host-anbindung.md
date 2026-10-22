@@ -149,6 +149,60 @@ Console.WriteLine(result.AsList().Count);                            // 1 ring
 
 `GeometryFactory.Default` ist ein einfaches statisches Property, das einmal beim Start gesetzt werden soll. Für einen einzelnen Aufruf mit anderer Factory wird sie explizit übergeben: `square.Intersection(other, factory: myFactory)`.
 
+## Threads und veränderliche Geometrien
+
+Host-Geometrien sind meist veränderlich; die Bibliothek behandelt sie für die Dauer eines Aufrufs als Werte.
+
+- **Während eines Aufrufs** liest ein Algorithmus Ihre Geometrie. Ändern Sie diese Instanz nicht aus einem anderen Thread, solange ein Algorithmus darauf läuft. Dieselbe Instanz aus vielen Threads zu lesen ist in Ordnung, sofern Ihre eigenen Klassen gleichzeitiges Lesen erlauben.
+- **`PreparedGeometry` und `SpatialIndex<T>` kopieren**, was sie brauchen (einen Schnappschuss der Koordinaten, die Envelopes), spätere Änderungen am Host-Objekt wirken sich also nicht aus; für Änderungen bauen Sie eine neue. Beide sind nach dem Bauen **thread-sicher**, bauen Sie sie also einmal und teilen Sie sie ([ADR 0014](../adr/0014-oeffentlicher-raeumlicher-index-statisch-str.de.md), [ADR 0024](../adr/0024-prepared-geometry-thread-sicher-und-distanz.de.md)).
+- **Die Factory** wird von dem Thread aufgerufen, der den Algorithmus ausführt, muss also thread-sicher oder zustandslos sein (siehe oben).
+- **Ergebnisse sind neue Objekte.** Ein Algorithmus liefert nie eine Eingabeinstanz zurück und verändert nie seine Eingabe, Sie können Eingabe und Ergebnis also nebeneinander behalten.
+
+## Einheiten, Koordinatensysteme und das Gitter
+
+Die Algorithmen sind **planar**: Sie rechnen mit den Zahlen X und Y, was immer diese bedeuten. Abstände und Flächen kommen in den Einheiten der Koordinaten heraus; nehmen Sie für alles, was misst, ein projiziertes Koordinatensystem (Meter): Ein Buffer von `10` um Längen-/Breitengrad-Daten sind 10 Grad. Z und M gehen nie in eine Berechnung ein.
+
+Overlays runden ihr Ergebnis auf ein **Gitter** ([ADR 0005](../adr/0005-overlay-winding-number-snap-rounding.de.md)). Standardmäßig wird die Gitterweite aus der größten Koordinate der Eingabe abgeleitet, was für die meisten Daten passt. Setzen Sie `Precision.DefaultGridSize` einmal, wenn Ihre Daten eine natürliche Auflösung haben (etwa 0,001 m), oder übergeben Sie `gridSize` an einen einzelnen Aufruf; siehe [Optionen und Genauigkeit](erste-schritte.md#optionen-und-genauigkeit). Prädikate und Maße rechnen auf den genauen Eingabekoordinaten und nutzen kein Gitter.
+
+## Fehler und Randfälle
+
+Alle Algorithmen folgen denselben Regeln ([ADR 0012](../adr/0012-api-signaturen-typisierte-overloads.de.md)), Sie können sich also an einer Stelle darauf verlassen:
+
+| Situation | Ergebnis |
+|---|---|
+| Ein Argument ist `null` | `ArgumentNullException` |
+| Ein Parameter liegt außerhalb des Bereichs (ein negativer Abstand, eine Gitterweite, die nicht endlich oder nicht größer als 0 ist, eine `NaN`-Toleranz) | `ArgumentOutOfRangeException` |
+| Keine Factory übergeben und `GeometryFactory.Default` nicht gesetzt | `InvalidOperationException` |
+| Ein Objekt implementiert `IGeometry2D`, aber keine der vier Arten (Punkt, Multipunkt, Polylinie, Polygon) | `NotSupportedException` |
+| Eine Geometrie ist leer oder ungültig | nie eine Exception: ein leeres Ergebnis, 0 bei Fläche und Länge, `NaN` bei einem Abstand, `null`, wo es keinen Punkt gibt, `false` bei einem Prädikat |
+| Eine Koordinate ist `NaN` oder unendlich | `IsValid` und `Validate` melden es; `MakeValid` entfernt sie; andere Algorithmen sind darauf nicht definiert |
+| Ein ungültiges Polygon ist die Eingabe | das Ergebnis folgt der Even-Odd-Regel über alle Ringe; prüfen Sie `IsValid`, wo Sie eine Garantie brauchen ([ADR 0003](../adr/0003-loecher-even-odd-ergebnisse-als-teilflaechen.de.md)) |
+
+## Das richtige Werkzeug wählen
+
+| Sie tun das oft | Nehmen Sie |
+|---|---|
+| Eine Geometrie gegen viele andere testen | `Prepare()`, dann die vorbereitete Geometrie abfragen |
+| Elemente einer großen Menge nach Ort finden | `SpatialIndex<T>`: `Query` für ein Rechteck, `Nearest` für das nächste |
+| Die sich treffenden Elemente zweier Mengen paaren | `Join` und `SelfJoin` auf zwei Indizes |
+| Viele Polygone, Linien oder Punkte verschmelzen | `UnionAll`, keine Schleife aus `Union` |
+| Geometrie in kleinem Maßstab zeigen | `Simplify`, `Clip` |
+| Benutzereingaben sauber halten | `Validate` und `MakeValid` |
+
+## Lesen und Schreiben
+
+`SpatialNET.IO` liest und schreibt WKT, WKB (ISO und EWKB, mit Z und M) und GeoJSON. Jedes `Read` nimmt optional eine Factory: Übergeben Sie Ihre, und was Sie lesen, ist schon eine Host-Geometrie, ohne Umwandlungsschritt. Anwendungsfälle stehen in den [Rezepten](rezepte.md).
+
+## Checkliste
+
+- Die Host-Geometrieklassen implementieren die Interfaces; `PointCount`, `RingCount` und die Indexer sind billig (sie werden in Schleifen aufgerufen).
+- `IPoint3D` nur dort, wo Z echt ist; `IPointM` nur dort, wo „kein M“ von 0 unterscheidbar ist.
+- Eine Factory, die Ihre Klassen erzeugt, thread-sicher ist, ihre Puffer kopiert und für leere Eingabe leere Geometrien erzeugt.
+- `GeometryFactory.Default` einmal beim Start gesetzt.
+- Koordinaten in einem projizierten System zum Messen; `Precision.DefaultGridSize` gesetzt, wenn Ihre Daten eine natürliche Auflösung haben.
+- `Prepare()` und `SpatialIndex<T>` dort, wo dieselbe Geometrie oder Menge wiederholt abgefragt wird.
+- Die Fremd-Geometrie-Tests des Repositorys laufen gegen Ihre Klassen (nächster Abschnitt).
+
 ## Die Anbindung prüfen
 
 Im Testprojekt liegt eine absichtlich unbequeme, host-artige Implementierung (`tests/SpatialNET.Tests/Foreign/ForeignGeometries.cs`): klassenbasierte Indexer, Ringe ohne Schlusspunkt, Außenringe im Uhrzeigersinn, zusätzlich `IReadOnlyList<T>` und jeder Punkt als `IPoint3D` mit `Z = 0`. Jeder Fixture-Test läuft auch gegen sie, so fallen Annahmen über konkrete Typen auf ([ADR 0008](../adr/0008-teststrategie-fixtures-nts-orakel.de.md)). Sie ist ein gutes Vorbild dafür, wie ein echter Host aussieht.

@@ -4,6 +4,8 @@
   href: getting-started.md
 - name: Host integration
   href: host-integration.md
+- name: Cookbook
+  href: cookbook.md
 - name: Concepts
   href: concepts/
 - name: Glossary
