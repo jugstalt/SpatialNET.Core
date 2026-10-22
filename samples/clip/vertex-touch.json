@@ -1,0 +1,14 @@
+{
+  "name": "Zwei Teilflächen berühren sich in einem Punkt",
+  "tags": [
+    "vertex-touch",
+    "multi"
+  ],
+  "a": "MULTIPOLYGON (((0 0, 5 0, 5 5, 0 5, 0 0)), ((5 5, 10 5, 10 10, 5 10, 5 5)))",
+  "params": {
+    "minX": 2.5,
+    "minY": 2.5,
+    "maxX": 7.5,
+    "maxY": 7.5
+  }
+}

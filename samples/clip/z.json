@@ -1,0 +1,13 @@
+{
+  "name": "Polygon mit Höhen",
+  "tags": [
+    "z"
+  ],
+  "a": "POLYGON Z ((0 0 1, 10 0 2, 10 10 3, 0 10 4, 0 0 1))",
+  "params": {
+    "minX": 2.5,
+    "minY": 2.5,
+    "maxX": 7.5,
+    "maxY": 7.5
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Geometrie berührt den Rand nur",
+  "tags": [],
+  "a": "POLYGON ((10 0, 20 0, 20 10, 10 10, 10 0))",
+  "params": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 10,
+    "maxY": 10
+  }
+}

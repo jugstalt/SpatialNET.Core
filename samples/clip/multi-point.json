@@ -1,0 +1,13 @@
+{
+  "name": "Multipunkt",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTIPOINT ((0 0), (2 0), (2 6))",
+  "params": {
+    "minX": 0.5,
+    "minY": 1.5,
+    "maxX": 1.5,
+    "maxY": 4.5
+  }
+}

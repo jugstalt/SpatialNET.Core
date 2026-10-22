@@ -165,3 +165,9 @@ public sealed class ReverseAlgorithm() : PlaygroundAlgorithm("reverse", "Reverse
 public sealed class MakeValidAlgorithm() : PlaygroundAlgorithm("makeValid", "MakeValid", "Prüfung",
     [In.A(In.Any)], [P.FillRule, P.GridSize],
     (i, p, f, g) => i["a"].MakeValid(p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g));
+
+public sealed class ClipAlgorithm() : PlaygroundAlgorithm("clip", "Clip", "Overlay",
+    [In.A(In.Any)],
+    [new("minX", "Min X", "number", 0.0, "kbs"), new("minY", "Min Y", "number", 0.0, "kbs"),
+     new("maxX", "Max X", "number", 100.0, "kbs"), new("maxY", "Max Y", "number", 100.0, "kbs"), P.GridSize],
+    (i, p, f, g) => i["a"].Clip(new Envelope2D(p.Number("minX"), p.Number("minY"), p.Number("maxX"), p.Number("maxY")), f, p.OptionalNumber("gridSize") ?? g));

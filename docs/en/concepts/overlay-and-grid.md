@@ -89,6 +89,22 @@ var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Sel
 
 `UnionAll` exists for polygons (with a `FillRule`), polylines and multipoints, and for geometries of equal dimension in general. Each input is read under the fill rule as in `Union`, empty inputs are skipped, and mixed dimensions throw `NotSupportedException`. It orders the inputs by their envelopes and unites them in small groups, level by level, so that neighbours meet early. **All steps use one grid**, resolved once over all inputs, so the grouping can change the result only by about one grid cell. The same sequence always gives the identical result; a different order gives the same area up to that tolerance.
 
+## Clipping to a rectangle
+
+`Clip` cuts a geometry to a rectangle, the case of tiles and viewports ([ADR 0022](../../adr/0022-locate-envelope-helfer-und-clip.md)). It is the intersection with the **closed** rectangle (the border belongs to it), with two fast paths:
+
+```csharp
+var tile = new Envelope2D(0, 0, 256, 256);
+
+IPolygon2D inTile = parcel.Clip(tile);    // cut at the border
+IPolyline2D road = roadLine.Clip(tile);   // the parts inside or on the border
+IMultiPoint2D hits = points.Clip(tile);   // filtered, never rounded
+```
+
+- A geometry that lies **completely in the rectangle** is returned as a copy **without rounding** (a polygon as a normalised copy), and one that **does not meet it** gives an empty geometry. Only where the border cuts, the overlay runs and **only those results lie on the grid**.
+- Z and M are carried like in `Intersection`; the corners of the rectangle that become vertices have none.
+- A rectangle without area (zero width or height) gives an empty polygon or polyline; an invalid envelope (not finite, or `Min > Max`) throws.
+
 ## What else you should know
 
 - **Strict semantics.** Results are dimension-homogeneous. Touch and collapse remnants of lower dimension are dropped: two polygons that only touch along an edge intersect in an *empty polygon*, not in a line. Where a result type is not unique, the typed overloads fix it: polygon ∩ polygon is an `IPolygon2D`; polygon ∩ polyline and polyline ∩ polyline are `IPolyline2D` (overlaps only, pure crossing points are dropped); point or multipoint ∩ anything is an `IMultiPoint2D`. `Difference` returns the type of the first operand. `Union` and `SymDifference` exist only for operands of equal dimension.

@@ -41,6 +41,13 @@ public static class Constructions
     {
         ArgumentNullException.ThrowIfNull(line);
         var f = GeometryFactory.Resolve(factory);
+        var boundary = LineBoundary(line);
+        return f.CreateMultiPoint(GeometryAccess.Restrict(boundary, f), line);
+    }
+
+    /// <summary>The mod-2 boundary of a polyline: the end points that occur an odd number of times, in order of first occurrence.</summary>
+    internal static Coordinate[] LineBoundary(IPolyline2D line)
+    {
         var order = new List<(double X, double Y)>();
         var ends = new Dictionary<(double X, double Y), (Coordinate Point, int Count)>();
         for (int i = 0; i < line.PathCount; i++)
@@ -66,8 +73,7 @@ public static class Constructions
             }
         }
 
-        var boundary = order.Where(k => ends[k].Count % 2 == 1).Select(k => ends[k].Point).ToArray();
-        return f.CreateMultiPoint(GeometryAccess.Restrict(boundary, f), line);
+        return order.Where(k => ends[k].Count % 2 == 1).Select(k => ends[k].Point).ToArray();
     }
 
     /// <summary>

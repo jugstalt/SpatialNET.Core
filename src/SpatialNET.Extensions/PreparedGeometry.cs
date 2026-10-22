@@ -42,6 +42,23 @@ public sealed class PreparedGeometry
     /// <summary>The snapshot of the prepared geometry.</summary>
     public IGeometry2D Geometry { get; }
 
+    /// <summary>
+    /// Like <see cref="Locations.Locate(IGeometry2D, Coordinate)"/>, but for many points against the same geometry: a polygon uses the
+    /// segment index (ADR 0022).
+    /// </summary>
+    /// <param name="point">The point; its coordinates must be finite.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The coordinates of <paramref name="point"/> are not finite.</exception>
+    public Location Locate(Coordinate point)
+    {
+        Locations.EnsureFinite(point);
+        if (_isEmpty || !_envelope.Contains(point))
+        {
+            return Location.Outside;
+        }
+
+        return _isArea ? LocateInArea(point) : Locations.LocateCore(Geometry, point);
+    }
+
     /// <summary>Like <see cref="Relations.Intersects"/>.</summary>
     /// <param name="other">The other geometry.</param>
     public bool Intersects(IGeometry2D other) => !Disjoint(other);

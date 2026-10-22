@@ -1,7 +1,5 @@
 namespace SpatialNET.Internal;
 
-internal enum Location { Outside, Boundary, Inside }
-
 /// <summary>Basic computation on rings and paths.</summary>
 internal static class Rings
 {

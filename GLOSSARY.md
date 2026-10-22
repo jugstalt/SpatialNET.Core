@@ -91,6 +91,14 @@ _Avoid_: Parallele, Versatzlinie, Offset-Linie
 Die Regel, nach der ein Algorithmus aus der Windungszahl eines Punktes entscheidet, ob er zur Fläche einer Eingabe gehört (EvenOdd, NonZero, Positive, Negative).
 _Avoid_: Fill-Mode, Polygon-Regel
 
+**Lage**:
+Die Stellung eines Punktes zu einer Geometrie: im Inneren, auf dem Rand oder außerhalb.
+_Avoid_: Position, Location
+
+**Zuschneiden**:
+Das Abschneiden einer Geometrie an einem Rechteck; der Rand des Rechtecks gehört zum Ergebnis.
+_Avoid_: Clippen, Ausschneiden
+
 **Gültig machen**:
 Das Reparieren einer ungültigen Geometrie: Ein Polygon wird nach der Even-Odd-Regel neu aufgebaut, seine Fläche bleibt dabei erhalten.
 _Avoid_: Fixen, Bereinigen

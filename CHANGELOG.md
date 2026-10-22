@@ -13,6 +13,9 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- `Locate` and the public `Location` enum (ADR 0022): where a point lies relative to a geometry (inside, boundary, outside), exact like the predicates; also `PreparedGeometry.Locate`.
+- `Clip` (ADR 0022): a geometry cut to a closed rectangle, with fast paths (completely inside: a copy without rounding, no contact: empty). Playground entry.
+- Helpers on `Envelope2D` (`Intersects`, `Contains`, `Union`, `Intersection`, `Expand`, `Center`) and `Envelope2D.ToPolygon`.
 - `SpatialIndex<T>.Join` and `SelfJoin` (ADR 0021): all pairs of two indexes, or of different entries within one, whose envelopes meet (optionally widened by a distance), found by walking the trees together. `SelfJoin` returns every unordered pair once.
 - `MakeValid` (ADR 0020): repairs a polygon by even-odd normalisation through the overlay core (not the OGC `ST_MakeValid`), and cleans polylines and points of non-finite and duplicate points. Playground entry.
 

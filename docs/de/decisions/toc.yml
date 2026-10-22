@@ -40,3 +40,5 @@
   href: ../../adr/0020-makevalid-even-odd-normalisierung.de.md
 - name: "0021 Spatial Join: Paare zweier Indizes im gemeinsamen Durchlauf, nur Envelopes"
   href: ../../adr/0021-spatial-join-doppelbaum-nur-vorfilter.de.md
+- name: "0022 Locate, Envelope-Helfer und Rechteck-Clip"
+  href: ../../adr/0022-locate-envelope-helfer-und-clip.de.md

@@ -1,0 +1,11 @@
+{
+  "name": "Punkt",
+  "tags": [],
+  "a": "POINT (3 4)",
+  "params": {
+    "minX": 3.5,
+    "minY": 4.5,
+    "maxX": 4.5,
+    "maxY": 5.5
+  }
+}

@@ -89,6 +89,22 @@ var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Sel
 
 `UnionAll` gibt es für Polygone (mit `FillRule`), Polylinien und Multipunkte sowie allgemein für Geometrien gleicher Dimension. Jede Eingabe wird wie bei `Union` unter der Füllregel gelesen, leere Eingaben werden übersprungen, gemischte Dimensionen werfen `NotSupportedException`. Die Eingaben werden nach ihren Envelopes geordnet und in kleinen Gruppen Ebene für Ebene vereinigt, damit sich Nachbarn früh treffen. **Alle Schritte nutzen ein Gitter**, das einmal über alle Eingaben aufgelöst wird; die Gruppierung kann das Ergebnis deshalb nur um etwa eine Gitterzelle verändern. Dieselbe Folge liefert immer das identische Ergebnis; eine andere Reihenfolge liefert dieselbe Fläche bis auf diese Toleranz.
 
+## Zuschneiden auf ein Rechteck
+
+`Clip` schneidet eine Geometrie auf ein Rechteck zu, der Fall von Kacheln und Ausschnitten ([ADR 0022](../../adr/0022-locate-envelope-helfer-und-clip.de.md)). Es ist der Schnitt mit dem **geschlossenen** Rechteck (der Rand gehört dazu), mit zwei Schnellpfaden:
+
+```csharp
+var tile = new Envelope2D(0, 0, 256, 256);
+
+IPolygon2D inTile = parcel.Clip(tile);    // am Rand zugeschnitten
+IPolyline2D road = roadLine.Clip(tile);   // die Teile innen oder auf dem Rand
+IMultiPoint2D hits = points.Clip(tile);   // gefiltert, nie gerundet
+```
+
+- Eine Geometrie, die **vollständig im Rechteck** liegt, kommt als Kopie **ohne Runden** zurück (ein Polygon als normalisierte Kopie), und eine, die es **nicht trifft**, ergibt eine leere Geometrie. Nur wo der Rand schneidet, läuft der Overlay, und **nur diese Ergebnisse liegen auf dem Gitter**.
+- Z und M werden wie bei `Intersection` mitgeführt; die Ecken des Rechtecks, die zu Stützpunkten werden, haben keines.
+- Ein Rechteck ohne Fläche (Breite oder Höhe null) ergibt ein leeres Polygon bzw. eine leere Polylinie; eine ungültige Envelope (nicht endlich oder `Min > Max`) wirft.
+
 ## Was du sonst noch wissen solltest
 
 - **Strikte Semantik.** Ergebnisse sind dimensionshomogen. Berührungs- und Kollapsreste niedrigerer Dimension fallen weg: Zwei Polygone, die sich nur an einer Kante berühren, schneiden sich in einem *leeren Polygon*, nicht in einer Linie. Wo der Ergebnistyp nicht eindeutig wäre, legen ihn die typisierten Overloads fest: Polygon ∩ Polygon ist ein `IPolygon2D`; Polygon ∩ Polylinie und Polylinie ∩ Polylinie sind `IPolyline2D` (nur Überlappungen, reine Kreuzungspunkte fallen weg); Punkt oder Multipunkt ∩ beliebig ist ein `IMultiPoint2D`. `Difference` liefert den Typ des ersten Operanden. `Union` und `SymDifference` gibt es nur für Operanden gleicher Dimension.

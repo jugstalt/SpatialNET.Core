@@ -1,0 +1,11 @@
+{
+  "name": "Das Rechteck trifft die Geometrie nicht",
+  "tags": [],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (3 3, 3 7, 7 7, 7 3, 3 3))",
+  "params": {
+    "minX": 50,
+    "minY": 50,
+    "maxX": 60,
+    "maxY": 60
+  }
+}

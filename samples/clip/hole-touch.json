@@ -1,0 +1,13 @@
+{
+  "name": "Loch berührt den Außenring",
+  "tags": [
+    "hole-touch"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (0 5, 5 2, 5 8, 0 5))",
+  "params": {
+    "minX": 2.5,
+    "minY": 2.5,
+    "maxX": 7.5,
+    "maxY": 7.5
+  }
+}

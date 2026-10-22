@@ -1,0 +1,13 @@
+{
+  "name": "Vertex im ULP-Bereich neben der Kante",
+  "tags": [
+    "near-coincident"
+  ],
+  "a": "POLYGON ((0 0, 10 0, 10.000000000001 5, 10 10, 0 10, 0 0))",
+  "params": {
+    "minX": 2.5,
+    "minY": 2.5,
+    "maxX": 7.5,
+    "maxY": 7.5
+  }
+}

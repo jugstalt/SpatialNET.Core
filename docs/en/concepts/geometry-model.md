@@ -54,6 +54,26 @@ An empty geometry has 0 points, paths or rings. It is a valid argument everywher
 - `Centroid()` is `null`; `Distance` to an empty geometry is `NaN` (a deliberate deviation from NetTopologySuite, which returns 0 and so makes "touching" and "nothing there" indistinguishable).
 - For predicates, only `Disjoint` is true when either geometry is empty.
 
+## Where is a point? Locate
+
+`Locate` tells where a point lies relative to a geometry: `Location.Inside`, `Location.Boundary` or `Location.Outside` ([ADR 0022](../../adr/0022-locate-envelope-helfer-und-clip.md)). It is exact, like the predicates, and agrees with them: for a polygon, `Inside` is `Contains`, `Outside` is `Disjoint`, and `Boundary` is the rest of `Intersects`.
+
+```csharp
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 20, 0 20, 0 0), (5 5, 5 15, 15 15, 15 5, 5 5))");
+
+Location a = parcel.Locate(new Coordinate(2, 2));    // Inside
+Location b = parcel.Locate(new Coordinate(0, 10));   // Boundary
+Location c = parcel.Locate(new Coordinate(10, 10));  // Outside: in the hole
+```
+
+- **Polygon:** even-odd over all rings; a hole is outside, every ring (also of a hole) is boundary. **Polyline:** boundary at an end point by the mod-2 rule, inside elsewhere on the line. **Points:** inside if equal, they have no boundary. An empty geometry is outside.
+- For many points against the same geometry, `geometry.Prepare().Locate(point)` uses a segment index.
+- A point with a `NaN` or infinite coordinate throws `ArgumentOutOfRangeException`.
+
+## Envelopes
+
+`Envelope2D` has helpers for the arithmetic every host writes itself: `Intersects`, `Contains` (an envelope or a point; the border counts), `Union`, `Intersection`, `Expand` (negative shrinks), `Center`. An empty envelope meets nothing and contains nothing. `ToPolygon(factory)` turns an envelope into a rectangle polygon.
+
 ## Measures
 
 `Area`, `Length`, `Envelope`, `Centroid` and `Distance` are extension methods ([ADR 0012](../../adr/0012-api-signaturen-typisierte-overloads.md)). `Area` exists for polygons, `Length` for polylines and polygons (the perimeter); the general `IGeometry2D` overloads return 0 when a measure does not fit the dimension. `Centroid` is returned as a `Coordinate?` value without Z, not as a geometry, so no factory is needed.

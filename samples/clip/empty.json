@@ -1,0 +1,13 @@
+{
+  "name": "Leeres Polygon",
+  "tags": [
+    "empty"
+  ],
+  "a": "POLYGON EMPTY",
+  "params": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 1,
+    "maxY": 1
+  }
+}

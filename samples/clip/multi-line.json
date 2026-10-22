@@ -1,0 +1,13 @@
+{
+  "name": "Zwei Pfade",
+  "tags": [
+    "multi"
+  ],
+  "a": "MULTILINESTRING ((0 0, 3 4), (10 10, 10 20))",
+  "params": {
+    "minX": 2.5,
+    "minY": 5.0,
+    "maxX": 7.5,
+    "maxY": 15.0
+  }
+}

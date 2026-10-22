@@ -1,0 +1,13 @@
+{
+  "name": "Mit M-Werten (XY wie ohne M)",
+  "tags": [
+    "m"
+  ],
+  "a": "POLYGON ZM ((0 0 1 0, 10 0 2 10, 10 10 3 30, 0 10 4 20, 0 0 1 0))",
+  "params": {
+    "minX": 2.5,
+    "minY": 2.5,
+    "maxX": 7.5,
+    "maxY": 7.5
+  }
+}

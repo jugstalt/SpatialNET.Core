@@ -54,6 +54,26 @@ Eine leere Geometrie hat 0 Punkte, Pfade bzw. Ringe. Sie ist überall ein gülti
 - `Centroid()` ist `null`; `Distance` zu einer leeren Geometrie ist `NaN` (eine bewusste Abweichung von NetTopologySuite, das 0 liefert und damit „berührt sich“ und „nichts da“ verwechselbar macht).
 - Bei Prädikaten ist nur `Disjoint` wahr, wenn eine der Geometrien leer ist.
 
+## Wo liegt ein Punkt? Locate
+
+`Locate` sagt, wo ein Punkt relativ zu einer Geometrie liegt: `Location.Inside`, `Location.Boundary` oder `Location.Outside` ([ADR 0022](../../adr/0022-locate-envelope-helfer-und-clip.de.md)). Es ist exakt wie die Prädikate und stimmt mit ihnen überein: Bei einem Polygon ist `Inside` gleich `Contains`, `Outside` gleich `Disjoint`, und `Boundary` ist der Rest von `Intersects`.
+
+```csharp
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 20, 0 20, 0 0), (5 5, 5 15, 15 15, 15 5, 5 5))");
+
+Location a = parcel.Locate(new Coordinate(2, 2));    // Inside
+Location b = parcel.Locate(new Coordinate(0, 10));   // Boundary
+Location c = parcel.Locate(new Coordinate(10, 10));  // Outside: im Loch
+```
+
+- **Polygon:** Even-Odd über alle Ringe; ein Loch ist außen, jeder Ring (auch der eines Lochs) ist Rand. **Polylinie:** Rand an einem Endpunkt nach der Mod-2-Regel, sonst innen auf der Linie. **Punkte:** innen, wenn gleich, sie haben keinen Rand. Eine leere Geometrie ist außen.
+- Für viele Punkte gegen dieselbe Geometrie nutzt `geometry.Prepare().Locate(point)` einen Segmentindex.
+- Ein Punkt mit `NaN` oder unendlicher Koordinate wirft `ArgumentOutOfRangeException`.
+
+## Envelopes
+
+`Envelope2D` hat Helfer für die Arithmetik, die jeder Host selbst schreibt: `Intersects`, `Contains` (eine Envelope oder ein Punkt; der Rand zählt), `Union`, `Intersection`, `Expand` (negativ schrumpft), `Center`. Eine leere Envelope trifft nichts und enthält nichts. `ToPolygon(factory)` macht aus einer Envelope ein Rechteck-Polygon.
+
 ## Maße
 
 `Area`, `Length`, `Envelope`, `Centroid` und `Distance` sind Extension-Methoden ([ADR 0012](../../adr/0012-api-signaturen-typisierte-overloads.de.md)). `Area` gibt es für Polygone, `Length` für Polylinien und Polygone (der Umfang); die allgemeinen Overloads auf `IGeometry2D` liefern 0, wenn das Maß nicht zur Dimension passt. `Centroid` kommt als Wert `Coordinate?` ohne Z zurück, nicht als Geometrie, braucht also keine Factory.

@@ -68,6 +68,28 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void LocateAndClip()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 20, 0 20, 0 0), (5 5, 5 15, 15 15, 15 5, 5 5))");
+
+        // --- snippet: locate
+        Location a = parcel.Locate(new Coordinate(2, 2));    // Inside
+        Location b = parcel.Locate(new Coordinate(0, 10));   // Boundary
+        Location c = parcel.Locate(new Coordinate(10, 10));  // Outside: in the hole
+        // --- end
+
+        // --- snippet: clip
+        var tile = new Envelope2D(0, 0, 10, 10);
+
+        IPolygon2D inTile = parcel.Clip(tile);    // cut at the border
+        // --- end
+
+        Assert.Equal((Location.Inside, Location.Boundary, Location.Outside), (a, b, c));
+        Assert.Equal(75, inTile.Area(), 6);   // 10 x 10 minus the part of the hole (5..10 x 5..10)
+    }
+
+    [Fact]
     public void SpatialJoin()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

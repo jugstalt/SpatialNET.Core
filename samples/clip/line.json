@@ -1,0 +1,11 @@
+{
+  "name": "Linie",
+  "tags": [],
+  "a": "LINESTRING (0 0, 3 4, 3 10)",
+  "params": {
+    "minX": 0.75,
+    "minY": 2.5,
+    "maxX": 2.25,
+    "maxY": 7.5
+  }
+}

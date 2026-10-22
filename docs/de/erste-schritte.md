@@ -94,7 +94,8 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 
 | Bereich | Methoden (Extension-Methoden im Namespace `SpatialNET`) |
 |---|---|
-| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference` |
+| Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference`, `Clip` |
+| Lage eines Punktes | `Locate` (`Location`), auch auf `PreparedGeometry` |
 | Abgeleitete Geometrien | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Prädikate | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest`, `Join`, `SelfJoin` |

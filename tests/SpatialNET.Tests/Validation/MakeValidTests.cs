@@ -8,6 +8,7 @@ using SpatialNET.IO;
 using SpatialNET.Tests.Fixtures;
 using SpatialNET.Tests.MValues;
 using SpatialNET.Tests.Oracle;
+using NtsLocation = NetTopologySuite.Geometries.Location;
 using NtsPolygon = NetTopologySuite.Geometries.Polygon;
 
 namespace SpatialNET.Tests.Validation;
@@ -40,7 +41,7 @@ internal static class EvenOdd
         foreach (var face in polygonizer.GetPolygons())
         {
             var point = face.InteriorPoint.Coordinate;
-            int containing = rings.Count(r => RayCrossingCounter.LocatePointInRing(point, r.Coordinates) == Location.Interior);
+            int containing = rings.Count(r => RayCrossingCounter.LocatePointInRing(point, r.Coordinates) == NtsLocation.Interior);
             if (containing % 2 == 1)
             {
                 area += face.Area;

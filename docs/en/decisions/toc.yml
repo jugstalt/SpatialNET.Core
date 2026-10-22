@@ -40,3 +40,5 @@
   href: ../../adr/0020-makevalid-even-odd-normalisierung.md
 - name: "0021 Spatial join: pairs of two indexes by a joint walk, envelopes only"
   href: ../../adr/0021-spatial-join-doppelbaum-nur-vorfilter.md
+- name: "0022 Locate, envelope helpers and rectangle clip"
+  href: ../../adr/0022-locate-envelope-helfer-und-clip.md
