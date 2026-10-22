@@ -9,7 +9,7 @@ SpatialNET bekommt **`UnionAll`**, die Vereinigung vieler Geometrien (das „Dis
 - **Ort:** `UnionAll` in der statischen Klasse `Overlays`, `SpatialNET.Extensions`, Namespace `SpatialNET`. Kein neues Paket. Für die Package Validation ist das nur eine Ergänzung.
 - **API** (Extension-Methoden; Parameter wie bei `Union`, ADR 0012: Pflichtparameter, dann `fillRule`, `factory`, `gridSize`):
   - `UnionAll(this IEnumerable<IPolygon2D>, FillRule fillRule = EvenOdd, …)` liefert `IPolygon2D`.
-  - `UnionAll(this IEnumerable<IPolyline2D>, …)` liefert `IPolyline2D` (genodet und zu maximalen Pfaden verbunden, wie `Union`). `UnionAll(this IEnumerable<IMultiPoint2D>, …)` liefert `IMultiPoint2D`.
+  - `UnionAll(this IEnumerable<IPolyline2D>, …)` liefert `IPolyline2D` (genodet wie `Union`: Ein Pfad wird dort getrennt, wo verschiedene Eingabelinien sich treffen oder enden). `UnionAll(this IEnumerable<IMultiPoint2D>, …)` liefert `IMultiPoint2D`.
   - `UnionAll(this IEnumerable<IGeometry2D>, FillRule, …)` liefert `IGeometry2D` und akzeptiert wie das binäre `Union` nur Eingaben **gleicher Dimension** (Punkte und Multipunkte zählen als eine Dimension); gemischte Dimensionen werfen `NotSupportedException`.
 - **Eingaben:**
   - Jede Eingabe wird einzeln unter `fillRule` (Standard EvenOdd) gelesen und dann vereinigt, genau wie `Union` seine Operanden liest. Bei einer anderen Füllregel als EvenOdd wird zuerst jede Eingabe einmal unter dieser Regel normalisiert, und die Gruppen werden unter EvenOdd auf diesen gültigen Polygonen vereinigt; so bleibt `FillRule.Negative`, das Außenringe im Uhrzeigersinn erwartet, über die Schritte hinweg korrekt, denn Zwischenergebnisse sind nach ADR 0003 gegen den Uhrzeigersinn orientiert.

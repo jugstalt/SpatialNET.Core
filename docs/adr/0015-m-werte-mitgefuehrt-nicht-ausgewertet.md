@@ -14,7 +14,7 @@ SpatialNET gets **M values** (a measure attached to a vertex, for example the di
 - **Interpolation:**
   - At a new vertex, M comes from the **source segment** of the result edge, linearly by the parameter along it, exactly as Z does in the noder. If several edges meet in one grid pixel, the first one in the noder's deterministic order wins.
   - M is interpolated **only if both ends of the segment have M**. Otherwise the new vertex has no M. Nothing is guessed, and 0 is never substituted.
-  - Original vertices keep their M, even if the other end of the segment has none (the noder takes the segment's own end points' M directly). Z still follows the older rule of ADR 0005 and is not changed by this ADR.
+  - Original vertices keep their M, even if the other end of the segment has none (the noder takes the segment's own end points' M directly). Z follows the same rule: since then, the end points of a segment keep their own Z as well (before, a vertex lost its Z if the other end of its only segment had none).
 - **Algorithms:** overlays (`Intersection`, `Union`, `Difference`, `SymDifference`), `Cut`, `Simplify` and `OffsetCurve` carry M like Z. `Buffer` and `ConvexHull` produce no M, just as `Buffer` produces no Z (ADR 0006). `Centroid` returns a `Coordinate?` without M (as without Z, ADR 0012). Predicates and measures ignore M.
 - **IO:** WKT reads and writes `M` and `ZM` (`POINT M (1 2 3)`, `POINT ZM (1 2 3 4)`). GeoJSON stays without M, so that exports remain standard (RFC 7946); whoever needs M uses WKT and, later, WKB.
 - **Tests (ADR 0008):** the NTS oracle does not interpolate M in overlays, so M is not checked against it. Instead:

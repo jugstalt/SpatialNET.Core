@@ -91,7 +91,7 @@ public static partial class Overlays
     public static IPolygon2D Union(this IPolygon2D a, IPolygon2D b, FillRule fillRule = FillRule.EvenOdd, IGeometryFactory? factory = null, double? gridSize = null) =>
         (IPolygon2D)OverlayRunner.Run(OverlayOp.Union, a, b, fillRule, factory, gridSize);
 
-    /// <summary>Union of two polylines, noded and joined into maximal paths.</summary>
+    /// <summary>Union of two polylines, noded; a path is cut where different input lines meet or end, and continues through a node only where a single input line does.</summary>
     /// <param name="a">The first polyline.</param>
     /// <param name="b">The second polyline.</param>
     /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>

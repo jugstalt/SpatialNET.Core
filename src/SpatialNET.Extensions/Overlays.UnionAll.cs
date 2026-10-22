@@ -26,7 +26,7 @@ public static partial class Overlays
     public static IPolygon2D UnionAll(this IEnumerable<IPolygon2D> polygons, FillRule fillRule = FillRule.EvenOdd, IGeometryFactory? factory = null, double? gridSize = null) =>
         (IPolygon2D)UnionAllCore(Materialize(polygons, nameof(polygons)), 2, fillRule, factory, gridSize);
 
-    /// <summary>Union of many polylines, noded and joined into maximal paths (ADR 0018).</summary>
+    /// <summary>Union of many polylines, noded like <see cref="Union(IPolyline2D, IPolyline2D, IGeometryFactory?, double?)"/>: a path is cut where different input lines meet or end (ADR 0018).</summary>
     /// <param name="polylines">The polylines; empty ones are skipped.</param>
     /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
     /// <param name="gridSize">The grid size; <c>null</c> = cascade (global default, otherwise automatic from all inputs).</param>

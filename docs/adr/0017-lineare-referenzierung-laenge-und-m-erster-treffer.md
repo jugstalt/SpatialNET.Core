@@ -19,7 +19,7 @@ SpatialNET gets **linear referencing** on polylines: a position on a line is add
   | `SubstringByM(double fromM, double toM, factory)` | `IPolyline2D` | the piece between the first hits of two M values |
 
   `Project` and `ProjectToM` also exist for `IPoint2D`, which only converts. There are no `IGeometry2D` overloads: the operations are defined on lines, and the boundary of a polygon is not a line here.
-- **Position along the line:** the planar length, the same as `Length()`. Z does not take part. The paths of a polyline are **laid end to end in their order** (cumulative length), with no connection assumed between the end of one path and the start of the next. Segments of length 0 contribute nothing.
+- **Position along the line:** the planar length, the same as `Length()`. Z does not take part. The paths of a polyline are **laid end to end in their order** (cumulative length), with no connection assumed between the end of one path and the start of the next. Segments of length 0 contribute nothing. A length that falls exactly on the boundary of two paths belongs to the **end of the earlier path** (so `Interpolate` returns that end, not the start of the next path).
 - **`Interpolate`:**
   - `distance` is **clamped** to `[0, length]`: negative gives the start, too large gives the end. There is no "negative counts from the end" as in JTS (a caller computes `length - d`).
   - A line whose points are all equal has length 0 and returns that point.

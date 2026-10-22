@@ -112,6 +112,18 @@ public class MPropagationTests
     }
 
     [Fact]
+    public void Without_Z_at_one_end_the_original_vertex_keeps_its_Z_and_the_new_vertex_has_none()
+    {
+        var line = MGeo.Polyline(new Coordinate(0, 0, 5), new Coordinate(10, 0));
+        var cutter = MGeo.Polyline(new Coordinate(5, -1), new Coordinate(5, 1));
+
+        var all = line.Cut(cutter, ZM).SelectMany(p => MGeo.Coordinates(p)).ToArray();
+
+        Assert.Equal(5, all.Single(c => c is { X: 0 }).Z);              // the vertex keeps its own Z
+        Assert.All(all.Where(c => c.X > 0), c => Assert.False(c.HasZ)); // never guessed, never 0
+    }
+
+    [Fact]
     public void Cut_interpolates_M_on_the_original_segment()
     {
         var line = MGeo.Polyline(new(0, 0, M: 0), new(10, 0, M: 100));

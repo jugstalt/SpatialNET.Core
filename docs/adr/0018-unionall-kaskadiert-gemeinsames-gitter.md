@@ -9,7 +9,7 @@ SpatialNET gets **`UnionAll`**, the union of many geometries (the "dissolve" of 
 - **Placement:** `UnionAll` in the static class `Overlays`, `SpatialNET.Extensions`, namespace `SpatialNET`. No new package. For the package validation this is an addition only.
 - **API** (extension methods; parameters as for `Union`, ADR 0012: required parameters, then `fillRule`, `factory`, `gridSize`):
   - `UnionAll(this IEnumerable<IPolygon2D>, FillRule fillRule = EvenOdd, …)` returns `IPolygon2D`.
-  - `UnionAll(this IEnumerable<IPolyline2D>, …)` returns `IPolyline2D` (noded and joined into maximal paths, like `Union`). `UnionAll(this IEnumerable<IMultiPoint2D>, …)` returns `IMultiPoint2D`.
+  - `UnionAll(this IEnumerable<IPolyline2D>, …)` returns `IPolyline2D` (noded like `Union`: a path is cut where different input lines meet or end). `UnionAll(this IEnumerable<IMultiPoint2D>, …)` returns `IMultiPoint2D`.
   - `UnionAll(this IEnumerable<IGeometry2D>, FillRule, …)` returns `IGeometry2D` and, like the binary `Union`, accepts only inputs of **equal dimension** (points and multipoints count as one dimension); mixed dimensions throw `NotSupportedException`.
 - **Inputs:**
   - Each input is read on its own under `fillRule` (default EvenOdd) and then united, exactly as `Union` reads its operands. For a fill rule other than EvenOdd, every input is normalised once under that rule first, and the groups are united under EvenOdd on these valid polygons; this keeps `FillRule.Negative`, which expects clockwise shells, correct across the steps, because intermediate results are counter-clockwise by ADR 0003.

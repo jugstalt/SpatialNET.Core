@@ -80,6 +80,16 @@ public class LinearReferencingTests
     }
 
     [Fact]
+    public void Interpolate_on_the_boundary_of_two_paths_returns_the_end_of_the_earlier_path()
+    {
+        var line = Lines([C(0, 0), C(10, 0)], [C(20, 0), C(20, 10)]);
+
+        Assert.Equal(C(10, 0), line.Interpolate(10));
+        Assert.Equal(20, line.Interpolate(10.001)!.Value.X, 1e-9); // just after: the next path
+        Assert.Equal(10, line.Project(C(10, 0)), 1e-12);
+    }
+
+    [Fact]
     public void Interpolate_of_empty_and_degenerate_lines()
     {
         Assert.Null(new MPolyline([]).Interpolate(1));

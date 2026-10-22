@@ -69,6 +69,28 @@ public class HullAndSimplifyContractTests
     }
 
     [Fact]
+    public void Hull_respects_SupportsZ_and_never_carries_M()
+    {
+        var points = SpatialNET.IO.Wkt.Read("MULTIPOINT ZM ((0 0 1 10), (4 0 2 20), (4 4 3 30), (0 4 4 40), (2 2 5 50))", F);
+
+        var withZ = Assert.IsAssignableFrom<IPolygon2D>(points.ConvexHull(F));
+        var flat = Assert.IsAssignableFrom<IPolygon2D>(points.ConvexHull(new SpatialNET.Imp.ImpGeometryFactory(supportsZ: false)));
+
+        Assert.All(Enumerable.Range(0, withZ[0].PointCount), i =>
+        {
+            var c = SpatialNET.Internal.GeometryAccess.ToCoordinate(withZ[0][i]);
+            Assert.True(c.HasZ);
+            Assert.False(c.HasM);
+        });
+        Assert.All(Enumerable.Range(0, flat[0].PointCount), i =>
+        {
+            var c = SpatialNET.Internal.GeometryAccess.ToCoordinate(flat[0][i]);
+            Assert.False(c.HasZ);
+            Assert.False(c.HasM);
+        });
+    }
+
+    [Fact]
     public void Hull_degenerates_like_JTS()
     {
         Assert.IsAssignableFrom<IPoint2D>(SpatialNET.IO.Wkt.Read("MULTIPOINT ((1 1), (1 1))", F).ConvexHull(F));

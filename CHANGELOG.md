@@ -4,6 +4,13 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Fixed
+
+- A vertex no longer loses its Z in overlays, `Cut`, `Simplify` and `OffsetCurve` when the other end of its only segment has none; the end points of a segment keep their own Z, as they already did for M.
+- `ConvexHull` now respects `SupportsZ` of the factory.
+- The documentation of `Union` and `UnionAll` for polylines no longer claims "maximal paths": a path is cut where different input lines meet or end (behaviour unchanged).
+- ADR 0017 and the concept page state that a length exactly on the boundary of two paths belongs to the end of the earlier path (behaviour unchanged).
+
 ### Added
 
 - `SpatialIndex<T>.Join` and `SelfJoin` (ADR 0021): all pairs of two indexes, or of different entries within one, whose envelopes meet (optionally widened by a distance), found by walking the trees together. `SelfJoin` returns every unordered pair once.

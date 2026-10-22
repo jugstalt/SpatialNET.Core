@@ -19,7 +19,7 @@ IPolyline2D piece = road.SubstringByM(150, 225); // von (5 0) über (10 0) nach 
 
 ## Längen
 
-Eine Länge ist die planare Länge entlang der Linie, dieselbe wie `Length()`; Z nimmt nicht teil. Die Pfade einer Polylinie werden **in ihrer Reihenfolge aneinandergelegt**, und zwischen dem Ende eines Pfades und dem Anfang des nächsten wird keine Verbindung angenommen.
+Eine Länge ist die planare Länge entlang der Linie, dieselbe wie `Length()`; Z nimmt nicht teil. Die Pfade einer Polylinie werden **in ihrer Reihenfolge aneinandergelegt**, und zwischen dem Ende eines Pfades und dem Anfang des nächsten wird keine Verbindung angenommen. Eine Länge genau auf der Grenze zweier Pfade gehört zum Ende des früheren Pfades.
 
 - `Interpolate` **begrenzt** die Distanz auf `[0, Länge]`. Eine negative Distanz liefert den Anfang (sie zählt nicht vom Ende, wie in JTS: dafür `Länge - d` verwenden).
 - `Project` liefert die Länge des nächsten Punktes. Sind mehrere Punkte gleich nah, etwa wo sich eine Linie kreuzt oder auf sich zurückläuft, gewinnt die **kleinste Länge**.

@@ -19,7 +19,7 @@ IPolyline2D piece = road.SubstringByM(150, 225); // from (5 0) via (10 0) to (10
 
 ## Lengths
 
-A length is the planar length along the line, the same as `Length()`; Z does not take part. The paths of a polyline are **laid end to end** in their order, and no connection is assumed between the end of one path and the start of the next.
+A length is the planar length along the line, the same as `Length()`; Z does not take part. The paths of a polyline are **laid end to end** in their order, and no connection is assumed between the end of one path and the start of the next. A length exactly on the boundary of two paths belongs to the end of the earlier path.
 
 - `Interpolate` **clamps** the distance to `[0, length]`. A negative distance gives the start (it does not count from the end, as in JTS: use `length - d`).
 - `Project` returns the length of the nearest point. If several points are equally near, for example where a line crosses itself or doubles back, the **smallest length** wins.

@@ -76,8 +76,10 @@ internal static class SnapRoundingNoder
                 }
 
                 double tz = Math.Clamp(t, 0, 1);
-                double z = p.HasZ && q.HasZ ? p.Z + tz * (q.Z - p.Z) : double.NaN;
-                // The segment's own end points keep their M even if the other end has none (ADR 0015).
+                // The segment's own end points keep their Z and M even if the other end has none (ADR 0005, ADR 0015).
+                double z = double.IsNegativeInfinity(t) ? p.Z
+                    : double.IsPositiveInfinity(t) ? q.Z
+                    : p.HasZ && q.HasZ ? p.Z + tz * (q.Z - p.Z) : double.NaN;
                 double m = double.IsNegativeInfinity(t) ? p.M
                     : double.IsPositiveInfinity(t) ? q.M
                     : p.HasM && q.HasM ? p.M + tz * (q.M - p.M) : double.NaN;

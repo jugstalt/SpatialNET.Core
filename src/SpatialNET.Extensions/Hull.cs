@@ -19,7 +19,7 @@ public static class Hull
         GeometryAccess.EnsureKnown(geometry, nameof(geometry));
         var f = GeometryFactory.Resolve(factory);
 
-        var points = GeometryAccess.AllPoints(geometry).Select(p => p.ToCoordinate() with { M = double.NaN })
+        var points = GeometryAccess.AllPoints(geometry).Select(p => GeometryAccess.Restrict(p.ToCoordinate() with { M = double.NaN }, f))
             .OrderBy(c => c.X).ThenBy(c => c.Y)
             .ToList();
         points = Distinct(points);
