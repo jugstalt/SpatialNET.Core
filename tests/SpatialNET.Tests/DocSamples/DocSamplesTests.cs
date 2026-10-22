@@ -83,6 +83,72 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void TransformationsAndChecks()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: transformations
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+        var track = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 4 4, 8 0)");
+
+        IPolygon2D moved = parcel.Translate(100, 50);                          // dx, dy
+        IPolygon2D turned = parcel.Rotate(Math.PI / 4, parcel.Centroid());     // radians, counter-clockwise
+        IPolygon2D mirrored = parcel.Scale(-1, 1);                             // still valid, rings oriented again
+
+        bool simple = track.IsSimple();                                        // true: no self-intersection
+        double apart = track.HausdorffDistance(Wkt.Read("LINESTRING(0 0, 8 0)")); // 4: the apex is 4 away
+        // --- end
+
+        Assert.Equal(new Envelope2D(100, 50, 110, 60), moved.Envelope());
+        Assert.Equal(100, turned.Area(), 6);
+        Assert.True(mirrored.IsValid());
+        Assert.True(simple);
+        Assert.Equal(4, apart, 9);
+    }
+
+    [Fact]
+    public void BoundingShapesAndLabel()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: shapes
+        var lot = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 10, 0 10, 0 0), (6 2, 14 2, 14 8, 6 8, 6 2))");
+
+        IGeometry2D box = lot.MinimumRotatedRectangle();   // the tightest rectangle, at any angle
+        Circle? around = lot.MinimumBoundingCircle();      // centre and radius of the smallest circle
+        IPolygon2D disc = around!.Value.ToPolygon();       // the same circle as a polygon
+        Coordinate? label = lot.Polylabel();               // inside, and as far from the edge as possible: not in the hole
+        // --- end
+
+        Assert.Equal(200, box.Area(), 6);
+        Assert.Equal(Math.Sqrt(500) / 2, around.Value.Radius, 9);
+        Assert.True(disc.IsValid());
+        Assert.Equal(Location.Inside, lot.Locate(label!.Value));
+    }
+
+    [Fact]
+    public void CleanUp()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: cleanup
+        var land = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 20, 0 20, 0 0), (2 2, 4 2, 4 4, 2 4, 2 2), (6 6, 12 6, 12 12, 6 12, 6 6))");
+
+        IPolygon2D solid = land.RemoveHoles();                // no holes at all
+        IPolygon2D lakes = land.RemoveHoles(minArea: 5);      // the pond of 4 goes, the lake of 36 stays
+        IGeometry2D big = land.RemoveSmallParts(100);         // parts of less than 100 are dropped (polygon: area, line: length)
+        IGeometry2D rounded = land.SnapToGrid(5);             // only rounds; the result may be invalid
+        IGeometry2D safe = land.ReducePrecision(5);           // rounds and keeps it valid
+        // --- end
+
+        Assert.Equal(400, solid.Area(), 9);
+        Assert.Equal(364, lakes.Area(), 9);
+        Assert.Equal(360, big.Area(), 9);
+        Assert.NotNull(rounded);
+        Assert.True(safe.IsValid());
+    }
+
+    [Fact]
     public void LocateAndClip()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

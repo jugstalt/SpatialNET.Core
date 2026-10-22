@@ -112,6 +112,24 @@ public class AlgorithmStressTests
     }
 
     [StressFact]
+    public void ReducePrecision_gives_a_valid_polygon_on_the_grid_and_RemoveHoles_keeps_it_valid()
+    {
+        DirtyPolygon.Run(polygon =>
+        {
+            double grid = 0.5;
+            var reduced = (IPolygon2D)polygon.ReducePrecision(grid, F);
+
+            Assert.True(reduced.IsValid(), RawWkt(polygon));
+            Assert.All(Internal.GeometryAccess.AllPoints(reduced), p =>
+                Assert.True(Math.Abs(p.X / grid - Math.Round(p.X / grid)) <= 1e-6 && Math.Abs(p.Y / grid - Math.Round(p.Y / grid)) <= 1e-6, RawWkt(polygon)));
+
+            var solid = reduced.RemoveHoles(factory: F);
+            Assert.True(solid.IsValid(), RawWkt(polygon));
+            Assert.True(solid.Area() >= reduced.Area() - 1e-9 * (1 + reduced.Area()), RawWkt(polygon));
+        });
+    }
+
+    [StressFact]
     public void MakeValid_gives_a_valid_polygon_with_the_even_odd_area()
     {
         DirtyPolygon.Run(polygon =>

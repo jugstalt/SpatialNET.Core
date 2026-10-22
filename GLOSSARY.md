@@ -99,6 +99,34 @@ _Avoid_: Position, Location
 Das Abschneiden einer Geometrie an einem Rechteck; der Rand des Rechtecks gehört zum Ergebnis.
 _Avoid_: Clippen, Ausschneiden
 
+**Einfach**:
+Eine Linie, die sich außer an ihren Endpunkten weder berührt noch kreuzt (`IsSimple`).
+_Avoid_: selbstüberschneidungsfrei, simple
+
+**Hausdorff-Distanz**:
+Wie weit zwei Formen als Ganzes auseinanderliegen: der größte Abstand eines Punkts der einen zur anderen, in beiden Richtungen (`HausdorffDistance`, diskret).
+_Avoid_: Fréchet-Distanz, Formabstand
+
+**Kleinstes umschließendes Rechteck**:
+Das Rechteck mit der kleinsten Fläche, das eine Geometrie enthält, in beliebigem Winkel (`MinimumRotatedRectangle`).
+_Avoid_: Mindestrechteck, Bounding Box (das ist die achsparallele Envelope)
+
+**Kleinster umschließender Kreis**:
+Der kleinste Kreis, der eine Geometrie enthält (`MinimumBoundingCircle`).
+_Avoid_: Umkreis, Bounding Circle
+
+**Pol der Unzugänglichkeit**:
+Der Punkt im Inneren eines Polygons mit dem größten Abstand zum Rand, ein guter Ort für eine Beschriftung (`Polylabel`).
+_Avoid_: Labelpunkt, Schwerpunkt (der kann außerhalb liegen)
+
+**Auf das Raster legen**:
+Das Runden jeder Koordinate auf den nächsten Rasterpunkt und sonst nichts; kann ein Polygon ungültig machen (`SnapToGrid`).
+_Avoid_: Quantisieren, Snappen
+
+**Genauigkeit reduzieren**:
+Snap Rounding auf ein Raster mit gültigem Ergebnis (`ReducePrecision`).
+_Avoid_: Präzisionsreduktion
+
 **Polygonisieren**:
 Das Umwandeln von Linien in die Flächen, die sie umschließen: Jede beschränkte Fläche der Anordnung der Linien wird zu einem Polygon.
 _Avoid_: Flächenbildung, Polygonizer

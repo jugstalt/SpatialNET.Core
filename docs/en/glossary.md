@@ -34,6 +34,13 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | grid size | Gitterweite | The spacing, in map units, of the grid to which an overlay rounds all coordinates of its result (`gridSize`) |
 | location | Lage | Where a point lies relative to a geometry: inside, on the boundary or outside (`Locate`, `Location`) |
 | clip | zuschneiden | Cutting a geometry to a rectangle (`Clip`) |
+| simple | einfach | A line that does not touch or cross itself except at its end points (`IsSimple`) |
+| Hausdorff distance | Hausdorff-Distanz | How far two shapes are apart as a whole: the greatest distance from a point of one to the other, in both directions (`HausdorffDistance`, discrete) |
+| minimum rotated rectangle | kleinstes umschließendes Rechteck | The rectangle of least area that contains a geometry, at any angle (`MinimumRotatedRectangle`) |
+| minimum bounding circle | kleinster umschließender Kreis | The smallest circle that contains a geometry (`MinimumBoundingCircle`) |
+| pole of inaccessibility | Pol der Unzugänglichkeit | The point inside a polygon that is farthest from its boundary, a good place for a label (`Polylabel`) |
+| snap to grid | auf das Raster legen | Rounding every coordinate to the nearest grid point and nothing else; may make a polygon invalid (`SnapToGrid`) |
+| reduce precision | Genauigkeit reduzieren | Snap rounding to a grid with a valid result (`ReducePrecision`) |
 | polygonize | polygonisieren | Turning lines into the areas they enclose: every bounded face of the arrangement of the lines becomes a polygon (`Polygonize`) |
 | line merge | Linien verbinden | Joining the paths of a polyline where exactly two path ends meet (`LineMerge`) |
 | make valid | gültig machen | Repairing an invalid geometry: a polygon by even-odd normalisation through the overlay core (`MakeValid`) |

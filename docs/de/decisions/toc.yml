@@ -46,3 +46,9 @@
   href: ../../adr/0023-linemerge-und-polygonize.de.md
 - name: "0024 PreparedGeometry thread-sicher, mit Distanz"
   href: ../../adr/0024-prepared-geometry-thread-sicher-und-distanz.de.md
+- name: "0025 Transformationen, Prüfungen und Hausdorff-Distanz"
+  href: ../../adr/0025-transformationen-pruefungen-und-hausdorff.de.md
+- name: "0026 Hüllformen und Beschriftungspunkt"
+  href: ../../adr/0026-huellformen-und-beschriftungspunkt.de.md
+- name: "0027 Bereinigen: Löcher, Kleinteile, Raster"
+  href: ../../adr/0027-bereinigen-loecher-kleinteile-raster.de.md

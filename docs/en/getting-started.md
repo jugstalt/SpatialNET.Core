@@ -101,8 +101,10 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest`, `Join`, `SelfJoin` |
 | Linear referencing | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Validity | `IsValid`, `Validate`, `MakeValid` |
-| Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
-| Constructions | `Boundary`, `Densify`, `Reverse`, `LineMerge` |
+| Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
+| Constructions | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle` |
+| Clean-up | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
+| Checks | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 The signatures, parameters and exceptions of every method are in the API reference, which is generated from the XML comments.

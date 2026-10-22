@@ -152,7 +152,7 @@ internal static class PolygonStructure
         return false; // deckungsgleicher Ring – ungültige Eingabe
     }
 
-    private static Coordinate[] Oriented(Coordinate[] closed, bool counterClockwise)
+    internal static Coordinate[] Oriented(Coordinate[] closed, bool counterClockwise)
     {
         bool isCcw = Rings.SignedArea(closed) > 0;
         if (isCcw == counterClockwise)

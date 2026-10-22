@@ -62,3 +62,20 @@ IPolygon2D valid = bowtie.MakeValid();  // zwei Dreiecke, gültig
 - **Polylinien** verlieren nicht endliche Punkte, aufeinanderfolgende doppelte Punkte und Pfade mit weniger als zwei verschiedenen Punkten; sich kreuzende Linien sind gültig. **Punkte** verlieren nicht endliche; Duplikate bleiben. Linien und Punkte werden nicht gerundet.
 - Das Ergebnis ist immer eine neue Geometrie aus der Factory, und `MakeValid(MakeValid(g))` ist bis auf das Gitter wieder dieselbe Geometrie (zweimal ausgeführt kann es eine Kante eines sehr dünnen Splitters um etwa eine Gitterzelle biegen).
 
+## Bereinigen
+
+Entfernen, was zu klein ist, und auf ein Raster runden ([ADR 0027](../../adr/0027-bereinigen-loecher-kleinteile-raster.de.md)):
+
+```csharp
+var land = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 20, 0 20, 0 0), (2 2, 4 2, 4 4, 2 4, 2 2), (6 6, 12 6, 12 12, 6 12, 6 6))");
+
+IPolygon2D solid = land.RemoveHoles();                // gar keine Löcher mehr
+IPolygon2D lakes = land.RemoveHoles(minArea: 5);      // der Teich mit 4 geht, der See mit 36 bleibt
+IGeometry2D big = land.RemoveSmallParts(100);         // Teile unter 100 entfallen (Polygon: Fläche, Linie: Länge)
+IGeometry2D rounded = land.SnapToGrid(5);             // rundet nur; das Ergebnis kann ungültig sein
+IGeometry2D safe = land.ReducePrecision(5);           // rundet und hält es gültig
+```
+
+- **`RemoveHoles(minArea)`** entfernt die Löcher unter `minArea` (Standard: alle). **`RemoveSmallParts(limit)`** entfernt Polygonteile nach ihrer Nettofläche (Außenring minus Löcher) und Polylinienpfade nach ihrer Länge; Punkte haben keine Größe.
+- **`SnapToGrid(gridSize)`** rundet X und Y auf das nächste Vielfache und legt zusammenfallende Stützpunkte zusammen; Pfade und Ringe, die zusammenfallen, entfallen. Es ist billig und vorhersagbar und **kann ein Polygon ungültig machen**.
+- **`ReducePrecision(gridSize)`** liefert ein **gültiges** Ergebnis auf dem Raster: Polygone über Even-Odd-`MakeValid`, Linien über `Union` (genodet, Doppelungen vereint), Multipunkte ohne Doppelungen.

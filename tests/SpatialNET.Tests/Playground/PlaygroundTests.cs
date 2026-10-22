@@ -26,6 +26,7 @@ public class PlaygroundCompletenessTests
         ["UnionAll"] = "Vereinigung vieler Geometrien (ADR 0018); der Playground kennt nur zwei Operanden A und B",
         ["InterpolateByM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
         ["ProjectToM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
+        ["Transform"] = "Nimmt eine Funktion als Parameter, die die Oberfläche nicht darstellt (ADR 0025); Translate, Scale und Rotate decken sie ab",
         ["SubstringByM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
     };
 

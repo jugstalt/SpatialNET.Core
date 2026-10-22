@@ -101,8 +101,10 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest`, `Join`, `SelfJoin` |
 | Lineare Referenzierung | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Gültigkeit | `IsValid`, `Validate`, `MakeValid` |
-| Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface` |
-| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge` |
+| Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
+| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle` |
+| Bereinigen | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
+| Formprüfungen | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
 Signaturen, Parameter und Exceptions jeder Methode stehen in der API-Referenz (Englisch), die aus den XML-Kommentaren generiert wird.

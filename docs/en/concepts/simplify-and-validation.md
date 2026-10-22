@@ -62,3 +62,20 @@ IPolygon2D valid = bowtie.MakeValid();  // two triangles, valid
 - **Polylines** lose non-finite points, consecutive duplicate points and paths with fewer than two distinct points; crossing lines are valid. **Points** lose non-finite ones; duplicates stay. Lines and points are not rounded.
 - The result is always a new geometry from the factory, and `MakeValid(MakeValid(g))` is the same geometry again up to the grid (running it twice can bend an edge of a very thin sliver by about one grid cell).
 
+## Clean-up
+
+Remove what is too small, round to a grid ([ADR 0027](../../adr/0027-bereinigen-loecher-kleinteile-raster.md)):
+
+```csharp
+var land = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 20, 0 20, 0 0), (2 2, 4 2, 4 4, 2 4, 2 2), (6 6, 12 6, 12 12, 6 12, 6 6))");
+
+IPolygon2D solid = land.RemoveHoles();                // no holes at all
+IPolygon2D lakes = land.RemoveHoles(minArea: 5);      // the pond of 4 goes, the lake of 36 stays
+IGeometry2D big = land.RemoveSmallParts(100);         // parts of less than 100 are dropped (polygon: area, line: length)
+IGeometry2D rounded = land.SnapToGrid(5);             // only rounds; the result may be invalid
+IGeometry2D safe = land.ReducePrecision(5);           // rounds and keeps it valid
+```
+
+- **`RemoveHoles(minArea)`** removes the holes smaller than `minArea` (default: all of them). **`RemoveSmallParts(limit)`** removes polygon parts by their net area (shell minus holes) and polyline paths by their length; points have no size.
+- **`SnapToGrid(gridSize)`** rounds X and Y to the nearest multiple and merges what falls together; paths and rings that collapse are dropped. It is cheap and predictable, and it **can make a polygon invalid**.
+- **`ReducePrecision(gridSize)`** gives a **valid** result on the grid: polygons through even-odd `MakeValid`, lines through `Union` (noded, duplicates merged), multipoints without duplicates.

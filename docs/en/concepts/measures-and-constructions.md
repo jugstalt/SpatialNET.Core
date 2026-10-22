@@ -26,3 +26,42 @@ IPolyline2D back = outline.Reverse();                        // the same line, b
 - **`Densify(maxSegmentLength)`** splits every longer segment into equal pieces no longer than the limit. The shape and all original vertices stay; Z and M of the new vertices are interpolated. Polygons stay valid. A limit so small that the result would exceed 50 million vertices throws.
 - **`LineMerge`** joins the paths of a polyline where exactly two path ends meet ([ADR 0023](../../adr/0023-linemerge-und-polygonize.md)); this is what `Union` of lines does not do. Equality of the end points is exact (no tolerance), a node where three or more ends meet keeps its paths apart, a cycle becomes one closed path, and with `directed: true` only end to start is joined. It does not node: crossing lines stay as they are (run `Union` first for that).
 - **`Reverse`** reverses every path and the order of the paths of a polyline. There is none for polygons, because their orientation is normalised ([ADR 0003](../../adr/0003-loecher-even-odd-ergebnisse-als-teilflaechen.md)).
+
+## Transformations and checks
+
+Moving, scaling and rotating, a few yes/no questions about the form of a geometry, and the Hausdorff distance ([ADR 0025](../../adr/0025-transformationen-pruefungen-und-hausdorff.md)):
+
+```csharp
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+var track = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 4 4, 8 0)");
+
+IPolygon2D moved = parcel.Translate(100, 50);                          // dx, dy
+IPolygon2D turned = parcel.Rotate(Math.PI / 4, parcel.Centroid());     // radians, counter-clockwise
+IPolygon2D mirrored = parcel.Scale(-1, 1);                             // still valid, rings oriented again
+
+bool simple = track.IsSimple();                                        // true: no self-intersection
+double apart = track.HausdorffDistance(Wkt.Read("LINESTRING(0 0, 8 0)")); // 4: the apex is 4 away
+```
+
+- **`Translate(dx, dy)`, `Scale(sx, sy, origin?)`, `Rotate(angle, origin?)`** change X and Y and keep Z and M. The origin is (0, 0) unless given; angles are radians, counter-clockwise; quarter turns are exact. A negative factor mirrors, and the rings of a polygon are oriented again, so it stays valid. **`Transform(Func<Coordinate, Coordinate>)`** maps every vertex through your function (it can make a polygon invalid if it is not a one-to-one map). There are overloads for each geometry kind.
+- **`IsSimple`** is the OGC definition: a line is simple if it does not touch or cross itself except at the end points; open paths may meet at their ends, the closing point of a ring may not be touched. Points and polygons are simple (use `IsValid` for areas). **`IsClosed`** and **`IsRing`** are for polylines: closed paths, and one closed, simple path of four points or more.
+- **`EqualsExact(a, b, tolerance = 0)`** compares coordinates **as given**, vertex by vertex, within the tolerance; a ring that starts elsewhere is different. For the same set of points use `EqualsTopo`.
+- **`HausdorffDistance(a, b, densifyFraction = 1)`** is the discrete Hausdorff distance: how far the shapes are apart as a whole (the largest distance from any vertex of one to the line work of the other, in both directions). A smaller fraction adds sample points along the segments and approaches the exact value from below. Polygons count by their rings.
+
+## Bounding shapes and a label point
+
+Three constructions for maps and layouts ([ADR 0026](../../adr/0026-huellformen-und-beschriftungspunkt.md)):
+
+```csharp
+var lot = Wkt.Read<IPolygon2D>("POLYGON((0 0, 20 0, 20 10, 0 10, 0 0), (6 2, 14 2, 14 8, 6 8, 6 2))");
+
+IGeometry2D box = lot.MinimumRotatedRectangle();   // the tightest rectangle, at any angle
+Circle? around = lot.MinimumBoundingCircle();      // centre and radius of the smallest circle
+IPolygon2D disc = around!.Value.ToPolygon();       // the same circle as a polygon
+Coordinate? label = lot.Polylabel();               // inside, and as far from the edge as possible: not in the hole
+```
+
+- **`MinimumRotatedRectangle`** is the rectangle of least area (not of least width), found with rotating calipers over the convex hull. A degenerate input gives a point or the line between the extreme points, as `ConvexHull` does.
+- **`MinimumBoundingCircle`** returns a `Circle` (centre and radius), `null` if the geometry is empty. `ToPolygon(factory, quadrantSegments)` makes an inscribed polygon from it.
+- **`Polylabel(polygon, tolerance?)`** is the pole of inaccessibility: the point inside that is farthest from the boundary, holes included, within the tolerance (default a thousandth of the larger side of the envelope). For a polygon of several parts it is the pole of the part with the largest circle.
+- A **concave hull** is not offered yet: there is no single definition, and the right variant depends on the use case.

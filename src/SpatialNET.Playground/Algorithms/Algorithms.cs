@@ -181,3 +181,67 @@ public sealed class LineMergeAlgorithm() : PlaygroundAlgorithm("lineMerge", "Lin
 public sealed class PolygonizeAlgorithm() : PlaygroundAlgorithm("polygonize", "Polygonize", "Overlay",
     [In.A(In.Lines, "Linien")], [P.GridSize],
     (i, p, f, g) => ((IPolyline2D)i["a"]).Polygonize(f, p.OptionalNumber("gridSize") ?? g).Cast<IGeometry2D>().ToList());
+
+// ---------- Transformationen, Prüfungen und Hausdorff (ADR 0025) ----------
+
+public sealed class TranslateAlgorithm() : PlaygroundAlgorithm("translate", "Translate", "Konstruktion",
+    [In.A(In.Any)],
+    [new("dx", "Verschiebung X", "number", 10.0, "kbs"), new("dy", "Verschiebung Y", "number", 5.0, "kbs")],
+    (i, p, f, _) => i["a"].Translate(p.Number("dx"), p.Number("dy"), f));
+
+public sealed class ScaleAlgorithm() : PlaygroundAlgorithm("scale", "Scale", "Konstruktion",
+    [In.A(In.Any)],
+    [new("sx", "Faktor X", "number", 2.0), new("sy", "Faktor Y", "number", 0.5),
+     new("originX", "Fixpunkt X", "number", 0.0, "kbs"), new("originY", "Fixpunkt Y", "number", 0.0, "kbs")],
+    (i, p, f, _) => i["a"].Scale(p.Number("sx"), p.Number("sy"), new Coordinate(p.Number("originX"), p.Number("originY")), f));
+
+public sealed class RotateAlgorithm() : PlaygroundAlgorithm("rotate", "Rotate", "Konstruktion",
+    [In.A(In.Any)],
+    [new("degrees", "Winkel (Grad, gegen den Uhrzeigersinn)", "number", 30.0),
+     new("originX", "Mittelpunkt X", "number", 0.0, "kbs"), new("originY", "Mittelpunkt Y", "number", 0.0, "kbs")],
+    (i, p, f, _) => i["a"].Rotate(p.Number("degrees") * Math.PI / 180, new Coordinate(p.Number("originX"), p.Number("originY")), f));
+
+public sealed class IsSimpleAlgorithm() : PlaygroundAlgorithm("isSimple", "IsSimple", "Prüfung", [In.A(In.Any)], [], (i, _, _, _) => i["a"].IsSimple());
+
+public sealed class IsClosedAlgorithm() : PlaygroundAlgorithm("isClosed", "IsClosed", "Prüfung", [In.A(In.Lines, "Linie")], [], (i, _, _, _) => ((IPolyline2D)i["a"]).IsClosed());
+
+public sealed class IsRingAlgorithm() : PlaygroundAlgorithm("isRing", "IsRing", "Prüfung", [In.A(In.Lines, "Linie")], [], (i, _, _, _) => ((IPolyline2D)i["a"]).IsRing());
+
+public sealed class EqualsExactAlgorithm() : PlaygroundAlgorithm("equalsExact", "EqualsExact", "Prädikate",
+    [In.A(In.Any, "A"), In.B(In.Any)], [new("tolerance", "Toleranz", "number", 0.0, "kbs")],
+    (i, p, _, _) => i["a"].EqualsExact(i["b"], p.Number("tolerance")));
+
+public sealed class HausdorffDistanceAlgorithm() : PlaygroundAlgorithm("hausdorffDistance", "HausdorffDistance", "Maße",
+    [In.A(In.Any, "A"), In.B(In.Any)], [new("densifyFraction", "Verdichtungsanteil (0–1]", "number", 1.0)],
+    (i, p, _, _) => i["a"].HausdorffDistance(i["b"], p.Number("densifyFraction")));
+
+// ---------- Hüllformen und Beschriftungspunkt (ADR 0026) ----------
+
+public sealed class MinimumRotatedRectangleAlgorithm() : PlaygroundAlgorithm("minimumRotatedRectangle", "MinimumRotatedRectangle", "Konstruktion",
+    [In.A(In.Any)], [], (i, _, f, _) => i["a"].MinimumRotatedRectangle(f));
+
+public sealed class MinimumBoundingCircleAlgorithm() : PlaygroundAlgorithm("minimumBoundingCircle", "MinimumBoundingCircle", "Konstruktion",
+    [In.A(In.Any)], [new("quadrantSegments", "Segmente je Viertelkreis", "int", 16)],
+    (i, p, f, _) => (object?)i["a"].MinimumBoundingCircle()?.ToPolygon(f, (int)p.Number("quadrantSegments")) ?? f.CreatePolygon([], null));
+
+public sealed class PolylabelAlgorithm() : PlaygroundAlgorithm("polylabel", "Polylabel", "Maße",
+    [In.A(In.Areas, "Polygon")], [new("tolerance", "Toleranz (leer = auto)", "number", null, "kbs")],
+    (i, p, _, _) => ((IPolygon2D)i["a"]).Polylabel(p.OptionalNumber("tolerance")));
+
+// ---------- Bereinigen (ADR 0027) ----------
+
+public sealed class RemoveHolesAlgorithm() : PlaygroundAlgorithm("removeHoles", "RemoveHoles", "Konstruktion",
+    [In.A(In.Areas, "Polygon")], [new("minArea", "Mindestfläche eines Lochs (leer = alle entfernen)", "number", null)],
+    (i, p, f, _) => ((IPolygon2D)i["a"]).RemoveHoles(p.OptionalNumber("minArea") ?? double.PositiveInfinity, f));
+
+public sealed class RemoveSmallPartsAlgorithm() : PlaygroundAlgorithm("removeSmallParts", "RemoveSmallParts", "Konstruktion",
+    [In.A(In.Any)], [new("minSize", "Mindestgröße (Fläche bzw. Länge)", "number", 10.0)],
+    (i, p, f, _) => i["a"].RemoveSmallParts(p.Number("minSize"), f));
+
+public sealed class SnapToGridAlgorithm() : PlaygroundAlgorithm("snapToGrid", "SnapToGrid", "Konstruktion",
+    [In.A(In.Any)], [new("gridSize", "Gitterweite", "number", 1.0, "kbs")],
+    (i, p, f, _) => i["a"].SnapToGrid(p.Number("gridSize"), f));
+
+public sealed class ReducePrecisionAlgorithm() : PlaygroundAlgorithm("reducePrecision", "ReducePrecision", "Konstruktion",
+    [In.A(In.Any)], [new("gridSize", "Gitterweite", "number", 1.0, "kbs")],
+    (i, p, f, _) => i["a"].ReducePrecision(p.Number("gridSize"), f));

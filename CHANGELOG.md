@@ -19,6 +19,9 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid` and `ReducePrecision` (ADR 0027): remove holes and parts below a size, round to a grid (may leave a polygon invalid), and reduce precision with a valid result. Playground entries for all four.
+- `MinimumRotatedRectangle`, `MinimumBoundingCircle` (with the value type `Circle`) and `Polylabel` (ADR 0026): the tightest rectangle and the smallest circle around a geometry, and the best place for a label in a polygon. Playground entries for all three. `ConcaveHull` is deferred.
+- `Translate`, `Scale`, `Rotate` and `Transform` (ADR 0025): coordinate transformations for every geometry kind, keeping Z and M and the orientation of polygon rings. `IsSimple`, `IsClosed`, `IsRing` and `EqualsExact`: checks about the form of a geometry. `HausdorffDistance`: the discrete Hausdorff distance. Playground entries for all of them except `Transform`.
 - `PreparedGeometry.Distance`, `IsWithinDistance` and `NearestPoints` (ADR 0024), with the same results as the unprepared methods.
 - `LineMerge` (ADR 0023): joins the paths of a polyline where exactly two path ends meet (exact, optionally directed). `Polygonize` (ADR 0023): the areas a polyline encloses, one polygon per bounded face, noded on the grid. Playground entries for both.
 - `Locate` and the public `Location` enum (ADR 0022): where a point lies relative to a geometry (inside, boundary, outside), exact like the predicates; also `PreparedGeometry.Locate`.
