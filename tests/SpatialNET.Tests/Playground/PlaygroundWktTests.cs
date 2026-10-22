@@ -119,6 +119,44 @@ public class PlaygroundWktTests(WebApplicationFactory<Program> factory) : IClass
         Assert.All(plain!, f => Assert.Null(f!["aWkt"]));
     }
 
+    private const string Line = "LINESTRING (0 0, 10 3)";
+
+    [Fact]
+    public async Task A_predicate_shows_the_distance_and_says_when_a_false_is_only_rounding()
+    {
+        // (3.3 0.99) is on the line mathematically, but its coordinates are rounded: the exact predicate says no
+        var (_, nearly) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (3.3 0.99)", b = Line }, local = true });
+        Assert.False(nearly["value"]!.GetValue<bool>());
+        Assert.InRange(nearly["distance"]!.GetValue<double>(), 1e-17, 1e-12);
+        Assert.True(nearly["nearlyTouching"]!.GetValue<bool>());
+        Assert.Null(nearly["withinTolerance"]);
+
+        // exactly on the line, and a vertex: true, distance 0, nothing to note
+        var (_, exact) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (5 1.5)", b = Line }, local = true });
+        Assert.True(exact["value"]!.GetValue<bool>());
+        Assert.Equal(0, exact["distance"]!.GetValue<double>());
+        Assert.False(exact["nearlyTouching"]!.GetValue<bool>());
+
+        var (_, far) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (5 5)", b = Line }, local = true });
+        Assert.False(far["value"]!.GetValue<bool>());
+        Assert.False(far["nearlyTouching"]!.GetValue<bool>());
+    }
+
+    [Fact]
+    public async Task The_tolerance_only_informs_and_never_changes_the_predicate()
+    {
+        var (_, within) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (3.3 0.99)", b = Line }, @params = new { tolerance = 1e-9 }, local = true });
+        Assert.False(within["value"]!.GetValue<bool>()); // still exact
+        Assert.True(within["withinTolerance"]!.GetValue<bool>());
+
+        var (_, outside) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (5 5)", b = Line }, @params = new { tolerance = 1.0 }, local = true });
+        Assert.False(outside["withinTolerance"]!.GetValue<bool>());
+
+        var (_, empty) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT EMPTY", b = Line }, local = true });
+        Assert.Null(empty["distance"]);
+        Assert.False(empty["nearlyTouching"]!.GetValue<bool>());
+    }
+
     [Fact]
     public void The_projection_keeps_Z_and_M()
     {

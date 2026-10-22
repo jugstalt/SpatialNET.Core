@@ -168,6 +168,52 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void PredicatesWithATolerance()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // two parcels with a boundary that is 4 mm off, and one that sticks out by 3 mm
+        var a = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
+        var b = Wkt.Read<IPolygon2D>("POLYGON((10.004 0, 20 0, 20 10, 10.004 10, 10.004 0))");
+
+        // --- snippet: tolerance
+        double t = 0.01;                                    // the tolerance, in the unit of your coordinates (here 1 cm)
+
+        bool intersects = a.IsWithinDistance(b, t);         // Intersects: closer than t
+        bool disjoint = !a.IsWithinDistance(b, t);          // Disjoint: farther than t
+        bool contains = a.Buffer(t).Contains(b);            // Contains: b is in a, up to t over the edge
+        bool within = b.Buffer(t).Contains(a);              // Within
+        bool covers = a.Buffer(t).Covers(b);                // Covers
+        bool coveredBy = b.Buffer(t).Covers(a);             // CoveredBy
+        bool touches = a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b);          // Touches (areas): they meet, and overlap by less than t
+        bool overlaps = a.Buffer(-t).Intersects(b.Buffer(-t))                             // Overlaps (areas): they overlap by more than t,
+            && !a.Buffer(t).Covers(b) && !b.Buffer(t).Covers(a);                          // and neither lies in the other
+        bool equal = a.HausdorffDistance(b) <= t;           // EqualsTopo: no vertex of one is farther than t from the other
+        // --- end
+
+        Assert.False(a.Intersects(b));   // the exact predicate says no ...
+        Assert.True(intersects);         // ... the tolerant one yes
+        Assert.False(disjoint);
+        Assert.True(touches);
+        Assert.False(overlaps);
+        Assert.False(contains);
+        Assert.False(equal);
+
+        var inner = Wkt.Read<IPolygon2D>("POLYGON((5 5, 10.003 5, 10.003 6, 5 6, 5 5))");
+        Assert.False(a.Contains(inner));
+        Assert.True(a.Buffer(0.01).Contains(inner));
+        Assert.True(inner.Buffer(0.01).Contains(Wkt.Read<IPolygon2D>("POLYGON((5.001 5.001, 6 5.001, 6 5.5, 5.001 5.5, 5.001 5.001))")));
+
+        var shifted = Wkt.Read<IPolygon2D>("POLYGON((0.004 0, 10.004 0, 10.004 10, 0.004 10, 0.004 0))");
+        Assert.False(a.EqualsTopo(shifted));
+        Assert.True(a.HausdorffDistance(shifted) <= 0.01);
+
+        var half = Wkt.Read<IPolygon2D>("POLYGON((5 0, 15 0, 15 10, 5 10, 5 0))");
+        Assert.True(a.Buffer(-0.01).Intersects(half.Buffer(-0.01)) && !a.Buffer(0.01).Covers(half) && !half.Buffer(0.01).Covers(a));
+        Assert.False(a.Buffer(-0.01).Intersects(b));
+    }
+
+    [Fact]
     public void LocateAndClip()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

@@ -16,6 +16,9 @@ Then open `http://localhost:5003`.
   a new algorithm needs only a descriptor, no frontend change.
 - **Usage:** Ctrl+K chooses the algorithm; draw inputs (target A/B), upload them as GeoJSON or pick an example
   from the bar. Computation runs 300 ms after every change. Examples without `crs` run local planar (`L.CRS.Simple`).
+- **Snapping and exactness:** drawing snaps to vertices and to segments (Leaflet-Geoman). A vertex is exact; a point snapped onto a
+  segment is only close to it, within rounding. Predicates compute exactly, so such a point can give `false`; every predicate shows the
+  distance of its inputs, and the optional tolerance tells whether they are within it (the predicate itself stays exact).
 - **WKT and M:** every input has a WKT field (paste WKT, also with Z and M, or copy what you drew), and every result shows its WKT
   with a copy button. GeoJSON cannot carry M, so the M algorithms (`InterpolateByM`, `ProjectToM`, `SubstringByM`) get their
   data through WKT. Editing a geometry on the map drops its M.

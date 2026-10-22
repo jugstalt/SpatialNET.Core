@@ -36,8 +36,29 @@ public sealed class IsValidAlgorithm() : PlaygroundAlgorithm("isValid", "IsValid
 public sealed class ValidateAlgorithm() : PlaygroundAlgorithm("validate", "Validate", "Prüfung", [In.A(In.Any)], [], (i, _, _, _) => i["a"].Validate());
 public sealed class RelateAlgorithm() : PlaygroundAlgorithm("relate", "Relate (DE-9IM)", "Prädikate", [In.A(In.Any, "A"), In.B(In.Any)], [], (i, _, _, _) => i["a"].Relate(i["b"]));
 
+/// <summary>
+/// Ergebnis eines Prädikats samt Abstand der Eingaben. Ein Prädikat rechnet exakt: Ein gezeichneter Punkt, der optisch auf einer Linie
+/// liegt, liegt rechnerisch fast nie genau darauf. Der Abstand zeigt, ob ein „false“ nur an der Rundung der Koordinaten liegt.
+/// </summary>
+/// <param name="Value">Das Ergebnis des Prädikats.</param>
+/// <param name="Distance">Der Abstand der beiden Eingaben (<c>NaN</c>, wenn eine leer ist).</param>
+/// <param name="WithinTolerance">Ob der Abstand höchstens die angegebene Toleranz beträgt; <c>null</c> ohne Toleranz.</param>
+/// <param name="NearlyTouching">Ob der Abstand größer als 0, aber nur um Rundungsgröße ist.</param>
+public sealed record PredicateResult(bool Value, double Distance, bool? WithinTolerance, bool NearlyTouching);
+
 public abstract class PredicateAlgorithm(string id, string name, Func<IGeometry2D, IGeometry2D, bool> predicate)
-    : PlaygroundAlgorithm(id, name, "Prädikate", [In.A(In.Any, "A"), In.B(In.Any)], [], (i, _, _, _) => predicate(i["a"], i["b"]));
+    : PlaygroundAlgorithm(id, name, "Prädikate", [In.A(In.Any, "A"), In.B(In.Any)],
+        [new("tolerance", "Toleranz (nur Hinweis, das Prädikat bleibt exakt)", "number", null, "kbs")],
+        (i, p, _, _) =>
+        {
+            var (a, b) = (i["a"], i["b"]);
+            double distance = a.Distance(b);
+            double scale = new[] { a.Envelope(), b.Envelope() }.Where(e => !e.IsEmpty)
+                .SelectMany(e => new[] { e.MinX, e.MinY, e.MaxX, e.MaxY }).Select(Math.Abs).Append(1).Max();
+            return new PredicateResult(predicate(a, b), distance,
+                p.OptionalNumber("tolerance") is { } tolerance && !double.IsNaN(distance) ? distance <= tolerance : null,
+                distance > 0 && distance <= 1e-9 * scale);
+        });
 
 public sealed class IntersectsAlgorithm() : PredicateAlgorithm("intersects", "Intersects", (a, b) => a.Intersects(b));
 public sealed class DisjointAlgorithm() : PredicateAlgorithm("disjoint", "Disjoint", (a, b) => a.Disjoint(b));

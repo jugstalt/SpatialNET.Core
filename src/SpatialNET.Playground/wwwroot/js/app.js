@@ -81,6 +81,8 @@ async function compute() {
 // ---------- Ergebnis-Chips ----------
 
 const fmt = v => typeof v === 'number' ? v.toLocaleString('de-DE', { maximumFractionDigits: 6 }) : escape(v);
+// sehr kleine Abstände (Rundungsgröße) nicht zu 0 runden
+const fmtSmall = v => v !== 0 && Math.abs(v) < 1e-4 ? v.toExponential(2).replace('.', ',') : fmt(v);
 
 function showResult(result, error) {
   $('error').hidden = !error;
@@ -96,7 +98,19 @@ function showResult(result, error) {
   let html = '';
   switch (result.kind) {
     case 'number': html = `<div class="value">${result.value === null ? escape(result.text) : fmt(result.value)}</div>`; break;
-    case 'bool': html = `<div class="value">${result.value ? 'true' : 'false'}</div>`; break;
+    case 'bool':
+      html = `<div class="value">${result.value ? 'true' : 'false'}</div>`;
+      if (typeof result.distance === 'number') html += `<div class="muted">Abstand A–B: ${fmtSmall(result.distance)}${u}</div>`;
+      if (result.withinTolerance !== null && result.withinTolerance !== undefined) {
+        html += `<div class="muted">Abstand ≤ Toleranz: <b>${result.withinTolerance ? 'ja' : 'nein'}</b></div>`;
+      }
+
+      if (result.nearlyTouching) {
+        html += '<div class="warn">Die Geometrien liegen praktisch aufeinander, aber nicht exakt: Prädikate rechnen exakt auf den Koordinaten. '
+          + 'Ein gezeichneter Punkt „auf“ einer Linie liegt rechnerisch fast nie genau darauf. Für „ungefähr“ dient IsWithinDistance.</div>';
+      }
+
+      break;
     case 'matrix': html = `<div class="value" style="font-family:ui-monospace,monospace">${escape(result.value)}</div><div class="muted">DE-9IM</div>`; break;
     case 'none': html = `<div class="muted">${escape(result.text)}</div>`; break;
     case 'validation':

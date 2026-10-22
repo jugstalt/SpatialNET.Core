@@ -48,6 +48,51 @@ Rules that apply to all predicates:
 
 Predicates compute exactly on the coordinates you pass. Overlays round to a grid ([Overlays, fill rules and the grid](overlay-and-grid.md)). For near-touches below the grid size, `a.Intersects(b)` can therefore be true while `a.Intersection(b)` is empty.
 
+### Exactness in practice, and the alternatives with a tolerance
+
+The predicates demand **numerical exactness**: `Intersects` is `true` only if the two geometries share a point *to the last bit* of their coordinates. This is what makes the results reliable and consistent with each other, and it is what NetTopologySuite and JTS do. With measured or computed data it is almost never met: a coordinate is a rounded `double`, a point that you place on a line by clicking, by projecting or by computing lies, say, 4e-16 beside it, and a boundary shared by two parcels is only as exact as the two surveys. A point on a **vertex** is exact, because it has the very same numbers; a point on a **segment** is practically never exact.
+
+If "close enough" is what you mean, which for survey data it is, say so with a tolerance. The library has no global tolerance for the predicates; it has the tools to ask for one:
+
+```csharp
+double t = 0.01;                                    // the tolerance, in the unit of your coordinates (here 1 cm)
+
+bool intersects = a.IsWithinDistance(b, t);         // Intersects: closer than t
+bool disjoint = !a.IsWithinDistance(b, t);          // Disjoint: farther than t
+bool contains = a.Buffer(t).Contains(b);            // Contains: b is in a, up to t over the edge
+bool within = b.Buffer(t).Contains(a);              // Within
+bool covers = a.Buffer(t).Covers(b);                // Covers
+bool coveredBy = b.Buffer(t).Covers(a);             // CoveredBy
+bool touches = a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b);          // Touches (areas): they meet, and overlap by less than t
+bool overlaps = a.Buffer(-t).Intersects(b.Buffer(-t))                             // Overlaps (areas): they overlap by more than t,
+    && !a.Buffer(t).Covers(b) && !b.Buffer(t).Covers(a);                          // and neither lies in the other
+bool equal = a.HausdorffDistance(b) <= t;           // EqualsTopo: no vertex of one is farther than t from the other
+```
+
+| Predicate | With a tolerance `t` | Reads as |
+|---|---|---|
+| `Intersects` | `a.IsWithinDistance(b, t)` | the distance is at most `t` |
+| `Disjoint` | `!a.IsWithinDistance(b, t)` | the distance is more than `t` |
+| `Contains(a, b)` | `a.Buffer(t).Contains(b)` | b lies in a, or sticks out by at most `t` |
+| `Within(a, b)` | `b.Buffer(t).Contains(a)` | a lies in b, or sticks out by at most `t` |
+| `Covers(a, b)` | `a.Buffer(t).Covers(b)` | as `Contains`, boundary points count |
+| `CoveredBy(a, b)` | `b.Buffer(t).Covers(a)` | as `Within`, boundary points count |
+| `Touches` (areas) | `a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b)` | they meet, and overlap by less than `t` |
+| `Overlaps` (areas) | `a.Buffer(-t).Intersects(b.Buffer(-t)) && !a.Buffer(t).Covers(b) && !b.Buffer(t).Covers(a)` | they overlap by more than `t`, neither lies in the other |
+| `EqualsTopo` | `a.HausdorffDistance(b) <= t` | no vertex is farther than `t` from the other geometry (see below) |
+| `Crosses`, `Relate` | none | see below |
+
+Notes on the table:
+
+- `IsWithinDistance` stops as soon as it knows the answer and checks the envelopes first, so it is cheap. For many queries against one geometry use `Prepare()` and `prepared.IsWithinDistance(b, t)`. None of these calls changes `a` or `b`; the buffers are new geometries.
+- `Buffer` is the expensive part of the alternatives. For many tests against the same `a`, compute `a.Buffer(t)` (and `a.Buffer(-t)`) once and keep it.
+- `Buffer(-t)` shrinks an area; it works for polygons, not for lines or points, so `Touches` and `Overlaps` as written are for areas. For a line or a point use the distance: they touch if `IsWithinDistance(b, t)`.
+- `HausdorffDistance` is discrete (it looks at vertices and, with a `densifyFraction` below 1, at points in between) and a lower bound; pass `densifyFraction` (for example 0.1) if the geometries have long segments. A vertex on a vertex is the case it decides exactly.
+- `Crosses` and `Relate` have no simple counterpart: a crossing or a DE-9IM matrix is a statement about the interiors, and "almost crossing" has no single meaning. Ask for what you mean: `IsWithinDistance` for "they meet", and `NearestPoints` for where.
+- To make *data* exact instead of the question tolerant, round it once to a grid on import (`ReducePrecision(0.01)`). That makes vertices that lie within a cell identical, which helps where geometries meet at vertices, but it does not help a point on the middle of a segment ([Measures and constructions](measures-and-constructions.md)).
+
+The [playground](../getting-started.md#the-playground) shows the distance next to every predicate for this reason, takes a tolerance as a hint, and says so when a `false` is only a rounding difference.
+
 ## Repeated predicates: `Prepare()`
 
 If you test many geometries against the same one (for example a polygon against thousands of points), prepare it once:

@@ -151,6 +151,16 @@ public sealed class RunService
             case double d:
                 return new JsonObject { ["kind"] = "number", ["value"] = double.IsFinite(d) ? d : null, ["text"] = Text(d) };
 
+            case PredicateResult r:
+                return new JsonObject
+                {
+                    ["kind"] = "bool",
+                    ["value"] = r.Value,
+                    ["distance"] = double.IsFinite(r.Distance) ? r.Distance : null,
+                    ["withinTolerance"] = r.WithinTolerance,
+                    ["nearlyTouching"] = r.NearlyTouching,
+                };
+
             case bool b:
                 return new JsonObject { ["kind"] = "bool", ["value"] = b };
 
