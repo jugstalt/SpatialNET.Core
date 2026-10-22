@@ -130,6 +130,33 @@ public class AlgorithmStressTests
     }
 
     [StressFact]
+    public void Delaunay_is_a_Delaunay_triangulation_and_the_concave_hull_contains_every_point()
+    {
+        Points(3, 25).Run(points =>
+        {
+            var finite = points.Where(c => double.IsFinite(c.X) && double.IsFinite(c.Y)).GroupBy(c => (c.X, c.Y)).Select(g => g.First()).ToArray();
+            foreach (bool radial in new[] { true, false })
+            {
+                var mesh = Internal.Triangulation.DelaunayMesh.Create(finite, radial);
+                if (mesh is not null)
+                {
+                    SpatialNET.Tests.Construction.DelaunayMeshTests.Verify(mesh, string.Join(" ", finite.Select(c => $"({c.X:R},{c.Y:R})")));
+                }
+            }
+
+            var geometry = F.CreateMultiPoint(points, null);
+            foreach (bool holes in new[] { false, true })
+            {
+                if (geometry.ConcaveHullByRatio(0.3, holes, F) is IPolygon2D hull)
+                {
+                    Assert.True(hull.IsValid(), RawWkt(geometry));
+                    Assert.All(finite, c => Assert.True(hull.Locate(c) != Location.Outside, $"{c} outside: {RawWkt(geometry)}"));
+                }
+            }
+        });
+    }
+
+    [StressFact]
     public void MakeValid_gives_a_valid_polygon_with_the_even_odd_area()
     {
         DirtyPolygon.Run(polygon =>

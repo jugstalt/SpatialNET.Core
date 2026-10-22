@@ -54,3 +54,5 @@
   href: ../../adr/0027-bereinigen-loecher-kleinteile-raster.de.md
 - name: "0028 Öffentliche API verfolgen und die Kriterien für 1.0"
   href: ../../adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.de.md
+- name: "0029 Delaunay-Triangulierung und konkave Hülle"
+  href: ../../adr/0029-delaunay-und-konkave-huelle.de.md

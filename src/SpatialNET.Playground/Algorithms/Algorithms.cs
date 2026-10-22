@@ -260,3 +260,19 @@ public sealed class SubstringByMAlgorithm() : PlaygroundAlgorithm("substringByM"
     [In.A(In.Lines, "Linie (WKT mit M)")],
     [new("fromM", "Von (M)", "number", 50.0), new("toM", "Bis (M)", "number", 200.0)],
     (i, p, f, _) => ((IPolyline2D)i["a"]).SubstringByM(p.Number("fromM"), p.Number("toM"), f));
+
+// ---------- Delaunay-Triangulierung und konkave Hülle (ADR 0029) ----------
+
+public sealed class DelaunayTrianglesAlgorithm() : PlaygroundAlgorithm("delaunayTriangles", "DelaunayTriangles", "Konstruktion",
+    [In.A(In.Any)], [],
+    (i, _, f, _) => i["a"].DelaunayTriangles(f).Cast<IGeometry2D>().ToList());
+
+public sealed class ConcaveHullAlgorithm() : PlaygroundAlgorithm("concaveHull", "ConcaveHull", "Konstruktion",
+    [In.A(In.Any)],
+    [new("maxEdgeLength", "Längste Randkante", "number", 20.0, "kbs"), new("holesAllowed", "Löcher erlaubt", "bool", false)],
+    (i, p, f, _) => i["a"].ConcaveHull(p.Number("maxEdgeLength"), p.Bool("holesAllowed"), f));
+
+public sealed class ConcaveHullByRatioAlgorithm() : PlaygroundAlgorithm("concaveHullByRatio", "ConcaveHullByRatio", "Konstruktion",
+    [In.A(In.Any)],
+    [new("edgeLengthRatio", "Kantenlängen-Verhältnis (0–1)", "number", 0.3), new("holesAllowed", "Löcher erlaubt", "bool", false)],
+    (i, p, f, _) => i["a"].ConcaveHullByRatio(p.Number("edgeLengthRatio"), p.Bool("holesAllowed"), f));

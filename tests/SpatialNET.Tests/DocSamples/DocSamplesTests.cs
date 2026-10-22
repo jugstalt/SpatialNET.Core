@@ -149,6 +149,25 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void TriangulationAndConcaveHull()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: triangulation
+        var wells = Wkt.Read("MULTIPOINT ((0 0), (4 0), (8 0), (0 4), (4 4), (8 4), (0 8), (4 8), (8 8), (12 2), (12 6), (13 4))");
+
+        IReadOnlyList<IPolygon2D> triangles = wells.DelaunayTriangles();      // no vertex inside the circumcircle of a triangle
+        IGeometry2D around = wells.ConcaveHull(5.5);                          // keeps every edge on the border up to 5.5 long
+        IGeometry2D byRatio = wells.ConcaveHullByRatio(0.3);                  // the same, scale-free: 0 = tightest, 1 = convex hull
+        // --- end
+
+        Assert.Equal(wells.ConvexHull().Area(), triangles.Sum(t => t.Area()), 6);
+        Assert.True(around.IsValid());
+        Assert.True(around.Area() <= wells.ConvexHull().Area());
+        Assert.True(byRatio.IsValid());
+    }
+
+    [Fact]
     public void LocateAndClip()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

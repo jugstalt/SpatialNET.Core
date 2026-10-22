@@ -64,4 +64,19 @@ Coordinate? label = lot.Polylabel();               // innen und möglichst weit 
 - **`MinimumRotatedRectangle`** ist das Rechteck mit der kleinsten Fläche (nicht der kleinsten Breite), gefunden mit Rotating Calipers über die konvexe Hülle. Eine entartete Eingabe liefert einen Punkt oder die Linie zwischen den äußersten Punkten, wie `ConvexHull`.
 - **`MinimumBoundingCircle`** liefert einen `Circle` (Mitte und Radius), `null` bei leerer Geometrie. `ToPolygon(factory, quadrantSegments)` macht daraus ein einbeschriebenes Polygon.
 - **`Polylabel(polygon, tolerance?)`** ist der Pol der Unzugänglichkeit: der Punkt im Inneren mit dem größten Abstand zum Rand, Löcher eingeschlossen, innerhalb der Toleranz (Standard ein Tausendstel der größeren Seite der Envelope). Bei einem Polygon aus mehreren Teilen ist es der Pol des Teils mit dem größten Kreis.
-- Eine **konkave Hülle** gibt es noch nicht: Es gibt keine einheitliche Definition, und die richtige Variante hängt vom Anwendungsfall ab.
+
+## Triangulierung und konkave Hülle
+
+Die Delaunay-Triangulierung der Stützpunkte einer Geometrie und eine Hülle, die sie enger umschließt als die konvexe Hülle ([ADR 0029](../../adr/0029-delaunay-und-konkave-huelle.de.md)):
+
+```csharp
+var wells = Wkt.Read("MULTIPOINT ((0 0), (4 0), (8 0), (0 4), (4 4), (8 4), (0 8), (4 8), (8 8), (12 2), (12 6), (13 4))");
+
+IReadOnlyList<IPolygon2D> triangles = wells.DelaunayTriangles();      // kein Stützpunkt im Umkreis eines Dreiecks
+IGeometry2D around = wells.ConcaveHull(5.5);                          // lässt jede Randkante bis 5,5 Länge stehen
+IGeometry2D byRatio = wells.ConcaveHullByRatio(0.3);                  // dasselbe, maßstabsfrei: 0 = am engsten, 1 = konvexe Hülle
+```
+
+- **`DelaunayTriangles`** liefert eine flache Liste von Dreiecken (Polygone gegen den Uhrzeigersinn), die die konvexe Hülle füllen, sodass kein Stützpunkt im Umkreis eines Dreiecks liegt. Punkte auf einem gemeinsamen Kreis erlauben mehrere Triangulierungen; das Ergebnis ist eine davon.
+- **`ConcaveHull(maxEdgeLength, holesAllowed)`** nimmt vom Rand her Dreiecke weg, längste Randkante zuerst, solange diese Kante länger als die Grenze ist; das Polygon bleibt zusammenhängend und enthält jeden Stützpunkt. `ConcaveHullByRatio` gibt die Grenze als Verhältnis der Kantenlängen der Triangulierung an (0 bis 1; 1 ist die konvexe Hülle). Mit `holesAllowed` kann sie auch im Inneren Löcher öffnen. Eine Geometrie mit weniger als drei verschiedenen oder nur kollinearen Stützpunkten liefert, was `ConvexHull` liefert.
+- Die Grenze wählen: Eine Grenze etwas über dem üblichen Abstand benachbarter Punkte hält den Umriss getreu; eine größere füllt Lücken, eine kleinere öffnet Buchten.

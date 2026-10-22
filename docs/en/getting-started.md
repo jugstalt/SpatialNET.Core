@@ -102,7 +102,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Linear referencing | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Validity | `IsValid`, `Validate`, `MakeValid` |
 | Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
-| Constructions | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle` |
+| Constructions | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio`, `DelaunayTriangles` |
 | Clean-up | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
 | Checks | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |

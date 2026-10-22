@@ -127,6 +127,14 @@ _Avoid_: Quantisieren, Snappen
 Snap Rounding auf ein Raster mit gültigem Ergebnis (`ReducePrecision`).
 _Avoid_: Präzisionsreduktion
 
+**Konkave Hülle**:
+Ein Polygon, das jeden Punkt enthält und sie enger umschließt als die konvexe Hülle; gefunden, indem man Dreiecke aus der Delaunay-Triangulierung wegnimmt (`ConcaveHull`).
+_Avoid_: konkaves Hüllpolygon, Alpha-Shape (das ist ein anderes Verfahren)
+
+**Delaunay-Triangulierung**:
+Die Triangulierung von Punkten, bei der kein Punkt im Umkreis eines Dreiecks liegt (`DelaunayTriangles`).
+_Avoid_: Dreiecksvermaschung, TIN (das ist ein Geländemodell darauf)
+
 **Polygonisieren**:
 Das Umwandeln von Linien in die Flächen, die sie umschließen: Jede beschränkte Fläche der Anordnung der Linien wird zu einem Polygon.
 _Avoid_: Flächenbildung, Polygonizer

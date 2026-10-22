@@ -64,4 +64,19 @@ Coordinate? label = lot.Polylabel();               // inside, and as far from th
 - **`MinimumRotatedRectangle`** is the rectangle of least area (not of least width), found with rotating calipers over the convex hull. A degenerate input gives a point or the line between the extreme points, as `ConvexHull` does.
 - **`MinimumBoundingCircle`** returns a `Circle` (centre and radius), `null` if the geometry is empty. `ToPolygon(factory, quadrantSegments)` makes an inscribed polygon from it.
 - **`Polylabel(polygon, tolerance?)`** is the pole of inaccessibility: the point inside that is farthest from the boundary, holes included, within the tolerance (default a thousandth of the larger side of the envelope). For a polygon of several parts it is the pole of the part with the largest circle.
-- A **concave hull** is not offered yet: there is no single definition, and the right variant depends on the use case.
+
+## Triangulation and concave hull
+
+The Delaunay triangulation of the vertices of a geometry, and a hull that wraps them more tightly than the convex hull ([ADR 0029](../../adr/0029-delaunay-und-konkave-huelle.md)):
+
+```csharp
+var wells = Wkt.Read("MULTIPOINT ((0 0), (4 0), (8 0), (0 4), (4 4), (8 4), (0 8), (4 8), (8 8), (12 2), (12 6), (13 4))");
+
+IReadOnlyList<IPolygon2D> triangles = wells.DelaunayTriangles();      // no vertex inside the circumcircle of a triangle
+IGeometry2D around = wells.ConcaveHull(5.5);                          // keeps every edge on the border up to 5.5 long
+IGeometry2D byRatio = wells.ConcaveHullByRatio(0.3);                  // the same, scale-free: 0 = tightest, 1 = convex hull
+```
+
+- **`DelaunayTriangles`** returns a flat list of triangles (counter-clockwise polygons) that tile the convex hull, such that no vertex lies in the circumcircle of a triangle. Points on a common circle allow several triangulations; the result is one of them.
+- **`ConcaveHull(maxEdgeLength, holesAllowed)`** takes triangles away from the border, longest border edge first, while that edge is longer than the limit; the polygon stays connected and contains every vertex. `ConcaveHullByRatio` gives the limit as a ratio of the edge lengths of the triangulation (0 to 1; 1 is the convex hull). With `holesAllowed` it may also open holes inside. A geometry with fewer than three different or only collinear vertices gives what `ConvexHull` gives.
+- Choosing the limit: a limit a little above the typical distance between neighbouring points keeps the outline faithful; a larger one fills gaps, a smaller one opens bays.

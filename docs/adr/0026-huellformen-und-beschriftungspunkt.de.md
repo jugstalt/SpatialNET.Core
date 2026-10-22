@@ -1,6 +1,6 @@
 # Hüllformen und Beschriftungspunkt
 
-Drei Konstruktionen, die Hosts für Karten und Layouts brauchen: **`MinimumRotatedRectangle`** (das engste Rechteck um eine Geometrie, in beliebigem Winkel), **`MinimumBoundingCircle`** (der kleinste Kreis darum) und **`Polylabel`** (der beste Ort für eine Beschriftung in einem Polygon). `ConcaveHull` ist **zurückgestellt**: Es gibt keine einheitliche Definition, und eine Variante lohnt sich erst, wenn ein Anwendungsfall festlegt, welche.
+Drei Konstruktionen, die Hosts für Karten und Layouts brauchen: **`MinimumRotatedRectangle`** (das engste Rechteck um eine Geometrie, in beliebigem Winkel), **`MinimumBoundingCircle`** (der kleinste Kreis darum) und **`Polylabel`** (der beste Ort für eine Beschriftung in einem Polygon). `ConcaveHull` kam später, zusammen mit der Delaunay-Triangulierung, die es braucht ([ADR 0029](0029-delaunay-und-konkave-huelle.de.md)).
 
 *English version: [0026-huellformen-und-beschriftungspunkt.md](0026-huellformen-und-beschriftungspunkt.md)*
 
@@ -20,4 +20,4 @@ Drei Konstruktionen, die Hosts für Karten und Layouts brauchen: **`MinimumRotat
 - Das Rechteck durch Ausprobieren aller Winkel (verworfen: Calipers über die Hüllkanten sind exakt und linear)
 - Den Kreis nur als Polygon liefern (verworfen: Mitte und Radius sind, was die meisten Aufrufer wollen; `ToPolygon` ist ein Aufruf entfernt)
 - Polylabel auf einem Raster fester Auflösung (verworfen: Die adaptiven Zellen geben eine garantierte Toleranz mit wenigen Abstandsberechnungen)
-- `ConcaveHull` jetzt (verworfen, zurückgestellt: keine einheitliche Definition; die Kantenlängen-Variante von JTS und die Alpha-Shape unterscheiden sich, und keine ist offensichtlich die richtige)
+- `ConcaveHull` jetzt (damals verworfen, keine einheitliche Definition; später in ADR 0029 mit der Kantenlängen-Variante von JTS umgesetzt)

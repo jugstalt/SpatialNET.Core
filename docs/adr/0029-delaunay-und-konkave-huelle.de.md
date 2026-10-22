@@ -1,0 +1,43 @@
+# Delaunay-Triangulierung und konkave Hülle
+
+Zwei verwandte Operationen auf den Stützpunkten einer Geometrie. **`DelaunayTriangles`** trianguliert sie so, dass kein Stützpunkt im Umkreis eines Dreiecks liegt, die Dreiecke also so „rund“ sind, wie die Punkte es erlauben. **`ConcaveHull`** (mit der Variante **`ConcaveHullByRatio`**) umschließt die Punkte enger als die konvexe Hülle: Es geht von der Triangulierung aus und nimmt am Rand Dreiecke weg, wo eine Kante zu lang ist. Die Triangulierung ist die Grundlage der Hülle und für sich nützlich, etwa für Geländemodelle, Interpolation und Nachbarschaften, deshalb ist sie öffentlich.
+
+*English version: [0029-delaunay-und-konkave-huelle.md](0029-delaunay-und-konkave-huelle.md)*
+
+## Consequences
+
+- **Platzierung:** `DelaunayTriangles`, `ConcaveHull` und `ConcaveHullByRatio` in `Shapes` (jetzt eine partielle Klasse; ADR 0026), in `SpatialNET.Extensions`, Namespace `SpatialNET`. Die Triangulierung selbst (`DelaunayMesh`, ein Halbkantennetz mit Nachbarn) und der exakte Incircle-Test sind intern. Für die Paketvalidierung und die API-Verfolgung ist das nur eine Ergänzung (ADR 0028).
+- **`DelaunayTriangles(geometry, factory?)`** liefert `IReadOnlyList<IPolygon2D>`: eine flache Liste von Dreiecken, jedes ein Polygon mit Stützpunkten gegen den Uhrzeigersinn, in keiner bestimmten Reihenfolge (wie die Teile von `Cut`, ADR 0007). Die Eingabe wie bei `ConvexHull`: jeder Stützpunkt jeder Geometrieart, nur X und Y; Stützpunkte mit gleichem X und Y zählen einmal, nicht endliche werden ignoriert. Die Liste ist leer, wenn weniger als drei verschiedene Stützpunkte bleiben oder alle kollinear sind. Z eines Stützpunkts bleibt, M nicht. **Stützpunkte auf einem gemeinsamen Kreis** (die Ecken eines Rechtecks, ein regelmäßiges Raster) erlauben mehrere Triangulierungen, alle Delaunay; welche herauskommt, ist deterministisch, aber nicht festgelegt, und die Dokumentation sagt das. Alles Übrige, jeder Punkt außerhalb jedes Umkreises, ist der Vertrag.
+- **`ConcaveHull(geometry, maxEdgeLength, holesAllowed = false, factory?)`** und **`ConcaveHullByRatio(geometry, edgeLengthRatio, holesAllowed = false, factory?)`** liefern `IGeometry2D`: ein Polygon, das jeden Stützpunkt enthält. Eine Geometrie mit weniger als drei verschiedenen oder nur kollinearen Stützpunkten liefert, was `ConvexHull` liefert (einen Punkt, die Linie zwischen den äußersten Punkten, ein leeres Polygon). `maxEdgeLength` ist in der Einheit der Koordinaten, nicht negativ und nicht `NaN`; unendlich ergibt die konvexe Hülle. Das Verhältnis liegt zwischen 0 und 1 und ergibt die Grenze `kürzeste + Verhältnis * (längste - kürzeste)` über die Kantenlängen der Triangulierung (die Definition von JTS), hängt also nicht vom Maßstab ab; 1 ergibt die konvexe Hülle, 0 die engste Hülle. Z eines Stützpunkts bleibt, M nicht.
+- **Die Regel.** Die Hülle ist die Vereinigung der übrig bleibenden Dreiecke. Vom Rand her werden Dreiecke weggenommen, **längste Randkante zuerst**, solange diese Kante länger als die Grenze ist, unter zwei Bedingungen: Ein Dreieck muss **genau eine Randkante** haben (eines mit zwei Randkanten ließe seinen dritten Stützpunkt außerhalb der Hülle, und die Hülle muss jeden Stützpunkt enthalten), und sein **dritter Stützpunkt darf noch nicht auf einem Rand liegen** (sonst würde das Wegnehmen das Polygon einschnüren). Unter diesen Bedingungen bleibt die Hülle zusammenhängend und ohne Löcher. Ein Dreieck, das sie nicht erfüllt, bleibt, auch wenn seine Kante lang ist; das hält das Ergebnis ein Polygon.
+- **Löcher.** Mit `holesAllowed` werden, nachdem der Rand fertig ist, innere Dreiecke weggenommen, deren drei Stützpunkte alle innen liegen und die eine Kante über der Grenze haben, längste zuerst, und das Loch wächst nach derselben Regel von seinem Rand aus. Ein Loch berührt nie den äußeren Rand oder ein anderes Loch, das Ergebnis ist also immer ein gültiges Polygon mit Löchern und kein Multipolygon.
+- **Übereinstimmung mit NTS.** Die Regel ist die des JTS-`ConcaveHull`; bei Punkten in allgemeiner Lage (keine zwei gleichen Kantenlängen) ist die Fläche in den Tests gleich dem NTS-Ergebnis, mit und ohne Löcher, für 400 Zufallsfälle mit 10 bis 80 Punkten. Bei Punkten, die gleichwertige Wahlen erlauben, kann das Ergebnis darin abweichen, welche zuerst genommen wird.
+- **Robustheit.** Die Triangulierung nutzt exakte Prädikate: den Orientierungstest des Overlay-Kerns (ADR 0005) und einen neuen exakten Incircle-Test (ein Gleitkomma-Filter mit Shewchuks Fehlerschranke und die exakte Determinante über ganzen Zahlen, wenn das Vorzeichen unsicher ist). Der Algorithmus ist der Sweep von Mapbox' Delaunator in einer eigenen Fassung: ein Startdreieck, dann die Punkte nach ihrem Abstand vom Umkreismittelpunkt, sodass jeder Punkt normalerweise außerhalb der bisherigen Hülle liegt und sich an die sichtbaren Hüllkanten anschließt; jedes Einfügen stellt die Delaunay-Eigenschaft durch Kantenwechsel wieder her. Ein Punkt, der auf einer Hüllkante oder innen liegt (was die Ordnung nicht ausschließen kann und ein regelmäßiges Raster oft erzeugt), wird eingefügt, indem sein Dreieck exakt gesucht und das Dreieck oder die Kante geteilt wird. Die Tests lassen jede Punktmenge durch beide Wege laufen.
+- **Geschwindigkeit.** Einmalmessungen (`--quick-triangulation`, Release-Build) bei gleichmäßig verteilten Punkten, auf einem Raster und in Gruppen:
+
+| Punkte | Anordnung | `DelaunayTriangles` (ms) | NTS (ms) | `ConcaveHullByRatio` (ms) |
+|---|---|---|---|---|
+| 10.000 | in Gruppen | 42 | 109 | 15 |
+| 10.000 | Raster | 78 | 163 | 36 |
+| 10.000 | gleichmäßig | 52 | 105 | 13 |
+| 100.000 | in Gruppen | 558 | 1.697 | 176 |
+| 100.000 | Raster | 562 | 3.142 | 348 |
+| 100.000 | gleichmäßig | 501 | 2.154 | 180 |
+| 1.000.000 | in Gruppen | 5.563 | – | 2.182 |
+| 1.000.000 | Raster | 11.458 | – | 5.057 |
+| 1.000.000 | gleichmäßig | 9.076 | – | 2.388 |
+
+  `DelaunayTriangles` schließt das Erzeugen der Dreieckspolygone ein. Die Triangulierung wächst etwa linear; der NTS-Builder ist um ein Mehrfaches langsamer.
+- **Nicht jetzt.** Das Voronoi-Diagramm, eine Triangulierung mit Zwangskanten (Kanten, die erhalten bleiben müssen), ein Netz mit Nachbarzugriff und die konkave Hülle von Polygonen (statt von Punkten) gehören nicht dazu; jedes wäre ein eigener Entwurf und lässt sich ohne Bruch ergänzen.
+- **Tests (ADR 0008):** `[Covers]`-Tests statt Fixtures. Für die Triangulierung: Handfälle und Property-Tests über zufällige, Raster-, kollineare und auf einem Kreis liegende Punktmengen, mit beiden Einfügewegen, die alles prüfen, was eine Triangulierung zur Delaunay-Triangulierung macht (Dreiecke gegen den Uhrzeigersinn, die Anzahl `2n - 2 - h`, stimmige Nachbarn, kein Punkt in einem Umkreis, die Dreiecke füllen die konvexe Hülle); der exakte Incircle-Test gegen Ganzzahlrechnung; extreme Größenordnungen; und die Gleichheit mit der NTS-Triangulierung bei Punkten in allgemeiner Lage. Für die Hüllen: Handfälle (eine C-Form), Eigenschaften (gültig, enthält jeden Punkt, liegt in der konvexen Hülle, ein Ring ohne Löcher), die Fläche gegen den NTS-`ConcaveHull` und die Unabhängigkeit vom Maßstab. Ein wöchentlicher Stresstest lässt Triangulierung und Hülle auf schmutzigen Punkten laufen.
+- **Playground und Dokumentation:** Deskriptoren für die drei (ADR 0011; die Dreiecke werden als Liste von Teilen gezeigt wie bei `Cut`), ein Abschnitt in der Konzeptseite zu Maßen und Konstruktionen, Glossareinträge, ein Benchmark.
+
+## Considered Options
+
+- Die Alpha-Shape (verworfen: Ihr Parameter, der Radius eines Kreises, ist schwerer zu fassen als eine längste Kante, und es gibt keine Referenz zum Testen)
+- k nächste Nachbarn (verworfen: keine Eigenschaft der Punkte allein und nicht deterministisch gegen eine Referenz)
+- Die Triangulierung intern lassen (verworfen: Sie wird ohnehin auf diesem Niveau gebaut und getestet, Hosts brauchen sie, und eine flache Dreiecksliste ist ein kleiner, sicherer Vertrag)
+- Eine öffentliche Triangulierung mit Nachbarn und Voronoi (vorerst verworfen: ein größerer Vertrag, der besser entworfen wird, wenn es einen Anwendungsfall gibt)
+- Bowyer-Watson mit einem Superdreieck (verworfen: Ein endliches Superdreieck kann bei flacher oder sehr großer Eingabe falsche Hüllkanten hinterlassen; der Sweep mit exakten Prädikaten kennt diesen Fall nicht)
+- Die Quad-Edge-Struktur von JTS (verworfen: Ein Halbkanten-Array ist einfacher, schneller und leichter zu testen)
+- Dreiecke mit zwei Randkanten gehen lassen (verworfen: Es ließe ihren dritten Stützpunkt aus der Hülle fallen, und die Hülle muss jeden Punkt enthalten)

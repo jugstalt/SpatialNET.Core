@@ -102,7 +102,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Lineare Referenzierung | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
 | Gültigkeit | `IsValid`, `Validate`, `MakeValid` |
 | Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
-| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle` |
+| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio`, `DelaunayTriangles` |
 | Bereinigen | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
 | Formprüfungen | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |

@@ -40,7 +40,7 @@ public readonly record struct Circle(Coordinate Centre, double Radius)
 /// <summary>
 /// Bounding shapes and label points (ADR 0026): <c>MinimumRotatedRectangle</c>, <c>MinimumBoundingCircle</c> and <c>Polylabel</c>.
 /// </summary>
-public static class Shapes
+public static partial class Shapes
 {
     // ---------- MinimumRotatedRectangle ----------
 

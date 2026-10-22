@@ -41,6 +41,8 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | pole of inaccessibility | Pol der Unzugänglichkeit | The point inside a polygon that is farthest from its boundary, a good place for a label (`Polylabel`) |
 | snap to grid | auf das Raster legen | Rounding every coordinate to the nearest grid point and nothing else; may make a polygon invalid (`SnapToGrid`) |
 | reduce precision | Genauigkeit reduzieren | Snap rounding to a grid with a valid result (`ReducePrecision`) |
+| concave hull | konkave Hülle | A polygon that contains every point and wraps them more tightly than the convex hull, found by taking triangles away from the Delaunay triangulation (`ConcaveHull`) |
+| Delaunay triangulation | Delaunay-Triangulierung | The triangulation of points in which no point lies inside the circumcircle of a triangle (`DelaunayTriangles`) |
 | polygonize | polygonisieren | Turning lines into the areas they enclose: every bounded face of the arrangement of the lines becomes a polygon (`Polygonize`) |
 | line merge | Linien verbinden | Joining the paths of a polyline where exactly two path ends meet (`LineMerge`) |
 | make valid | gültig machen | Repairing an invalid geometry: a polygon by even-odd normalisation through the overlay core (`MakeValid`) |

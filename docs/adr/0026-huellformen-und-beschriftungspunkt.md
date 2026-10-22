@@ -1,6 +1,6 @@
 # Bounding shapes and label point
 
-Three constructions that hosts need for maps and layouts: **`MinimumRotatedRectangle`** (the tightest rectangle around a geometry, at any angle), **`MinimumBoundingCircle`** (the smallest circle around it) and **`Polylabel`** (the best place for a label inside a polygon). `ConcaveHull` is **deferred**: it has no single agreed definition, and a variant is worth adding only when a use case fixes which one.
+Three constructions that hosts need for maps and layouts: **`MinimumRotatedRectangle`** (the tightest rectangle around a geometry, at any angle), **`MinimumBoundingCircle`** (the smallest circle around it) and **`Polylabel`** (the best place for a label inside a polygon). `ConcaveHull` came later, together with the Delaunay triangulation it needs ([ADR 0029](0029-delaunay-und-konkave-huelle.md)).
 
 *German version: [0026-huellformen-und-beschriftungspunkt.de.md](0026-huellformen-und-beschriftungspunkt.de.md)*
 
@@ -20,4 +20,4 @@ Three constructions that hosts need for maps and layouts: **`MinimumRotatedRecta
 - The rectangle by trying every angle (rejected: calipers over the hull edges are exact and linear)
 - Returning the circle only as a polygon (rejected: the centre and radius are what most callers want; `ToPolygon` is one call away)
 - Polylabel on a grid of fixed resolution (rejected: the adaptive cells give a guaranteed tolerance with few distance evaluations)
-- `ConcaveHull` now (rejected, deferred: no single definition; the edge-length variant of JTS and the alpha shape differ, and neither is obviously the right one)
+- `ConcaveHull` now (rejected then, no single definition; done later in ADR 0029 with the edge-length variant of JTS)

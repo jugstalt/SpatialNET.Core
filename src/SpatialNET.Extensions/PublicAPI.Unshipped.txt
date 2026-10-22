@@ -48,6 +48,9 @@ static SpatialNET.Overlays.MakeValid(this SpatialNET.IMultiPoint2D! multiPoint, 
 static SpatialNET.Overlays.MakeValid(this SpatialNET.IPolygon2D! polygon, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Overlays.MakeValid(this SpatialNET.IPolyline2D! polyline, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.Overlays.Polygonize(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+static SpatialNET.Shapes.ConcaveHull(this SpatialNET.IGeometry2D! geometry, double maxEdgeLength, bool holesAllowed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Shapes.ConcaveHullByRatio(this SpatialNET.IGeometry2D! geometry, double edgeLengthRatio, bool holesAllowed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Shapes.DelaunayTriangles(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
 static SpatialNET.Shapes.MinimumBoundingCircle(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Circle?
 static SpatialNET.Shapes.MinimumRotatedRectangle(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Shapes.Polylabel(this SpatialNET.IPolygon2D! polygon, double? tolerance = null) -> SpatialNET.Coordinate?

@@ -8,7 +8,32 @@ using SpatialNET.Imp;
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick → grobe Stoppuhr-Messung
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-unionall → UnionAll gegen das Falten von Union (ADR 0018)
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-prepared → PreparedGeometry (ADR 0024)
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-triangulation → Delaunay und ConcaveHull gegen NTS (ADR 0029)
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-join → Join und SelfJoin gegen die Schleife aus Abfragen (ADR 0021)
+if (args.Contains("--quick-triangulation"))
+{
+    GeometryFactory.Default = ImpGeometryFactory.Instance;
+    foreach (var layout in Enum.GetValues<PointLayout>())
+    {
+        foreach (int n in new[] { 10_000, 100_000, 1_000_000 })
+        {
+            var (points, nts) = TriangulationBenchmarks.Create(layout, n);
+            var builder = () =>
+            {
+                var b = new NetTopologySuite.Triangulate.DelaunayTriangulationBuilder();
+                b.SetSites(nts);
+                return b.GetTriangles(NetTopologySuite.Geometries.GeometryFactory.Default).NumGeometries;
+            };
+            double ours = Measure(() => points.DelaunayTriangles());
+            double theirs = n <= 100_000 ? Measure(() => builder()) : double.NaN;
+            double hull = Measure(() => points.ConcaveHullByRatio(0.3));
+            Console.WriteLine($"{layout,-10} N={n,8}  DelaunayTriangles {ours,9:F1} ms  NTS {theirs,9:F1} ms  ConcaveHull {hull,9:F1} ms");
+        }
+    }
+
+    return;
+}
+
 if (args.Contains("--quick-unionall"))
 {
     GeometryFactory.Default = ImpGeometryFactory.Instance;

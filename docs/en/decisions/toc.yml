@@ -54,3 +54,5 @@
   href: ../../adr/0027-bereinigen-loecher-kleinteile-raster.md
 - name: "0028 Public API tracking and the criteria for 1.0"
   href: ../../adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md
+- name: "0029 Delaunay triangulation and concave hull"
+  href: ../../adr/0029-delaunay-und-konkave-huelle.md
