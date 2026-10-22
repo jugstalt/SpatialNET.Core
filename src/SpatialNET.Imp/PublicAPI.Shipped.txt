@@ -1,0 +1,47 @@
+#nullable enable
+override SpatialNET.Imp.Point.ToString() -> string!
+override SpatialNET.Imp.Point3D.ToString() -> string!
+override SpatialNET.Imp.Point3DM.ToString() -> string!
+override SpatialNET.Imp.PointM.ToString() -> string!
+SpatialNET.Imp.ImpGeometryFactory
+SpatialNET.Imp.ImpGeometryFactory.CreateMultiPoint(System.ReadOnlySpan<SpatialNET.Coordinate> coordinates, SpatialNET.IGeometry2D? source) -> SpatialNET.IMultiPoint2D!
+SpatialNET.Imp.ImpGeometryFactory.CreatePoint(SpatialNET.Coordinate coordinate, SpatialNET.IGeometry2D? source) -> SpatialNET.IPoint2D!
+SpatialNET.Imp.ImpGeometryFactory.CreatePolygon(System.ReadOnlySpan<SpatialNET.PolygonPart> parts, SpatialNET.IGeometry2D? source) -> SpatialNET.IPolygon2D!
+SpatialNET.Imp.ImpGeometryFactory.CreatePolyline(System.ReadOnlySpan<System.ReadOnlyMemory<SpatialNET.Coordinate>> paths, SpatialNET.IGeometry2D? source) -> SpatialNET.IPolyline2D!
+SpatialNET.Imp.ImpGeometryFactory.ImpGeometryFactory(bool supportsZ = true) -> void
+SpatialNET.Imp.ImpGeometryFactory.ImpGeometryFactory(bool supportsZ, bool supportsM) -> void
+SpatialNET.Imp.ImpGeometryFactory.SupportsM.get -> bool
+SpatialNET.Imp.ImpGeometryFactory.SupportsZ.get -> bool
+SpatialNET.Imp.MultiPoint
+SpatialNET.Imp.MultiPoint.MultiPoint(params System.ReadOnlySpan<SpatialNET.IPoint2D!> points) -> void
+SpatialNET.Imp.Path
+SpatialNET.Imp.Path.Path(params System.ReadOnlySpan<SpatialNET.IPoint2D!> points) -> void
+SpatialNET.Imp.Point
+SpatialNET.Imp.Point.Point(double x, double y) -> void
+SpatialNET.Imp.Point.X.get -> double
+SpatialNET.Imp.Point.Y.get -> double
+SpatialNET.Imp.Point3D
+SpatialNET.Imp.Point3D.Point3D(double x, double y, double z) -> void
+SpatialNET.Imp.Point3D.Z.get -> double
+SpatialNET.Imp.Point3DM
+SpatialNET.Imp.Point3DM.M.get -> double
+SpatialNET.Imp.Point3DM.Point3DM(double x, double y, double z, double m) -> void
+SpatialNET.Imp.Point3DM.Z.get -> double
+SpatialNET.Imp.PointM
+SpatialNET.Imp.PointM.M.get -> double
+SpatialNET.Imp.PointM.PointM(double x, double y, double m) -> void
+SpatialNET.Imp.PointSequence
+SpatialNET.Imp.PointSequence.PointCount.get -> int
+SpatialNET.Imp.PointSequence.PointSequence(System.ReadOnlySpan<SpatialNET.IPoint2D!> points) -> void
+SpatialNET.Imp.PointSequence.this[int index].get -> SpatialNET.IPoint2D!
+SpatialNET.Imp.Polygon
+SpatialNET.Imp.Polygon.Polygon(params System.ReadOnlySpan<SpatialNET.IRing2D!> rings) -> void
+SpatialNET.Imp.Polygon.RingCount.get -> int
+SpatialNET.Imp.Polygon.this[int index].get -> SpatialNET.IRing2D!
+SpatialNET.Imp.Polyline
+SpatialNET.Imp.Polyline.PathCount.get -> int
+SpatialNET.Imp.Polyline.Polyline(params System.ReadOnlySpan<SpatialNET.IPath2D!> paths) -> void
+SpatialNET.Imp.Polyline.this[int index].get -> SpatialNET.IPath2D!
+SpatialNET.Imp.Ring
+SpatialNET.Imp.Ring.Ring(params System.ReadOnlySpan<SpatialNET.IPoint2D!> points) -> void
+static SpatialNET.Imp.ImpGeometryFactory.Instance.get -> SpatialNET.Imp.ImpGeometryFactory!

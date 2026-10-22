@@ -27,12 +27,13 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
 1. **Decide the version** using the table above.
 2. **Make sure `main` is green.** Everything that should be in the release is merged, and the [CI workflow](.github/workflows/ci.yml) is green on the latest commit of `main`.
 3. **Update the changelog.** In [`CHANGELOG.md`](CHANGELOG.md), rename the heading `[Unreleased]` to the new version and date, for example `## [0.1.0-preview.2] - 2026-11-03`, and add a fresh, empty `## [Unreleased]` section above it.
+3a. **Ship the public API.** Run `pwsh tools/ship-public-api.ps1` (or `powershell -File tools/ship-public-api.ps1`). It moves the entries of every `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` ([ADR 0028](docs/adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md)); commit the changed files with the release preparation.
 4. **Optional – raise `VersionPrefix`.** If the new version has a higher `MAJOR.MINOR.PATCH` than the one in [`Directory.Build.props`](Directory.Build.props) (for example `0.1.0` → `0.2.0`), change `VersionPrefix` as well, so that local builds are not older than the last release. This does not affect the published packages.
 5. **Move the package validation baseline** (only if the previous release is already on nuget.org, which it should be). Set `PackageValidationBaselineVersion` in [`Directory.Build.props`](Directory.Build.props) to the version you released **last**, so that the next pack checks the API against it – see [API compatibility check](#api-compatibility-check).
 6. **Commit and push** to `main` (directly or via a pull request) and wait for CI to turn green:
 
    ```bash
-   git add CHANGELOG.md Directory.Build.props
+   git add CHANGELOG.md Directory.Build.props src/*/PublicAPI.*.txt
    git commit -m "chore: prepare release 0.1.0-preview.2"
    git push origin main
    ```
@@ -72,6 +73,8 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
 - **GitHub Pages:** in Settings → Pages, set the source to "GitHub Actions" so that [`.github/workflows/docs.yml`](.github/workflows/docs.yml) can publish the documentation.
 
 ## API compatibility check
+
+Besides the package validation described here, the public API is tracked in `PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt` of each library project and checked on every build by `Microsoft.CodeAnalysis.PublicApiAnalyzers`; the conditions for version 1.0 are in [ADR 0028](docs/adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md).
 
 Package validation is enabled in the four library projects (`EnablePackageValidation`). When the packages are packed – in CI, in the release workflow and locally with `dotnet pack` – the public API is compared with the published package named by `PackageValidationBaselineVersion` in [`Directory.Build.props`](Directory.Build.props). A breaking change fails the pack; the baseline package is downloaded from nuget.org, so packing needs network access.
 

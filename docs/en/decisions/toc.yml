@@ -52,3 +52,5 @@
   href: ../../adr/0026-huellformen-und-beschriftungspunkt.md
 - name: "0027 Clean-up: holes, small parts, grid"
   href: ../../adr/0027-bereinigen-loecher-kleinteile-raster.md
+- name: "0028 Public API tracking and the criteria for 1.0"
+  href: ../../adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md

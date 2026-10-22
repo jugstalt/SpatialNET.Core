@@ -1,0 +1,75 @@
+#nullable enable
+SpatialNET.Coordinate
+SpatialNET.Coordinate.Coordinate() -> void
+SpatialNET.Coordinate.Coordinate(double X, double Y, double Z = NaN, double M = NaN) -> void
+SpatialNET.Coordinate.HasM.get -> bool
+SpatialNET.Coordinate.HasZ.get -> bool
+SpatialNET.Coordinate.M.get -> double
+SpatialNET.Coordinate.M.init -> void
+SpatialNET.Coordinate.X.get -> double
+SpatialNET.Coordinate.X.init -> void
+SpatialNET.Coordinate.Y.get -> double
+SpatialNET.Coordinate.Y.init -> void
+SpatialNET.Coordinate.Z.get -> double
+SpatialNET.Coordinate.Z.init -> void
+SpatialNET.Envelope2D
+SpatialNET.Envelope2D.Envelope2D() -> void
+SpatialNET.Envelope2D.Envelope2D(double MinX, double MinY, double MaxX, double MaxY) -> void
+SpatialNET.Envelope2D.Height.get -> double
+SpatialNET.Envelope2D.IsEmpty.get -> bool
+SpatialNET.Envelope2D.MaxX.get -> double
+SpatialNET.Envelope2D.MaxX.init -> void
+SpatialNET.Envelope2D.MaxY.get -> double
+SpatialNET.Envelope2D.MaxY.init -> void
+SpatialNET.Envelope2D.MinX.get -> double
+SpatialNET.Envelope2D.MinX.init -> void
+SpatialNET.Envelope2D.MinY.get -> double
+SpatialNET.Envelope2D.MinY.init -> void
+SpatialNET.Envelope2D.Width.get -> double
+SpatialNET.FillRule
+SpatialNET.FillRule.EvenOdd = 0 -> SpatialNET.FillRule
+SpatialNET.FillRule.Negative = 3 -> SpatialNET.FillRule
+SpatialNET.FillRule.NonZero = 1 -> SpatialNET.FillRule
+SpatialNET.FillRule.Positive = 2 -> SpatialNET.FillRule
+SpatialNET.GeometryFactory
+SpatialNET.IGeometry2D
+SpatialNET.IGeometryFactory
+SpatialNET.IGeometryFactory.CreateMultiPoint(System.ReadOnlySpan<SpatialNET.Coordinate> coordinates, SpatialNET.IGeometry2D? source) -> SpatialNET.IMultiPoint2D!
+SpatialNET.IGeometryFactory.CreatePoint(SpatialNET.Coordinate coordinate, SpatialNET.IGeometry2D? source) -> SpatialNET.IPoint2D!
+SpatialNET.IGeometryFactory.CreatePolygon(System.ReadOnlySpan<SpatialNET.PolygonPart> parts, SpatialNET.IGeometry2D? source) -> SpatialNET.IPolygon2D!
+SpatialNET.IGeometryFactory.CreatePolyline(System.ReadOnlySpan<System.ReadOnlyMemory<SpatialNET.Coordinate>> paths, SpatialNET.IGeometry2D? source) -> SpatialNET.IPolyline2D!
+SpatialNET.IGeometryFactory.SupportsM.get -> bool
+SpatialNET.IGeometryFactory.SupportsZ.get -> bool
+SpatialNET.IMultiPoint2D
+SpatialNET.IPath2D
+SpatialNET.IPoint2D
+SpatialNET.IPoint2D.X.get -> double
+SpatialNET.IPoint2D.Y.get -> double
+SpatialNET.IPoint3D
+SpatialNET.IPoint3D.Z.get -> double
+SpatialNET.IPointCollection2D
+SpatialNET.IPointCollection2D.PointCount.get -> int
+SpatialNET.IPointCollection2D.this[int index].get -> SpatialNET.IPoint2D!
+SpatialNET.IPointM
+SpatialNET.IPointM.M.get -> double
+SpatialNET.IPolygon2D
+SpatialNET.IPolygon2D.RingCount.get -> int
+SpatialNET.IPolygon2D.this[int index].get -> SpatialNET.IRing2D!
+SpatialNET.IPolyline2D
+SpatialNET.IPolyline2D.PathCount.get -> int
+SpatialNET.IPolyline2D.this[int index].get -> SpatialNET.IPath2D!
+SpatialNET.IRing2D
+SpatialNET.PolygonPart
+SpatialNET.PolygonPart.Holes.get -> System.ReadOnlyMemory<System.ReadOnlyMemory<SpatialNET.Coordinate>>
+SpatialNET.PolygonPart.Holes.init -> void
+SpatialNET.PolygonPart.PolygonPart() -> void
+SpatialNET.PolygonPart.PolygonPart(System.ReadOnlyMemory<SpatialNET.Coordinate> Shell, System.ReadOnlyMemory<System.ReadOnlyMemory<SpatialNET.Coordinate>> Holes = default(System.ReadOnlyMemory<System.ReadOnlyMemory<SpatialNET.Coordinate>>)) -> void
+SpatialNET.PolygonPart.Shell.get -> System.ReadOnlyMemory<SpatialNET.Coordinate>
+SpatialNET.PolygonPart.Shell.init -> void
+SpatialNET.Precision
+static SpatialNET.Envelope2D.Empty.get -> SpatialNET.Envelope2D
+static SpatialNET.GeometryFactory.Default.get -> SpatialNET.IGeometryFactory?
+static SpatialNET.GeometryFactory.Default.set -> void
+static SpatialNET.GeometryFactory.Resolve(SpatialNET.IGeometryFactory? factory) -> SpatialNET.IGeometryFactory!
+static SpatialNET.Precision.DefaultGridSize.get -> double?
+static SpatialNET.Precision.DefaultGridSize.set -> void

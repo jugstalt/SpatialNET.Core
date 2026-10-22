@@ -1,0 +1,73 @@
+#nullable enable
+SpatialNET.Characteristics
+SpatialNET.Circle
+SpatialNET.Circle.Centre.get -> SpatialNET.Coordinate
+SpatialNET.Circle.Centre.init -> void
+SpatialNET.Circle.Circle() -> void
+SpatialNET.Circle.Circle(SpatialNET.Coordinate Centre, double Radius) -> void
+SpatialNET.Circle.Radius.get -> double
+SpatialNET.Circle.Radius.init -> void
+SpatialNET.Circle.ToPolygon(SpatialNET.IGeometryFactory? factory = null, int quadrantSegments = 8) -> SpatialNET.IPolygon2D!
+SpatialNET.Cleaning
+SpatialNET.Envelopes
+SpatialNET.Location
+SpatialNET.Location.Boundary = 1 -> SpatialNET.Location
+SpatialNET.Location.Inside = 2 -> SpatialNET.Location
+SpatialNET.Location.Outside = 0 -> SpatialNET.Location
+SpatialNET.Locations
+SpatialNET.PreparedGeometry.Distance(SpatialNET.IGeometry2D! other) -> double
+SpatialNET.PreparedGeometry.IsWithinDistance(SpatialNET.IGeometry2D! other, double distance) -> bool
+SpatialNET.PreparedGeometry.Locate(SpatialNET.Coordinate point) -> SpatialNET.Location
+SpatialNET.PreparedGeometry.NearestPoints(SpatialNET.IGeometry2D! other) -> (SpatialNET.Coordinate OnPrepared, SpatialNET.Coordinate OnOther)?
+SpatialNET.Shapes
+SpatialNET.SpatialIndex<T>.Join<TOther>(SpatialNET.SpatialIndex<TOther>! other, double distance = 0) -> System.Collections.Generic.IEnumerable<(T Left, TOther Right)>!
+SpatialNET.SpatialIndex<T>.Join<TOther>(SpatialNET.SpatialIndex<TOther>! other, System.Collections.Generic.ICollection<(T Left, TOther Right)>! results, double distance = 0) -> void
+SpatialNET.SpatialIndex<T>.SelfJoin(double distance = 0) -> System.Collections.Generic.IEnumerable<(T First, T Second)>!
+SpatialNET.Transformations
+static SpatialNET.Characteristics.EqualsExact(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, double tolerance = 0) -> bool
+static SpatialNET.Characteristics.IsClosed(this SpatialNET.IPolyline2D! line) -> bool
+static SpatialNET.Characteristics.IsRing(this SpatialNET.IPolyline2D! line) -> bool
+static SpatialNET.Characteristics.IsSimple(this SpatialNET.IGeometry2D! geometry) -> bool
+static SpatialNET.Cleaning.ReducePrecision(this SpatialNET.IGeometry2D! geometry, double gridSize, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Cleaning.RemoveHoles(this SpatialNET.IPolygon2D! polygon, double minArea = Infinity, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Cleaning.RemoveSmallParts(this SpatialNET.IGeometry2D! geometry, double minSize, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Cleaning.RemoveSmallParts(this SpatialNET.IPolygon2D! polygon, double minArea, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Cleaning.RemoveSmallParts(this SpatialNET.IPolyline2D! line, double minLength, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Cleaning.SnapToGrid(this SpatialNET.IGeometry2D! geometry, double gridSize, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Constructions.LineMerge(this SpatialNET.IPolyline2D! line, bool directed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Envelopes.ToPolygon(this SpatialNET.Envelope2D envelope, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Locations.Locate(this SpatialNET.IGeometry2D! geometry, SpatialNET.Coordinate point) -> SpatialNET.Location
+static SpatialNET.Locations.Locate(this SpatialNET.IGeometry2D! geometry, SpatialNET.IPoint2D! point) -> SpatialNET.Location
+static SpatialNET.Measures.HausdorffDistance(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, double densifyFraction = 1) -> double
+static SpatialNET.Overlays.Clip(this SpatialNET.IGeometry2D! geometry, SpatialNET.Envelope2D envelope, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.Clip(this SpatialNET.IMultiPoint2D! multiPoint, SpatialNET.Envelope2D envelope, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.Clip(this SpatialNET.IPolygon2D! polygon, SpatialNET.Envelope2D envelope, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.Clip(this SpatialNET.IPolyline2D! line, SpatialNET.Envelope2D envelope, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.MakeValid(this SpatialNET.IGeometry2D! geometry, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.MakeValid(this SpatialNET.IMultiPoint2D! multiPoint, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.MakeValid(this SpatialNET.IPolygon2D! polygon, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.MakeValid(this SpatialNET.IPolyline2D! polyline, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.Polygonize(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+static SpatialNET.Shapes.MinimumBoundingCircle(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Circle?
+static SpatialNET.Shapes.MinimumRotatedRectangle(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Shapes.Polylabel(this SpatialNET.IPolygon2D! polygon, double? tolerance = null) -> SpatialNET.Coordinate?
+static SpatialNET.Transformations.Rotate(this SpatialNET.IGeometry2D! geometry, double angle, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Transformations.Rotate(this SpatialNET.IMultiPoint2D! multiPoint, double angle, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Transformations.Rotate(this SpatialNET.IPoint2D! point, double angle, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
+static SpatialNET.Transformations.Rotate(this SpatialNET.IPolygon2D! polygon, double angle, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Transformations.Rotate(this SpatialNET.IPolyline2D! line, double angle, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Transformations.Scale(this SpatialNET.IGeometry2D! geometry, double sx, double sy, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Transformations.Scale(this SpatialNET.IMultiPoint2D! multiPoint, double sx, double sy, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Transformations.Scale(this SpatialNET.IPoint2D! point, double sx, double sy, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
+static SpatialNET.Transformations.Scale(this SpatialNET.IPolygon2D! polygon, double sx, double sy, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Transformations.Scale(this SpatialNET.IPolyline2D! line, double sx, double sy, SpatialNET.Coordinate? origin = null, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Transformations.Transform(this SpatialNET.IGeometry2D! geometry, System.Func<SpatialNET.Coordinate, SpatialNET.Coordinate>! transform, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Transformations.Transform(this SpatialNET.IMultiPoint2D! multiPoint, System.Func<SpatialNET.Coordinate, SpatialNET.Coordinate>! transform, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Transformations.Transform(this SpatialNET.IPoint2D! point, System.Func<SpatialNET.Coordinate, SpatialNET.Coordinate>! transform, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
+static SpatialNET.Transformations.Transform(this SpatialNET.IPolygon2D! polygon, System.Func<SpatialNET.Coordinate, SpatialNET.Coordinate>! transform, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Transformations.Transform(this SpatialNET.IPolyline2D! line, System.Func<SpatialNET.Coordinate, SpatialNET.Coordinate>! transform, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Transformations.Translate(this SpatialNET.IGeometry2D! geometry, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Transformations.Translate(this SpatialNET.IMultiPoint2D! multiPoint, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Transformations.Translate(this SpatialNET.IPoint2D! point, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
+static SpatialNET.Transformations.Translate(this SpatialNET.IPolygon2D! polygon, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Transformations.Translate(this SpatialNET.IPolyline2D! line, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!

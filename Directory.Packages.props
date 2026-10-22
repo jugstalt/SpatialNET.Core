@@ -17,6 +17,9 @@
     <!-- Benchmarks -->
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
 
+    <!-- Analyzers -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
+
     <!-- Playground -->
     <PackageVersion Include="Proj4Net.Core" Version="2.26.2401" />
   </ItemGroup>

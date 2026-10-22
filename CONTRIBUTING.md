@@ -30,6 +30,16 @@ Warnings are errors. The tests (about 6,350) take roughly 20 seconds. The proper
 5. **Test** against the NTS oracle, with contract tests and, where it makes sense, property tests ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). Every fixture test also runs against the deliberately awkward host-style implementation in `tests/SpatialNET.Tests/Foreign/`.
 6. **Document it for users** in the matching concept page under `docs/en/concepts/` and `docs/de/konzepte/`.
 
+## Public API
+
+The public API is tracked ([ADR 0028](docs/adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md)): every public type and member is listed in `PublicAPI.Shipped.txt` or `PublicAPI.Unshipped.txt` of its project, and the build fails if the code and the files differ. When you add, change or remove public API, let the analyzer fix the list: in the IDE with the code fix for RS0016/RS0017, or on the command line:
+
+```bash
+dotnet format analyzers src/SpatialNET.Extensions --diagnostics RS0016 RS0017 --severity info
+```
+
+Review the change to the `.txt` file in your diff like any other change: it is the API change a reader of the pull request sees.
+
 ## Language
 
 - English leads for everything code-facing: XML comments, exception messages, commit messages, pull requests, issues and the documentation. German is the second language of the documentation.

@@ -30,6 +30,16 @@ Warnungen sind Fehler. Die Tests (rund 6.350) laufen etwa 20 Sekunden. Die Prope
 5. **Testen** gegen das NTS-Orakel, mit Contract-Tests und, wo sinnvoll, Property-Tests ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.de.md)). Jeder Fixture-Test läuft auch gegen die absichtlich unbequeme, host-artige Implementierung in `tests/SpatialNET.Tests/Foreign/`.
 6. **Für Anwender dokumentieren** auf der passenden Konzeptseite unter `docs/en/concepts/` und `docs/de/konzepte/`.
 
+## Öffentliche API
+
+Die öffentliche API wird verfolgt ([ADR 0028](docs/adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.de.md)): Jeder öffentliche Typ und Member steht in `PublicAPI.Shipped.txt` oder `PublicAPI.Unshipped.txt` seines Projekts, und der Build scheitert, wenn Code und Dateien auseinanderlaufen. Wenn Sie öffentliche API hinzufügen, ändern oder entfernen, lassen Sie den Analyzer die Liste nachziehen: in der IDE mit dem Code-Fix für RS0016/RS0017, oder auf der Kommandozeile:
+
+```bash
+dotnet format analyzers src/SpatialNET.Extensions --diagnostics RS0016 RS0017 --severity info
+```
+
+Prüfen Sie die Änderung an der `.txt`-Datei im Diff wie jede andere: Sie ist die API-Änderung, die ein Leser des Pull Requests sieht.
+
 ## Sprache
 
 - Englisch führt bei allem, was am Code hängt: XML-Kommentare, Exception-Meldungen, Commit-Messages, Pull Requests, Issues und die Dokumentation. Deutsch ist die zweite Sprache der Dokumentation.

@@ -37,6 +37,13 @@
     <PackageValidationBaselineVersion>0.3.0-preview.1</PackageValidationBaselineVersion>
   </PropertyGroup>
 
+  <!-- Öffentliche API (ADR 0028): PublicApiAnalyzers verlangt, dass jede öffentliche API in PublicAPI.Shipped.txt oder
+       PublicAPI.Unshipped.txt steht (RS0016, RS0017). RS0026/RS0027 (mehrere Überladungen mit optionalen Parametern) sind
+       abgeschaltet: Die typisierten Überladungen mit dem gemeinsamen Muster (factory = null, gridSize = null) sind Absicht (ADR 0012). -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);RS0026;RS0027</NoWarn>
+  </PropertyGroup>
+
   <!-- Die README liegt im Paket, sobald sie im Wurzelordner existiert. -->
   <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)README.md')">
     <PackageReadmeFile>README.md</PackageReadmeFile>

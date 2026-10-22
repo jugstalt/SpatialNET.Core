@@ -1,0 +1,47 @@
+#nullable enable
+SpatialNET.IO.GeoJson
+SpatialNET.IO.GeoJsonOptions
+SpatialNET.IO.GeoJsonOptions.Indented.get -> bool
+SpatialNET.IO.GeoJsonOptions.Indented.init -> void
+SpatialNET.IO.GeoJsonOptions.ZMode.get -> SpatialNET.IO.ZMode
+SpatialNET.IO.GeoJsonOptions.ZMode.init -> void
+SpatialNET.IO.MMode
+SpatialNET.IO.MMode.Auto = 0 -> SpatialNET.IO.MMode
+SpatialNET.IO.MMode.Never = 1 -> SpatialNET.IO.MMode
+SpatialNET.IO.Wkb
+SpatialNET.IO.WkbOptions
+SpatialNET.IO.WkbOptions.MMode.get -> SpatialNET.IO.MMode
+SpatialNET.IO.WkbOptions.MMode.init -> void
+SpatialNET.IO.WkbOptions.ZMode.get -> SpatialNET.IO.ZMode
+SpatialNET.IO.WkbOptions.ZMode.init -> void
+SpatialNET.IO.Wkt
+SpatialNET.IO.WktOptions
+SpatialNET.IO.WktOptions.MMode.get -> SpatialNET.IO.MMode
+SpatialNET.IO.WktOptions.MMode.init -> void
+SpatialNET.IO.WktOptions.ZMode.get -> SpatialNET.IO.ZMode
+SpatialNET.IO.WktOptions.ZMode.init -> void
+SpatialNET.IO.ZMode
+SpatialNET.IO.ZMode.Always = 1 -> SpatialNET.IO.ZMode
+SpatialNET.IO.ZMode.Auto = 0 -> SpatialNET.IO.ZMode
+SpatialNET.IO.ZMode.Never = 2 -> SpatialNET.IO.ZMode
+static SpatialNET.IO.GeoJson.Read(string! json, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IO.GeoJson.Read(System.IO.Stream! stream, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IO.GeoJson.Read(System.ReadOnlySpan<byte> utf8, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IO.GeoJson.Read<T>(string! json, SpatialNET.IGeometryFactory? factory = null) -> T
+static SpatialNET.IO.GeoJson.ReadAll(string! json, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IGeometry2D!>!
+static SpatialNET.IO.GeoJson.ReadAll(System.IO.Stream! stream, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IGeometry2D!>!
+static SpatialNET.IO.GeoJson.ReadAll(System.ReadOnlySpan<byte> utf8, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IGeometry2D!>!
+static SpatialNET.IO.GeoJson.ToFeatureCollection(System.Collections.Generic.IEnumerable<SpatialNET.IGeometry2D!>! geometries, SpatialNET.IO.GeoJsonOptions? options = null) -> string!
+static SpatialNET.IO.GeoJson.ToGeoJson(this SpatialNET.IGeometry2D! geometry, SpatialNET.IO.GeoJsonOptions? options = null) -> string!
+static SpatialNET.IO.GeoJson.WriteTo(this SpatialNET.IGeometry2D! geometry, System.Text.Json.Utf8JsonWriter! writer, SpatialNET.IO.GeoJsonOptions? options = null) -> void
+static SpatialNET.IO.GeoJsonOptions.Default.get -> SpatialNET.IO.GeoJsonOptions!
+static SpatialNET.IO.Wkb.Read(System.ReadOnlySpan<byte> wkb, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IO.Wkb.Read<T>(System.ReadOnlySpan<byte> wkb, SpatialNET.IGeometryFactory? factory = null) -> T
+static SpatialNET.IO.Wkb.ReadAll(System.ReadOnlySpan<byte> wkb, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IGeometry2D!>!
+static SpatialNET.IO.Wkb.ToWkb(this SpatialNET.IGeometry2D! geometry, SpatialNET.IO.WkbOptions? options = null) -> byte[]!
+static SpatialNET.IO.WkbOptions.Default.get -> SpatialNET.IO.WkbOptions!
+static SpatialNET.IO.Wkt.Read(string! wkt, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IO.Wkt.Read<T>(string! wkt, SpatialNET.IGeometryFactory? factory = null) -> T
+static SpatialNET.IO.Wkt.ReadAll(string! wkt, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IGeometry2D!>!
+static SpatialNET.IO.Wkt.ToWkt(this SpatialNET.IGeometry2D! geometry, SpatialNET.IO.WktOptions? options = null) -> string!
+static SpatialNET.IO.WktOptions.Default.get -> SpatialNET.IO.WktOptions!

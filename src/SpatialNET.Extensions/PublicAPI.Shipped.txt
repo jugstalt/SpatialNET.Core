@@ -1,0 +1,189 @@
+#nullable enable
+const SpatialNET.SpatialIndex<T>.DefaultNodeCapacity = 16 -> int
+override SpatialNET.IntersectionMatrix.Equals(object? obj) -> bool
+override SpatialNET.IntersectionMatrix.GetHashCode() -> int
+override SpatialNET.IntersectionMatrix.ToString() -> string!
+SpatialNET.Buffering
+SpatialNET.BufferOptions
+SpatialNET.BufferOptions.ArcTolerance.get -> double?
+SpatialNET.BufferOptions.ArcTolerance.init -> void
+SpatialNET.BufferOptions.CapStyle.get -> SpatialNET.CapStyle
+SpatialNET.BufferOptions.CapStyle.init -> void
+SpatialNET.BufferOptions.JoinStyle.get -> SpatialNET.JoinStyle
+SpatialNET.BufferOptions.JoinStyle.init -> void
+SpatialNET.BufferOptions.MitreLimit.get -> double
+SpatialNET.BufferOptions.MitreLimit.init -> void
+SpatialNET.BufferOptions.QuadrantSegments.get -> int
+SpatialNET.BufferOptions.QuadrantSegments.init -> void
+SpatialNET.BufferOptions.SimplifyFactor.get -> double
+SpatialNET.BufferOptions.SimplifyFactor.init -> void
+SpatialNET.BufferOptions.SingleSided.get -> bool
+SpatialNET.BufferOptions.SingleSided.init -> void
+SpatialNET.CapStyle
+SpatialNET.CapStyle.Flat = 1 -> SpatialNET.CapStyle
+SpatialNET.CapStyle.Round = 0 -> SpatialNET.CapStyle
+SpatialNET.CapStyle.Square = 2 -> SpatialNET.CapStyle
+SpatialNET.Constructions
+SpatialNET.Cutting
+SpatialNET.Hull
+SpatialNET.IntersectionMatrix
+SpatialNET.IntersectionMatrix.BB.get -> int
+SpatialNET.IntersectionMatrix.BE.get -> int
+SpatialNET.IntersectionMatrix.BI.get -> int
+SpatialNET.IntersectionMatrix.EB.get -> int
+SpatialNET.IntersectionMatrix.EE.get -> int
+SpatialNET.IntersectionMatrix.EI.get -> int
+SpatialNET.IntersectionMatrix.Equals(SpatialNET.IntersectionMatrix other) -> bool
+SpatialNET.IntersectionMatrix.IB.get -> int
+SpatialNET.IntersectionMatrix.IE.get -> int
+SpatialNET.IntersectionMatrix.II.get -> int
+SpatialNET.IntersectionMatrix.IntersectionMatrix() -> void
+SpatialNET.IntersectionMatrix.Matches(string! pattern) -> bool
+SpatialNET.JoinStyle
+SpatialNET.JoinStyle.Bevel = 2 -> SpatialNET.JoinStyle
+SpatialNET.JoinStyle.Mitre = 1 -> SpatialNET.JoinStyle
+SpatialNET.JoinStyle.Round = 0 -> SpatialNET.JoinStyle
+SpatialNET.LinearReferencing
+SpatialNET.ListViews
+SpatialNET.Measures
+SpatialNET.OffsetCurves
+SpatialNET.OffsetOptions
+SpatialNET.OffsetOptions.ArcTolerance.get -> double?
+SpatialNET.OffsetOptions.ArcTolerance.init -> void
+SpatialNET.OffsetOptions.Joined.get -> bool
+SpatialNET.OffsetOptions.Joined.init -> void
+SpatialNET.OffsetOptions.JoinStyle.get -> SpatialNET.JoinStyle
+SpatialNET.OffsetOptions.JoinStyle.init -> void
+SpatialNET.OffsetOptions.MitreLimit.get -> double
+SpatialNET.OffsetOptions.MitreLimit.init -> void
+SpatialNET.OffsetOptions.QuadrantSegments.get -> int
+SpatialNET.OffsetOptions.QuadrantSegments.init -> void
+SpatialNET.OffsetOptions.SimplifyFactor.get -> double
+SpatialNET.OffsetOptions.SimplifyFactor.init -> void
+SpatialNET.Overlays
+SpatialNET.Preparation
+SpatialNET.PreparedGeometry
+SpatialNET.PreparedGeometry.Contains(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.PreparedGeometry.CoveredBy(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.PreparedGeometry.Covers(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.PreparedGeometry.Disjoint(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.PreparedGeometry.Geometry.get -> SpatialNET.IGeometry2D!
+SpatialNET.PreparedGeometry.Intersects(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.PreparedGeometry.Touches(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.PreparedGeometry.Within(SpatialNET.IGeometry2D! other) -> bool
+SpatialNET.Relations
+SpatialNET.Simplification
+SpatialNET.SpatialIndex<T>
+SpatialNET.SpatialIndex<T>.Count.get -> int
+SpatialNET.SpatialIndex<T>.Extent.get -> SpatialNET.Envelope2D
+SpatialNET.SpatialIndex<T>.Nearest(SpatialNET.Coordinate point, int k, System.Func<T, SpatialNET.Coordinate, double>? distance = null) -> System.Collections.Generic.IReadOnlyList<T>!
+SpatialNET.SpatialIndex<T>.Query(SpatialNET.Envelope2D envelope) -> System.Collections.Generic.IEnumerable<T>!
+SpatialNET.SpatialIndex<T>.Query(SpatialNET.Envelope2D envelope, System.Collections.Generic.ICollection<T>! results) -> void
+SpatialNET.SpatialIndex<T>.SpatialIndex(System.Collections.Generic.IEnumerable<(SpatialNET.Envelope2D Envelope, T Item)>! items, int nodeCapacity = 16) -> void
+SpatialNET.SpatialIndexing
+SpatialNET.Validation
+SpatialNET.ValidationIssue
+SpatialNET.ValidationIssue.Kind.get -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssue.Kind.init -> void
+SpatialNET.ValidationIssue.Location.get -> SpatialNET.Coordinate
+SpatialNET.ValidationIssue.Location.init -> void
+SpatialNET.ValidationIssue.ValidationIssue() -> void
+SpatialNET.ValidationIssue.ValidationIssue(SpatialNET.ValidationIssueKind Kind, SpatialNET.Coordinate Location) -> void
+SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.DegenerateRing = 2 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.DisconnectedInterior = 6 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.InvalidCoordinate = 3 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.OverlappingShells = 5 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.RingSelfTouch = 1 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.SelfIntersection = 0 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationIssueKind.TooFewPoints = 4 -> SpatialNET.ValidationIssueKind
+SpatialNET.ValidationResult
+SpatialNET.ValidationResult.Issues.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.ValidationIssue>!
+SpatialNET.ValidationResult.Issues.init -> void
+SpatialNET.ValidationResult.IsValid.get -> bool
+SpatialNET.ValidationResult.ValidationResult(System.Collections.Generic.IReadOnlyList<SpatialNET.ValidationIssue>! Issues) -> void
+static SpatialNET.Buffering.Buffer(this SpatialNET.IGeometry2D! geometry, double distance, SpatialNET.BufferOptions? options = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.BufferOptions.Default.get -> SpatialNET.BufferOptions!
+static SpatialNET.Constructions.Boundary(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Constructions.Boundary(this SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Constructions.Boundary(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Constructions.Densify(this SpatialNET.IGeometry2D! geometry, double maxSegmentLength, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Constructions.Densify(this SpatialNET.IPolygon2D! polygon, double maxSegmentLength, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Constructions.Densify(this SpatialNET.IPolyline2D! line, double maxSegmentLength, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Constructions.Reverse(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Cutting.Cut(this SpatialNET.IPolygon2D! polygon, SpatialNET.IPolyline2D! cutter, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+static SpatialNET.Cutting.Cut(this SpatialNET.IPolyline2D! polyline, SpatialNET.IPolyline2D! cutter, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolyline2D!>!
+static SpatialNET.Hull.ConvexHull(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IntersectionMatrix.operator !=(SpatialNET.IntersectionMatrix a, SpatialNET.IntersectionMatrix b) -> bool
+static SpatialNET.IntersectionMatrix.operator ==(SpatialNET.IntersectionMatrix a, SpatialNET.IntersectionMatrix b) -> bool
+static SpatialNET.LinearReferencing.Interpolate(this SpatialNET.IPolyline2D! line, double distance) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.InterpolateByM(this SpatialNET.IPolyline2D! line, double m) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point) -> double
+static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> double
+static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point) -> double
+static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> double
+static SpatialNET.LinearReferencing.Substring(this SpatialNET.IPolyline2D! line, double from, double to, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.LinearReferencing.SubstringByM(this SpatialNET.IPolyline2D! line, double fromM, double toM, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.ListViews.AsList(this SpatialNET.IPointCollection2D! points) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPoint2D!>!
+static SpatialNET.ListViews.AsList(this SpatialNET.IPolygon2D! polygon) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IRing2D!>!
+static SpatialNET.ListViews.AsList(this SpatialNET.IPolyline2D! polyline) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPath2D!>!
+static SpatialNET.Measures.Area(this SpatialNET.IGeometry2D! geometry) -> double
+static SpatialNET.Measures.Area(this SpatialNET.IPolygon2D! polygon) -> double
+static SpatialNET.Measures.Centroid(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Coordinate?
+static SpatialNET.Measures.Distance(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> double
+static SpatialNET.Measures.Envelope(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Envelope2D
+static SpatialNET.Measures.IsWithinDistance(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, double distance) -> bool
+static SpatialNET.Measures.Length(this SpatialNET.IGeometry2D! geometry) -> double
+static SpatialNET.Measures.Length(this SpatialNET.IPolygon2D! polygon) -> double
+static SpatialNET.Measures.Length(this SpatialNET.IPolyline2D! polyline) -> double
+static SpatialNET.Measures.NearestPoints(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> (SpatialNET.Coordinate OnA, SpatialNET.Coordinate OnB)?
+static SpatialNET.Measures.PointOnSurface(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Coordinate?
+static SpatialNET.OffsetCurves.OffsetCurve(this SpatialNET.IPolygon2D! polygon, double distance, SpatialNET.OffsetOptions? options = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.OffsetCurves.OffsetCurve(this SpatialNET.IPolyline2D! polyline, double distance, SpatialNET.OffsetOptions? options = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.OffsetOptions.Default.get -> SpatialNET.OffsetOptions!
+static SpatialNET.Overlays.Difference(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.Difference(this SpatialNET.IMultiPoint2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.Difference(this SpatialNET.IPoint2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.Difference(this SpatialNET.IPolygon2D! a, SpatialNET.IPolygon2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.Difference(this SpatialNET.IPolygon2D! a, SpatialNET.IPolyline2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.Difference(this SpatialNET.IPolyline2D! a, SpatialNET.IPolygon2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.Difference(this SpatialNET.IPolyline2D! a, SpatialNET.IPolyline2D! b, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IMultiPoint2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IPoint2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IPolygon2D! a, SpatialNET.IPolygon2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IPolygon2D! a, SpatialNET.IPolyline2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IPolyline2D! a, SpatialNET.IPolygon2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.Intersection(this SpatialNET.IPolyline2D! a, SpatialNET.IPolyline2D! b, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.SymDifference(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.SymDifference(this SpatialNET.IMultiPoint2D! a, SpatialNET.IMultiPoint2D! b, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.SymDifference(this SpatialNET.IPolygon2D! a, SpatialNET.IPolygon2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.SymDifference(this SpatialNET.IPolyline2D! a, SpatialNET.IPolyline2D! b, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.Union(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.Union(this SpatialNET.IMultiPoint2D! a, SpatialNET.IMultiPoint2D! b, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.Union(this SpatialNET.IPolygon2D! a, SpatialNET.IPolygon2D! b, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.Union(this SpatialNET.IPolyline2D! a, SpatialNET.IPolyline2D! b, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IGeometry2D!>! geometries, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IMultiPoint2D!>! multiPoints, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IPolygon2D!>! polygons, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IPolyline2D!>! polylines, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Preparation.Prepare(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.PreparedGeometry!
+static SpatialNET.Relations.Contains(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.CoveredBy(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Covers(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Crosses(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Disjoint(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.EqualsTopo(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Intersects(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Overlaps(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Relate(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> SpatialNET.IntersectionMatrix
+static SpatialNET.Relations.Relate(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b, string! pattern) -> bool
+static SpatialNET.Relations.Touches(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Relations.Within(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
+static SpatialNET.Simplification.Simplify(this SpatialNET.IPolygon2D! polygon, double tolerance, bool preserveTopology = false, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Simplification.Simplify(this SpatialNET.IPolyline2D! polyline, double tolerance, bool preserveTopology = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.SpatialIndexing.Query<T>(this SpatialNET.SpatialIndex<T>! index, SpatialNET.IGeometry2D! geometry) -> System.Collections.Generic.IEnumerable<T>!
+static SpatialNET.SpatialIndexing.ToSpatialIndex<T>(this System.Collections.Generic.IEnumerable<T>! source, System.Func<T, SpatialNET.Envelope2D>! envelopeOf, int nodeCapacity = 16) -> SpatialNET.SpatialIndex<T>!
+static SpatialNET.SpatialIndexing.ToSpatialIndex<TGeometry>(this System.Collections.Generic.IEnumerable<TGeometry>! geometries, int nodeCapacity = 16) -> SpatialNET.SpatialIndex<TGeometry>!
+static SpatialNET.Validation.IsValid(this SpatialNET.IGeometry2D! geometry) -> bool
+static SpatialNET.Validation.Validate(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.ValidationResult!
