@@ -1,6 +1,6 @@
 # Buffer und Offset-Kurven
 
-`Buffer` vergrößert oder verkleinert eine Geometrie um eine Distanz. `OffsetCurve` liefert eine parallele Linie zu einer Polylinie oder zum Rand eines Polygons. Beide bauen auf dem Overlay-Kern auf ([Overlays, Füllregeln und das Gitter](overlay-und-gitter.md)); Standardwerte und Parameter sind bewusst JTS-/NetTopologySuite-kompatibel, damit die Ergebnisse nah am Orakel bleiben, mit dem die Tests vergleichen ([ADR 0006](../../adr/0006-buffer-roh-offset-union-positive-offsetcurve-jts.de.md)).
+`Buffer` vergrößert oder verkleinert eine Geometrie um eine Distanz. `OffsetCurve` liefert eine parallele Linie zu einer Polylinie oder zum Rand eines Polygons. Beide bauen auf dem Overlay-Kern auf ([Overlays, Füllregeln und das Gitter](overlay-and-grid.md)); Standardwerte und Parameter sind bewusst JTS-/NetTopologySuite-kompatibel, damit die Ergebnisse nah am Orakel bleiben, mit dem die Tests vergleichen ([ADR 0006](../../adr/0006-buffer-roh-offset-union-positive-offsetcurve-jts.de.md)).
 
 ## Buffer
 

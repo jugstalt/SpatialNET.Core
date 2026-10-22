@@ -18,22 +18,43 @@ Console.WriteLine(square.Relate(edge));   // FF2101FF2
 
 The matrix is written row by row in the order I, B, E of a against I, B, E of b (`II IB IE BI BB BE EI EB EE`); the nine values are also available as properties (`II`, `IB`, …, `EE`). `a.Relate(b, pattern)` checks the matrix against a pattern of nine characters: `T` (not empty), `F` (empty), `*` (anything), `0`, `1`, `2` (exactly this dimension). For example `T*F**F***` is "within".
 
+### Reading a pattern
+
+A pattern has nine characters, one for each pair of the three parts of `a` and the three parts of `b`. The three parts of a geometry are its **interior** (I), its **boundary** (B) and its **exterior** (E): for an area the inside, the edge and the rest of the plane; for a line everything except its two end points, the end points, and the rest; for a point the point itself, nothing, and the rest. The nine positions, row by row:
+
+| | interior of `b` | boundary of `b` | exterior of `b` |
+|---|---|---|---|
+| **interior of `a`** | 1st (`II`) | 2nd (`IB`) | 3rd (`IE`) |
+| **boundary of `a`** | 4th (`BI`) | 5th (`BB`) | 6th (`BE`) |
+| **exterior of `a`** | 7th (`EI`) | 8th (`EB`) | 9th (`EE`) |
+
+Each character says what the two parts **share**:
+
+| Character | Means |
+|---|---|
+| `T` | they share something (points, a line or an area; the dimension does not matter) |
+| `F` | they share nothing (empty) |
+| `*` | does not matter |
+| `0`, `1`, `2` | they share exactly points (0), a line (1) or an area (2) |
+
+`T` and `F` do not say that the predicate is true or false; the predicate is true if all nine positions fit its pattern. As an example, `T*F**F***` is the pattern of `Within`: `T` at II, the interiors share something; `F` at IE, the interior of `a` shares nothing with the exterior of `b`; `F` at BE, neither does the boundary of `a`; the rest does not matter. In words: the interiors meet, and nothing of `a` sticks out of `b`. The matrix `FF2101FF2` of the square and its edge above reads the same way: II `F` (the interiors share nothing), IE `2` (the inside of the square shares an area with the exterior of the edge), BI `1` (the boundary of the square and the interior of the edge share a line: the edge lies on it), BB `0` (the end points of the edge touch the boundary), and so on.
+
 ## The predicates
 
 All predicates are extension methods on `IGeometry2D`:
 
 | Predicate | Meaning |
 |---|---|
-| `Intersects` | the geometries share at least one point |
-| `Disjoint` | the geometries share no point (`FF*FF****`) |
-| `Contains(a, b)` | b lies in a and they share an interior point (`T*****FF*`) |
-| `Within(a, b)` | a lies in b (`T*F**F***`) |
-| `Covers(a, b)` | no point of b lies outside a; boundary points count |
-| `CoveredBy(a, b)` | no point of a lies outside b; boundary points count |
-| `Touches` | the geometries meet only in boundary points |
-| `Crosses` | the geometries cross (OGC; depends on the dimensions) |
-| `Overlaps` | geometries of equal dimension overlap partially |
-| `EqualsTopo` | the geometries are topologically equal (`T*F**FFF*`); false if one is empty |
+| [`Intersects`](predicates/intersects.md) | the geometries share at least one point |
+| [`Disjoint`](predicates/disjoint.md) | the geometries share no point (`FF*FF****`) |
+| [`Contains(a, b)`](predicates/contains.md) | b lies in a and they share an interior point (`T*****FF*`) |
+| [`Within(a, b)`](predicates/within.md) | a lies in b (`T*F**F***`) |
+| [`Covers(a, b)`](predicates/covers.md) | no point of b lies outside a; boundary points count |
+| [`CoveredBy(a, b)`](predicates/covered-by.md) | no point of a lies outside b; boundary points count |
+| [`Touches`](predicates/touches.md) | the geometries meet only in boundary points |
+| [`Crosses`](predicates/crosses.md) | the geometries cross (OGC; depends on the dimensions) |
+| [`Overlaps`](predicates/overlaps.md) | geometries of equal dimension overlap partially |
+| [`EqualsTopo`](predicates/equals-topo.md) | the geometries are topologically equal (`T*F**FFF*`); false if one is empty |
 
 `Contains` versus `Covers` is the difference that surprises most people: a polygon does not *contain* a line that lies on its boundary (the line has no point in the interior), but it *covers* it. If you mean "lies inside, the boundary counts", use `Covers`/`CoveredBy`.
 
@@ -44,6 +65,71 @@ Rules that apply to all predicates:
 - **Line boundaries by mod-2.** The end points of a line are its boundary, closed paths have no boundary, and for a polyline with several paths only an odd number of path ends at a point counts.
 - **Invalid input** is handled deterministically and without exceptions, but without a guarantee that the predicates are consistent with one another.
 
+## The situations
+
+The tables on the pages of the single predicates use the same 27 situations. `a` is the first, `b` the second geometry; the matrix is `a.Relate(b)` ([The intersection matrix](#the-intersection-matrix)). A cell shows `true` where the predicate holds.
+
+| Situation | Matrix | [Intersects](predicates/intersects.md) | [Disjoint](predicates/disjoint.md) | [Contains](predicates/contains.md) | [Within](predicates/within.md) | [Covers](predicates/covers.md) | [CoveredBy](predicates/covered-by.md) | [Touches](predicates/touches.md) | [Crosses](predicates/crosses.md) | [Overlaps](predicates/overlaps.md) | [EqualsTopo](predicates/equals-topo.md) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| A point inside an area | `0FFFFF212` | **true** |  |  | **true** |  | **true** |  |  |  |  |
+| A point on the edge of an area | `F0FFFF212` | **true** |  |  |  |  | **true** | **true** |  |  |  |
+| A point outside an area | `FF0FFF212` |  | **true** |  |  |  |  |  |  |  |  |
+| A point in a hole of an area | `FF0FFF212` |  | **true** |  |  |  |  |  |  |  |  |
+| A point on a line (not at its end) | `0FFFFF102` | **true** |  |  | **true** |  | **true** |  |  |  |  |
+| A point at the end of a line | `F0FFFF102` | **true** |  |  |  |  | **true** | **true** |  |  |  |
+| A point at a bend (a vertex) inside a line | `0FFFFF102` | **true** |  |  | **true** |  | **true** |  |  |  |  |
+| A point beside a line | `FF0FFF102` |  | **true** |  |  |  |  |  |  |  |  |
+| Two equal points | `0FFFFFFF2` | **true** |  | **true** | **true** | **true** | **true** |  |  |  | **true** |
+| Two lines that cross | `0F1FF0102` | **true** |  |  |  |  |  |  | **true** |  |  |
+| Two lines that meet end to end | `FF1F00102` | **true** |  |  |  |  |  | **true** |  |  |  |
+| A line that ends on another line (a T) | `FF10F0102` | **true** |  |  |  |  |  | **true** |  |  |  |
+| Two lines that run together for a stretch | `1010F0102` | **true** |  |  |  |  |  |  |  | **true** |  |
+| Two equal lines (one reversed) | `1FFF0FFF2` | **true** |  | **true** | **true** | **true** | **true** |  |  |  | **true** |
+| A line inside an area | `1FF0FF212` | **true** |  |  | **true** |  | **true** |  |  |  |  |
+| A line that crosses the edge of an area | `1010F0212` | **true** |  |  |  |  |  |  | **true** |  |  |
+| A line along the edge of an area | `F1FF0F212` | **true** |  |  |  |  | **true** | **true** |  |  |  |
+| A line outside an area that ends on its edge | `FF1F00212` | **true** |  |  |  |  |  | **true** |  |  |  |
+| A line outside an area | `FF1FF0212` |  | **true** |  |  |  |  |  |  |  |  |
+| A small area inside a large one | `2FF1FF212` | **true** |  |  | **true** |  | **true** |  |  |  |  |
+| An area inside another, touching its edge from inside | `2FF11F212` | **true** |  |  | **true** |  | **true** |  |  |  |  |
+| Two areas that share an edge | `FF2F11212` | **true** |  |  |  |  |  | **true** |  |  |  |
+| Two areas that touch at a corner | `FF2F01212` | **true** |  |  |  |  |  | **true** |  |  |  |
+| Two areas that overlap | `212111212` | **true** |  |  |  |  |  |  |  | **true** |  |
+| Two equal areas (other start point and direction) | `2FFF1FFF2` | **true** |  | **true** | **true** | **true** | **true** |  |  |  | **true** |
+| Two areas apart | `FF2FF1212` |  | **true** |  |  |  |  |  |  |  |  |
+| An area inside a hole of another | `FF2FF1212` |  | **true** |  |  |  |  |  |  |  |  |
+
+### The geometries
+
+| Situation | `a` | `b` |
+|---|---|---|
+| A point inside an area | `POINT (5 5)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A point on the edge of an area | `POINT (10 5)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A point outside an area | `POINT (15 5)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A point in a hole of an area | `POINT (5 5)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (4 4, 6 4, 6 6, 4 6, 4 4))` |
+| A point on a line (not at its end) | `POINT (5 0)` | `LINESTRING (0 0, 10 0)` |
+| A point at the end of a line | `POINT (0 0)` | `LINESTRING (0 0, 10 0)` |
+| A point at a bend (a vertex) inside a line | `POINT (5 0)` | `LINESTRING (0 0, 5 0, 5 5)` |
+| A point beside a line | `POINT (5 1)` | `LINESTRING (0 0, 10 0)` |
+| Two equal points | `POINT (1 1)` | `POINT (1 1)` |
+| Two lines that cross | `LINESTRING (0 0, 10 10)` | `LINESTRING (0 10, 10 0)` |
+| Two lines that meet end to end | `LINESTRING (0 0, 5 5)` | `LINESTRING (5 5, 10 0)` |
+| A line that ends on another line (a T) | `LINESTRING (5 0, 5 5)` | `LINESTRING (0 0, 10 0)` |
+| Two lines that run together for a stretch | `LINESTRING (0 0, 10 0)` | `LINESTRING (5 0, 15 0)` |
+| Two equal lines (one reversed) | `LINESTRING (0 0, 10 0)` | `LINESTRING (10 0, 0 0)` |
+| A line inside an area | `LINESTRING (2 2, 8 8)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A line that crosses the edge of an area | `LINESTRING (5 5, 15 5)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A line along the edge of an area | `LINESTRING (0 0, 10 0)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A line outside an area that ends on its edge | `LINESTRING (10 5, 15 5)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A line outside an area | `LINESTRING (12 0, 12 10)` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| A small area inside a large one | `POLYGON ((2 2, 4 2, 4 4, 2 4, 2 2))` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| An area inside another, touching its edge from inside | `POLYGON ((0 0, 5 0, 5 5, 0 5, 0 0))` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` |
+| Two areas that share an edge | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` | `POLYGON ((10 0, 20 0, 20 10, 10 10, 10 0))` |
+| Two areas that touch at a corner | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` | `POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))` |
+| Two areas that overlap | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` | `POLYGON ((5 0, 15 0, 15 10, 5 10, 5 0))` |
+| Two equal areas (other start point and direction) | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` | `POLYGON ((10 0, 10 10, 0 10, 0 0, 10 0))` |
+| Two areas apart | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))` | `POLYGON ((20 0, 30 0, 30 10, 20 10, 20 0))` |
+| An area inside a hole of another | `POLYGON ((4.5 4.5, 5.5 4.5, 5.5 5.5, 4.5 5.5, 4.5 4.5))` | `POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (4 4, 6 4, 6 6, 4 6, 4 4))` |
 ## Exactness versus overlays
 
 Predicates compute exactly on the coordinates you pass. Overlays round to a grid ([Overlays, fill rules and the grid](overlay-and-grid.md)). For near-touches below the grid size, `a.Intersects(b)` can therefore be true while `a.Intersection(b)` is empty.

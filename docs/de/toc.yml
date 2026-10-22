@@ -1,15 +1,15 @@
 - name: Start
   href: index.md
 - name: Erste Schritte
-  href: erste-schritte.md
+  href: getting-started.md
 - name: Host-Anbindung
-  href: host-anbindung.md
+  href: host-integration.md
 - name: Rezepte
-  href: rezepte.md
+  href: cookbook.md
 - name: Konzepte
-  href: konzepte/
+  href: concepts/
 - name: Glossar
-  href: glossar.md
+  href: glossary.md
 - name: Entscheidungen
   href: decisions/
 - name: Recherche (GitHub)

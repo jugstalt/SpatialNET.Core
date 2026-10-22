@@ -1,10 +1,10 @@
 # Rezepte
 
-Kurze Rezepte für das, was Hosts täglich tun. Jedes ist ein vollständiges, lauffähiges Fragment (sie werden im Testprojekt übersetzt und geprüft) und nennt die Seite, die die Idee dahinter erklärt. Sie setzen die Einrichtung aus der [Host-Anbindung](host-anbindung.md) voraus: Die Host-Klassen sind vorhanden und `GeometryFactory.Default` ist gesetzt; hier stehen die mitgelieferten `SpatialNET.Imp`-Klassen und WKT stellvertretend für Ihre Daten.
+Kurze Rezepte für das, was Hosts täglich tun. Jedes ist ein vollständiges, lauffähiges Fragment (sie werden im Testprojekt übersetzt und geprüft) und nennt die Seite, die die Idee dahinter erklärt. Sie setzen die Einrichtung aus der [Host-Anbindung](host-integration.md) voraus: Die Host-Klassen sind vorhanden und `GeometryFactory.Default` ist gesetzt; hier stehen die mitgelieferten `SpatialNET.Imp`-Klassen und WKT stellvertretend für Ihre Daten.
 
 ## Welches Flurstück liegt unter dem Klick?
 
-Ein räumlicher Index findet Kandidaten über die Envelope; der genaue Test entscheidet. Dasselbe Muster beantwortet „alles im Abstand von einem Punkt“: die Envelope aufweiten, dann genau testen ([Räumlicher Index](konzepte/raeumlicher-index.md)).
+Ein räumlicher Index findet Kandidaten über die Envelope; der genaue Test entscheidet. Dasselbe Muster beantwortet „alles im Abstand von einem Punkt“: die Envelope aufweiten, dann genau testen ([Räumlicher Index](concepts/spatial-index.md)).
 
 ```csharp
 var parcels = new Dictionary<string, IPolygon2D>
@@ -35,7 +35,7 @@ Console.WriteLine(string.Join(",", near)); // A-2
 
 ## Ein Polygon, viele Punkte
 
-Tausende Punkte gegen ein großes Polygon zu testen ist der Zweck von `Prepare()`. Die vorbereitete Geometrie ist thread-sicher: einmal bauen und von allen Threads nutzen lassen ([Prädikate](konzepte/praedikate.md), [ADR 0024](../adr/0024-prepared-geometry-thread-sicher-und-distanz.de.md)).
+Tausende Punkte gegen ein großes Polygon zu testen ist der Zweck von `Prepare()`. Die vorbereitete Geometrie ist thread-sicher: einmal bauen und von allen Threads nutzen lassen ([Prädikate](concepts/predicates.md), [ADR 0024](../adr/0024-prepared-geometry-thread-sicher-und-distanz.de.md)).
 
 ```csharp
 var district = Wkt.Read<IPolygon2D>("POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))");
@@ -51,7 +51,7 @@ Console.WriteLine(inside); // points strictly inside, not on the boundary
 
 ## Räumlicher Verschnitt mit Flächenanteilen
 
-`Join` paart die Elemente zweier Indizes, deren Envelopes sich treffen, und überspringt ganze Teilbäume, die sich nicht treffen können; danach testen Sie genau und rechnen, was Sie brauchen, hier wie viel jedes Flurstücks in einer Überschwemmungszone liegt ([Räumlicher Index](konzepte/raeumlicher-index.md), [Overlays](konzepte/overlay-und-gitter.md)).
+`Join` paart die Elemente zweier Indizes, deren Envelopes sich treffen, und überspringt ganze Teilbäume, die sich nicht treffen können; danach testen Sie genau und rechnen, was Sie brauchen, hier wie viel jedes Flurstücks in einer Überschwemmungszone liegt ([Räumlicher Index](concepts/spatial-index.md), [Overlays](concepts/overlay-and-grid.md)).
 
 ```csharp
 var parcels = new[]
@@ -77,7 +77,7 @@ Console.WriteLine(shares[0].Share); // 0.25
 
 ## Nach Attribut verschmelzen
 
-Erst gruppieren, dann je Gruppe `UnionAll`. Es verschmilzt viele Polygone in einem Zug, nicht als Schleife paarweiser Vereinigungen ([Overlays](konzepte/overlay-und-gitter.md)).
+Erst gruppieren, dann je Gruppe `UnionAll`. Es verschmilzt viele Polygone in einem Zug, nicht als Schleife paarweiser Vereinigungen ([Overlays](concepts/overlay-and-grid.md)).
 
 ```csharp
 var landUse = new (string Use, string Wkt)[]
@@ -99,7 +99,7 @@ Console.WriteLine(dissolved["forest"].RingCount); // 1: one outline, the shared 
 
 ## Ein gezeichnetes Polygon reparieren
 
-`Validate` sagt, was falsch ist und wo; `MakeValid` repariert es nach der Even-Odd-Regel. Prüfen Sie zuerst und lassen Sie gültige Eingaben, wie sie sind: `MakeValid` liefert immer ein neues Polygon auf dem Raster ([Vereinfachen, konvexe Hülle und Validierung](konzepte/vereinfachen-und-validieren.md)).
+`Validate` sagt, was falsch ist und wo; `MakeValid` repariert es nach der Even-Odd-Regel. Prüfen Sie zuerst und lassen Sie gültige Eingaben, wie sie sind: `MakeValid` liefert immer ein neues Polygon auf dem Raster ([Vereinfachen, konvexe Hülle und Validierung](concepts/simplify-and-validation.md)).
 
 ```csharp
 // A user drew a bow tie: the outline crosses itself.
@@ -120,7 +120,7 @@ Console.WriteLine(repaired.Area());    // 50
 
 ## Ein Flurstück teilen
 
-`Cut` liefert die Teile als flache Liste. Ein Teil, den die Linie nicht erreicht, kommt unversehrt zurück ([Cut](konzepte/cut.md)).
+`Cut` liefert die Teile als flache Liste. Ein Teil, den die Linie nicht erreicht, kommt unversehrt zurück ([Cut](concepts/cut.md)).
 
 ```csharp
 var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");
@@ -135,7 +135,7 @@ Console.WriteLine(string.Join(" and ", pieces.Select(p => p.Area()).Order())); /
 
 ## Von Linien zu Flächen
 
-`LineMerge` verbindet Stücke, die Ende an Ende liegen, zu längeren Pfaden; `Polygonize` macht aus Linien die Flächen, die sie umschließen. Linien, die nur herausragen, umschließen nichts und entfallen ([Overlays](konzepte/overlay-und-gitter.md), [Maße und Konstruktionen](konzepte/masse-und-konstruktionen.md)).
+`LineMerge` verbindet Stücke, die Ende an Ende liegen, zu längeren Pfaden; `Polygonize` macht aus Linien die Flächen, die sie umschließen. Linien, die nur herausragen, umschließen nichts und entfallen ([Overlays](concepts/overlay-and-grid.md), [Maße und Konstruktionen](concepts/measures-and-constructions.md)).
 
 ```csharp
 // A road network digitised in pieces: the pieces only touch at their ends.
@@ -153,7 +153,7 @@ Console.WriteLine(fields.Count); // 2: the ends of the crossing line outside the
 
 ## Stationierung entlang einer Straße
 
-Position entlang einer Linie, nächste Position zu einem Punkt und das Stück zwischen zwei Positionen. Mit M-Werten gibt es dieselben drei nach Messwert statt nach Länge ([Lineare Referenzierung](konzepte/lineare-referenzierung.md)).
+Position entlang einer Linie, nächste Position zu einem Punkt und das Stück zwischen zwei Positionen. Mit M-Werten gibt es dieselben drei nach Messwert statt nach Länge ([Lineare Referenzierung](concepts/linear-referencing.md)).
 
 ```csharp
 var road = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 100 0, 100 50)");
@@ -168,7 +168,7 @@ Console.WriteLine($"{at!.Value.X} {at.Value.Y}, {chainage}, {section.Length()}")
 
 ## Für die Karte
 
-Für kleine Maßstäbe vereinfachen, auf den Bildschirm zuschneiden und einen guten Ort für die Beschriftung finden ([Vereinfachen, konvexe Hülle und Validierung](konzepte/vereinfachen-und-validieren.md), [Overlays](konzepte/overlay-und-gitter.md), [Maße und Konstruktionen](konzepte/masse-und-konstruktionen.md)).
+Für kleine Maßstäbe vereinfachen, auf den Bildschirm zuschneiden und einen guten Ort für die Beschriftung finden ([Vereinfachen, konvexe Hülle und Validierung](concepts/simplify-and-validation.md), [Overlays](concepts/overlay-and-grid.md), [Maße und Konstruktionen](concepts/measures-and-constructions.md)).
 
 ```csharp
 // A wiggly shore with many vertices.
@@ -190,7 +190,7 @@ Console.WriteLine(light.AsList().Sum(r => r.PointCount) < shore.AsList().Sum(r =
 
 ## Austausch mit Datenbanken und Web-Clients
 
-WKB für eine Datenbankspalte und GeoJSON für einen Web-Client schreiben und lesen. Das Lesen nimmt die Factory, die Ihre eigenen Klassen erzeugt; was Sie lesen, ist also schon eine Host-Geometrie ([Erste Schritte](erste-schritte.md)).
+WKB für eine Datenbankspalte und GeoJSON für einen Web-Client schreiben und lesen. Das Lesen nimmt die Factory, die Ihre eigenen Klassen erzeugt; was Sie lesen, ist also schon eine Host-Geometrie ([Erste Schritte](getting-started.md)).
 
 ```csharp
 var parcel = Wkt.Read<IPolygon2D>("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))");

@@ -10,7 +10,7 @@ Console.WriteLine(noisy.Simplify(0.5).ToWkt()); // LINESTRING (0 0, 4 0)
 ```
 
 - **Polylinien:** Jeder Pfad wird vereinfacht; Anfangs- und Endpunkt bleiben, die übrigen Vertices sind unverändert (inklusive Z und M).
-- **Polygone:** Jeder Ring wird vereinfacht; auch der Startpunkt eines Rings darf entfallen, und Ringe, die weniger als 4 Punkte behalten, fallen weg. Das Ergebnis wird über das Overlay normalisiert und ist deshalb **immer gültig** (siehe [Das Geometriemodell](geometriemodell.md)).
+- **Polygone:** Jeder Ring wird vereinfacht; auch der Startpunkt eines Rings darf entfallen, und Ringe, die weniger als 4 Punkte behalten, fallen weg. Das Ergebnis wird über das Overlay normalisiert und ist deshalb **immer gültig** (siehe [Das Geometriemodell](geometry-model.md)).
 - **`preserveTopology: true`** nutzt eine topologieerhaltende Variante nach dem Muster von JTS `TopologyPreservingSimplifier`: Es entstehen keine neuen Kreuzungen zwischen oder innerhalb der Pfade, und es gehen keine Ringe verloren.
 - `tolerance` gilt in Karteneinheiten und muss endlich und ≥ 0 sein.
 
@@ -58,7 +58,7 @@ IPolygon2D valid = bowtie.MakeValid();  // zwei Dreiecke, gültig
 ```
 
 - **Es ist nicht das OGC-`ST_MakeValid`.** Ergebnisse sind dimensionshomogen, und eine Geometry-Collection gibt es nicht, kollabierte Reste bleiben also nicht als Linien erhalten.
-- **Es läuft auf dem Gitter** ([Overlays](overlay-und-gitter.md)): Das Ergebnis liegt auf dem Gitter, auch die Teile, die vorher gültig waren. Wer gültige Eingaben unberührt lassen will, prüft vorher `IsValid()`. `FillRule.NonZero` verschmilzt überlappende Außenringe, statt die Überlappung zum Loch zu machen.
+- **Es läuft auf dem Gitter** ([Overlays](overlay-and-grid.md)): Das Ergebnis liegt auf dem Gitter, auch die Teile, die vorher gültig waren. Wer gültige Eingaben unberührt lassen will, prüft vorher `IsValid()`. `FillRule.NonZero` verschmilzt überlappende Außenringe, statt die Überlappung zum Loch zu machen.
 - **Polylinien** verlieren nicht endliche Punkte, aufeinanderfolgende doppelte Punkte und Pfade mit weniger als zwei verschiedenen Punkten; sich kreuzende Linien sind gültig. **Punkte** verlieren nicht endliche; Duplikate bleiben. Linien und Punkte werden nicht gerundet.
 - Das Ergebnis ist immer eine neue Geometrie aus der Factory, und `MakeValid(MakeValid(g))` ist bis auf das Gitter wieder dieselbe Geometrie (zweimal ausgeführt kann es eine Kante eines sehr dünnen Splitters um etwa eine Gitterzelle biegen).
 

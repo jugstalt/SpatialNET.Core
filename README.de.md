@@ -40,14 +40,14 @@ Console.WriteLine(a.Intersects(b));          // True
 Console.WriteLine(a.Buffer(1).Area() > 100); // True
 ```
 
-Hosts implementieren die Interfaces an ihren eigenen Geometrieklassen und stellen eine eigene Factory bereit, siehe [Host-Anbindung](docs/de/host-anbindung.md).
+Hosts implementieren die Interfaces an ihren eigenen Geometrieklassen und stellen eine eigene Factory bereit, siehe [Host-Anbindung](docs/de/host-integration.md).
 
 ## Dokumentation
 
-- [Erste Schritte](docs/de/erste-schritte.md) und [Host-Anbindung](docs/de/host-anbindung.md)
-- [Konzepte](docs/de/konzepte/geometriemodell.md): Geometriemodell, [Overlays und Gitter](docs/de/konzepte/overlay-und-gitter.md), [Prädikate](docs/de/konzepte/praedikate.md), [Buffer und Offset](docs/de/konzepte/buffer-und-offset.md), [Vereinfachen und Validieren](docs/de/konzepte/vereinfachen-und-validieren.md), [Cut](docs/de/konzepte/cut.md), [Räumlicher Index](docs/de/konzepte/raeumlicher-index.md), [Lineare Referenzierung](docs/de/konzepte/lineare-referenzierung.md), [Maße und Konstruktionen](docs/de/konzepte/masse-und-konstruktionen.md)
-- [Glossar](docs/de/glossar.md) (Begriffe Deutsch ↔ Englisch)
-- API-Referenz: aus den XML-Kommentaren mit DocFX generiert (nur Englisch), Build mit `docs/build.ps1` (siehe [docs/de/erste-schritte.md](docs/de/erste-schritte.md#die-dokumentation-bauen))
+- [Erste Schritte](docs/de/getting-started.md) und [Host-Anbindung](docs/de/host-integration.md)
+- [Konzepte](docs/de/concepts/geometry-model.md): Geometriemodell, [Overlays und Gitter](docs/de/concepts/overlay-and-grid.md), [Prädikate](docs/de/concepts/predicates.md), [Buffer und Offset](docs/de/concepts/buffer-and-offset.md), [Vereinfachen und Validieren](docs/de/concepts/simplify-and-validation.md), [Cut](docs/de/concepts/cut.md), [Räumlicher Index](docs/de/concepts/spatial-index.md), [Lineare Referenzierung](docs/de/concepts/linear-referencing.md), [Maße und Konstruktionen](docs/de/concepts/measures-and-constructions.md)
+- [Glossar](docs/de/glossary.md) (Begriffe Deutsch ↔ Englisch)
+- API-Referenz: aus den XML-Kommentaren mit DocFX generiert (nur Englisch), Build mit `docs/build.ps1` (siehe [docs/de/getting-started.md](docs/de/getting-started.md#die-dokumentation-bauen))
 - [Architekturentscheidungen (ADRs)](docs/adr/) – die Begründungen hinter dem Design (Englisch, mit deutschen Fassungen)
 - [Recherche](research/) zur Algorithmenwahl
 

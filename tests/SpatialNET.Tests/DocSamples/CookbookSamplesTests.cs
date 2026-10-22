@@ -3,7 +3,7 @@ using SpatialNET.IO;
 
 namespace SpatialNET.Tests.DocSamples;
 
-// Die Rezepte aus docs/en/cookbook.md und docs/de/rezepte.md. Ändert sich ein Beispiel, muss die Dokumentation mitgezogen werden.
+// Die Rezepte aus docs/en/cookbook.md und docs/de/cookbook.md. Ändert sich ein Beispiel, muss die Dokumentation mitgezogen werden.
 
 [Collection(GlobalStateCollection.Name)]
 public sealed class CookbookSamplesTests : IDisposable

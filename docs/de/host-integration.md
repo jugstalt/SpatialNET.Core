@@ -162,7 +162,7 @@ Host-Geometrien sind meist veränderlich; die Bibliothek behandelt sie für die 
 
 Die Algorithmen sind **planar**: Sie rechnen mit den Zahlen X und Y, was immer diese bedeuten. Abstände und Flächen kommen in den Einheiten der Koordinaten heraus; nehmen Sie für alles, was misst, ein projiziertes Koordinatensystem (Meter): Ein Buffer von `10` um Längen-/Breitengrad-Daten sind 10 Grad. Z und M gehen nie in eine Berechnung ein.
 
-Overlays runden ihr Ergebnis auf ein **Gitter** ([ADR 0005](../adr/0005-overlay-winding-number-snap-rounding.de.md)). Standardmäßig wird die Gitterweite aus der größten Koordinate der Eingabe abgeleitet, was für die meisten Daten passt. Setzen Sie `Precision.DefaultGridSize` einmal, wenn Ihre Daten eine natürliche Auflösung haben (etwa 0,001 m), oder übergeben Sie `gridSize` an einen einzelnen Aufruf; siehe [Optionen und Genauigkeit](erste-schritte.md#optionen-und-genauigkeit). Prädikate und Maße rechnen auf den genauen Eingabekoordinaten und nutzen kein Gitter.
+Overlays runden ihr Ergebnis auf ein **Gitter** ([ADR 0005](../adr/0005-overlay-winding-number-snap-rounding.de.md)). Standardmäßig wird die Gitterweite aus der größten Koordinate der Eingabe abgeleitet, was für die meisten Daten passt. Setzen Sie `Precision.DefaultGridSize` einmal, wenn Ihre Daten eine natürliche Auflösung haben (etwa 0,001 m), oder übergeben Sie `gridSize` an einen einzelnen Aufruf; siehe [Optionen und Genauigkeit](getting-started.md#optionen-und-genauigkeit). Prädikate und Maße rechnen auf den genauen Eingabekoordinaten und nutzen kein Gitter.
 
 ## Fehler und Randfälle
 
@@ -191,7 +191,7 @@ Alle Algorithmen folgen denselben Regeln ([ADR 0012](../adr/0012-api-signaturen-
 
 ## Lesen und Schreiben
 
-`SpatialNET.IO` liest und schreibt WKT, WKB (ISO und EWKB, mit Z und M) und GeoJSON. Jedes `Read` nimmt optional eine Factory: Übergeben Sie Ihre, und was Sie lesen, ist schon eine Host-Geometrie, ohne Umwandlungsschritt. Anwendungsfälle stehen in den [Rezepten](rezepte.md).
+`SpatialNET.IO` liest und schreibt WKT, WKB (ISO und EWKB, mit Z und M) und GeoJSON. Jedes `Read` nimmt optional eine Factory: Übergeben Sie Ihre, und was Sie lesen, ist schon eine Host-Geometrie, ohne Umwandlungsschritt. Anwendungsfälle stehen in den [Rezepten](cookbook.md).
 
 ## Checkliste
 

@@ -28,7 +28,7 @@ Warnungen sind Fehler. Die Tests (rund 6.350) laufen etwa 20 Sekunden. Die Prope
 3. **Fixtures anlegen** unter `samples/<algorithmus>/` und den Pflicht-Tag-Katalog abdecken ([samples/README.de.md](samples/README.de.md)); der Test `FixtureCompletenessTests` erzwingt das für jede öffentliche Methode.
 4. **Playground-Deskriptor anlegen** in `src/SpatialNET.Playground/Algorithms/`; ein Vollständigkeitstest verlangt einen je öffentlicher Methode ([ADR 0011](docs/adr/0011-playground-karte-zuerst-deskriptor-registry.de.md)).
 5. **Testen** gegen das NTS-Orakel, mit Contract-Tests und, wo sinnvoll, Property-Tests ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.de.md)). Jeder Fixture-Test läuft auch gegen die absichtlich unbequeme, host-artige Implementierung in `tests/SpatialNET.Tests/Foreign/`.
-6. **Für Anwender dokumentieren** auf der passenden Konzeptseite unter `docs/en/concepts/` und `docs/de/konzepte/`.
+6. **Für Anwender dokumentieren** auf der passenden Konzeptseite unter `docs/en/concepts/` und `docs/de/concepts/`.
 
 ## Öffentliche API
 
@@ -43,7 +43,7 @@ Prüfen Sie die Änderung an der `.txt`-Datei im Diff wie jede andere: Sie ist d
 ## Sprache
 
 - Englisch führt bei allem, was am Code hängt: XML-Kommentare, Exception-Meldungen, Commit-Messages, Pull Requests, Issues und die Dokumentation. Deutsch ist die zweite Sprache der Dokumentation.
-- **Die Dokumentation ist zweisprachig.** Eine Änderung an einer Seite unter `docs/en`, `docs/de`, `docs/adr`, `research/` oder an einer README ändert im selben Pull Request auch die Gegenstück-Seite (`X.md` ist Englisch, `X.de.md` Deutsch). Wenn du kein Deutsch schreiben kannst, sag es im Pull Request, ein Maintainer ergänzt es.
+- **Die Dokumentation ist zweisprachig.** Eine Änderung an einer Seite unter `docs/en`, `docs/de`, `docs/adr`, `research/` oder an einer README ändert im selben Pull Request auch die Gegenstück-Seite (`X.md` ist Englisch, `X.de.md` Deutsch; die Seiten unter `docs/en` und `docs/de` haben **dieselben Datei- und Ordnernamen**, damit der Sprachwechsel auf derselben Seite landet). Wenn du kein Deutsch schreiben kannst, sag es im Pull Request, ein Maintainer ergänzt es.
 - Inline-`//`-Kommentare in bestehenden Dateien sind teils deutsch; neue schreibst du auf Englisch.
 
 ## Dokumentation

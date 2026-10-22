@@ -1,6 +1,6 @@
 # Das Geometriemodell
 
-SpatialNET rechnet auf einer kleinen Menge lesender Interfaces. Diese Seite beschreibt, was diese Geometrien bedeuten: wie Polygone definiert sind, was „gültig“ heißt und was bei leeren oder ungültigen Eingaben passiert. Die Interfaces selbst stehen unter [Host-Anbindung](../host-anbindung.md).
+SpatialNET rechnet auf einer kleinen Menge lesender Interfaces. Diese Seite beschreibt, was diese Geometrien bedeuten: wie Polygone definiert sind, was „gültig“ heißt und was bei leeren oder ungültigen Eingaben passiert. Die Interfaces selbst stehen unter [Host-Anbindung](../host-integration.md).
 
 ## Geometrie-Arten
 
@@ -32,7 +32,7 @@ Ein Polygon ist gültig, wenn sich die Ringe nicht kreuzen. Nach der OGC-Regel, 
 - Ringe, die sich kreuzen oder entlang einer Kante überlagern, sind ungültig. Insbesondere sind teilweise überlappende Außenringe ungültig: Even-Odd macht die Überlappung zum Loch, während viele Hosts die Fläche doppelt zählen würden.
 - Degenerierte Ringe (weniger als 3 verschiedene Punkte, Fläche 0) werden von den Algorithmen ignoriert und von `IsValid()` gemeldet.
 
-Ein fehlender Schlusspunkt und die Ring-Orientierung sind keine Fehler. Wie man die Gültigkeit prüft, steht unter [Vereinfachen, konvexe Hülle und Validierung](vereinfachen-und-validieren.md).
+Ein fehlender Schlusspunkt und die Ring-Orientierung sind keine Fehler. Wie man die Gültigkeit prüft, steht unter [Vereinfachen, konvexe Hülle und Validierung](simplify-and-validation.md).
 
 ## Gültige und ungültige Eingaben
 

@@ -25,7 +25,7 @@ Das Zielframework ist `net10.0`. Welche Projekte gebraucht werden, hängt von de
 
 | Du bist … | Referenz |
 |---|---|
-| ein Host (GIS-Anwendung mit eigenen Geometrieklassen) | `SpatialNET.Extensions` (bringt `SpatialNET.Core` mit); siehe [Host-Anbindung](host-anbindung.md) |
+| ein Host (GIS-Anwendung mit eigenen Geometrieklassen) | `SpatialNET.Extensions` (bringt `SpatialNET.Core` mit); siehe [Host-Anbindung](host-integration.md) |
 | Anwender ohne eigene Geometrieklassen | `SpatialNET.Extensions`, `SpatialNET.Imp` und für Textformate `SpatialNET.IO` |
 
 ## Ein erstes Programm

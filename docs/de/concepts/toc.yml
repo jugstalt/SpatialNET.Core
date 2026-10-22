@@ -1,0 +1,39 @@
+- name: Das Geometriemodell
+  href: geometry-model.md
+- name: Overlays, Füllregeln und das Gitter
+  href: overlay-and-grid.md
+- name: Prädikate und DE-9IM
+  href: predicates.md
+  items:
+  - name: Intersects
+    href: predicates/intersects.md
+  - name: Disjoint
+    href: predicates/disjoint.md
+  - name: Contains
+    href: predicates/contains.md
+  - name: Within
+    href: predicates/within.md
+  - name: Covers
+    href: predicates/covers.md
+  - name: CoveredBy
+    href: predicates/covered-by.md
+  - name: Touches
+    href: predicates/touches.md
+  - name: Crosses
+    href: predicates/crosses.md
+  - name: Overlaps
+    href: predicates/overlaps.md
+  - name: EqualsTopo
+    href: predicates/equals-topo.md
+- name: Buffer und Offset-Kurven
+  href: buffer-and-offset.md
+- name: Vereinfachen, konvexe Hülle und Validierung
+  href: simplify-and-validation.md
+- name: Cut
+  href: cut.md
+- name: Räumlicher Index
+  href: spatial-index.md
+- name: Lineare Referenzierung
+  href: linear-referencing.md
+- name: Maße und Konstruktionen
+  href: measures-and-constructions.md

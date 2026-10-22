@@ -36,7 +36,7 @@ Für Elemente, die keine Geometrien sind, gibst du den Envelope selbst an: `reco
 
 ## Was eine Abfrage liefert
 
-Der Index kennt nur **Envelopes**. `Query` liefert die Elemente, deren Envelope den Abfrage-Envelope berührt oder überlappt (abgeschlossene Intervalle). Das Ergebnis ist also ein Vorfilter: Der exakte Test auf der echten Geometrie liegt bei dir (`.Where(x => x.Intersects(g))`, siehe [Prädikate](praedikate.md)). Bei vielen Tests gegen eine Geometrie kombinierst du ihn mit `Prepare()`.
+Der Index kennt nur **Envelopes**. `Query` liefert die Elemente, deren Envelope den Abfrage-Envelope berührt oder überlappt (abgeschlossene Intervalle). Das Ergebnis ist also ein Vorfilter: Der exakte Test auf der echten Geometrie liegt bei dir (`.Where(x => x.Intersects(g))`, siehe [Prädikate](predicates.md)). Bei vielen Tests gegen eine Geometrie kombinierst du ihn mit `Prepare()`.
 
 - **Reihenfolge.** Die Reihenfolge der `Query`-Ergebnisse ist nicht festgelegt.
 - **Ohne Allokation.** `Query(envelope, results)` fügt in eine Sammlung ein, die du übergibst (etwa eine wiederverwendete `List<T>`), ohne Enumerator.

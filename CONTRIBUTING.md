@@ -28,7 +28,7 @@ Warnings are errors. The tests (about 6,350) take roughly 20 seconds. The proper
 3. **Add fixtures** under `samples/<algorithm>/` and cover the mandatory tag catalog ([samples/README.md](samples/README.md)); the test `FixtureCompletenessTests` enforces it for every public method.
 4. **Add a playground descriptor** in `src/SpatialNET.Playground/Algorithms/`; a completeness test requires one per public method ([ADR 0011](docs/adr/0011-playground-karte-zuerst-deskriptor-registry.md)).
 5. **Test** against the NTS oracle, with contract tests and, where it makes sense, property tests ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). Every fixture test also runs against the deliberately awkward host-style implementation in `tests/SpatialNET.Tests/Foreign/`.
-6. **Document it for users** in the matching concept page under `docs/en/concepts/` and `docs/de/konzepte/`.
+6. **Document it for users** in the matching concept page under `docs/en/concepts/` and `docs/de/concepts/`.
 
 ## Public API
 
@@ -43,7 +43,7 @@ Review the change to the `.txt` file in your diff like any other change: it is t
 ## Language
 
 - English leads for everything code-facing: XML comments, exception messages, commit messages, pull requests, issues and the documentation. German is the second language of the documentation.
-- **Documentation is bilingual.** A change to a page under `docs/en`, `docs/de`, `docs/adr`, `research/` or a README changes its counterpart in the same pull request (`X.md` is English, `X.de.md` German). If you cannot write German, say so in the pull request and a maintainer will add it.
+- **Documentation is bilingual.** A change to a page under `docs/en`, `docs/de`, `docs/adr`, `research/` or a README changes its counterpart in the same pull request (`X.md` is English, `X.de.md` German; the pages under `docs/en` and `docs/de` have the **same file and folder names**, so that the language switch lands on the same page). If you cannot write German, say so in the pull request and a maintainer will add it.
 - Inline `//` comments in existing files are partly German; write new ones in English.
 
 ## Documentation
