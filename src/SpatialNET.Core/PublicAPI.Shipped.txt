@@ -13,9 +13,15 @@ SpatialNET.Coordinate.Y.init -> void
 SpatialNET.Coordinate.Z.get -> double
 SpatialNET.Coordinate.Z.init -> void
 SpatialNET.Envelope2D
+SpatialNET.Envelope2D.Center.get -> SpatialNET.Coordinate
+SpatialNET.Envelope2D.Contains(SpatialNET.Coordinate point) -> bool
+SpatialNET.Envelope2D.Contains(SpatialNET.Envelope2D other) -> bool
 SpatialNET.Envelope2D.Envelope2D() -> void
 SpatialNET.Envelope2D.Envelope2D(double MinX, double MinY, double MaxX, double MaxY) -> void
+SpatialNET.Envelope2D.Expand(double distance) -> SpatialNET.Envelope2D
 SpatialNET.Envelope2D.Height.get -> double
+SpatialNET.Envelope2D.Intersection(SpatialNET.Envelope2D other) -> SpatialNET.Envelope2D
+SpatialNET.Envelope2D.Intersects(SpatialNET.Envelope2D other) -> bool
 SpatialNET.Envelope2D.IsEmpty.get -> bool
 SpatialNET.Envelope2D.MaxX.get -> double
 SpatialNET.Envelope2D.MaxX.init -> void
@@ -25,6 +31,7 @@ SpatialNET.Envelope2D.MinX.get -> double
 SpatialNET.Envelope2D.MinX.init -> void
 SpatialNET.Envelope2D.MinY.get -> double
 SpatialNET.Envelope2D.MinY.init -> void
+SpatialNET.Envelope2D.Union(SpatialNET.Envelope2D other) -> SpatialNET.Envelope2D
 SpatialNET.Envelope2D.Width.get -> double
 SpatialNET.FillRule
 SpatialNET.FillRule.EvenOdd = 0 -> SpatialNET.FillRule

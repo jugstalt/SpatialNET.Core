@@ -4,6 +4,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.5.0-preview.1] - 2026-10-22
+
 ### Changed
 
 - The playground is in English (labels, messages and the names of the examples). The German documentation pages now have the same file and folder names as the English ones (`docs/de/concepts/`, `getting-started.md`, `host-integration.md`, `glossary.md`, `cookbook.md`), so the language switch lands on the same page.
@@ -82,7 +84,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.4.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.5.0-preview.1...HEAD
+[0.5.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.4.0-preview.1...v0.5.0-preview.1
 [0.4.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.3.0-preview.1...v0.4.0-preview.1
 [0.3.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.2.0-preview.1...v0.3.0-preview.1
 [0.2.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.1.0-preview.1...v0.2.0-preview.1

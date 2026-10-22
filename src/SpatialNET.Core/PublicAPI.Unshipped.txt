@@ -1,8 +1,1 @@
 #nullable enable
-SpatialNET.Envelope2D.Center.get -> SpatialNET.Coordinate
-SpatialNET.Envelope2D.Contains(SpatialNET.Coordinate point) -> bool
-SpatialNET.Envelope2D.Contains(SpatialNET.Envelope2D other) -> bool
-SpatialNET.Envelope2D.Expand(double distance) -> SpatialNET.Envelope2D
-SpatialNET.Envelope2D.Intersection(SpatialNET.Envelope2D other) -> SpatialNET.Envelope2D
-SpatialNET.Envelope2D.Intersects(SpatialNET.Envelope2D other) -> bool
-SpatialNET.Envelope2D.Union(SpatialNET.Envelope2D other) -> SpatialNET.Envelope2D
