@@ -43,8 +43,10 @@ dependencies of the playground.
 
 Several algorithms follow the JTS Topology Suite in structure and behavior, among them the snap-rounding noder,
 OverlayNG (overlay core, RingClipper), offset/buffer construction (OffsetCurveBuilder,
-BufferInputLineSimplifier) and TopologyPreservingSimplifier. The places are marked in the source code with
-"as in JTS" or "after JTS" ("wie JTS" / "Muster JTS" in the German inline comments).
+BufferInputLineSimplifier) and TopologyPreservingSimplifier, and in behavior the concave hull (the edge length
+ratio and the removal of border triangles, `ConcaveHull`), the discrete Hausdorff distance, `LineMerge`,
+`Polygonize` and the predicates. The places are marked in the source code with "as in JTS" or "after JTS"
+("wie JTS" / "Muster JTS" in the German inline comments).
 
 - License: JTS is dual-licensed under the Eclipse Public License 2.0 and the Eclipse Distribution License 1.0;
   SpatialNET relies on the Eclipse Distribution License 1.0
@@ -52,10 +54,29 @@ BufferInputLineSimplifier) and TopologyPreservingSimplifier. The places are mark
 - License text: same as [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt)
 - Project: <https://github.com/locationtech/jts>
 
+### Delaunator and polylabel (Mapbox)
+
+The Delaunay triangulation (`DelaunayMesh`, used by `DelaunayTriangles` and `ConcaveHull`) follows the
+structure of the sweep algorithm of Mapbox's Delaunator (a seed triangle, the points in order of their distance
+from its circumcentre, an angular hash of the convex hull), reimplemented in C# with exact predicates and an
+additional path for points on or inside the hull. `Polylabel` follows the polylabel algorithm of Mapbox (a
+priority queue of square cells). No source code was copied; the notices are given because the structure follows
+these projects.
+
+- License: ISC, Copyright (c) 2017 Mapbox
+  (Delaunator: Copyright (c) 2017, Mapbox; polylabel: Copyright (c) 2016, Mapbox)
+- Projects: <https://github.com/mapbox/delaunator>, <https://github.com/mapbox/polylabel>
+
 ### Scientific methods (no license obligation, cited for attribution)
 
 - J. R. Shewchuk: *Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates*,
-  Discrete & Computational Geometry 18, 1997 – error bounds of the orientation predicate `orient2d`.
+  Discrete & Computational Geometry 18, 1997 – error bounds of the orientation predicate `orient2d` and of the
+  incircle predicate `incircle`.
+- E. Welzl: *Smallest enclosing disks (balls and ellipsoids)*, New Results and New Trends in Computer Science,
+  Springer LNCS 555, 1991 – the smallest bounding circle.
+- G. T. Toussaint: *Solving geometric problems with the rotating calipers*, Proceedings of IEEE MELECON, 1983 –
+  the minimum rotated rectangle.
+- B. Delaunay: *Sur la sphère vide*, Izvestia Akademii Nauk SSSR, 1934 – the Delaunay triangulation.
 - J. D. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13, 1999 –
   snap rounding.
 - D. H. Douglas, T. K. Peucker: *Algorithms for the reduction of the number of points required to represent a
@@ -75,3 +96,7 @@ In addition to Leaflet and Leaflet-Geoman it uses:
 The following packages are loaded via NuGet only for tests, benchmarks and tools and are not shipped with
 SpatialNET: NetTopologySuite (BSD-3-Clause, test oracle and benchmark comparison), xUnit, CsCheck,
 coverlet, Microsoft.NET.Test.Sdk, Microsoft.AspNetCore.Mvc.Testing, BenchmarkDotNet.
+
+The build uses `Microsoft.CodeAnalysis.PublicApiAnalyzers` (MIT, a development dependency of the four
+libraries that is not part of their packages) to track the public API, and the documentation is built with the
+DocFX tool (MIT, `.config/dotnet-tools.json`).
