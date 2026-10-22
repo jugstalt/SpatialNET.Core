@@ -50,6 +50,7 @@ static SpatialNET.Overlays.MakeValid(this SpatialNET.IPolyline2D! polyline, Spat
 static SpatialNET.Overlays.Polygonize(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
 static SpatialNET.Shapes.ConcaveHull(this SpatialNET.IGeometry2D! geometry, double maxEdgeLength, bool holesAllowed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Shapes.ConcaveHullByRatio(this SpatialNET.IGeometry2D! geometry, double edgeLengthRatio, bool holesAllowed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Shapes.ConvexHull(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Shapes.DelaunayTriangles(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
 static SpatialNET.Shapes.MinimumBoundingCircle(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Circle?
 static SpatialNET.Shapes.MinimumRotatedRectangle(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
@@ -74,3 +75,5 @@ static SpatialNET.Transformations.Translate(this SpatialNET.IMultiPoint2D! multi
 static SpatialNET.Transformations.Translate(this SpatialNET.IPoint2D! point, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
 static SpatialNET.Transformations.Translate(this SpatialNET.IPolygon2D! polygon, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Transformations.Translate(this SpatialNET.IPolyline2D! line, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+*REMOVED*SpatialNET.Hull
+*REMOVED*static SpatialNET.Hull.ConvexHull(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!

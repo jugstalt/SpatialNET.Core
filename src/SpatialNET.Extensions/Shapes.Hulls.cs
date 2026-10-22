@@ -5,11 +5,81 @@ namespace SpatialNET;
 
 public static partial class Shapes
 {
+    // ---------- ConvexHull ----------
+
+    /// <summary>
+    /// The convex hull of all points. Depending on degeneracy a polygon (counter-clockwise), a polyline
+    /// between the two extreme points (all points collinear) or a point; empty for empty input (as in JTS).
+    /// </summary>
+    /// <param name="geometry">The geometry.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="geometry"/> is <c>null</c>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="geometry"/> is not a known geometry kind.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
+    public static IGeometry2D ConvexHull(this IGeometry2D geometry, IGeometryFactory? factory = null)
+    {
+        GeometryAccess.EnsureKnown(geometry, nameof(geometry));
+        var f = GeometryFactory.Resolve(factory);
+
+        var points = GeometryAccess.AllPoints(geometry).Select(p => GeometryAccess.Restrict(p.ToCoordinate() with { M = double.NaN }, f))
+            .OrderBy(c => c.X).ThenBy(c => c.Y)
+            .ToList();
+        points = Distinct(points);
+
+        if (points.Count == 0)
+        {
+            return f.CreatePolygon([], geometry);
+        }
+
+        if (points.Count == 1)
+        {
+            return f.CreatePoint(points[0], geometry);
+        }
+
+        // Andrews Monotone Chain; kollineare Punkte werden verworfen.
+        var hull = new Coordinate[2 * points.Count];
+        int k = 0;
+        for (int i = 0; i < points.Count; i++)
+        {
+            while (k >= 2 && Predicates.Orient(hull[k - 2], hull[k - 1], points[i]) <= 0) k--;
+            hull[k++] = points[i];
+        }
+
+        for (int i = points.Count - 2, lower = k + 1; i >= 0; i--)
+        {
+            while (k >= lower && Predicates.Orient(hull[k - 2], hull[k - 1], points[i]) <= 0) k--;
+            hull[k++] = points[i];
+        }
+
+        if (k <= 3)
+        {
+            // alle Punkte kollinear: Linie zwischen den Extrempunkten
+            ReadOnlyMemory<Coordinate>[] path = [new[] { points[0], points[^1] }];
+            return f.CreatePolyline(path, geometry);
+        }
+
+        return f.CreatePolygon([new PolygonPart(hull[..k])], geometry);
+    }
+
+    private static List<Coordinate> Distinct(List<Coordinate> sorted)
+    {
+        var result = new List<Coordinate>(sorted.Count);
+        foreach (var c in sorted)
+        {
+            if (result.Count == 0 || !Rings.SameXY(result[^1], c))
+            {
+                result.Add(c);
+            }
+        }
+
+        return result;
+    }
+
     // ---------- DelaunayTriangles ----------
 
     /// <summary>
     /// The Delaunay triangulation of the vertices of a geometry (ADR 0029): triangles such that no vertex lies inside the circumcircle of
-    /// a triangle. They tile the convex hull of the vertices. As for <see cref="Hull.ConvexHull"/> every vertex of every kind of
+    /// a triangle. They tile the convex hull of the vertices. As for <see cref="ConvexHull"/> every vertex of every kind of
     /// geometry counts, with X and Y only; vertices with the same X and Y count once, and vertices that are not finite are ignored.
     /// </summary>
     /// <remarks>
@@ -75,7 +145,7 @@ public static partial class Shapes
     /// <remarks>
     /// Without <paramref name="holesAllowed"/> the result is one polygon without holes. With it, interior triangles of which all vertices are
     /// interior and which have an edge longer than the limit open holes that grow the same way; a hole never touches the border or another
-    /// hole. As for <see cref="Hull.ConvexHull"/> a geometry with fewer than three different or only collinear vertices gives a point, the
+    /// hole. As for <see cref="ConvexHull"/> a geometry with fewer than three different or only collinear vertices gives a point, the
     /// line between the extreme points, or an empty polygon. Z of a vertex is kept, M is not.
     /// </remarks>
     /// <param name="geometry">The geometry.</param>

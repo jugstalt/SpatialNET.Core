@@ -6,6 +6,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Changed
 
+- **Breaking (before 1.0):** the concrete classes of `SpatialNET.Imp` (`Point`, `Point3D`, `PointM`, `Point3DM`, `PointSequence`, `MultiPoint`, `Path`, `Ring`, `Polyline`, `Polygon`) are now `internal`; use `ImpGeometryFactory` to create geometries. They clashed with the types of hosts that import the namespace (ADR 0028).
+- **Breaking (before 1.0):** `Hull.ConvexHull` moved to `Shapes.ConvexHull`, and the class `Hull` is gone. The extension call `geometry.ConvexHull()` is unchanged; only a static call `Hull.ConvexHull(geometry)` must be adapted (ADR 0028).
 - `PreparedGeometry` is now thread-safe after construction (ADR 0024): its segment index is the immutable `SpatialIndex<int>`. Preparing and querying small polygons is somewhat slower (about a millisecond or less per polygon), large polygons are on a par or faster.
 
 ### Fixed

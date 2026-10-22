@@ -12,6 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="SpatialNET.Tests" />
+    <InternalsVisibleTo Include="SpatialNET.Playground" />
+    <InternalsVisibleTo Include="SpatialNET.Benchmarks" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
   </ItemGroup>
 

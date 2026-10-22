@@ -3,7 +3,7 @@ namespace SpatialNET.Imp;
 /// <summary>An immutable point without height.</summary>
 /// <param name="x">The X coordinate.</param>
 /// <param name="y">The Y coordinate.</param>
-public class Point(double x, double y) : IPoint2D
+internal class Point(double x, double y) : IPoint2D
 {
     /// <inheritdoc />
     public double X { get; } = x;
@@ -19,7 +19,7 @@ public class Point(double x, double y) : IPoint2D
 /// <param name="x">The X coordinate.</param>
 /// <param name="y">The Y coordinate.</param>
 /// <param name="z">The height.</param>
-public sealed class Point3D(double x, double y, double z) : Point(x, y), IPoint3D
+internal sealed class Point3D(double x, double y, double z) : Point(x, y), IPoint3D
 {
     /// <inheritdoc />
     public double Z { get; } = z;
@@ -32,7 +32,7 @@ public sealed class Point3D(double x, double y, double z) : Point(x, y), IPoint3
 /// <param name="x">The X coordinate.</param>
 /// <param name="y">The Y coordinate.</param>
 /// <param name="m">The measure.</param>
-public sealed class PointM(double x, double y, double m) : Point(x, y), IPointM
+internal sealed class PointM(double x, double y, double m) : Point(x, y), IPointM
 {
     /// <inheritdoc />
     public double M { get; } = m;
@@ -46,7 +46,7 @@ public sealed class PointM(double x, double y, double m) : Point(x, y), IPointM
 /// <param name="y">The Y coordinate.</param>
 /// <param name="z">The height.</param>
 /// <param name="m">The measure.</param>
-public sealed class Point3DM(double x, double y, double z, double m) : Point(x, y), IPoint3D, IPointM
+internal sealed class Point3DM(double x, double y, double z, double m) : Point(x, y), IPoint3D, IPointM
 {
     /// <inheritdoc />
     public double Z { get; } = z;
@@ -59,7 +59,7 @@ public sealed class Point3DM(double x, double y, double z, double m) : Point(x, 
 }
 
 /// <summary>Common base of the immutable point sequences.</summary>
-public abstract class PointSequence : IPointCollection2D
+internal abstract class PointSequence : IPointCollection2D
 {
     private readonly IPoint2D[] _points;
 
@@ -76,19 +76,19 @@ public abstract class PointSequence : IPointCollection2D
 
 /// <summary>An immutable multipoint.</summary>
 /// <param name="points">The points; they are copied.</param>
-public sealed class MultiPoint(params ReadOnlySpan<IPoint2D> points) : PointSequence(points), IMultiPoint2D;
+internal sealed class MultiPoint(params ReadOnlySpan<IPoint2D> points) : PointSequence(points), IMultiPoint2D;
 
 /// <summary>An immutable path.</summary>
 /// <param name="points">The points; they are copied.</param>
-public class Path(params ReadOnlySpan<IPoint2D> points) : PointSequence(points), IPath2D;
+internal class Path(params ReadOnlySpan<IPoint2D> points) : PointSequence(points), IPath2D;
 
 /// <summary>An immutable ring.</summary>
 /// <param name="points">The points; they are copied. The closing point may be omitted.</param>
-public sealed class Ring(params ReadOnlySpan<IPoint2D> points) : Path(points), IRing2D;
+internal sealed class Ring(params ReadOnlySpan<IPoint2D> points) : Path(points), IRing2D;
 
 /// <summary>An immutable polyline.</summary>
 /// <param name="paths">The paths; the array is copied.</param>
-public sealed class Polyline(params ReadOnlySpan<IPath2D> paths) : IPolyline2D
+internal sealed class Polyline(params ReadOnlySpan<IPath2D> paths) : IPolyline2D
 {
     private readonly IPath2D[] _paths = paths.ToArray();
 
@@ -101,7 +101,7 @@ public sealed class Polyline(params ReadOnlySpan<IPath2D> paths) : IPolyline2D
 
 /// <summary>An immutable polygon as a flat list of rings.</summary>
 /// <param name="rings">The rings; the array is copied.</param>
-public sealed class Polygon(params ReadOnlySpan<IRing2D> rings) : IPolygon2D
+internal sealed class Polygon(params ReadOnlySpan<IRing2D> rings) : IPolygon2D
 {
     private readonly IRing2D[] _rings = rings.ToArray();
 

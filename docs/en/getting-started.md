@@ -107,7 +107,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Checks | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Conversion | `AsList` (LINQ-friendly views), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
-The signatures, parameters and exceptions of every method are in the API reference, which is generated from the XML comments.
+The signatures, parameters and exceptions of every method are in the API reference, which is generated from the XML comments. The methods live in static classes named by topic (`Measures`, `Overlays`, `Validation`, `Preparation`, …; the extension class has a plural or gerund name, its result type a singular one, such as `ValidationResult`), but you rarely name them, because you call the methods on the geometry. Create geometries through a factory (`ImpGeometryFactory` or your own); the classes behind it are not public.
 
 ## The playground
 

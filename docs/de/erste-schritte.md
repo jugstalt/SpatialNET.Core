@@ -107,7 +107,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Formprüfungen | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
 
-Signaturen, Parameter und Exceptions jeder Methode stehen in der API-Referenz (Englisch), die aus den XML-Kommentaren generiert wird.
+Signaturen, Parameter und Exceptions jeder Methode stehen in der API-Referenz (Englisch), die aus den XML-Kommentaren generiert wird. Die Methoden stehen in statischen Klassen, die nach Themen heißen (`Measures`, `Overlays`, `Validation`, `Preparation`, …; die Erweiterungsklasse hat einen Namen im Plural oder in der Verlaufsform, ihr Ergebnistyp einen im Singular, etwa `ValidationResult`), aber Sie nennen sie selten, weil Sie die Methoden an der Geometrie aufrufen. Geometrien erzeugen Sie über eine Factory (`ImpGeometryFactory` oder Ihre eigene); die Klassen dahinter sind nicht öffentlich.
 
 ## Der Playground
 

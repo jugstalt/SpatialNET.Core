@@ -47,7 +47,7 @@ public static partial class Shapes
     /// <summary>
     /// The rectangle of least area that contains the geometry, turned to any angle (ADR 0026). A side of it lies on a side of the
     /// convex hull. Among rectangles of equal area the one of the first hull edge wins. Counter-clockwise, without Z and M. For a
-    /// degenerate input the result is, as for <see cref="Hull.ConvexHull"/>, a point or the line between the two extreme points,
+    /// degenerate input the result is, as for <see cref="ConvexHull"/>, a point or the line between the two extreme points,
     /// and an empty polygon for an empty geometry.
     /// </summary>
     /// <param name="geometry">The geometry.</param>
