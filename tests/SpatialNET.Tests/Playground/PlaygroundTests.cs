@@ -77,7 +77,7 @@ public class PlaygroundCompletenessTests
             if (algorithm is null) continue;
             foreach (var key in fixture.Params.Keys.Where(k => !ExpectationParams.Contains(k)))
             {
-                Assert.True(algorithm.Parameters.Any(p => p.Key == key), $"{fixture.Id}: Parameter „{key}“ fehlt im Deskriptor.");
+                Assert.True(algorithm.Parameters.Any(p => p.Key == key), $"{fixture.Id}: Parameter \"{key}\" is missing in the descriptor.");
             }
         }
     }
@@ -133,7 +133,7 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
         var list = await _client.GetFromJsonAsync<JsonArray>("/api/algorithms");
 
         var buffer = list!.Single(a => a!["id"]!.GetValue<string>() == "buffer")!;
-        Assert.Equal("Konstruktion", buffer["group"]!.GetValue<string>());
+        Assert.Equal("Construction", buffer["group"]!.GetValue<string>());
         Assert.Contains(buffer["parameters"]!.AsArray(), p => p!["key"]!.GetValue<string>() == "distance" && p["unit"]!.GetValue<string>() == "kbs");
     }
 
@@ -185,7 +185,7 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
 
         Assert.Equal(HttpStatusCode.OK, status);
         Assert.Equal(100, body["value"]!.GetValue<double>(), 1e-9);
-        Assert.Equal("lokal", body["kbs"]!.GetValue<string>());
+        Assert.Equal("local", body["kbs"]!.GetValue<string>());
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
 
         (status, body) = await Run(new { algorithm = "buffer", inputs = new { }, local = true });
         Assert.Equal(HttpStatusCode.BadRequest, status);
-        Assert.Contains("fehlt", body["error"]!.GetValue<string>());
+        Assert.Contains("missing", body["error"]!.GetValue<string>());
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
         var (status, body) = await Run(new { algorithm = "area", inputs = new { a = Square(13.4, 60, 0.001) }, kbs = "EPSG:3857" });
 
         Assert.Equal(HttpStatusCode.OK, status);
-        Assert.Contains("Faktor 2", body["warnings"]![0]!.GetValue<string>());
+        Assert.Contains("factor 2", body["warnings"]![0]!.GetValue<string>());
     }
 
     [Fact]

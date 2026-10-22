@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,35 +14,35 @@
 <body>
   <div id="map"></div>
 
-  <!-- Befehlspalette: Algorithmus (Strg+K), Parameter, Eingaben -->
-  <section class="palette" aria-label="Algorithmus">
-    <input id="search" class="search" type="search" placeholder="Algorithmus suchen …  (Strg+K)" autocomplete="off">
+  <!-- Command palette: algorithm (Ctrl+K), parameters, inputs -->
+  <section class="palette" aria-label="Algorithm">
+    <input id="search" class="search" type="search" placeholder="Search algorithm …  (Ctrl+K)" autocomplete="off">
     <div id="list" class="list" hidden></div>
     <div class="panel">
       <div class="title"><b id="alg-name"></b> <span id="alg-group" class="muted"></span></div>
       <div id="params"></div>
-      <h3>Eingaben</h3>
+      <h3>Inputs</h3>
       <div id="inputs"></div>
     </div>
   </section>
 
-  <!-- Chips: Rechen-KBS, Layer, Ergebnis -->
+  <!-- Chips: computation CRS, layers, result -->
   <aside class="chips">
-    <div class="chip"><label>Modus <select id="mode"><option value="geo">Karte (WGS84)</option><option value="local">Lokal planar</option></select></label></div>
-    <div class="chip"><label>Rechen-KBS <select id="kbs"></select></label> <input id="kbs-free" placeholder="EPSG:…" size="10" hidden></div>
+    <div class="chip"><label>Mode <select id="mode"><option value="geo">Map (WGS84)</option><option value="local">Local planar</option></select></label></div>
+    <div class="chip"><label>Computation CRS <select id="kbs"></select></label> <input id="kbs-free" placeholder="EPSG:…" size="10" hidden></div>
     <div class="chip" id="kbs-label"></div>
     <div class="chip layers">
       <label><input type="checkbox" data-show="a" checked> <span class="sw a"></span> A</label>
       <label><input type="checkbox" data-show="b" checked> <span class="sw b"></span> B</label>
-      <label><input type="checkbox" data-show="r" checked> <span class="sw r"></span> Ergebnis</label>
+      <label><input type="checkbox" data-show="r" checked> <span class="sw r"></span> Result</label>
     </div>
     <div class="chip result" id="result"></div>
     <div class="chip error" id="error" hidden></div>
   </aside>
 
-  <!-- Beispiel-Leiste -->
+  <!-- Example strip -->
   <footer class="strip-wrap">
-    <label class="muted strip-toggle"><input type="checkbox" id="all-fixtures"> alle Fixtures</label>
+    <label class="muted strip-toggle"><input type="checkbox" id="all-fixtures"> all examples</label>
     <div id="strip" class="strip"></div>
   </footer>
 </body>

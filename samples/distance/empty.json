@@ -1,5 +1,5 @@
 {
-  "name": "Leere Geometrie ergibt NaN",
+  "name": "An empty geometry gives NaN",
   "tags": [
     "empty"
   ],

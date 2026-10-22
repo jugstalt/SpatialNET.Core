@@ -1,5 +1,5 @@
 {
-  "name": "Zwei Teilflächen teilen eine Kante",
+  "name": "Two parts share an edge",
   "tags": [
     "collinear-overlap",
     "multi"

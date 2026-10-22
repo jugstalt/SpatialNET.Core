@@ -1,5 +1,5 @@
 {
-  "name": "Kollineare Zwischenpunkte entfallen",
+  "name": "Collinear intermediate points are dropped",
   "tags": [
     "collinear-overlap"
   ],

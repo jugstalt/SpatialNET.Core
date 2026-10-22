@@ -5,16 +5,16 @@ using SpatialNET.IO;
 namespace SpatialNET.Playground.Services;
 
 /// <summary>
-/// Liefert die Fixtures aus <c>samples/&lt;algorithmus&gt;/</c> als Beispielgeometrien (ADR 0008/0011).
-/// Mit <c>crs</c> werden sie nach WGS84 projiziert, ohne <c>crs</c> sind sie lokal planar (L.CRS.Simple, ADR 0010).
+/// Delivers the fixtures from <c>samples/&lt;algorithm&gt;/</c> as example geometries (ADR 0008/0011).
+/// With <c>crs</c> they are projected to WGS84, without <c>crs</c> they are local planar (L.CRS.Simple, ADR 0010).
 /// </summary>
 public sealed class FixtureStore(string root)
 {
     public static string DefaultRoot => Path.Combine(AppContext.BaseDirectory, "samples");
 
     /// <summary>
-    /// Algorithmen nach M zeigen die Beispiele mit Tag <c>m</c> ihrer Längen-Varianten (deren Linien tragen M); die Parameter
-    /// dieser Beispiele (Längen) passen nicht und entfallen, es gelten die Standardwerte des Deskriptors.
+    /// The algorithms by M show the examples with the tag <c>m</c> of their length variants (whose lines carry M); the parameters
+    /// of those examples (lengths) do not fit and are dropped, the defaults of the descriptor apply.
     /// </summary>
     private static readonly Dictionary<string, string> MAliases = new()
     {
@@ -23,7 +23,7 @@ public sealed class FixtureStore(string root)
         ["substringByM"] = "substring",
     };
 
-    /// <summary>Die Fixtures eines Algorithmus; ohne <paramref name="all"/> nur die mit Tag <c>playground</c>.</summary>
+    /// <summary>The fixtures of an algorithm; without <paramref name="all"/> only those with the tag <c>playground</c>.</summary>
     public IReadOnlyList<JsonObject> For(string algorithm, bool all)
     {
         bool viaAlias = MAliases.TryGetValue(algorithm, out var source);
@@ -82,7 +82,7 @@ public sealed class FixtureStore(string root)
             return JsonNode.Parse(g.ToGeoJson());
         }
 
-        // WKT mit M: GeoJSON kann M nicht tragen, die Oberfläche schickt es deshalb als WKT mit (ADR 0015).
+        // WKT with M: GeoJSON cannot carry M, so the UI sends it as WKT as well (ADR 0015).
         string? WktWithM(string key)
         {
             var wkt = node[key]?.GetValue<string>();
@@ -113,7 +113,7 @@ public sealed class FixtureStore(string root)
         }
         catch (Exception e) when (e is FormatException or NotSupportedException)
         {
-            // z. B. NaN-Koordinaten: nicht als GeoJSON darstellbar
+            // e.g. NaN coordinates: they cannot be shown as GeoJSON
             error = e.Message;
         }
 

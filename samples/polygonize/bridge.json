@@ -1,5 +1,5 @@
 {
-  "name": "Eine Brücke zwischen Außen- und Innenring schneidet nichts",
+  "name": "A bridge between outer and inner ring cuts nothing",
   "tags": [],
   "a": "MULTILINESTRING ((0 0, 20 0, 20 20, 0 20, 0 0), (5 5, 15 5, 15 15, 5 15, 5 5), (0 0, 5 5))"
 }

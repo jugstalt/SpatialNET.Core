@@ -1,5 +1,5 @@
 {
-  "name": "Ein Zyklus wird zu einem geschlossenen Pfad",
+  "name": "A cycle becomes a closed path",
   "tags": [],
   "a": "MULTILINESTRING ((0 0, 1 0), (1 0, 1 1), (1 1, 0 0))"
 }

@@ -1,5 +1,5 @@
 {
-  "name": "Länge hinter dem Ende wird begrenzt",
+  "name": "A length beyond the end is clamped",
   "tags": [],
   "a": "LINESTRING (0 0, 10 0, 10 10)",
   "params": {

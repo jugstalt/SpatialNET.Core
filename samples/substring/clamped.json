@@ -1,5 +1,5 @@
 {
-  "name": "Längen werden begrenzt",
+  "name": "Lengths are clamped",
   "tags": [],
   "a": "LINESTRING (0 0, 10 0, 10 10)",
   "params": {

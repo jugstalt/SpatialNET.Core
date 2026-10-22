@@ -1,5 +1,5 @@
 {
-  "name": "Flächenloses Loch wird ignoriert",
+  "name": "A hole without area is ignored",
   "tags": [
     "degenerate-ring"
   ],

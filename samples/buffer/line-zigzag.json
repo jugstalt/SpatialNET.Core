@@ -1,5 +1,5 @@
 {
-  "name": "Zackige Linie (Vereinfachung, Engstellen)",
+  "name": "Jagged line (simplification, narrow places)",
   "tags": [
     "near-coincident"
   ],
@@ -10,5 +10,5 @@
   "tolerance": {
     "symdiff": 0.0001
   },
-  "description": "Winzige Zacken nahe an Engstellen: NTS rechnet hier mit reduzierter Präzision; Abweichung ≈ 1e-5 der Fläche."
+  "description": "Tiny spikes close to narrow places: NTS computes with reduced precision here; deviation ≈ 1e-5 of the area."
 }

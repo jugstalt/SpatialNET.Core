@@ -1,6 +1,6 @@
 {
-  "name": "Löcher exakt gefüllt",
-  "description": "B besteht aus genau den Löchern von A als Flächen (identische Kanten in Gegenrichtung): A ∪ B ist der volle Außenring, A ∩ B hat Fläche 0.",
+  "name": "Holes filled exactly",
+  "description": "B consists of exactly the holes of A as areas (identical edges in the opposite direction): A ∪ B is the full outer ring, A ∩ B has area 0.",
   "tags": [
     "collinear-overlap",
     "multi",

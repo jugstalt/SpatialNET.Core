@@ -16,7 +16,7 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Deskriptoren aller Algorithmen; die UI entsteht daraus (ADR 0011).
+// Descriptors of all algorithms; the UI is built from them (ADR 0011).
 app.MapGet("/api/algorithms", () => PlaygroundAlgorithm.All.Select(a => new
 {
     a.Id,
@@ -36,12 +36,12 @@ app.MapPost("/api/run", (RunRequest request, RunService service) =>
     }
     catch (Exception e)
     {
-        // Das Playground zeigt jeden Fehler des Algorithmus bzw. der Projektion als Meldung an (ADR 0011).
+        // The playground shows every error of the algorithm or the projection as a message (ADR 0011).
         return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
     }
 });
 
-// GeoJSON-Upload: der Client schickt die Datei, gelesen wird mit GeoJson.ReadAll (ADR 0009/0011).
+// GeoJSON upload: the client sends the file, it is read with GeoJson.ReadAll (ADR 0009/0011).
 app.MapPost("/api/import", async (HttpRequest request) =>
 {
     using var body = new MemoryStream();
@@ -57,7 +57,7 @@ app.MapPost("/api/import", async (HttpRequest request) =>
     }
 });
 
-// WKT <-> GeoJSON: die Oberfläche zeigt und liest WKT (mit Z und M), die Karte zeichnet GeoJSON (ADR 0015/0011).
+// WKT <-> GeoJSON: the UI shows and reads WKT (with Z and M), the map draws GeoJSON (ADR 0015/0011).
 app.MapPost("/api/convert", (ConvertRequest request) =>
 {
     try
@@ -66,7 +66,7 @@ app.MapPost("/api/convert", (ConvertRequest request) =>
             ? Wkt.Read(request.Wkt, ImpGeometryFactory.Instance)
             : request.Geometry is { ValueKind: JsonValueKind.Object } json
                 ? GeoJson.Read(json.GetRawText(), ImpGeometryFactory.Instance)
-                : throw new ArgumentException("Weder „wkt“ noch „geometry“ angegeben.");
+                : throw new ArgumentException("Neither \"wkt\" nor \"geometry\" was given.");
         return Results.Json(new { geometry = JsonNode.Parse(geometry.ToGeoJson()), wkt = geometry.ToWkt() });
     }
     catch (Exception e) when (e is FormatException or NotSupportedException or ArgumentException or JsonException)
@@ -77,5 +77,5 @@ app.MapPost("/api/convert", (ConvertRequest request) =>
 
 app.Run();
 
-/// <summary>Einstiegspunkt; öffentlich für Endpunkt-Tests.</summary>
+/// <summary>Entry point; public for the endpoint tests.</summary>
 public partial class Program;

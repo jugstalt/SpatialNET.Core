@@ -1,5 +1,5 @@
 {
-  "name": "Ein Quadrat: eine Fläche",
+  "name": "One square: one face",
   "tags": [],
   "a": "LINESTRING (0 0, 10 0, 10 10, 0 10, 0 0)"
 }

@@ -1,10 +1,10 @@
-// Karte: WGS84 mit OSM-Kacheln oder lokal planar mit L.CRS.Simple (ADR 0010); Zeichnen mit Geoman.
+// Map: WGS84 with OSM tiles, or local planar with L.CRS.Simple (ADR 0010); drawing with Geoman.
 
 /* global L */
 
 export const COLORS = { a: '#2563eb', b: '#ea580c', r: '#16a34a' };
 
-/** Farben für Listen-Ergebnisse (z. B. Cut): jeder Teil eigene Farbe, nummeriert. */
+/** Colours for list results (e.g. Cut): every part has its own colour and a number. */
 const PART_COLORS = ['#16a34a', '#9333ea', '#0891b2', '#db2777', '#ca8a04', '#4f46e5', '#dc2626', '#059669'];
 
 const DRAW_MODES = { Point: 'Marker', MultiPoint: 'Marker', LineString: 'Line', Polygon: 'Polygon' };
@@ -12,7 +12,7 @@ const DRAW_MODES = { Point: 'Marker', MultiPoint: 'Marker', LineString: 'Line', 
 export class MapView {
   /**
    * @param {HTMLElement} element
-   * @param {(key: string, geometry: object) => void} onInput Neue bzw. bearbeitete Eingabe.
+   * @param {(key: string, geometry: object) => void} onInput A new or edited input.
    */
   constructor(element, onInput) {
     this.element = element;
@@ -24,7 +24,7 @@ export class MapView {
     this.result = null;
   }
 
-  /** Baut die Karte neu, wenn sich der Modus ändert. */
+  /** Rebuilds the map when the mode changes. */
   setMode(local) {
     if (this.local === local && this.map) return;
     this.local = local;
@@ -37,12 +37,12 @@ export class MapView {
       this.map.setView([0, 0], 0);
     } else {
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 22, maxNativeZoom: 19, attribution: '© OpenStreetMap-Mitwirkende',
+        maxZoom: 22, maxNativeZoom: 19, attribution: '© OpenStreetMap contributors',
       }).addTo(this.map);
       this.map.setView([47.07, 15.44], 13);
     }
 
-    this.map.pm.setLang('de');
+    this.map.pm.setLang('en');
     this.map.pm.addControls({
       position: 'topleft', drawMarker: false, drawCircle: false, drawCircleMarker: false, drawText: false,
       drawPolyline: false, drawPolygon: false, drawRectangle: false, cutPolygon: false, rotateMode: false,
@@ -60,7 +60,7 @@ export class MapView {
     this.#renderResult();
   }
 
-  /** Startet das Zeichnen eines Typs für Eingabe a oder b. */
+  /** Starts drawing a type for input a or b. */
   draw(target, type) {
     this.drawTarget = target;
     this.drawType = type;
@@ -70,7 +70,7 @@ export class MapView {
     });
   }
 
-  /** Mehrere gezeichnete Punkte ergeben für MultiPoint-Eingaben einen MultiPoint. */
+  /** Several drawn points make a MultiPoint for MultiPoint inputs. */
   #merge(target, geometry) {
     const current = this.inputs[target];
     if (this.drawType !== 'MultiPoint' || geometry.type !== 'Point') return geometry;
@@ -111,7 +111,7 @@ export class MapView {
         style: { color: COLORS[key], weight: 2, fillOpacity: 0.08 },
         pointToLayer: (_, latlng) => L.circleMarker(latlng, { radius: 5, color: COLORS[key] }),
       });
-      // Bearbeiten (Geoman Edit/Drag) schreibt die Eingabe zurück.
+      // Editing (Geoman edit/drag) writes the input back.
       layer.on('pm:edit pm:dragend', () => this.onInput(key, combine(layer)));
       layer.addTo(this.inputLayer);
     }
@@ -145,7 +145,7 @@ export class MapView {
   }
 }
 
-/** GeoJSON-Geometrie aus einem (ggf. mehrteiligen) bearbeiteten Layer. */
+/** GeoJSON geometry of an edited layer (which may have several parts). */
 function combine(layer) {
   const features = layer.toGeoJSON().features ?? [];
   return features.length === 1 ? features[0].geometry : { type: 'GeometryCollection', geometries: features.map(f => f.geometry) };

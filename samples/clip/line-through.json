@@ -1,5 +1,5 @@
 {
-  "name": "Linie durch das Rechteck",
+  "name": "Line through the rectangle",
   "tags": [],
   "a": "LINESTRING (-5 5, 15 5)",
   "params": {

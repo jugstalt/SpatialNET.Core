@@ -1,5 +1,5 @@
 {
-  "name": "Linie gegen Polygon mit flächenlosem Loch",
+  "name": "Line against a polygon with a hole without area",
   "tags": [
     "degenerate-ring"
   ],

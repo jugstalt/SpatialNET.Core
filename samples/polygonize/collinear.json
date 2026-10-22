@@ -1,5 +1,5 @@
 {
-  "name": "Sich überlappende Kanten fallen zusammen",
+  "name": "Overlapping edges collapse",
   "tags": [
     "collinear-overlap"
   ],

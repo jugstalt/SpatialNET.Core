@@ -1,5 +1,5 @@
 {
-  "name": "Von größer als bis kehrt das Stück um",
+  "name": "From greater than to reverses the piece",
   "tags": [],
   "a": "LINESTRING (0 0, 10 0, 10 10)",
   "params": {

@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Changed
 
+- The playground is in English (labels, messages and the names of the examples). The German documentation pages now have the same file and folder names as the English ones (`docs/de/concepts/`, `getting-started.md`, `host-integration.md`, `glossary.md`, `cookbook.md`), so the language switch lands on the same page.
 - **Breaking (before 1.0):** the concrete classes of `SpatialNET.Imp` (`Point`, `Point3D`, `PointM`, `Point3DM`, `PointSequence`, `MultiPoint`, `Path`, `Ring`, `Polyline`, `Polygon`) are now `internal`; use `ImpGeometryFactory` to create geometries. They clashed with the types of hosts that import the namespace (ADR 0028).
 - **Breaking (before 1.0):** `Hull.ConvexHull` moved to `Shapes.ConvexHull`, and the class `Hull` is gone. The extension call `geometry.ConvexHull()` is unchanged; only a static call `Hull.ConvexHull(geometry)` must be adapted (ADR 0028).
 - `PreparedGeometry` is now thread-safe after construction (ADR 0024): its segment index is the immutable `SpatialIndex<int>`. Preparing and querying small polygons is somewhat slower (about a millisecond or less per polygon), large polygons are on a par or faster.
@@ -21,11 +22,12 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- Documentation: one page per predicate (`docs/en/concepts/predicates/`, `docs/de/concepts/predicates/`) with its DE-9IM pattern, a table of 27 situations computed with the library itself, the details that surprise (points and lines, closed lines, `Contains` versus `Covers`), and the alternative with a tolerance. The overview page has the matrix of all predicates against all situations.
 - Playground: every predicate shows the distance of its inputs and, below it, the call that asks with a tolerance (`IsWithinDistance`, `Buffer`, …), and a note says when a `false` is only a rounding difference (a point drawn "on" a line is rarely exactly on it). The predicates stay exact; the library has no global tolerance.
 - `DelaunayTriangles`, `ConcaveHull` and `ConcaveHullByRatio` (ADR 0029): the Delaunay triangulation of the vertices of a geometry (a flat list of triangles, with exact predicates), and a concave hull that takes triangles away from its border. Playground entries for all three.
 - Playground: WKT with Z and M. Every input has a WKT field, every result shows its WKT with a copy button, `POST /api/convert` converts between WKT and GeoJSON, the projection keeps Z and M, and `InterpolateByM`, `ProjectToM` and `SubstringByM` are available with the examples that carry M.
 - The public API is tracked with `Microsoft.CodeAnalysis.PublicApiAnalyzers` (`PublicAPI.Shipped.txt` holds the API of `v0.4.0-preview.1`, `PublicAPI.Unshipped.txt` the changes since), and `tools/ship-public-api.ps1` moves the entries at release time. ADR 0028 records the criteria for version 1.0.
-- Documentation: a Cookbook (`docs/en/cookbook.md`, `docs/de/rezepte.md`) with ten tested recipes, and new sections in Host integration on threads and mutable geometries, units and the grid, errors and edge cases, choosing the right tool, reading and writing, and a checklist.
+- Documentation: a Cookbook (`docs/en/cookbook.md`, `docs/de/cookbook.md`) with ten tested recipes, and new sections in Host integration on threads and mutable geometries, units and the grid, errors and edge cases, choosing the right tool, reading and writing, and a checklist.
 - `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid` and `ReducePrecision` (ADR 0027): remove holes and parts below a size, round to a grid (may leave a polygon invalid), and reduce precision with a valid result. Playground entries for all four.
 - `MinimumRotatedRectangle`, `MinimumBoundingCircle` (with the value type `Circle`) and `Polylabel` (ADR 0026): the tightest rectangle and the smallest circle around a geometry, and the best place for a label in a polygon. Playground entries for all three.
 - `Translate`, `Scale`, `Rotate` and `Transform` (ADR 0025): coordinate transformations for every geometry kind, keeping Z and M and the orientation of polygon rings. `IsSimple`, `IsClosed`, `IsRing` and `EqualsExact`: checks about the form of a geometry. `HausdorffDistance`: the discrete Hausdorff distance. Playground entries for all of them except `Transform`.

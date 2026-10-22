@@ -1,5 +1,5 @@
 {
-  "name": "Ein Pfad läuft gegen die Richtung",
+  "name": "One path runs against the direction",
   "tags": [],
   "a": "MULTILINESTRING ((0 0, 1 1), (2 0, 1 1))"
 }

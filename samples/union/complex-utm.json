@@ -1,6 +1,6 @@
 {
-  "name": "Mehrteilige Flächen mit Löchern in UTM",
-  "description": "Zwei Flächen mit vielen Löchern (eine mit Insel) gegen eine dritte, in EPSG:25833 bei Wien: große Koordinaten, Gitterweite automatisch 1 µm.",
+  "name": "Multi-part areas with holes in UTM",
+  "description": "Two areas with many holes (one with an island) against a third, in EPSG:25833 near Vienna: large coordinates, grid size automatically 1 µm.",
   "tags": [
     "large-coords",
     "multi",

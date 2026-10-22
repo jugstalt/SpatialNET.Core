@@ -1,5 +1,5 @@
 {
-  "name": "Punkt im Polygon",
+  "name": "Point in a polygon",
   "tags": [],
   "a": "POINT (5 5)",
   "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",

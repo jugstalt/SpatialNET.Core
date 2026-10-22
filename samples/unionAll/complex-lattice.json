@@ -1,6 +1,6 @@
 {
-  "name": "Löcher-Raster, um eine halbe Zelle versetzt",
-  "description": "Quadratische Löcher auf einem 10er-Raster; B ist um (5, 5) versetzt: Löcher von A und B teilen Kanten und Ecken, einige Löcher berühren sich in einer Ecke.",
+  "name": "Grid of holes, shifted by half a cell",
+  "description": "Square holes on a grid of 10; B is shifted by (5, 5): holes of A and B share edges and corners, some holes touch at a corner.",
   "tags": [
     "collinear-overlap",
     "vertex-touch"

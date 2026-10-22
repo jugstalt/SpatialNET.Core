@@ -1,5 +1,5 @@
 {
-  "name": "Zwei Linien",
+  "name": "Two lines",
   "tags": [],
   "a": "LINESTRING (0 0, 10 0)",
   "b": "LINESTRING (3 2, 7 5)",

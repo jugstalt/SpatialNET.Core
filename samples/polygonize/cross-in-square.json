@@ -1,5 +1,5 @@
 {
-  "name": "Diagonalen teilen das Quadrat in vier Dreiecke",
+  "name": "Diagonals split the square into four triangles",
   "tags": [],
   "a": "MULTILINESTRING ((0 0, 10 0, 10 10, 0 10, 0 0), (0 0, 10 10), (0 10, 10 0))"
 }

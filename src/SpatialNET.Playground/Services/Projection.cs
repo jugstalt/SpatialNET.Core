@@ -5,8 +5,8 @@ using Proj4Coordinate = Proj4Net.Core.Coordinate;
 namespace SpatialNET.Playground.Services;
 
 /// <summary>
-/// Projektion zwischen WGS84 (Leaflet) und dem Rechen-KBS mit Proj4Net (ADR 0010). Transformiert nur Vertices,
-/// ohne Verdichtung; die Struktur (Ringe, Pfade) bleibt erhalten, ebenso Z und M.
+/// Projection between WGS84 (Leaflet) and the computation CRS with Proj4Net (ADR 0010). Transforms vertices only,
+/// without densifying; the structure (rings, paths) is kept, and so are Z and M.
 /// </summary>
 public sealed class Projection
 {
@@ -30,10 +30,10 @@ public sealed class Projection
 
     public bool IsGeographic { get; }
 
-    /// <summary>Einheit der Distanz-Parameter (ADR 0010).</summary>
+    /// <summary>The unit of the distance parameters (ADR 0010).</summary>
     public string Unit => IsGeographic ? "°" : "m";
 
-    /// <summary>Auto-UTM: Zone aus dem Mittelpunkt (Länge, Breite) in WGS84.</summary>
+    /// <summary>Auto-UTM: the zone of the centre (longitude, latitude) in WGS84.</summary>
     public static string AutoUtm(double lon, double lat)
     {
         int zone = Math.Clamp((int)Math.Floor((lon + 180) / 6) + 1, 1, 60);
@@ -51,7 +51,7 @@ public sealed class Projection
             return new SpatialNET.Coordinate(t.X, t.Y, c.Z, c.M);
         });
 
-    /// <summary>Bildet jede Koordinate ab und baut die gleiche Struktur mit der Referenz-Implementierung.</summary>
+    /// <summary>Maps every coordinate and builds the same structure with the reference implementation.</summary>
     public static IGeometry2D Map(IGeometry2D g, Func<SpatialNET.Coordinate, SpatialNET.Coordinate> map)
     {
         IPoint2D P(IPoint2D p)

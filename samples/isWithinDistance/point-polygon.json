@@ -1,5 +1,5 @@
 {
-  "name": "Punkt neben Polygon",
+  "name": "Point beside a polygon",
   "tags": [],
   "a": "POINT (15 5)",
   "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",

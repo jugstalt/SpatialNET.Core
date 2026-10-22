@@ -6,15 +6,15 @@ using SpatialNET.Playground.Algorithms;
 
 namespace SpatialNET.Playground.Services;
 
-/// <summary>Anfrage an <c>POST /api/run</c>.</summary>
-/// <param name="Algorithm">Id des Algorithmus.</param>
-/// <param name="Inputs">Operanden als GeoJSON-Geometrien (WGS84, bei <paramref name="Local"/> lokal planar).</param>
-/// <param name="Params">Parameterwerte; fehlende nehmen den Standard des Deskriptors.</param>
-/// <param name="Kbs"><c>auto</c> (Auto-UTM, ADR 0010) oder ein EPSG-Code wie <c>EPSG:25833</c>.</param>
-/// <param name="Local">Lokale Koordinaten (L.CRS.Simple): keine Projektion.</param>
+/// <summary>A request to <c>POST /api/run</c>.</summary>
+/// <param name="Algorithm">The id of the algorithm.</param>
+/// <param name="Inputs">The operands as GeoJSON geometries (WGS84, local planar with <paramref name="Local"/>).</param>
+/// <param name="Params">The parameter values; missing ones take the default of the descriptor.</param>
+/// <param name="Kbs"><c>auto</c> (auto-UTM, ADR 0010) or an EPSG code such as <c>EPSG:25833</c>.</param>
+/// <param name="Local">Local coordinates (L.CRS.Simple): no projection.</param>
 /// <param name="Wkt">
-/// Operanden als WKT (Länge/Breite bzw. lokal, mit Z und M); ein Wert hier gilt vor der GeoJSON-Eingabe desselben Operanden,
-/// denn GeoJSON trägt kein M (ADR 0015).
+/// The operands as WKT (longitude/latitude, or local, with Z and M); a value here counts before the GeoJSON of the same operand,
+/// because GeoJSON carries no M (ADR 0015).
 /// </param>
 public sealed record RunRequest(
     string Algorithm,
@@ -24,14 +24,14 @@ public sealed record RunRequest(
     bool Local = false,
     Dictionary<string, string>? Wkt = null);
 
-/// <summary>Anfrage an <c>POST /api/convert</c>: genau eines von beiden.</summary>
-/// <param name="Geometry">Eine GeoJSON-Geometrie.</param>
-/// <param name="Wkt">Ein WKT-Text.</param>
+/// <summary>A request to <c>POST /api/convert</c>: exactly one of the two.</summary>
+/// <param name="Geometry">A GeoJSON geometry.</param>
+/// <param name="Wkt">A WKT text.</param>
 public sealed record ConvertRequest(JsonElement? Geometry, string? Wkt);
 
 /// <summary>
-/// Führt einen Algorithmus aus (ADR 0010): WGS84 → Rechen-KBS projizieren, rechnen, nur die Vertices zurückprojizieren.
-/// Distanzen und Maße sind in Einheiten des Rechen-KBS.
+/// Runs an algorithm (ADR 0010): project WGS84 → computation CRS, compute, project only the vertices back.
+/// Distances and measures are in units of the computation CRS.
 /// </summary>
 public sealed class RunService
 {
@@ -44,7 +44,7 @@ public sealed class RunService
     {
         if (!_algorithms.TryGetValue(request.Algorithm, out var algorithm))
         {
-            throw new ArgumentException($"Unbekannter Algorithmus „{request.Algorithm}“.");
+            throw new ArgumentException($"Unknown algorithm \"{request.Algorithm}\".");
         }
 
         var raw = new Dictionary<string, IGeometry2D>();
@@ -58,7 +58,7 @@ public sealed class RunService
                 }
                 catch (Exception e) when (e is FormatException or NotSupportedException)
                 {
-                    throw new ArgumentException($"Eingabe „{input.Label}“ ({input.Key}): {e.Message}", e);
+                    throw new ArgumentException($"Input \"{input.Label}\" ({input.Key}): {e.Message}", e);
                 }
 
                 continue;
@@ -66,7 +66,7 @@ public sealed class RunService
 
             if (request.Inputs is null || !request.Inputs.TryGetValue(input.Key, out var json) || json.ValueKind != JsonValueKind.Object)
             {
-                throw new ArgumentException($"Eingabe „{input.Label}“ ({input.Key}) fehlt.");
+                throw new ArgumentException($"Input \"{input.Label}\" ({input.Key}) is missing.");
             }
 
             raw[input.Key] = GeoJson.Read(json.GetRawText(), Factory);
@@ -74,7 +74,7 @@ public sealed class RunService
 
         var warnings = new JsonArray();
         Projection? projection = null;
-        string kbs = "lokal";
+        string kbs = "local";
         if (!request.Local)
         {
             var requested = string.IsNullOrWhiteSpace(request.Kbs) ? "auto" : request.Kbs.Trim();
@@ -86,19 +86,19 @@ public sealed class RunService
             }
             catch (Exception e)
             {
-                throw new ArgumentException($"Unbekanntes oder nicht unterstütztes KBS „{epsg}“ ({e.Message}).", e);
+                throw new ArgumentException($"Unknown or unsupported CRS \"{epsg}\" ({e.Message}).", e);
             }
 
             kbs = requested.Equals("auto", StringComparison.OrdinalIgnoreCase) ? $"{epsg} (auto)" : epsg;
             if (projection.IsGeographic)
             {
-                warnings.Add("Geographisches KBS: Distanzen und Flächen sind in Grad, nicht in Metern.");
+                warnings.Add("Geographic CRS: distances and areas are in degrees, not in metres.");
             }
             else if (epsg == "EPSG:3857")
             {
                 double scale = 1 / Math.Cos(center.Y * Math.PI / 180);
                 warnings.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture,
-                    $"EPSG:3857 ist nicht längentreu: am Ort (Breite {center.Y:0.##}°) ist 1 Einheit ≈ {1 / scale:0.###} m (Faktor {scale:0.###})."));
+                    $"EPSG:3857 does not preserve lengths: at this place (latitude {center.Y:0.##}°) 1 unit ≈ {1 / scale:0.###} m (factor {scale:0.###})."));
             }
         }
 
@@ -114,13 +114,13 @@ public sealed class RunService
         return response;
     }
 
-    /// <summary>Mittelpunkt des gemeinsamen Envelopes aller Eingaben in WGS84; bestimmt die Auto-UTM-Zone (ADR 0010).</summary>
+    /// <summary>The centre of the common envelope of all inputs in WGS84; it decides the auto-UTM zone (ADR 0010).</summary>
     private static Coordinate Center(IEnumerable<IGeometry2D> inputs)
     {
         var envelopes = inputs.Select(g => g.Envelope()).Where(e => !e.IsEmpty).ToList();
         if (envelopes.Count == 0)
         {
-            return new Coordinate(9, 0); // leere Eingaben: beliebige Zone
+            return new Coordinate(9, 0); // empty inputs: any zone
         }
 
         return new Coordinate(
@@ -178,10 +178,10 @@ public sealed class RunService
                 };
 
             case null:
-                return new JsonObject { ["kind"] = "none", ["text"] = "kein Ergebnis (leere Eingabe)" };
+                return new JsonObject { ["kind"] = "none", ["text"] = "no result (empty input)" };
 
             case Envelope2D e when e.IsEmpty:
-                return new JsonObject { ["kind"] = "none", ["text"] = "leerer Envelope" };
+                return new JsonObject { ["kind"] = "none", ["text"] = "empty envelope" };
 
             case Envelope2D e:
                 var rectangle = Factory.CreatePolygon([new PolygonPart(new Coordinate[]
@@ -210,11 +210,11 @@ public sealed class RunService
                 };
 
             default:
-                throw new NotSupportedException($"Ergebnistyp {value.GetType().Name} wird nicht dargestellt.");
+                throw new NotSupportedException($"The result type {value.GetType().Name} cannot be shown.");
         }
     }
 
-    /// <summary>Kennzahlen des Ergebnisses in Einheiten des Rechen-KBS.</summary>
+    /// <summary>Figures of the result in units of the computation CRS.</summary>
     private static JsonObject Stats(IReadOnlyList<IGeometry2D> geometries) => new()
     {
         ["area"] = geometries.Sum(g => g.Area()),
@@ -232,7 +232,7 @@ public sealed class RunService
         _ => 0,
     };
 
-    /// <summary>Punkte, Pfade bzw. Teilflächen (Ringe mit positiver Fläche, ADR 0003).</summary>
+    /// <summary>Points, paths or parts of an area (rings with a positive area, ADR 0003).</summary>
     private static int Parts(IGeometry2D g) => g switch
     {
         IPoint2D => 1,

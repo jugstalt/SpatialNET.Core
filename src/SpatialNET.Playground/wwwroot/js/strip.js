@@ -1,4 +1,4 @@
-// Beispiel-Leiste: Vorschaukarten der Fixtures (SVG aus den GeoJSON-Eingaben).
+// Example strip: preview cards of the fixtures (SVG from the GeoJSON inputs).
 
 import { COLORS } from './map.js';
 
@@ -34,15 +34,15 @@ export function thumbnail(fixture) {
   return `<svg viewBox="0 0 ${W} ${H}">${svg}</svg>`;
 }
 
-/** Rendert die Leiste; Klick auf eine Karte lädt die Fixture. */
+/** Renders the strip; a click on a card loads the fixture. */
 export function renderStrip(element, fixtures, selectedId, onSelect) {
   element.innerHTML = fixtures.length
     ? fixtures.map(f => `
       <div class="card ${f.id === selectedId ? 'sel' : ''}" data-id="${escape(f.id)}" title="${escape(f.description ?? f.name)}">
         ${thumbnail(f)}<b>${escape(f.name)}</b>
-        <div class="tags">${escape(f.local ? 'lokal' : f.crs)} · ${f.tags.map(escape).join(' ')}</div>
+        <div class="tags">${escape(f.local ? 'local' : f.crs)} · ${f.tags.map(escape).join(' ')}</div>
       </div>`).join('')
-    : '<div class="card muted">Keine Beispiele – zeichnen oder GeoJSON hochladen.</div>';
+    : '<div class="card muted">No examples – draw or upload GeoJSON.</div>';
   element.querySelectorAll('[data-id]').forEach(card => card.onclick = () => onSelect(fixtures.find(f => f.id === card.dataset.id)));
 }
 

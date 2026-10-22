@@ -1,5 +1,5 @@
 {
-  "name": "Kreuzende Linien",
+  "name": "Crossing lines",
   "tags": [],
   "a": "LINESTRING (0 0, 10 10)",
   "b": "LINESTRING (0 10, 10 0)",

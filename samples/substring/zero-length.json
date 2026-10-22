@@ -1,5 +1,5 @@
 {
-  "name": "Gleiche Längen ergeben ein leeres Ergebnis",
+  "name": "Equal lengths give an empty result",
   "tags": [],
   "a": "LINESTRING (0 0, 10 0, 10 10)",
   "params": {
