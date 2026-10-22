@@ -24,10 +24,7 @@ public class PlaygroundCompletenessTests
         ["Locate"] = "Die Antwort ist eine Kategorie (innen, Rand, außen), die die Oberfläche nicht darstellt (ADR 0022)",
         ["ToPolygon"] = "Umwandlung einer Envelope in ein Polygon, kein Algorithmus (ADR 0022)",
         ["UnionAll"] = "Vereinigung vieler Geometrien (ADR 0018); der Playground kennt nur zwei Operanden A und B",
-        ["InterpolateByM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
-        ["ProjectToM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
         ["Transform"] = "Nimmt eine Funktion als Parameter, die die Oberfläche nicht darstellt (ADR 0025); Translate, Scale und Rotate decken sie ab",
-        ["SubstringByM"] = "Der Playground liest GeoJSON, und das hat kein M (ADR 0015); ohne M wäre die Methode dort wirkungslos",
     };
 
     [Theory]
@@ -231,7 +228,11 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
             {
                 var inputs = new JsonObject { ["a"] = fixture!["a"]?.DeepClone() };
                 if (fixture["b"] is { } b) inputs["b"] = b.DeepClone();
-                var (status, body) = await Run(new { algorithm = algorithm.Id, inputs, @params = fixture["params"], local = fixture["local"]!.GetValue<bool>() });
+                // Fixtures mit M reichen ihr WKT mit (GeoJSON trägt kein M, ADR 0015)
+                var wkt = new JsonObject();
+                if (fixture["aWkt"] is { } aWkt) wkt["a"] = aWkt.DeepClone();
+                if (fixture["bWkt"] is { } bWkt) wkt["b"] = bWkt.DeepClone();
+                var (status, body) = await Run(new { algorithm = algorithm.Id, inputs, wkt, @params = fixture["params"], local = fixture["local"]!.GetValue<bool>() });
                 if (status != HttpStatusCode.OK) failures.Add($"{fixture["id"]}: {body["error"]}");
             }
         }

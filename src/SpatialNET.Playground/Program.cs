@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using SpatialNET;
 using SpatialNET.Imp;
 using SpatialNET.IO;
 using SpatialNET.Playground.Algorithms;
@@ -51,6 +52,24 @@ app.MapPost("/api/import", async (HttpRequest request) =>
         return Results.Json(new { geometries = geometries.Select(g => JsonNode.Parse(g.ToGeoJson())).ToList() });
     }
     catch (Exception e) when (e is FormatException or NotSupportedException or JsonException)
+    {
+        return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
+    }
+});
+
+// WKT <-> GeoJSON: die Oberfläche zeigt und liest WKT (mit Z und M), die Karte zeichnet GeoJSON (ADR 0015/0011).
+app.MapPost("/api/convert", (ConvertRequest request) =>
+{
+    try
+    {
+        IGeometry2D geometry = !string.IsNullOrWhiteSpace(request.Wkt)
+            ? Wkt.Read(request.Wkt, ImpGeometryFactory.Instance)
+            : request.Geometry is { ValueKind: JsonValueKind.Object } json
+                ? GeoJson.Read(json.GetRawText(), ImpGeometryFactory.Instance)
+                : throw new ArgumentException("Weder „wkt“ noch „geometry“ angegeben.");
+        return Results.Json(new { geometry = JsonNode.Parse(geometry.ToGeoJson()), wkt = geometry.ToWkt() });
+    }
+    catch (Exception e) when (e is FormatException or NotSupportedException or ArgumentException or JsonException)
     {
         return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
     }

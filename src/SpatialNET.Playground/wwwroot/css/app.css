@@ -22,6 +22,11 @@ h3 { margin: 10px 0 4px; font-size: 11px; text-transform: uppercase; letter-spac
 .input-row .name { min-width: 92px; font-weight: 600; }
 .input-row .name.a { color: var(--a); } .input-row .name.b { color: var(--b); }
 
+.wkt { margin: 2px 0 6px; }
+.wkt summary { cursor: pointer; font-size: 12px; color: var(--mut); }
+.wkt textarea { width: 100%; font: 12px/1.35 ui-monospace, monospace; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; resize: vertical; background: #fff; }
+.chip.result .wkt textarea { min-width: 220px; }
+
 .chips { position: absolute; top: 12px; right: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; max-width: 360px; }
 .chip { background: #fff; border-radius: 16px; padding: 4px 10px; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 12px; }
 .chip:empty { display: none; }

@@ -19,6 +19,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- Playground: WKT with Z and M. Every input has a WKT field, every result shows its WKT with a copy button, `POST /api/convert` converts between WKT and GeoJSON, the projection keeps Z and M, and `InterpolateByM`, `ProjectToM` and `SubstringByM` are available with the examples that carry M.
 - The public API is tracked with `Microsoft.CodeAnalysis.PublicApiAnalyzers` (`PublicAPI.Shipped.txt` holds the API of `v0.4.0-preview.1`, `PublicAPI.Unshipped.txt` the changes since), and `tools/ship-public-api.ps1` moves the entries at release time. ADR 0028 records the criteria for version 1.0.
 - Documentation: a Cookbook (`docs/en/cookbook.md`, `docs/de/rezepte.md`) with ten tested recipes, and new sections in Host integration on threads and mutable geometries, units and the grid, errors and edge cases, choosing the right tool, reading and writing, and a checklist.
 - `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid` and `ReducePrecision` (ADR 0027): remove holes and parts below a size, round to a grid (may leave a polygon invalid), and reduce precision with a valid result. Playground entries for all four.

@@ -16,6 +16,10 @@ const state = {
   algorithm: null,
   params: {},
   inputs: {},
+  wkt: {},        // WKT-Text je Eingabe, der gilt (eingefügt oder aus einem Beispiel mit M); Zeichnen und Hochladen verwerfen ihn
+  shown: {},      // WKT-Text zur Anzeige für Eingaben ohne eigenen WKT-Text (vom Server aus dem GeoJSON erzeugt)
+  wktOpen: false,
+  resultWktOpen: false,
   fixtures: [],
   fixture: null,
   allFixtures: false,
@@ -28,6 +32,7 @@ const state = {
 const $ = id => document.getElementById(id);
 const view = new MapView($('map'), (key, geometry) => {
   state.inputs[key] = geometry;
+  delete state.wkt[key]; // eine gezeichnete oder verschobene Geometrie hat kein M mehr
   state.fixture = null;
   view.setInputs(state.inputs, false);
   renderInputs();
@@ -56,9 +61,10 @@ async function compute() {
 
   const id = ++sequence;
   const inputs = Object.fromEntries(alg.inputs.map(i => [i.key, state.inputs[i.key]]));
+  const wkt = Object.fromEntries(alg.inputs.filter(i => state.wkt[i.key]).map(i => [i.key, state.wkt[i.key]]));
   const kbs = state.fixture?.crs ?? (state.kbs === 'free' ? $('kbs-free').value.trim() || 'auto' : state.kbs);
   try {
-    const result = await api.run({ algorithm: alg.id, inputs, params: state.params, kbs, local: state.local });
+    const result = await api.run({ algorithm: alg.id, inputs, wkt, params: state.params, kbs, local: state.local });
     if (id !== sequence) return;
     state.last = result;
     showResult(result, null);
@@ -112,7 +118,23 @@ function showResult(result, error) {
   }
 
   html += (result.warnings ?? []).map(w => `<div class="warn">⚠ ${escape(w)}</div>`).join('');
+  const wktText = result.wkts ? result.wkts.join('\n') : result.wkt;
+  if (wktText) {
+    html += `<details class="wkt" ${state.resultWktOpen ? 'open' : ''}><summary>WKT</summary>
+      <textarea readonly rows="4" spellcheck="false">${escape(wktText)}</textarea>
+      <button data-copy>Kopieren</button></details>`;
+  }
+
   $('result').innerHTML = html;
+  const box = $('result').querySelector('details.wkt');
+  if (box) {
+    box.ontoggle = () => { state.resultWktOpen = box.open; };
+    box.querySelector('[data-copy]').onclick = async e => {
+      await navigator.clipboard?.writeText(wktText);
+      e.target.textContent = 'Kopiert';
+      setTimeout(() => { e.target.textContent = 'Kopieren'; }, 1200);
+    };
+  }
 }
 
 // ---------- Palette (Strg+K) ----------
@@ -214,16 +236,72 @@ function renderInputs() {
       <button data-upload="${i.key}" title="GeoJSON hochladen">⇪</button>
       <button data-clear="${i.key}" title="leeren">✕</button>
       ${describe(state.inputs[i.key])}
-    </div>`).join('');
+    </div>
+    <details class="wkt" data-wkt-box="${i.key}" ${state.wktOpen ? 'open' : ''}>
+      <summary title="Als WKT lesen und schreiben, auch mit Z und M. Auf der Karte bearbeiten verwirft M.">WKT</summary>
+      <textarea data-wkt="${i.key}" rows="3" spellcheck="false" placeholder="LINESTRING ZM (0 0 0 0, 10 0 10 100)">${escape(state.wkt[i.key] ?? state.shown[i.key] ?? '')}</textarea>
+      <div class="muted" data-wkt-msg="${i.key}"></div>
+    </details>`).join('');
   $('inputs').querySelectorAll('[data-draw]').forEach(b => b.onclick = () => { const [k, t] = b.dataset.draw.split(':'); view.draw(k, t); });
   $('inputs').querySelectorAll('[data-upload]').forEach(b => b.onclick = () => upload(b.dataset.upload));
+  $('inputs').querySelectorAll('details.wkt').forEach(d => d.ontoggle = () => { state.wktOpen = d.open; });
+  $('inputs').querySelectorAll('[data-wkt]').forEach(t => t.onchange = () => applyWkt(t.dataset.wkt, t.value.trim()));
+  refreshShown();
   $('inputs').querySelectorAll('[data-clear]').forEach(b => b.onclick = () => {
     delete state.inputs[b.dataset.clear];
+    delete state.wkt[b.dataset.clear];
+    delete state.shown[b.dataset.clear];
     state.fixture = null;
     view.setInputs(state.inputs, false);
     renderInputs();
     schedule();
   });
+}
+
+/** Ein eingefügter WKT-Text wird zur Eingabe: der Server liest ihn, die Karte bekommt das GeoJSON dazu. */
+async function applyWkt(key, text) {
+  const message = $('inputs').querySelector(`[data-wkt-msg="${key}"]`);
+  if (!text) {
+    delete state.inputs[key];
+    delete state.wkt[key];
+    delete state.shown[key];
+    state.fixture = null;
+    view.setInputs(state.inputs, false);
+    renderInputs();
+    renderStripState();
+    schedule();
+    return;
+  }
+
+  try {
+    const { geometry } = await api.convert({ wkt: text });
+    state.inputs[key] = geometry;
+    state.wkt[key] = text;
+    state.fixture = null;
+    view.setInputs(state.inputs, true);
+    renderInputs();
+    renderStripState();
+    schedule();
+  } catch (e) {
+    if (message) message.innerHTML = `<span class="warn">⚠ ${escape(e.message)}</span>`;
+  }
+}
+
+/** Zeigt für Eingaben ohne eigenen WKT-Text das WKT, das der Server aus dem GeoJSON erzeugt. */
+let shownSequence = 0;
+async function refreshShown() {
+  const id = ++shownSequence;
+  for (const input of state.algorithm.inputs) {
+    const key = input.key, geometry = state.inputs[key];
+    if (!geometry || state.wkt[key]) continue;
+    try {
+      const { wkt } = await api.convert({ geometry });
+      if (id !== shownSequence) return;
+      state.shown[key] = wkt;
+      const box = $('inputs').querySelector(`[data-wkt="${key}"]`);
+      if (box && document.activeElement !== box) box.value = wkt;
+    } catch { /* die Anzeige ist nur Beigabe */ }
+  }
 }
 
 function upload(target) {
@@ -237,7 +315,7 @@ function upload(target) {
       // Zwei Geometrien in einer Datei füllen A und B, sonst nur das Ziel.
       const keys = geometries.length > 1 && state.algorithm.inputs.length > 1 ? state.algorithm.inputs.map(i => i.key) : [target];
       if (state.local) setMode(false);
-      keys.forEach((k, i) => state.inputs[k] = geometries[i]);
+      keys.forEach((k, i) => { state.inputs[k] = geometries[i]; delete state.wkt[k]; });
       state.fixture = null;
       view.setInputs(state.inputs, true);
       renderInputs();
@@ -273,6 +351,8 @@ function setMode(local) {
 $('mode').onchange = () => {
   // Moduswechsel: Koordinaten passen nicht mehr zur Karte, Eingaben werden geleert.
   state.inputs = {};
+  state.wkt = {};
+  state.shown = {};
   state.fixture = null;
   state.last = null;
   setMode($('mode').value === 'local');
@@ -308,6 +388,11 @@ function loadFixture(fixture) {
   state.inputs = {};
   if (fixture.a) state.inputs.a = fixture.a;
   if (fixture.b) state.inputs.b = fixture.b;
+  // Beispiele mit M kommen mit ihrem WKT, denn GeoJSON trägt kein M (ADR 0015)
+  state.wkt = {};
+  if (fixture.aWkt) state.wkt.a = fixture.aWkt;
+  if (fixture.bWkt) state.wkt.b = fixture.bWkt;
+  state.shown = {};
   state.params = { ...defaults(state.algorithm), ...fixture.params };
   setMode(fixture.local);
   view.setInputs(state.inputs, true);
@@ -333,6 +418,8 @@ async function choose(id) {
   $('alg-group').textContent = state.algorithm.group;
   // Eingaben bleiben, soweit der neue Algorithmus sie nimmt.
   state.inputs = Object.fromEntries(state.algorithm.inputs.filter(i => state.inputs[i.key]).map(i => [i.key, state.inputs[i.key]]));
+  state.wkt = Object.fromEntries(Object.entries(state.wkt).filter(([k]) => state.inputs[k]));
+  state.shown = {};
   state.fixture = null;
   renderParams();
   renderInputs();

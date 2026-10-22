@@ -117,7 +117,7 @@ The playground is a small web application to try the algorithms on a map:
 dotnet run --project src/SpatialNET.Playground
 ```
 
-Open `http://localhost:5003`, press Ctrl+K to choose an algorithm, draw inputs (target A/B), upload GeoJSON or pick one of the sample geometries from the bar. The samples are the fixtures with the tag `playground` from the repository folder [`samples/`](https://github.com/jugstalt/SpatialNET.Core/tree/main/samples). Distances are given in the units of the computation CRS, which is chosen automatically (auto-UTM) by default ([ADR 0010](../adr/0010-playground-projektion-serverseitig-auto-utm.md)).
+Open `http://localhost:5003`, press Ctrl+K to choose an algorithm, draw inputs (target A/B), upload GeoJSON or pick one of the sample geometries from the bar. The samples are the fixtures with the tag `playground` from the repository folder [`samples/`](https://github.com/jugstalt/SpatialNET.Core/tree/main/samples). Distances are given in the units of the computation CRS, which is chosen automatically (auto-UTM) by default ([ADR 0010](../adr/0010-playground-projektion-serverseitig-auto-utm.md)). Every input also has a WKT field (with Z and M) and every result shows its WKT, which is how the M algorithms get their data (GeoJSON has no M, [ADR 0015](../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md)).
 
 ## Building the documentation
 

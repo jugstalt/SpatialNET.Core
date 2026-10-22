@@ -117,7 +117,7 @@ Der Playground ist eine kleine Web-Anwendung, um die Algorithmen auf einer Karte
 dotnet run --project src/SpatialNET.Playground
 ```
 
-`http://localhost:5003` öffnen, mit Strg+K einen Algorithmus wählen, Eingaben zeichnen (Ziel A/B), GeoJSON hochladen oder ein Beispiel aus der Leiste wählen. Die Beispiele sind die Fixtures mit dem Tag `playground` aus dem Repository-Ordner [`samples/`](https://github.com/jugstalt/SpatialNET.Core/tree/main/samples). Distanzen gelten in den Einheiten des Rechen-KBS, das standardmäßig automatisch gewählt wird (Auto-UTM) ([ADR 0010](../adr/0010-playground-projektion-serverseitig-auto-utm.de.md)).
+`http://localhost:5003` öffnen, mit Strg+K einen Algorithmus wählen, Eingaben zeichnen (Ziel A/B), GeoJSON hochladen oder ein Beispiel aus der Leiste wählen. Die Beispiele sind die Fixtures mit dem Tag `playground` aus dem Repository-Ordner [`samples/`](https://github.com/jugstalt/SpatialNET.Core/tree/main/samples). Distanzen gelten in den Einheiten des Rechen-KBS, das standardmäßig automatisch gewählt wird (Auto-UTM) ([ADR 0010](../adr/0010-playground-projektion-serverseitig-auto-utm.de.md)). Jede Eingabe hat außerdem ein WKT-Feld (mit Z und M), und jedes Ergebnis zeigt sein WKT; so bekommen die M-Algorithmen ihre Daten (GeoJSON hat kein M, [ADR 0015](../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)).
 
 ## Die Dokumentation bauen
 

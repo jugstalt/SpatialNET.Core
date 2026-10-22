@@ -16,3 +16,6 @@ Dann `http://localhost:5003` öffnen.
   ein neuer Algorithmus braucht nur einen Deskriptor, keine Frontend-Änderung.
 - **Bedienung:** Strg+K wählt den Algorithmus; Eingaben zeichnen (Ziel A/B), als GeoJSON hochladen oder ein Beispiel
   aus der Leiste wählen. Gerechnet wird 300 ms nach jeder Änderung. Beispiele ohne `crs` laufen lokal planar (`L.CRS.Simple`).
+- **WKT und M:** Jede Eingabe hat ein WKT-Feld (WKT einfügen, auch mit Z und M, oder das Gezeichnete kopieren), und jedes
+  Ergebnis zeigt sein WKT mit einer Kopieren-Schaltfläche. GeoJSON kann kein M tragen, deshalb bekommen die M-Algorithmen
+  (`InterpolateByM`, `ProjectToM`, `SubstringByM`) ihre Daten über WKT. Eine Geometrie auf der Karte zu bearbeiten verwirft ihr M.

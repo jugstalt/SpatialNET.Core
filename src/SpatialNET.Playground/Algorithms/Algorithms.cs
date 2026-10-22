@@ -245,3 +245,18 @@ public sealed class SnapToGridAlgorithm() : PlaygroundAlgorithm("snapToGrid", "S
 public sealed class ReducePrecisionAlgorithm() : PlaygroundAlgorithm("reducePrecision", "ReducePrecision", "Konstruktion",
     [In.A(In.Any)], [new("gridSize", "Gitterweite", "number", 1.0, "kbs")],
     (i, p, f, _) => i["a"].ReducePrecision(p.Number("gridSize"), f));
+
+// ---------- Lineare Referenzierung nach M (ADR 0015/0016): M kommt über WKT in den Playground ----------
+
+public sealed class InterpolateByMAlgorithm() : PlaygroundAlgorithm("interpolateByM", "InterpolateByM", "Lineare Referenzierung",
+    [In.A(In.Lines, "Linie (WKT mit M)")], [new("m", "M-Wert", "number", 150.0)],
+    (i, p, _, _) => ((IPolyline2D)i["a"]).InterpolateByM(p.Number("m")));
+
+public sealed class ProjectToMAlgorithm() : PlaygroundAlgorithm("projectToM", "ProjectToM", "Lineare Referenzierung",
+    [In.A(In.Lines, "Linie (WKT mit M)"), In.B(["Point"], "Punkt")], [],
+    (i, _, _, _) => ((IPolyline2D)i["a"]).ProjectToM((IPoint2D)i["b"]));
+
+public sealed class SubstringByMAlgorithm() : PlaygroundAlgorithm("substringByM", "SubstringByM", "Lineare Referenzierung",
+    [In.A(In.Lines, "Linie (WKT mit M)")],
+    [new("fromM", "Von (M)", "number", 50.0), new("toM", "Bis (M)", "number", 200.0)],
+    (i, p, f, _) => ((IPolyline2D)i["a"]).SubstringByM(p.Number("fromM"), p.Number("toM"), f));

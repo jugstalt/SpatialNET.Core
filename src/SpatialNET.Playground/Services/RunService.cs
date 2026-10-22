@@ -12,12 +12,22 @@ namespace SpatialNET.Playground.Services;
 /// <param name="Params">Parameterwerte; fehlende nehmen den Standard des Deskriptors.</param>
 /// <param name="Kbs"><c>auto</c> (Auto-UTM, ADR 0010) oder ein EPSG-Code wie <c>EPSG:25833</c>.</param>
 /// <param name="Local">Lokale Koordinaten (L.CRS.Simple): keine Projektion.</param>
+/// <param name="Wkt">
+/// Operanden als WKT (Länge/Breite bzw. lokal, mit Z und M); ein Wert hier gilt vor der GeoJSON-Eingabe desselben Operanden,
+/// denn GeoJSON trägt kein M (ADR 0015).
+/// </param>
 public sealed record RunRequest(
     string Algorithm,
     Dictionary<string, JsonElement>? Inputs,
     Dictionary<string, JsonElement>? Params,
     string? Kbs = "auto",
-    bool Local = false);
+    bool Local = false,
+    Dictionary<string, string>? Wkt = null);
+
+/// <summary>Anfrage an <c>POST /api/convert</c>: genau eines von beiden.</summary>
+/// <param name="Geometry">Eine GeoJSON-Geometrie.</param>
+/// <param name="Wkt">Ein WKT-Text.</param>
+public sealed record ConvertRequest(JsonElement? Geometry, string? Wkt);
 
 /// <summary>
 /// Führt einen Algorithmus aus (ADR 0010): WGS84 → Rechen-KBS projizieren, rechnen, nur die Vertices zurückprojizieren.
@@ -40,6 +50,20 @@ public sealed class RunService
         var raw = new Dictionary<string, IGeometry2D>();
         foreach (var input in algorithm.Inputs)
         {
+            if (request.Wkt is not null && request.Wkt.TryGetValue(input.Key, out var text) && !string.IsNullOrWhiteSpace(text))
+            {
+                try
+                {
+                    raw[input.Key] = SpatialNET.IO.Wkt.Read(text, Factory);
+                }
+                catch (Exception e) when (e is FormatException or NotSupportedException)
+                {
+                    throw new ArgumentException($"Eingabe „{input.Label}“ ({input.Key}): {e.Message}", e);
+                }
+
+                continue;
+            }
+
             if (request.Inputs is null || !request.Inputs.TryGetValue(input.Key, out var json) || json.ValueKind != JsonValueKind.Object)
             {
                 throw new ArgumentException($"Eingabe „{input.Label}“ ({input.Key}) fehlt.");
@@ -107,11 +131,12 @@ public sealed class RunService
     private static JsonObject Describe(object? value, Projection? projection)
     {
         JsonNode? Geo(IGeometry2D g) => JsonNode.Parse((projection is null ? g : projection.ToWgs84(g)).ToGeoJson());
+        string AsWkt(IGeometry2D g) => (projection is null ? g : projection.ToWgs84(g)).ToWkt();
 
         switch (value)
         {
             case IGeometry2D g:
-                return new JsonObject { ["kind"] = "geometry", ["geometry"] = Geo(g), ["stats"] = Stats([g]) };
+                return new JsonObject { ["kind"] = "geometry", ["geometry"] = Geo(g), ["wkt"] = AsWkt(g), ["stats"] = Stats([g]) };
 
             case IEnumerable<IGeometry2D> list:
                 var parts = list.ToList();
@@ -119,6 +144,7 @@ public sealed class RunService
                 {
                     ["kind"] = "geometries",
                     ["geometries"] = new JsonArray(parts.Select(Geo).ToArray()),
+                    ["wkts"] = new JsonArray(parts.Select(p => (JsonNode)AsWkt(p)).ToArray()),
                     ["stats"] = Stats(parts),
                 };
 
@@ -132,11 +158,13 @@ public sealed class RunService
                 return new JsonObject { ["kind"] = "matrix", ["value"] = m.ToString() };
 
             case Coordinate c:
+                var point = Factory.CreatePoint(c, null);
                 return new JsonObject
                 {
                     ["kind"] = "geometry",
-                    ["geometry"] = Geo(Factory.CreatePoint(c, null)),
-                    ["text"] = $"({Text(c.X)}, {Text(c.Y)})",
+                    ["geometry"] = Geo(point),
+                    ["wkt"] = AsWkt(point),
+                    ["text"] = $"({Text(c.X)}, {Text(c.Y)}{(c.HasZ ? $", Z = {Text(c.Z)}" : "")}{(c.HasM ? $", M = {Text(c.M)}" : "")})",
                 };
 
             case null:

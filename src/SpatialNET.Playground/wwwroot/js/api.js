@@ -15,6 +15,10 @@ export const fixtures = (algorithm, all) =>
 export const run = request =>
   fetch('api/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request) }).then(json);
 
+/** WKT <-> GeoJSON: {wkt} oder {geometry} -> {geometry, wkt}; WKT trägt Z und M, GeoJSON nicht (ADR 0015). */
+export const convert = request =>
+  fetch('api/convert', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request) }).then(json);
+
 /** Liest eine GeoJSON-Datei auf dem Server (GeoJson.ReadAll) → Liste von Geometrien. */
 export const importGeoJson = file =>
   fetch('api/import', { method: 'POST', headers: { 'Content-Type': 'application/geo+json' }, body: file }).then(json);

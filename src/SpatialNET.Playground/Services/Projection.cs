@@ -6,7 +6,7 @@ namespace SpatialNET.Playground.Services;
 
 /// <summary>
 /// Projektion zwischen WGS84 (Leaflet) und dem Rechen-KBS mit Proj4Net (ADR 0010). Transformiert nur Vertices,
-/// ohne Verdichtung; die Struktur (Ringe, Pfade) bleibt erhalten.
+/// ohne Verdichtung; die Struktur (Ringe, Pfade) bleibt erhalten, ebenso Z und M.
 /// </summary>
 public sealed class Projection
 {
@@ -48,7 +48,7 @@ public sealed class Projection
         Map(g, c =>
         {
             var t = transform.Transform(new Proj4Coordinate(c.X, c.Y), new Proj4Coordinate());
-            return new SpatialNET.Coordinate(t.X, t.Y, c.Z);
+            return new SpatialNET.Coordinate(t.X, t.Y, c.Z, c.M);
         });
 
     /// <summary>Bildet jede Koordinate ab und baut die gleiche Struktur mit der Referenz-Implementierung.</summary>
@@ -56,8 +56,14 @@ public sealed class Projection
     {
         IPoint2D P(IPoint2D p)
         {
-            var c = map(p is IPoint3D p3 ? new SpatialNET.Coordinate(p.X, p.Y, p3.Z) : new SpatialNET.Coordinate(p.X, p.Y));
-            return c.HasZ ? new Point3D(c.X, c.Y, c.Z) : new Imp.Point(c.X, c.Y);
+            var c = map(new SpatialNET.Coordinate(p.X, p.Y, p is IPoint3D p3 ? p3.Z : double.NaN, p is IPointM pm ? pm.M : double.NaN));
+            return (c.HasZ, c.HasM) switch
+            {
+                (false, false) => new Imp.Point(c.X, c.Y),
+                (true, false) => new Point3D(c.X, c.Y, c.Z),
+                (false, true) => new PointM(c.X, c.Y, c.M),
+                _ => new Point3DM(c.X, c.Y, c.Z, c.M),
+            };
         }
 
         IPoint2D[] Points(IPointCollection2D pc) => Enumerable.Range(0, pc.PointCount).Select(i => P(pc[i])).ToArray();
