@@ -68,3 +68,9 @@
   href: ../../adr/0034-locatefeature-geometrie-zu-m-bereichen.de.md
 - name: "0035 Seitlicher Versatz und Projektion mit Abstand und Seite"
   href: ../../adr/0035-seitlicher-versatz-und-projektion-mit-seite.de.md
+- name: "0036 Voronoi-Diagramm und die Kanten der Delaunay-Triangulierung"
+  href: ../../adr/0036-voronoi-diagramm.de.md
+- name: "0037 Die Triangulierung als Fläche: Nachbarn, Höhe, Höhenlinien"
+  href: ../../adr/0037-triangulation-netz-hoehe-hoehenlinien.de.md
+- name: "0038 Constrained-Delaunay-Triangulierung und die Triangulierung eines Polygons"
+  href: ../../adr/0038-constrained-delaunay-und-polygon-triangulierung.de.md

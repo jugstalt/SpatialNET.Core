@@ -65,6 +65,22 @@ _Avoid_: Eichen, Messwerte zuweisen
 Der Abstand eines Punktes von einer Linie mit Vorzeichen: positiv links der Richtung der Linie, negativ rechts; nicht die Offset-Kurve.
 _Avoid_: Offset, Querabstand
 
+**Voronoi-Zelle**:
+Die Fläche, die einem von mehreren Punkten näher liegt als jedem anderen (ein Thiessen-Polygon), auf eine Zuschnittfläche zugeschnitten.
+_Avoid_: Thiessen-Region, Einzugsfläche
+
+**Triangulierung**:
+Dreiecke, die eine Punktmenge oder ein Polygon lückenlos füllen, mit ihren Nachbarn.
+_Avoid_: Vermaschung, TIN (als Begriff der Bibliothek)
+
+**Bruchkante**:
+Eine Linie, die Kante der Triangulierung sein muss, etwa ein Rücken oder ein Graben (eine Zwangskante).
+_Avoid_: Constraint, Zwangslinie
+
+**Höhenlinie**:
+Die Linie, auf der eine Fläche eine bestimmte Höhe hat.
+_Avoid_: Isolinie, Contour
+
 **Ereignis**:
 Eine Aussage über einen Bereich von M-Werten auf einer Route mit Attributen nach Wahl des Hosts, z.B. ein Tempolimit von Kilometer 3 bis 5,5; hat keine eigene Geometrie.
 _Avoid_: Event, Streckenobjekt

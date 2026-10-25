@@ -11,7 +11,7 @@ internal static class In
     public static readonly string[] LinesAndAreas = ["LineString", "Polygon"];
 
     public static InputDescriptor A(string[] types, string label = "Input") => new("a", label, types);
-    public static InputDescriptor B(string[] types, string label = "B") => new("b", label, types);
+    public static InputDescriptor B(string[] types, string label = "B", bool optional = false) => new("b", label, types, optional);
 }
 
 internal static class P
@@ -304,3 +304,61 @@ public sealed class ConcaveHullByRatioAlgorithm() : PlaygroundAlgorithm("concave
     [In.A(In.Any)],
     [new("edgeLengthRatio", "Edge length ratio (0–1)", "number", 0.3), new("holesAllowed", "Holes allowed", "bool", false)],
     (i, p, f, _) => i["a"].ConcaveHullByRatio(p.Number("edgeLengthRatio"), p.Bool("holesAllowed"), f));
+
+// ---------- Voronoi diagram, triangulations and terrain (ADR 0036, ADR 0037, ADR 0038) ----------
+
+public sealed class VoronoiDiagramAlgorithm() : PlaygroundAlgorithm("voronoiDiagram", "VoronoiDiagram", "Triangulation",
+    [In.A(In.Any, "Sites"), In.B(In.Areas, "Clip area (optional)", optional: true)], [P.GridSize],
+    (i, p, f, g) => i["a"].VoronoiDiagram(i.TryGetValue("b", out var clip) ? (IPolygon2D)clip : null, f, p.OptionalNumber("gridSize") ?? g)
+        .Select(c => (IGeometry2D)c.Cell).ToList());
+
+public sealed class VoronoiEdgesAlgorithm() : PlaygroundAlgorithm("voronoiEdges", "VoronoiEdges", "Triangulation",
+    [In.A(In.Any, "Sites"), In.B(In.Areas, "Clip area (optional)", optional: true)], [P.GridSize],
+    (i, p, f, g) => i["a"].VoronoiEdges(i.TryGetValue("b", out var clip) ? (IPolygon2D)clip : null, f, p.OptionalNumber("gridSize") ?? g));
+
+public sealed class DelaunayEdgesAlgorithm() : PlaygroundAlgorithm("delaunayEdges", "DelaunayEdges", "Triangulation",
+    [In.A(In.Any)], [],
+    (i, _, f, _) => i["a"].DelaunayEdges(f));
+
+public sealed class TriangulateAlgorithm() : PlaygroundAlgorithm("triangulate", "Triangulate (polygon)", "Triangulation",
+    [In.A(In.Areas, "Polygon")], [P.GridSize],
+    (i, p, f, g) => ((IPolygon2D)i["a"]).Triangulate(f, p.OptionalNumber("gridSize") ?? g).Cast<IGeometry2D>().ToList());
+
+public sealed class ConstrainedDelaunayAlgorithm() : PlaygroundAlgorithm("constrainedDelaunay", "ConstrainedDelaunay", "Triangulation",
+    [In.A(In.Any, "Points"), In.B(In.LinesAndAreas, "Break lines")], [P.GridSize],
+    (i, p, f, g) => Triangulation.FromPointsAndLines(i["a"], i["b"], f, p.OptionalNumber("gridSize") ?? g).ToPolygons(f).Cast<IGeometry2D>().ToList());
+
+public sealed class InterpolateZAlgorithm() : PlaygroundAlgorithm("interpolateZ", "InterpolateZ (height)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)"), In.B(["Point"], "Point")], [],
+    (i, _, _, _) =>
+    {
+        var point = (IPoint2D)i["b"];
+        return Triangulation.FromPoints(i["a"]).InterpolateZ(new Coordinate(point.X, point.Y));
+    });
+
+public sealed class ContourAlgorithm() : PlaygroundAlgorithm("contour", "Contour (lines of equal height)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)")],
+    [new("z", "Height", "number", 50.0), new("interval", "Interval (0 = only the height above)", "number", 0.0)],
+    (i, p, f, _) =>
+    {
+        var triangulation = Triangulation.FromPoints(i["a"]);
+        double interval = p.Number("interval");
+        if (!(interval > 0))
+        {
+            return triangulation.Contour(p.Number("z"), f);
+        }
+
+        var heights = triangulation.Vertices.Where(v => v.HasZ).Select(v => v.Z).ToList();
+        if (heights.Count == 0)
+        {
+            return new List<IGeometry2D>();
+        }
+
+        var levels = new List<IGeometry2D>();
+        for (double level = Math.Ceiling(heights.Min() / interval) * interval; level <= heights.Max() && levels.Count < 200; level += interval)
+        {
+            levels.Add(triangulation.Contour(level, f));
+        }
+
+        return levels;
+    });

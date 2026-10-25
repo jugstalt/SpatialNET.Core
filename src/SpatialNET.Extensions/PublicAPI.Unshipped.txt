@@ -45,3 +45,29 @@ static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D!
 static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> SpatialNET.LineProjection?
 static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point, double from, double to) -> SpatialNET.LineProjection?
 static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> SpatialNET.LineProjection?
+SpatialNET.VoronoiCell
+SpatialNET.VoronoiCell.Cell.get -> SpatialNET.IPolygon2D!
+SpatialNET.VoronoiCell.Cell.init -> void
+SpatialNET.VoronoiCell.Site.get -> SpatialNET.Coordinate
+SpatialNET.VoronoiCell.Site.init -> void
+SpatialNET.VoronoiCell.VoronoiCell() -> void
+SpatialNET.VoronoiCell.VoronoiCell(SpatialNET.Coordinate Site, SpatialNET.IPolygon2D! Cell) -> void
+static SpatialNET.Shapes.DelaunayEdges(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Shapes.VoronoiDiagram(this SpatialNET.IGeometry2D! sites, SpatialNET.IPolygon2D? clip = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.VoronoiCell>!
+static SpatialNET.Shapes.VoronoiEdges(this SpatialNET.IGeometry2D! sites, SpatialNET.IPolygon2D? clip = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation
+SpatialNET.Triangulation.ConstrainedEdges(SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Contour(double z, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Edges(SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.InterpolateZ(SpatialNET.Coordinate point) -> double
+SpatialNET.Triangulation.IsConstrained(int triangle, int side) -> bool
+SpatialNET.Triangulation.Locate(SpatialNET.Coordinate point) -> int
+SpatialNET.Triangulation.Neighbour(int triangle, int side) -> int
+SpatialNET.Triangulation.ToPolygons(SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+SpatialNET.Triangulation.Triangle(int triangle) -> (int A, int B, int C)
+SpatialNET.Triangulation.TriangleCount.get -> int
+SpatialNET.Triangulation.Vertices.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Coordinate>!
+static SpatialNET.Shapes.Triangulate(this SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+static SpatialNET.Triangulation.FromPoints(SpatialNET.IGeometry2D! points) -> SpatialNET.Triangulation!
+static SpatialNET.Triangulation.FromPointsAndLines(SpatialNET.IGeometry2D! points, SpatialNET.IGeometry2D! lines, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.Triangulation!
+static SpatialNET.Triangulation.FromPolygon(SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.Triangulation!

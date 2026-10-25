@@ -66,6 +66,11 @@ public sealed class RunService
 
             if (request.Inputs is null || !request.Inputs.TryGetValue(input.Key, out var json) || json.ValueKind != JsonValueKind.Object)
             {
+                if (input.Optional)
+                {
+                    continue;
+                }
+
                 throw new ArgumentException($"Input \"{input.Label}\" ({input.Key}) is missing.");
             }
 
@@ -139,7 +144,7 @@ public sealed class RunService
                 return new JsonObject { ["kind"] = "geometry", ["geometry"] = Geo(g), ["wkt"] = AsWkt(g), ["stats"] = Stats([g]) };
 
             case IEnumerable<IGeometry2D> list:
-                var parts = list.ToList();
+                var parts = list.Where(g => !g.Envelope().IsEmpty).ToList();   // the map cannot draw an empty part: a Voronoi cell outside the clip area, a contour level without a line
                 return new JsonObject
                 {
                     ["kind"] = "geometries",

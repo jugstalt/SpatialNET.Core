@@ -6,7 +6,8 @@ namespace SpatialNET.Playground.Algorithms;
 /// <param name="Key">The key (a, b).</param>
 /// <param name="Label">The label.</param>
 /// <param name="Types">The allowed geometry types (Point, MultiPoint, LineString, Polygon).</param>
-public sealed record InputDescriptor(string Key, string Label, string[] Types);
+/// <param name="Optional"><c>true</c> if the algorithm also runs without this input (the algorithm gets no entry for it).</param>
+public sealed record InputDescriptor(string Key, string Label, string[] Types, bool Optional = false);
 
 /// <summary>A parameter of an algorithm in the playground.</summary>
 /// <param name="Key">The key.</param>

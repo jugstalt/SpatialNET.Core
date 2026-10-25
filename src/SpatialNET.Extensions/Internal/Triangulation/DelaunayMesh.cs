@@ -14,7 +14,7 @@ namespace SpatialNET.Internal.Triangulation;
 /// the Delaunay property by edge flips with the exact <see cref="InCircle"/> test; <see cref="Orientation"/> decides the
 /// visibility and the location. Points on a common circle give an equally valid, deterministic triangulation.
 /// </remarks>
-internal sealed class DelaunayMesh
+internal sealed partial class DelaunayMesh
 {
     private readonly Coordinate[] _points;
     private readonly int[] _triangles;
@@ -238,7 +238,7 @@ internal sealed class DelaunayMesh
         return double.IsNaN(r) ? double.PositiveInfinity : r;
     }
 
-    private static (double X, double Y) Circumcentre(Coordinate a, Coordinate b, Coordinate c)
+    internal static (double X, double Y) Circumcentre(Coordinate a, Coordinate b, Coordinate c)
     {
         double dx = b.X - a.X, dy = b.Y - a.Y, ex = c.X - a.X, ey = c.Y - a.Y;
         double bl = dx * dx + dy * dy, cl = ex * ex + ey * ey;
@@ -583,23 +583,40 @@ internal sealed class DelaunayMesh
                 continue;
             }
 
-            // flip u–v to pa–pb: (u, v, pa) and (v, u, pb) become (u, pb, pa) and (pb, v, pa)
-            int oA1 = _halfEdges[a1], oB1 = _halfEdges[b1], oB2 = _halfEdges[b2];
-            _triangles[a] = u;
-            _triangles[a1] = pb;
-            _triangles[a2] = pa;
-            _triangles[b] = pb;
-            _triangles[b1] = v;
-            _triangles[b2] = pa;
-
-            Link(a, oB1, u);            // u → pb
-            Pair(a1, b2);               // pb → pa  with  pa → pb
-            Link(b, oB2, pb);           // pb → v
-            Link(b1, oA1, v);           // v → pa
-            // pa → u keeps its place and its neighbour
-
+            Flip(a, b);
             _stack.Push(a);
             _stack.Push(b);
+        }
+    }
+
+    /// <summary>
+    /// Flips the edge between the half-edges <paramref name="a"/> and its opposite <paramref name="b"/>: the triangles (u, v, pa) and
+    /// (v, u, pb) become (u, pb, pa) and (pb, v, pa). The new diagonal is <c>a1</c> (pb → pa) and <c>b2</c> (pa → pb).
+    /// </summary>
+    private void Flip(int a, int b)
+    {
+        int a1 = Next(a), a2 = Prev(a), b1 = Next(b), b2 = Prev(b);
+        int u = _triangles[a], v = _triangles[a1], pa = _triangles[a2], pb = _triangles[b2];
+        int oA1 = _halfEdges[a1], oB1 = _halfEdges[b1], oB2 = _halfEdges[b2];
+        _triangles[a] = u;
+        _triangles[a1] = pb;
+        _triangles[a2] = pa;
+        _triangles[b] = pb;
+        _triangles[b1] = v;
+        _triangles[b2] = pa;
+
+        Link(a, oB1, u);            // u → pb
+        Pair(a1, b2);               // pb → pa  with  pa → pb
+        Link(b, oB2, pb);           // pb → v
+        Link(b1, oA1, v);           // v → pa
+        // pa → u keeps its place and its neighbour
+
+        if (_vertexEdge is not null)
+        {
+            _vertexEdge[u] = a;
+            _vertexEdge[pb] = b;
+            _vertexEdge[v] = b1;
+            _vertexEdge[pa] = a2;
         }
     }
 }

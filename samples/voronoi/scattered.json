@@ -1,0 +1,8 @@
+{
+  "name": "Twelve sites",
+  "description": "Voronoi cells (Thiessen polygons) of scattered sites; without a clip area they are cut to the widened envelope of the sites.",
+  "tags": [
+    "playground"
+  ],
+  "a": "MULTIPOINT ((10 20), (35 80), (60 30), (85 70), (50 55), (20 50), (75 10), (90 40), (30 5), (65 90), (5 85), (45 15))"
+}

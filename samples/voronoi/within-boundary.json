@@ -1,0 +1,9 @@
+{
+  "name": "Service areas within a boundary",
+  "description": "The same sites, cut to an L-shaped boundary (second input); sites outside it have empty cells.",
+  "tags": [
+    "playground"
+  ],
+  "a": "MULTIPOINT ((10 20), (35 80), (60 30), (85 70), (50 55), (20 50), (75 10), (90 40), (30 5), (65 90), (5 85), (45 15))",
+  "b": "POLYGON ((0 0, 100 0, 100 45, 60 45, 60 100, 0 100, 0 0))"
+}

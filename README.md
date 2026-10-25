@@ -2,7 +2,7 @@
 
 *[Deutsche Fassung](README.de.md)*
 
-SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures.
+SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures, linear referencing, and triangulations (Delaunay, Voronoi, terrain models).
 
 - **Own algorithms, no third-party engine.** Everything is implemented in-house; there is no dependency on NetTopologySuite, Clipper or similar ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.md)). NetTopologySuite appears only in the test project, as a comparison oracle.
 - **Interfaces instead of geometry classes.** The algorithms are extension methods on small read-only interfaces (`IPolygon2D`, `IPolyline2D`, …), so existing GIS software such as gView or WebGIS can use them through its own geometry classes. Results are created through a geometry factory that the host provides.
@@ -45,7 +45,7 @@ Hosts implement the interfaces on their own geometry classes and provide their o
 ## Documentation
 
 - [Getting started](docs/en/getting-started.md) and [host integration](docs/en/host-integration.md)
-- [Concepts](docs/en/concepts/geometry-model.md): geometry model, [overlays and the grid](docs/en/concepts/overlay-and-grid.md), [predicates](docs/en/concepts/predicates.md), [buffer and offset](docs/en/concepts/buffer-and-offset.md), [simplify and validation](docs/en/concepts/simplify-and-validation.md), [cut](docs/en/concepts/cut.md), [spatial index](docs/en/concepts/spatial-index.md), [linear referencing](docs/en/concepts/linear-referencing.md), [event tables](docs/en/concepts/event-tables.md), [measures and constructions](docs/en/concepts/measures-and-constructions.md)
+- [Concepts](docs/en/concepts/geometry-model.md): geometry model, [overlays and the grid](docs/en/concepts/overlay-and-grid.md), [predicates](docs/en/concepts/predicates.md), [buffer and offset](docs/en/concepts/buffer-and-offset.md), [simplify and validation](docs/en/concepts/simplify-and-validation.md), [cut](docs/en/concepts/cut.md), [spatial index](docs/en/concepts/spatial-index.md), [linear referencing](docs/en/concepts/linear-referencing.md), [event tables](docs/en/concepts/event-tables.md), [triangulation, Voronoi and terrain](docs/en/concepts/triangulation-and-voronoi.md), [measures and constructions](docs/en/concepts/measures-and-constructions.md)
 - [Glossary](docs/en/glossary.md) (English ↔ German terms)
 - API reference: generated from the XML comments with DocFX, build it with `docs/build.ps1` (see [docs/en/getting-started.md](docs/en/getting-started.md#building-the-documentation))
 - [Architecture decision records](docs/adr/) – the reasoning behind the design (English, with German versions)

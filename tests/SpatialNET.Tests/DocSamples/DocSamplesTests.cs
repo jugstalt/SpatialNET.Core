@@ -385,6 +385,71 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void VoronoiDiagram()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: voronoi
+        var stations = Wkt.Read<IMultiPoint2D>("MULTIPOINT ((10 20), (35 80), (60 30), (85 70), (50 55))");
+        var boundary = Wkt.Read<IPolygon2D>("POLYGON ((0 0, 100 0, 100 100, 0 100, 0 0))");
+
+        IReadOnlyList<VoronoiCell> cells = stations.VoronoiDiagram(boundary);   // five cells that tile the boundary
+        double total = cells.Sum(c => c.Cell.Area());                            // 10000
+        IPolyline2D edges = stations.VoronoiEdges(boundary);                     // the lines between the cells
+        // --- end
+
+        Assert.Equal(5, cells.Count);
+        Assert.Equal(10000, total, 6);
+        Assert.True(edges.PathCount > 0);
+    }
+
+    [Fact]
+    public void TerrainModel()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: terrain
+        var terrain = Triangulation.FromPoints(Wkt.Read("MULTIPOINT Z ((0 0 10), (100 0 20), (100 100 40), (0 100 30), (50 50 25))"));
+
+        double height = terrain.InterpolateZ(new Coordinate(25, 10));   // 14.5
+        int triangle = terrain.Locate(new Coordinate(25, 10));          // the triangle that contains the point
+        IPolyline2D contour = terrain.Contour(25);                      // the line at height 25, from (0 75) to (100 25)
+        // --- end
+
+        Assert.Equal(14.5, height, 9);
+        Assert.True(triangle >= 0);
+        Assert.Equal(Math.Sqrt(100 * 100 + 50 * 50), contour.Length(), 6);
+    }
+
+    [Fact]
+    public void BreakLinesAndPolygons()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: break-lines
+        var spots = Wkt.Read("MULTIPOINT Z ((0 0 5), (100 0 5), (100 40 15), (0 40 15), (50 20 9))");
+        var ditch = Wkt.Read("LINESTRING Z (0 20 8, 100 20 8)");   // passes through the vertex (50 20) and is split there
+
+        var surface = Triangulation.FromPointsAndLines(spots, ditch);
+        IPolyline2D kept = surface.ConstrainedEdges();             // two edges that together are the ditch
+        double onTheDitch = surface.InterpolateZ(new Coordinate(25, 20));   // 8.5: interpolated along the break line
+        // --- end
+
+        Assert.Equal(2, kept.PathCount);
+        Assert.Equal(100, kept.Length(), 9);
+        Assert.Equal(8.5, onTheDitch, 9);
+
+        // --- snippet: triangulate-polygon
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON ((0 0, 10 0, 10 10, 6 10, 6 4, 4 4, 4 10, 0 10, 0 0))");
+
+        IReadOnlyList<IPolygon2D> triangles = parcel.Triangulate();   // 8 vertices: 6 triangles inside the U
+        // --- end
+
+        Assert.Equal(6, triangles.Count);
+        Assert.Equal(parcel.Area(), triangles.Sum(t => t.Area()), 9);
+    }
+
+    [Fact]
     public void OffsetAndSide()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

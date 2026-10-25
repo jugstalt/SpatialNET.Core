@@ -38,6 +38,10 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | M-Wert | measure (M) |
 | Kalibrieren | calibrating (`CalibrateM`) |
 | Ereignis | event (`LineEvent<T>`) |
+| Voronoi-Zelle | Voronoi cell (`VoronoiCell`) |
+| Triangulierung | triangulation (`Triangulation`) |
+| Bruchkante | break line (constraint) |
+| Höhenlinie | contour line (`Triangulation.Contour`) |
 | seitlicher Versatz | offset to the side (`Interpolate(distance, offset)`) |
 
 ## Playground und Tests

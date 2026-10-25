@@ -1,0 +1,9 @@
+{
+  "name": "A rectangle with a hole",
+  "description": "Triangulate: eight triangles around the hole. ConstrainedDelaunay: two break lines from the corners to the hole.",
+  "tags": [
+    "playground"
+  ],
+  "a": "POLYGON ((0 0, 100 0, 100 80, 0 80, 0 0), (30 20, 30 60, 70 60, 70 20, 30 20))",
+  "b": "MULTILINESTRING ((0 0, 30 20), (100 80, 70 60))"
+}

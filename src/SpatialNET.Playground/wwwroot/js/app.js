@@ -51,7 +51,7 @@ function schedule() {
 
 async function compute() {
   const alg = state.algorithm;
-  const missing = alg?.inputs.filter(i => !state.inputs[i.key]) ?? [];
+  const missing = alg?.inputs.filter(i => !i.optional && !state.inputs[i.key]) ?? [];
   if (!alg || missing.length) {
     sequence++;
     showResult(null, null);
@@ -60,7 +60,7 @@ async function compute() {
   }
 
   const id = ++sequence;
-  const inputs = Object.fromEntries(alg.inputs.map(i => [i.key, state.inputs[i.key]]));
+  const inputs = Object.fromEntries(alg.inputs.filter(i => state.inputs[i.key]).map(i => [i.key, state.inputs[i.key]]));
   const wkt = Object.fromEntries(alg.inputs.filter(i => state.wkt[i.key]).map(i => [i.key, state.wkt[i.key]]));
   const kbs = state.fixture?.crs ?? (state.kbs === 'free' ? $('kbs-free').value.trim() || 'auto' : state.kbs);
   try {

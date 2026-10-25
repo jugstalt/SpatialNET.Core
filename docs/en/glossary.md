@@ -21,6 +21,10 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | measure (M) | M-Wert | A value that a point carries in addition to its position (for example the distance along a road); carried and interpolated like Z, never used in a computation (`IPointM`) |
 | calibrating | Kalibrieren | Giving a line M values from anchor points that carry M, by projecting them onto the line and interpolating in the length between them (`CalibrateM`) |
 | offset to the side | seitlicher Versatz | The signed distance of a point from a line, positive to the left of the direction of the line, negative to the right (`Interpolate(distance, offset)`, `LineProjection.Offset`); not the offset curve of `OffsetCurve` |
+| Voronoi cell | Voronoi-Zelle | The area that lies nearer to one of a set of points than to every other (a Thiessen polygon); cut to a clip area (`VoronoiDiagram`, `VoronoiCell`) |
+| triangulation | Triangulierung | Triangles that tile a set of points or a polygon, with their neighbours (`Triangulation`) |
+| break line | Bruchkante | A line that must be an edge of the triangulation, such as a ridge or a ditch (a constraint, `FromPointsAndLines`) |
+| contour line | Höhenlinie | The line where a surface has one height (`Triangulation.Contour`) |
 | event | Ereignis | A fact about a range of M values on a route, with attributes of the host's choice: a speed limit from kilometre 3 to 5.5 (`LineEvent<T>`); the arithmetic between event tables is `LineEvents` |
 | envelope | Envelope | The axis-aligned rectangle that encloses a geometry (`Envelope2D`) |
 | reference implementation | Referenz-Implementierung | The implementation of the geometry interfaces in `SpatialNET.Imp`, meant for tests, the playground and hosts without geometries of their own |

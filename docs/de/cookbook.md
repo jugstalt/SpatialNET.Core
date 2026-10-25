@@ -216,6 +216,42 @@ Console.WriteLine($"{Math.Round(from)} to {Math.Round(to)}"); // 12040 to 12100
 
 ```
 
+## Einzugsgebiete: welche Station ist die nächste?
+
+Die Voronoi-Zelle eines Punktes ist die Fläche, in der er von allen der nächste ist. Auf eine Grenze zugeschnitten, sind die Zellen Einzugsgebiete, und die Flächen sagen, wie viel jeder Punkt versorgt ([Triangulierung, Voronoi und Gelände](concepts/triangulation-and-voronoi.md)).
+
+```csharp
+var hydrants = Wkt.Read<IMultiPoint2D>("MULTIPOINT ((10 20), (35 80), (60 30), (85 70), (50 55))");
+var district = Wkt.Read<IPolygon2D>("POLYGON ((0 0, 100 0, 100 45, 60 45, 60 100, 0 100, 0 0))");
+
+// One cell per hydrant: where it is the nearest one, cut to the district.
+var cells = hydrants.VoronoiDiagram(district);
+
+// Which hydrant serves a point? The one whose cell contains it.
+var served = cells.First(c => c.Cell.Locate(new Coordinate(20, 60)) != Location.Outside);
+Console.WriteLine($"{served.Site.X} {served.Site.Y}");   // 35 80
+
+// How much of the district does each hydrant serve?
+var areas = cells.Select(c => Math.Round(c.Cell.Area())).ToArray();
+
+```
+
+## Höhe an einem Punkt und Höhenlinien
+
+Eine Triangulierung von Punkten mit Z ist ein Geländemodell: Sie liefert die Höhe überall innerhalb und die Linie jeder Höhe. Bruchkanten (Rücken, Gräben) lassen sich als Zwangskanten ergänzen; siehe die Konzeptseite ([Triangulierung, Voronoi und Gelände](concepts/triangulation-and-voronoi.md)).
+
+```csharp
+var points = Wkt.Read("MULTIPOINT Z ((0 0 10), (100 0 20), (100 100 40), (0 100 30), (50 50 25))");
+var terrain = Triangulation.FromPoints(points);
+
+Console.WriteLine(terrain.InterpolateZ(new Coordinate(25, 10)));            // 14.5
+foreach (double level in new[] { 20.0, 30.0 })
+{
+    Console.WriteLine($"{level}: {terrain.Contour(level).Length():0.0} m");   // 20: 111.8 m, 30: 111.8 m
+}
+
+```
+
 ## Für die Karte
 
 Für kleine Maßstäbe vereinfachen, auf den Bildschirm zuschneiden und einen guten Ort für die Beschriftung finden ([Vereinfachen, konvexe Hülle und Validierung](concepts/simplify-and-validation.md), [Overlays](concepts/overlay-and-grid.md), [Maße und Konstruktionen](concepts/measures-and-constructions.md)).

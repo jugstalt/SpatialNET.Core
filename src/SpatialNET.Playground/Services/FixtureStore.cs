@@ -25,11 +25,26 @@ public sealed class FixtureStore(string root)
         ["locateAlong"] = "interpolate",
     };
 
+    /// <summary>
+    /// Algorithms that share the example folder of another name, with the tag <c>playground</c> as usual (and their parameters): the
+    /// triangulations and the terrain methods have no fixture folder of their own, since these are not oracle cases (ADR 0036 to 0038).
+    /// </summary>
+    private static readonly Dictionary<string, string> SharedFolders = new()
+    {
+        ["voronoiDiagram"] = "voronoi",
+        ["voronoiEdges"] = "voronoi",
+        ["delaunayEdges"] = "voronoi",
+        ["triangulate"] = "triangulation",
+        ["constrainedDelaunay"] = "triangulation",
+        ["interpolateZ"] = "terrain",
+        ["contour"] = "terrain",
+    };
+
     /// <summary>The fixtures of an algorithm; without <paramref name="all"/> only those with the tag <c>playground</c>.</summary>
     public IReadOnlyList<JsonObject> For(string algorithm, bool all)
     {
         bool viaAlias = MAliases.TryGetValue(algorithm, out var source);
-        var folder = Path.Combine(root, source ?? algorithm);
+        var folder = Path.Combine(root, source ?? SharedFolders.GetValueOrDefault(algorithm) ?? algorithm);
         if (!Directory.Exists(folder) || algorithm.Contains("..") || algorithm.IndexOfAny(['/', '\\']) >= 0)
         {
             return [];

@@ -1,0 +1,9 @@
+{
+  "name": "A U shape with a break line",
+  "description": "Triangulate: the triangles inside the U. ConstrainedDelaunay: the vertices of the polygon with a diagonal that must be kept; it passes through the vertex (35 35) and is split there.",
+  "tags": [
+    "playground"
+  ],
+  "a": "POLYGON ((0 0, 100 0, 100 100, 65 100, 65 35, 35 35, 35 100, 0 100, 0 0))",
+  "b": "LINESTRING (0 0, 100 100)"
+}

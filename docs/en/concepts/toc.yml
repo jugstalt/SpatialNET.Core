@@ -39,3 +39,5 @@
   href: measures-and-constructions.md
 - name: Event tables
   href: event-tables.md
+- name: Triangulation, Voronoi and terrain
+  href: triangulation-and-voronoi.md

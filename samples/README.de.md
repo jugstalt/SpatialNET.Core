@@ -47,6 +47,10 @@ Jeder Algorithmus braucht mindestens einen Fall je Tag. Trifft ein Tag fachlich 
 
 Der Test `FixtureCompletenessTests` erzwingt Katalog und Abdeckung jeder öffentlichen Methode.
 
+## Beispielordner ohne Orakel
+
+`voronoi/`, `triangulation/` und `terrain/` enthalten **nur Beispiele für den Playground** (Tag `playground`), keine Orakelfälle: Die Playground-Einträge `voronoiDiagram`, `voronoiEdges` und `delaunayEdges` teilen sich `voronoi/`, `triangulate` und `constrainedDelaunay` teilen sich `triangulation/`, und `interpolateZ` und `contour` teilen sich `terrain/` (`FixtureStore.SharedFolders`, ADR 0036 bis 0038). Die Ordner haben keinen Tag-Katalog; diese Methoden werden durch Eigenschaften und gegen NTS in ihren eigenen Tests geprüft.
+
 ## Externe Korpora
 
 `samples/external/<quelle>/<algorithmus>/` enthält per `tools/SpatialNET.CorpusConverter` übernommene Fälle

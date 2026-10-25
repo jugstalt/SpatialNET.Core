@@ -256,6 +256,48 @@ public sealed class CookbookSamplesTests : IDisposable
     }
 
     [Fact]
+    public void ServiceAreas()
+    {
+        // --- snippet: cookbook-service-areas
+        var hydrants = Wkt.Read<IMultiPoint2D>("MULTIPOINT ((10 20), (35 80), (60 30), (85 70), (50 55))");
+        var district = Wkt.Read<IPolygon2D>("POLYGON ((0 0, 100 0, 100 45, 60 45, 60 100, 0 100, 0 0))");
+
+        // One cell per hydrant: where it is the nearest one, cut to the district.
+        var cells = hydrants.VoronoiDiagram(district);
+
+        // Which hydrant serves a point? The one whose cell contains it.
+        var served = cells.First(c => c.Cell.Locate(new Coordinate(20, 60)) != Location.Outside);
+        Console.WriteLine($"{served.Site.X} {served.Site.Y}");   // 35 80
+
+        // How much of the district does each hydrant serve?
+        var areas = cells.Select(c => Math.Round(c.Cell.Area())).ToArray();
+        // --- end
+
+        Assert.Equal(new Coordinate(35, 80), served.Site);
+        Assert.Equal(district.Area(), areas.Sum(), 1);
+        Assert.Equal(5, areas.Length);
+    }
+
+    [Fact]
+    public void HeightAndContours()
+    {
+        // --- snippet: cookbook-terrain
+        var points = Wkt.Read("MULTIPOINT Z ((0 0 10), (100 0 20), (100 100 40), (0 100 30), (50 50 25))");
+        var terrain = Triangulation.FromPoints(points);
+
+        Console.WriteLine(terrain.InterpolateZ(new Coordinate(25, 10)));            // 14.5
+        foreach (double level in new[] { 20.0, 30.0 })
+        {
+            Console.WriteLine($"{level}: {terrain.Contour(level).Length():0.0} m");   // 20: 111.8 m, 30: 111.8 m
+        }
+        // --- end
+
+        Assert.Equal(14.5, terrain.InterpolateZ(new Coordinate(25, 10)), 9);
+        Assert.Equal(111.8, terrain.Contour(20).Length(), 1);
+        Assert.Equal(111.8, terrain.Contour(30).Length(), 1);
+    }
+
+    [Fact]
     public void ForTheMap()
     {
         // --- snippet: cookbook-display

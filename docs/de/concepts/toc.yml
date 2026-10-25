@@ -39,3 +39,5 @@
   href: measures-and-constructions.md
 - name: Ereignistabellen
   href: event-tables.md
+- name: Triangulierung, Voronoi und Gelände
+  href: triangulation-and-voronoi.md

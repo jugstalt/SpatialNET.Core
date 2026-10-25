@@ -117,7 +117,7 @@ public static partial class Shapes
         return triangles;
     }
 
-    private static Coordinate[] DistinctPoints(IGeometry2D geometry)
+    internal static Coordinate[] DistinctPoints(IGeometry2D geometry)
     {
         var seen = new HashSet<(double, double)>();
         var points = new List<Coordinate>();

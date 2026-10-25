@@ -47,6 +47,10 @@ justification in `samples/<algorithm>/_catalog.json`: `{ "n/a": { "z": "justific
 
 The test `FixtureCompletenessTests` enforces the catalog and the coverage of every public method.
 
+## Example folders without an oracle
+
+`voronoi/`, `triangulation/` and `terrain/` hold **examples for the playground** only (tag `playground`), no oracle cases: the playground entries `voronoiDiagram`, `voronoiEdges` and `delaunayEdges` share `voronoi/`, `triangulate` and `constrainedDelaunay` share `triangulation/`, and `interpolateZ` and `contour` share `terrain/` (`FixtureStore.SharedFolders`, ADR 0036 to 0038). The folders carry no tag catalog; these methods are tested by properties and against NTS in their own tests.
+
 ## External corpora
 
 `samples/external/<source>/<algorithm>/` contains cases imported with `tools/SpatialNET.CorpusConverter`

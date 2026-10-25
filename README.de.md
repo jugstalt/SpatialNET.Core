@@ -2,7 +2,7 @@
 
 *[English version](README.md)*
 
-SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overlays (Schnitt, Vereinigung, Differenz), Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße.
+SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overlays (Schnitt, Vereinigung, Differenz), Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße, lineare Referenzierung und Triangulierungen (Delaunay, Voronoi, Geländemodelle).
 
 - **Eigene Algorithmen, keine fremde Engine.** Alles ist selbst implementiert, es gibt keine Abhängigkeit zu NetTopologySuite, Clipper o. ä. ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.de.md)). NetTopologySuite kommt nur im Testprojekt als Vergleichs-Orakel vor.
 - **Interfaces statt eigener Geometrieklassen.** Die Algorithmen sind Extension-Methoden auf kleinen, lesenden Interfaces (`IPolygon2D`, `IPolyline2D`, …). Bestehende GIS-Software wie gView oder WebGIS kann sie damit über ihre eigenen Geometrieklassen nutzen. Ergebnisse entstehen über eine Geometrie-Factory, die der Host bereitstellt.
@@ -45,7 +45,7 @@ Hosts implementieren die Interfaces an ihren eigenen Geometrieklassen und stelle
 ## Dokumentation
 
 - [Erste Schritte](docs/de/getting-started.md) und [Host-Anbindung](docs/de/host-integration.md)
-- [Konzepte](docs/de/concepts/geometry-model.md): Geometriemodell, [Overlays und Gitter](docs/de/concepts/overlay-and-grid.md), [Prädikate](docs/de/concepts/predicates.md), [Buffer und Offset](docs/de/concepts/buffer-and-offset.md), [Vereinfachen und Validieren](docs/de/concepts/simplify-and-validation.md), [Cut](docs/de/concepts/cut.md), [Räumlicher Index](docs/de/concepts/spatial-index.md), [Lineare Referenzierung](docs/de/concepts/linear-referencing.md), [Ereignistabellen](docs/de/concepts/event-tables.md), [Maße und Konstruktionen](docs/de/concepts/measures-and-constructions.md)
+- [Konzepte](docs/de/concepts/geometry-model.md): Geometriemodell, [Overlays und Gitter](docs/de/concepts/overlay-and-grid.md), [Prädikate](docs/de/concepts/predicates.md), [Buffer und Offset](docs/de/concepts/buffer-and-offset.md), [Vereinfachen und Validieren](docs/de/concepts/simplify-and-validation.md), [Cut](docs/de/concepts/cut.md), [Räumlicher Index](docs/de/concepts/spatial-index.md), [Lineare Referenzierung](docs/de/concepts/linear-referencing.md), [Ereignistabellen](docs/de/concepts/event-tables.md), [Triangulierung, Voronoi und Gelände](docs/de/concepts/triangulation-and-voronoi.md), [Maße und Konstruktionen](docs/de/concepts/measures-and-constructions.md)
 - [Glossar](docs/de/glossary.md) (Begriffe Deutsch ↔ Englisch)
 - API-Referenz: aus den XML-Kommentaren mit DocFX generiert (nur Englisch), Build mit `docs/build.ps1` (siehe [docs/de/getting-started.md](docs/de/getting-started.md#die-dokumentation-bauen))
 - [Architekturentscheidungen (ADRs)](docs/adr/) – die Begründungen hinter dem Design (Englisch, mit deutschen Fassungen)

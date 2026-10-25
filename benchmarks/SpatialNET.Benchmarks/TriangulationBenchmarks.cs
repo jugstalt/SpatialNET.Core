@@ -81,5 +81,20 @@ public class TriangulationBenchmarks
             factory.CreateMultiPointFromCoords(points.Select(c => new NetTopologySuite.Geometries.Coordinate(c.X, c.Y)).ToArray()));
     }
 
+    /// <summary>Points with a height: a smooth terrain with some noise, in the layout of <see cref="Create"/>.</summary>
+    public static IGeometry2D CreateTerrain(PointLayout layout, int count)
+    {
+        var points = ((IMultiPoint2D)Create(layout, count).Points);
+        var terrain = new Coordinate[points.PointCount];
+        var random = new Random(43);
+        for (int i = 0; i < terrain.Length; i++)
+        {
+            double x = points[i].X, y = points[i].Y;
+            terrain[i] = new Coordinate(x, y, 200 * Math.Sin(x / 900) * Math.Cos(y / 700) + random.NextDouble() * 3);
+        }
+
+        return ImpGeometryFactory.Instance.CreateMultiPoint(terrain, null);
+    }
+
     private static double Gaussian(Random random) => Math.Sqrt(-2 * Math.Log(1 - random.NextDouble())) * Math.Cos(2 * Math.PI * random.NextDouble());
 }
