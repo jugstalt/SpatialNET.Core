@@ -541,6 +541,109 @@ public static class LinearReferencing
         return f.CreateMultiPoint(GeometryAccess.Restrict(hits.ToArray(), f), line);
     }
 
+    /// <summary>
+    /// The ranges of M along a route where a line or an area lies: the reverse of <see cref="LocateBetween"/>, from a
+    /// geometry to what a route system stores (ADR 0034). A parcel next to a road becomes "from 4200 to 4900".
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The feature is widened by <paramref name="tolerance"/> (a buffer) and cut with the route; the M values of the pieces of the
+    /// route inside it are the result. A piece gives <c>(lowest M, highest M)</c> of its vertices, which is the M that it covers since
+    /// M is interpolated linearly on a segment (ADR 0017). Stretches of the route without M cannot answer and are left out; a piece
+    /// without length (the feature touches the route at one point) is not a range. Ranges that touch or overlap are joined, so a route
+    /// that passes the feature twice gives two ranges only if they are apart in M.
+    /// </para>
+    /// <para>
+    /// The M values at the ends of a range are interpolated on the grid of the overlay (ADR 0005), so they are exact to about its size.
+    /// </para>
+    /// <para>
+    /// A point has an M value, not a range: use <see cref="ProjectToM(IPolyline2D, Coordinate)"/> and <c>IsWithinDistance</c>.
+    /// </para>
+    /// </remarks>
+    /// <param name="route">The calibrated route, a polyline with M.</param>
+    /// <param name="feature">A polyline or a polygon.</param>
+    /// <param name="tolerance">How far from the feature the route still counts, in map units. For a polygon 0 is allowed (the area itself); for a line it must be greater than 0.</param>
+    /// <param name="factory">The factory for the intermediate geometries; <c>null</c> = <see cref="GeometryFactory.Default"/>. It must support M.</param>
+    /// <returns>The ranges, sorted; empty if there is none or the route has no M there.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="route"/> or <paramref name="feature"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative, <c>NaN</c> or infinite, or 0 for a line.</exception>
+    /// <exception cref="ArgumentException"><paramref name="feature"/> is a point, a multipoint or not a known geometry kind.</exception>
+    /// <exception cref="InvalidOperationException">No factory available, or it does not support M.</exception>
+    public static IReadOnlyList<(double From, double To)> LocateFeature(this IPolyline2D route, IGeometry2D feature, double tolerance,
+        IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(feature);
+        if (!double.IsFinite(tolerance) || tolerance < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "The tolerance must be finite and not negative.");
+        }
+
+        var f = GeometryFactory.Resolve(factory);
+        if (!f.SupportsM)
+        {
+            throw new InvalidOperationException("The factory does not support M values.");
+        }
+
+        IPolygon2D zone = feature switch
+        {
+            IPolygon2D polygon => polygon.Buffer(tolerance, null, f),
+            IPolyline2D line when tolerance > 0 => line.Buffer(tolerance, null, f),
+            IPolyline2D => throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "A line needs a tolerance greater than 0."),
+            IPoint2D or IMultiPoint2D => throw new ArgumentException("A point has an M value, not a range: use ProjectToM.", nameof(feature)),
+            _ => throw new ArgumentException("The feature is not a known geometry kind.", nameof(feature)),
+        };
+
+        var ranges = new List<(double From, double To)>();
+        if (zone.RingCount == 0 || new LineIndex(route).IsEmpty)
+        {
+            return ranges;
+        }
+
+        var pieces = route.Intersection(zone, FillRule.EvenOdd, f);
+        for (int p = 0; p < pieces.PathCount; p++)
+        {
+            var path = Rings.Coordinates(pieces[p]);
+            double lo = double.PositiveInfinity, hi = double.NegativeInfinity;
+            int count = 0;
+            for (int i = 0; i <= path.Length; i++)
+            {
+                if (i < path.Length && path[i].HasM)
+                {
+                    lo = Math.Min(lo, path[i].M);
+                    hi = Math.Max(hi, path[i].M);
+                    count++;
+                    continue;
+                }
+
+                if (count >= 2 && hi > lo)
+                {
+                    ranges.Add((lo, hi));
+                }
+
+                lo = double.PositiveInfinity;
+                hi = double.NegativeInfinity;
+                count = 0;
+            }
+        }
+
+        ranges.Sort((a, b) => a.From != b.From ? a.From.CompareTo(b.From) : a.To.CompareTo(b.To));
+        var joined = new List<(double From, double To)>();
+        foreach (var r in ranges)
+        {
+            if (joined.Count > 0 && r.From <= joined[^1].To)
+            {
+                joined[^1] = (joined[^1].From, Math.Max(joined[^1].To, r.To));
+            }
+            else
+            {
+                joined.Add(r);
+            }
+        }
+
+        return joined;
+    }
+
     private static IPolyline2D Piece(LineIndex index, double from, double to, IGeometryFactory f, IPolyline2D source)
     {
         if (index.IsEmpty)

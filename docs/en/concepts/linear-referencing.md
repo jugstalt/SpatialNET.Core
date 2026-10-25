@@ -58,6 +58,21 @@ IMultiPoint2D at12_5 = route.LocateAlong(12_500);            // every point wher
 - `LocateAlong` returns every hit in the order along the line; a hit at a vertex counts once, and a segment with constant M answers with its start, like `InterpolateByM`.
 - Both use only segments with M at both ends; no hit gives an empty result.
 
+## From a geometry to ranges of M
+
+`LocateBetween` goes from M to the road; `LocateFeature` goes back, from a line or an area to the ranges of M along the route where it lies ([ADR 0034](../../adr/0034-locatefeature-geometrie-zu-m-bereichen.md)). A parcel next to a road becomes "from 4 200 to 4 900", which can be stored as an event and combined with others ([Event tables](event-tables.md)).
+
+```csharp
+var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 0, 100 0 1000)");
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((20 0, 50 0, 50 10, 20 10, 20 0))");
+
+var ranges = route.LocateFeature(parcel, tolerance: 0);   // one range: 200 to 500
+```
+
+- The feature is widened by `tolerance` and cut with the route; every piece of the route inside gives a range from its lowest to its highest M. The tolerance is required: for a polygon 0 is allowed, for a line it must be greater than 0.
+- A route that passes the feature twice gives two ranges if they are apart in M. Touching ranges are joined, a touch at a single point gives nothing, and a stretch without M is left out.
+- A point has an M value, not a range: use `ProjectToM`. M at the ends of a range is exact to about the grid of the overlay.
+
 ## Lines that cross themselves: a window of lengths
 
 A hairpin bend or a loop gives a click several nearest points, and `Project` answers with the smallest length, the earlier pass. `Project(point, from, to)` and `ProjectToM(point, from, to)` search only the stretch between two lengths and still answer with a length (or M) on the whole line ([ADR 0031](../../adr/0031-project-mit-laengenfenster.md)):

@@ -242,11 +242,17 @@ public sealed class CookbookSamplesTests : IDisposable
             Console.WriteLine($"{piece.Value}: {shape.Length()} m");
             // 50 km/h, asphalt: 50 m / 50 km/h, gravel: 25 m / 70 km/h, gravel: 75 m
         }
+
+        // The way back: which part of the route does a parcel along the road belong to?
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON((20 0, 50 0, 50 10, 20 10, 20 0))");
+        var (from, to) = route.LocateFeature(parcel, tolerance: 0).Single();
+        Console.WriteLine($"{Math.Round(from)} to {Math.Round(to)}"); // 12040 to 12100
         // --- end
 
         Assert.Equal(
             [("50 km/h, asphalt", 50d), ("50 km/h, gravel", 25d), ("70 km/h, gravel", 75d)],
             both.Select(p => (p.Value, route.LocateBetween(p.From, p.To).Length())));
+        Assert.Equal((12040d, 12100d), (Math.Round(from), Math.Round(to)));
     }
 
     [Fact]

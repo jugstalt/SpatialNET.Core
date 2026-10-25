@@ -190,7 +190,7 @@ Console.WriteLine($"{measure}, {at[0].X} {at[0].Y}, {section.Length()}"); // 120
 
 ## Speed limit and surface along a route
 
-Two event tables of one route (a speed limit and a surface, each a range of M values with a value) and the question where both hold. The arithmetic runs on the numbers alone; the road geometry comes in only to draw or measure the result. The rows come from your database, the library never reads a table ([Event tables](concepts/event-tables.md), [Linear referencing](concepts/linear-referencing.md)).
+Two event tables of one route (a speed limit and a surface, each a range of M values with a value) and the question where both hold. The arithmetic runs on the numbers alone; the road geometry comes in only to draw or measure the result. The rows come from your database, the library never reads a table; the last lines go the other way, from a parcel to its range of M ([Event tables](concepts/event-tables.md), [Linear referencing](concepts/linear-referencing.md)).
 
 ```csharp
 var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 12000, 100 0 12200, 100 50 12300)");
@@ -208,6 +208,11 @@ foreach (var piece in both)
     Console.WriteLine($"{piece.Value}: {shape.Length()} m");
     // 50 km/h, asphalt: 50 m / 50 km/h, gravel: 25 m / 70 km/h, gravel: 75 m
 }
+
+// The way back: which part of the route does a parcel along the road belong to?
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((20 0, 50 0, 50 10, 20 10, 20 0))");
+var (from, to) = route.LocateFeature(parcel, tolerance: 0).Single();
+Console.WriteLine($"{Math.Round(from)} to {Math.Round(to)}"); // 12040 to 12100
 
 ```
 

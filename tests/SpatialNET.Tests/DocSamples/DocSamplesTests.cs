@@ -385,6 +385,22 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void LocateFeature()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: locate-feature
+        var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 0, 100 0 1000)");
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON((20 0, 50 0, 50 10, 20 10, 20 0))");
+
+        var ranges = route.LocateFeature(parcel, tolerance: 0);   // one range: 200 to 500
+        // --- end
+
+        var range = Assert.Single(ranges);
+        Assert.Equal((200d, 500d), (Math.Round(range.From, 6), Math.Round(range.To, 6)));
+    }
+
+    [Fact]
     public void EventTablesByRoute()
     {
         // --- snippet: event-tables-by-route

@@ -64,3 +64,5 @@
   href: ../../adr/0032-locatebetween-und-locatealong.md
 - name: "0033 Event tables: interval arithmetic on M ranges"
   href: ../../adr/0033-ereignistabellen-intervallrechnung.md
+- name: "0034 LocateFeature: from a geometry to ranges of M"
+  href: ../../adr/0034-locatefeature-geometrie-zu-m-bereichen.md

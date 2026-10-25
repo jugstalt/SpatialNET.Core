@@ -58,6 +58,21 @@ IMultiPoint2D at12_5 = route.LocateAlong(12_500);            // jeder Punkt, an 
 - `LocateAlong` liefert jeden Treffer in der Reihenfolge entlang der Linie; ein Treffer an einem Stützpunkt zählt einmal, und ein Segment mit konstantem M antwortet mit seinem Anfang, wie `InterpolateByM`.
 - Beide nutzen nur Segmente mit M an beiden Enden; kein Treffer ergibt ein leeres Ergebnis.
 
+## Von einer Geometrie zu Bereichen von M
+
+`LocateBetween` geht von M zur Straße; `LocateFeature` geht zurück, von einer Linie oder Fläche zu den Bereichen von M entlang der Route, in denen sie liegt ([ADR 0034](../../adr/0034-locatefeature-geometrie-zu-m-bereichen.de.md)). Ein Flurstück neben einer Straße wird zu „von 4 200 bis 4 900“, das sich als Ereignis speichern und mit anderen verrechnen lässt ([Ereignistabellen](event-tables.md)).
+
+```csharp
+var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 0, 100 0 1000)");
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((20 0, 50 0, 50 10, 20 10, 20 0))");
+
+var ranges = route.LocateFeature(parcel, tolerance: 0);   // one range: 200 to 500
+```
+
+- Die Geometrie wird um `tolerance` erweitert und mit der Route geschnitten; jedes Stück der Route darin ergibt einen Bereich vom niedrigsten bis zum höchsten M. Die Toleranz ist Pflicht: Für ein Polygon ist 0 erlaubt, für eine Linie muss sie größer als 0 sein.
+- Eine Route, die die Geometrie zweimal passiert, ergibt zwei Bereiche, wenn sie in M auseinanderliegen. Sich berührende Bereiche werden verbunden, eine Berührung in einem einzigen Punkt ergibt nichts, und eine Strecke ohne M bleibt draußen.
+- Ein Punkt hat einen M-Wert, keinen Bereich: `ProjectToM` verwenden. M an den Enden eines Bereichs ist auf etwa das Gitter des Overlays genau.
+
 ## Linien, die sich kreuzen: ein Längenfenster
 
 Eine Spitzkehre oder eine Schleife gibt einem Klick mehrere nächste Punkte, und `Project` antwortet mit der kleinsten Länge, dem früheren Durchgang. `Project(point, from, to)` und `ProjectToM(point, from, to)` suchen nur in der Strecke zwischen zwei Längen und antworten trotzdem mit einer Länge (oder M) auf der ganzen Linie ([ADR 0031](../../adr/0031-project-mit-laengenfenster.de.md)):

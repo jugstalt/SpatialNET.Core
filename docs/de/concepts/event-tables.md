@@ -92,6 +92,17 @@ Dictionary<string, LineEvent<int>[]> byRoute = rows
 
 Die Tabellen sind in M-Werten, nicht in Längen: Liegen Ihre Ereignisse als Meter ab Routenanfang vor, rechnen Sie sie zuerst um (oder kalibrieren die Route so, dass M diese Länge ist).
 
+## Von einer Geometrie zu einem Ereignis
+
+Die Gegenrichtung ist `LocateFeature` auf der Route: Ein Flurstück, eine Leitung oder eine überflutete Fläche wird zu den Bereichen von M, in denen sie liegt, und von dort zu einem Ereignis ([ADR 0034](../../adr/0034-locatefeature-geometrie-zu-m-bereichen.de.md)):
+
+```csharp
+var ranges = route.LocateFeature(parcel, tolerance: 0);
+var events = ranges.Select(r => new LineEvent<string>(r.From, r.To, "parcel 123/4"));
+```
+
+Die Ereignisse lassen sich dann mit den anderen verrechnen, etwa mit `Intersect` gegen eine Tempotabelle, um zu finden, wo ein Flurstück an einer 50-km/h-Strecke liegt.
+
 ## Nicht dabei
 
-Punktereignisse als eigener Typ und die Gegenrichtung, **von einer Geometrie zu einem Ereignis** (ein Flurstück an einer Straße wird zu „von 4 200 bis 4 900“), gehören nicht zu diesem Schritt; für einen Punkt liefert `ProjectToM` den M-Wert schon.
+Punktereignisse als eigener Typ gehören nicht zu diesem Schritt: Ein Punkt in einem Linienereignis ist `At`, ein Punkt auf der Karte ist `ProjectToM`.

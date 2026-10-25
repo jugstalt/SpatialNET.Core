@@ -92,6 +92,17 @@ Dictionary<string, LineEvent<int>[]> byRoute = rows
 
 Tables are in M values, not in lengths: if your events are stored as metres from the start of the route, convert them first (or calibrate the route so that M is that length).
 
+## From a geometry to an event
+
+The reverse direction is `LocateFeature` on the route: a parcel, a pipe or a flooded area becomes the ranges of M where it lies, and from there an event ([ADR 0034](../../adr/0034-locatefeature-geometrie-zu-m-bereichen.md)):
+
+```csharp
+var ranges = route.LocateFeature(parcel, tolerance: 0);
+var events = ranges.Select(r => new LineEvent<string>(r.From, r.To, "parcel 123/4"));
+```
+
+The events can then be combined with the others, for example with `Intersect` against a speed table to find where a parcel borders a 50 km/h stretch.
+
 ## Not included
 
-Point events as a type of their own, and the reverse direction, **from a geometry to an event** (a parcel along a road becomes "from 4 200 to 4 900"), are not part of this step; for a point, `ProjectToM` already gives the M value.
+Point events as a type of their own are not part of this step: a point in a line event is `At`, a point on the map is `ProjectToM`.

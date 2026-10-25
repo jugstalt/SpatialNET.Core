@@ -190,7 +190,7 @@ Console.WriteLine($"{measure}, {at[0].X} {at[0].Y}, {section.Length()}"); // 120
 
 ## Tempolimit und Belag entlang einer Route
 
-Zwei Ereignistabellen einer Route (ein Tempolimit und ein Belag, je ein Bereich von M-Werten mit einem Wert) und die Frage, wo beide gelten. Die Rechnung läuft allein auf den Zahlen; die Straßengeometrie kommt erst hinzu, um das Ergebnis zu zeichnen oder zu messen. Die Zeilen kommen aus Ihrer Datenbank, die Bibliothek liest nie eine Tabelle ([Ereignistabellen](concepts/event-tables.md), [Lineare Referenzierung](concepts/linear-referencing.md)).
+Zwei Ereignistabellen einer Route (ein Tempolimit und ein Belag, je ein Bereich von M-Werten mit einem Wert) und die Frage, wo beide gelten. Die Rechnung läuft allein auf den Zahlen; die Straßengeometrie kommt erst hinzu, um das Ergebnis zu zeichnen oder zu messen. Die Zeilen kommen aus Ihrer Datenbank, die Bibliothek liest nie eine Tabelle; die letzten Zeilen gehen den umgekehrten Weg, von einem Flurstück zu seinem M-Bereich ([Ereignistabellen](concepts/event-tables.md), [Lineare Referenzierung](concepts/linear-referencing.md)).
 
 ```csharp
 var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 12000, 100 0 12200, 100 50 12300)");
@@ -208,6 +208,11 @@ foreach (var piece in both)
     Console.WriteLine($"{piece.Value}: {shape.Length()} m");
     // 50 km/h, asphalt: 50 m / 50 km/h, gravel: 25 m / 70 km/h, gravel: 75 m
 }
+
+// The way back: which part of the route does a parcel along the road belong to?
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((20 0, 50 0, 50 10, 20 10, 20 0))");
+var (from, to) = route.LocateFeature(parcel, tolerance: 0).Single();
+Console.WriteLine($"{Math.Round(from)} to {Math.Round(to)}"); // 12040 to 12100
 
 ```
 
