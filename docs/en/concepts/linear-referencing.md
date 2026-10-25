@@ -17,6 +17,18 @@ Coordinate? km = road.InterpolateByM(150);      // (5 0): where the line first r
 IPolyline2D piece = road.SubstringByM(150, 225); // from (5 0) via (10 0) to (10 5)
 ```
 
+## What it is for
+
+A road is a line geometrically, but for the business it is a **route with a chainage**: damage at kilometre 12.4, speed limit 50 from 3.0 to 5.5, bridge at 8.2. The data hangs on the chainage, not on coordinates, and linear referencing translates between the two: coordinate to measure, and measure to point or stretch. The typical flow in a web GIS:
+
+1. **Load the route once.** A road section often has no M, and the measures sit on separate points (kilometre posts). `CalibrateM` turns the posts into M on the line. Afterwards one call per click is enough, instead of looking up the previous and the next post and calculating each time, and the calibrated line can be stored or cached. An anchor farther from the line than the tolerance is an error: a post that lies 40 m off the road shows up at once instead of silently giving wrong kilometres.
+2. **A click becomes a measure.** `ProjectToM` turns a click on the map into "kilometre 12.437", to show or to store as the position of a report.
+3. **A measure becomes a point.** `LocateAlong` answers "show kilometre 12.5". Usually that is one point; where a route passes the same place twice or M was reset, there are several, and it returns all of them.
+4. **A range becomes a stretch.** `LocateBetween` draws "speed limit 50 from 3.0 to 5.5" or "roadworks from 12 to 15" as a line that follows the road, not only its two end points. It runs in the direction of the line and has several paths if the route passes the range more than once or has gaps without M.
+5. **Hairpin bends and loops.** Where a line comes near itself, a click lies between two passes and `Project` gives the earlier one. `Project(point, from, to)` restricts the search to the section you are working in, or to the part after the last hit. The same helps when a GPS track follows the road: every point is projected near the previous one.
+
+The [cookbook](../cookbook.md#a-road-with-kilometre-posts) has this flow as a runnable recipe.
+
 ## Lengths
 
 A length is the planar length along the line, the same as `Length()`; Z does not take part. The paths of a polyline are **laid end to end** in their order, and no connection is assumed between the end of one path and the start of the next. A length exactly on the boundary of two paths belongs to the end of the earlier path.

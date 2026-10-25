@@ -24,6 +24,9 @@ public class PlaygroundCompletenessTests
         ["Locate"] = "Die Antwort ist eine Kategorie (innen, Rand, außen), die die Oberfläche nicht darstellt (ADR 0022)",
         ["ToPolygon"] = "Umwandlung einer Envelope in ein Polygon, kein Algorithmus (ADR 0022)",
         ["UnionAll"] = "Vereinigung vieler Geometrien (ADR 0018); der Playground kennt nur zwei Operanden A und B",
+        ["Intersect"] = "Rechnet mit Ereignistabellen (Messwert-Intervalle mit Attributen), nicht mit Geometrien (ADR 0033); wie Union, Difference und Clip gleichen Namens",
+        ["Dissolve"] = "Rechnet mit Ereignistabellen, nicht mit Geometrien (ADR 0033)",
+        ["At"] = "Rechnet mit Ereignistabellen, nicht mit Geometrien (ADR 0033)",
         ["CalibrateM"] = "Braucht Ankerpunkte mit M als zusätzliche Eingabe, die die Oberfläche nicht darstellt (ADR 0030)",
         ["Transform"] = "Nimmt eine Funktion als Parameter, die die Oberfläche nicht darstellt (ADR 0025); Translate, Scale und Rotate decken sie ab",
     };

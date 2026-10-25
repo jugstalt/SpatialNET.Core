@@ -19,6 +19,8 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | nearest points | nächste Punkte | The two points, one on each of two geometries, whose distance is the distance of the geometries (`NearestPoints`) |
 | linear referencing | lineare Referenzierung | Addressing a position on a line by its length along the line or by its M value (`Interpolate`, `Project`, `Substring` and their `...ByM` variants) |
 | measure (M) | M-Wert | A value that a point carries in addition to its position (for example the distance along a road); carried and interpolated like Z, never used in a computation (`IPointM`) |
+| calibrating | Kalibrieren | Giving a line M values from anchor points that carry M, by projecting them onto the line and interpolating in the length between them (`CalibrateM`) |
+| event | Ereignis | A fact about a range of M values on a route, with attributes of the host's choice: a speed limit from kilometre 3 to 5.5 (`LineEvent<T>`); the arithmetic between event tables is `LineEvents` |
 | envelope | Envelope | The axis-aligned rectangle that encloses a geometry (`Envelope2D`) |
 | reference implementation | Referenz-Implementierung | The implementation of the geometry interfaces in `SpatialNET.Imp`, meant for tests, the playground and hosts without geometries of their own |
 

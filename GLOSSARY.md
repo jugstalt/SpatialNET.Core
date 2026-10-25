@@ -57,6 +57,14 @@ _Avoid_: Linear Referencing, Routing
 Ein Wert, den ein Punkt zusätzlich zu seiner Lage trägt (z.B. die Strecke entlang einer Straße); er wird mitgeführt, aber nie in eine Berechnung einbezogen.
 _Avoid_: Measure, Messwert
 
+**Kalibrieren**:
+Die Linie bekommt M-Werte aus Ankerpunkten, die M tragen: Die Anker werden auf die Linie projiziert, an ihnen werden Stützpunkte eingefügt, und dazwischen wird M linear in der Länge interpoliert.
+_Avoid_: Eichen, Messwerte zuweisen
+
+**Ereignis**:
+Eine Aussage über einen Bereich von M-Werten auf einer Route mit Attributen nach Wahl des Hosts, z.B. ein Tempolimit von Kilometer 3 bis 5,5; hat keine eigene Geometrie.
+_Avoid_: Event, Streckenobjekt
+
 **Envelope**:
 Das achsenparallele Rechteck, das eine Geometrie umschließt.
 _Avoid_: Bounding Box, Extent, BBox

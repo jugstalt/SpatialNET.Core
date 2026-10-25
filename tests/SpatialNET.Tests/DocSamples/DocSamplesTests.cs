@@ -351,6 +351,61 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void EventTables()
+    {
+        // --- snippet: event-tables
+        var speed = new[] { new LineEvent<int>(0, 5000, 50), new LineEvent<int>(5000, 12000, 70) };
+        var surface = new[]
+        {
+            new LineEvent<string>(0, 3000, "asphalt"), new LineEvent<string>(3000, 8000, "gravel"), new LineEvent<string>(8000, 12000, "asphalt"),
+        };
+
+        // Where do both hold? One piece per overlap, with the two values combined.
+        var both = LineEvents.Intersect(speed, surface, (s, b) => (Speed: s, Surface: b));
+        // 0-3000 (50, asphalt), 3000-5000 (50, gravel), 5000-8000 (70, gravel), 8000-12000 (70, asphalt)
+
+        // Join neighbours with the same value: the surface alone, after cutting at the speed limits.
+        var surfaceOnly = LineEvents.Dissolve(both.Select(e => new LineEvent<string>(e.From, e.To, e.Value.Surface)));
+        // 0-3000 asphalt, 3000-8000 gravel, 8000-12000 asphalt
+
+        // Which speed limit holds at a bridge at 8200?
+        var atBridge = LineEvents.At(speed, 8200);               // one event: 5000-12000, 70
+
+        // Where is the road without a bicycle path?
+        var bikePath = new[] { new LineEvent<bool>(2000, 6000, true) };
+        var withoutPath = LineEvents.Difference(speed, bikePath); // 0-2000 (50) and 6000-12000 (70)
+        // --- end
+
+        Assert.Equal(4, both.Count);
+        Assert.Equal((5000d, 8000d, (70, "gravel")), (both[2].From, both[2].To, both[2].Value));
+        Assert.Equal(["asphalt", "gravel", "asphalt"], surfaceOnly.Select(e => e.Value));
+        Assert.Equal((3000d, 8000d), (surfaceOnly[1].From, surfaceOnly[1].To));
+        Assert.Equal(70, Assert.Single(atBridge).Value);
+        Assert.Equal([(0d, 2000d, 50), (6000d, 12000d, 70)], withoutPath.Select(e => (e.From, e.To, e.Value)));
+    }
+
+    [Fact]
+    public void EventTablesByRoute()
+    {
+        // --- snippet: event-tables-by-route
+        // The rows come from your database; the library only gets the numbers of one route at a time.
+        var rows = new[]
+        {
+            (Route: "A12", From: 0.0, To: 5000.0, Speed: 50),
+            (Route: "A12", From: 5000.0, To: 12000.0, Speed: 70),
+            (Route: "B3", From: 0.0, To: 800.0, Speed: 30),
+        };
+
+        Dictionary<string, LineEvent<int>[]> byRoute = rows
+            .GroupBy(r => r.Route)
+            .ToDictionary(g => g.Key, g => g.Select(r => new LineEvent<int>(r.From, r.To, r.Speed)).ToArray());
+        // --- end
+
+        Assert.Equal(2, byRoute["A12"].Length);
+        Assert.Equal(30, byRoute["B3"][0].Value);
+    }
+
+    [Fact]
     public void CalibrateM()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

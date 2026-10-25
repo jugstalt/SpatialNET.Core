@@ -199,6 +199,57 @@ public sealed class CookbookSamplesTests : IDisposable
     }
 
     [Fact]
+    public void RoadWithKilometrePosts()
+    {
+        // --- snippet: cookbook-calibrate
+        var road = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 100 0, 100 50)");
+        var posts = new[]
+        {
+            new Coordinate(0, 0, M: 12000), new Coordinate(100, 0, M: 12200), new Coordinate(100, 50, M: 12300),
+        };
+
+        // Once, when the road is loaded: the posts become M on the line.
+        IPolyline2D route = road.CalibrateM(posts, maxSnapDistance: 0.5);
+
+        double measure = route.ProjectToM(new Coordinate(40, 7));      // 12080: a click becomes a measure
+        IMultiPoint2D at = route.LocateAlong(12_150);                   // (75 0): a measure becomes a point
+        IPolyline2D section = route.LocateBetween(12_100, 12_260);      // (50 0) (100 0) (100 30): a range becomes a stretch
+
+        Console.WriteLine($"{measure}, {at[0].X} {at[0].Y}, {section.Length()}"); // 12080, 75 0, 80
+        // --- end
+
+        Assert.Equal(12080, measure, 9);
+        Assert.Equal((75d, 0d), (at[0].X, at[0].Y));
+        Assert.Equal(80, section.Length(), 9);
+    }
+
+    [Fact]
+    public void SpeedAndSurfaceAlongARoute()
+    {
+        // --- snippet: cookbook-events
+        var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 12000, 100 0 12200, 100 50 12300)");
+        var speed = new[] { new LineEvent<int>(12000, 12150, 50), new LineEvent<int>(12150, 12300, 70) };
+        var surface = new[] { new LineEvent<string>(12000, 12100, "asphalt"), new LineEvent<string>(12100, 12300, "gravel") };
+
+        // Where do both hold? Pure interval arithmetic on the measures, no geometry yet.
+        var both = LineEvents.Intersect(speed, surface, (s, b) => $"{s} km/h, {b}");
+
+        foreach (var piece in both)
+        {
+            // Only now the stretch of road: its shape, in the direction of the route.
+            IPolyline2D shape = route.LocateBetween(piece.From, piece.To);
+
+            Console.WriteLine($"{piece.Value}: {shape.Length()} m");
+            // 50 km/h, asphalt: 50 m / 50 km/h, gravel: 25 m / 70 km/h, gravel: 75 m
+        }
+        // --- end
+
+        Assert.Equal(
+            [("50 km/h, asphalt", 50d), ("50 km/h, gravel", 25d), ("70 km/h, gravel", 75d)],
+            both.Select(p => (p.Value, route.LocateBetween(p.From, p.To).Length())));
+    }
+
+    [Fact]
     public void ForTheMap()
     {
         // --- snippet: cookbook-display

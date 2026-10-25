@@ -166,6 +166,51 @@ Console.WriteLine($"{at!.Value.X} {at.Value.Y}, {chainage}, {section.Length()}")
 
 ```
 
+## Eine Straße mit Kilometersteinen
+
+Die Straße hat kein M, und die Messwerte sitzen auf Punkten entlang der Linie. Einmal kalibrieren, dann die drei Fragen eines Routensystems beantworten: Welchen Messwert hat ein Klick, wo liegt ein Messwert, und welche Strecke liegt zwischen zwei Messwerten ([Lineare Referenzierung](concepts/linear-referencing.md)).
+
+```csharp
+var road = Wkt.Read<IPolyline2D>("LINESTRING(0 0, 100 0, 100 50)");
+var posts = new[]
+{
+    new Coordinate(0, 0, M: 12000), new Coordinate(100, 0, M: 12200), new Coordinate(100, 50, M: 12300),
+};
+
+// Once, when the road is loaded: the posts become M on the line.
+IPolyline2D route = road.CalibrateM(posts, maxSnapDistance: 0.5);
+
+double measure = route.ProjectToM(new Coordinate(40, 7));      // 12080: a click becomes a measure
+IMultiPoint2D at = route.LocateAlong(12_150);                   // (75 0): a measure becomes a point
+IPolyline2D section = route.LocateBetween(12_100, 12_260);      // (50 0) (100 0) (100 30): a range becomes a stretch
+
+Console.WriteLine($"{measure}, {at[0].X} {at[0].Y}, {section.Length()}"); // 12080, 75 0, 80
+
+```
+
+## Tempolimit und Belag entlang einer Route
+
+Zwei Ereignistabellen einer Route (ein Tempolimit und ein Belag, je ein Bereich von M-Werten mit einem Wert) und die Frage, wo beide gelten. Die Rechnung läuft allein auf den Zahlen; die Straßengeometrie kommt erst hinzu, um das Ergebnis zu zeichnen oder zu messen. Die Zeilen kommen aus Ihrer Datenbank, die Bibliothek liest nie eine Tabelle ([Ereignistabellen](concepts/event-tables.md), [Lineare Referenzierung](concepts/linear-referencing.md)).
+
+```csharp
+var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 12000, 100 0 12200, 100 50 12300)");
+var speed = new[] { new LineEvent<int>(12000, 12150, 50), new LineEvent<int>(12150, 12300, 70) };
+var surface = new[] { new LineEvent<string>(12000, 12100, "asphalt"), new LineEvent<string>(12100, 12300, "gravel") };
+
+// Where do both hold? Pure interval arithmetic on the measures, no geometry yet.
+var both = LineEvents.Intersect(speed, surface, (s, b) => $"{s} km/h, {b}");
+
+foreach (var piece in both)
+{
+    // Only now the stretch of road: its shape, in the direction of the route.
+    IPolyline2D shape = route.LocateBetween(piece.From, piece.To);
+
+    Console.WriteLine($"{piece.Value}: {shape.Length()} m");
+    // 50 km/h, asphalt: 50 m / 50 km/h, gravel: 25 m / 70 km/h, gravel: 75 m
+}
+
+```
+
 ## Für die Karte
 
 Für kleine Maßstäbe vereinfachen, auf den Bildschirm zuschneiden und einen guten Ort für die Beschriftung finden ([Vereinfachen, konvexe Hülle und Validierung](concepts/simplify-and-validation.md), [Overlays](concepts/overlay-and-grid.md), [Maße und Konstruktionen](concepts/measures-and-constructions.md)).

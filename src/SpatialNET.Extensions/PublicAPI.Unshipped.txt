@@ -11,3 +11,19 @@ static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line
 static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> double
 static SpatialNET.LinearReferencing.LocateAlong(this SpatialNET.IPolyline2D! line, double m, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
 static SpatialNET.LinearReferencing.LocateBetween(this SpatialNET.IPolyline2D! line, double fromM, double toM, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.LineEvent<T>
+SpatialNET.LineEvent<T>.From.get -> double
+SpatialNET.LineEvent<T>.From.init -> void
+SpatialNET.LineEvent<T>.LineEvent() -> void
+SpatialNET.LineEvent<T>.LineEvent(double From, double To, T Value) -> void
+SpatialNET.LineEvent<T>.To.get -> double
+SpatialNET.LineEvent<T>.To.init -> void
+SpatialNET.LineEvent<T>.Value.get -> T
+SpatialNET.LineEvent<T>.Value.init -> void
+SpatialNET.LineEvents
+static SpatialNET.LineEvents.At<T>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, double m) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<T>>!
+static SpatialNET.LineEvents.Clip<T>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, double from, double to) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<T>>!
+static SpatialNET.LineEvents.Difference<TA, TB>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TA>>!
+static SpatialNET.LineEvents.Dissolve<T>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<T>>!
+static SpatialNET.LineEvents.Intersect<TA, TB, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b, System.Func<TA, TB, TResult>! combine) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TResult>>!
+static SpatialNET.LineEvents.Union<TA, TB, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b, System.Func<TA, TB, TResult>! both, System.Func<TA, TResult>! onlyA, System.Func<TB, TResult>! onlyB) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TResult>>!

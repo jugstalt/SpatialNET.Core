@@ -17,6 +17,18 @@ Coordinate? km = road.InterpolateByM(150);      // (5 0): wo die Linie zuerst M 
 IPolyline2D piece = road.SubstringByM(150, 225); // von (5 0) über (10 0) nach (10 5)
 ```
 
+## Wofür man das braucht
+
+Eine Straße ist geometrisch eine Linie, fachlich aber eine **Route mit Kilometrierung**: Schaden bei Kilometer 12,4, Tempo 50 von 3,0 bis 5,5, Brücke bei 8,2. Die Daten hängen an der Kilometrierung, nicht an Koordinaten, und die lineare Referenzierung übersetzt zwischen beiden: Koordinate zu Messwert, und Messwert zu Punkt oder Strecke. Der typische Ablauf in einem WebGIS:
+
+1. **Die Route einmal laden.** Ein Straßenabschnitt hat oft kein M, und die Messwerte sitzen auf getrennten Punkten (Kilometersteine). `CalibrateM` macht aus den Steinen M auf der Linie. Danach genügt ein Aufruf pro Klick, statt jedes Mal den vorherigen und den nächsten Stein zu suchen und zu rechnen, und die kalibrierte Linie lässt sich speichern oder zwischenspeichern. Ein Anker, der weiter als die Toleranz von der Linie entfernt ist, ist ein Fehler: Ein Stein, der 40 m neben der Straße liegt, fällt sofort auf, statt still falsche Kilometer zu liefern.
+2. **Ein Klick wird zum Messwert.** `ProjectToM` macht aus einem Klick auf die Karte „Kilometer 12,437“, zum Anzeigen oder zum Speichern als Position einer Meldung.
+3. **Ein Messwert wird zum Punkt.** `LocateAlong` beantwortet „zeige Kilometer 12,5“. Meist ist das ein Punkt; wo eine Route dieselbe Stelle zweimal passiert oder M zurückgesetzt wurde, sind es mehrere, und es liefert alle.
+4. **Ein Bereich wird zur Strecke.** `LocateBetween` zeichnet „Tempo 50 von 3,0 bis 5,5“ oder „Baustelle von 12 bis 15“ als Linie, die der Straße folgt, nicht nur ihren zwei Endpunkten. Sie läuft in Richtung der Linie und hat mehrere Pfade, wenn die Route den Bereich mehrfach durchläuft oder Lücken ohne M hat.
+5. **Spitzkehren und Schleifen.** Wo eine Linie sich selbst nahekommt, liegt ein Klick zwischen zwei Durchgängen, und `Project` liefert den früheren. `Project(point, from, to)` beschränkt die Suche auf den Abschnitt, in dem man arbeitet, oder auf den Teil nach dem letzten Treffer. Dasselbe hilft, wenn ein GPS-Track der Straße folgt: Jeder Punkt wird nahe dem vorigen projiziert.
+
+Das [Cookbook](../cookbook.md) hat diesen Ablauf als lauffähiges Rezept.
+
 ## Längen
 
 Eine Länge ist die planare Länge entlang der Linie, dieselbe wie `Length()`; Z nimmt nicht teil. Die Pfade einer Polylinie werden **in ihrer Reihenfolge aneinandergelegt**, und zwischen dem Ende eines Pfades und dem Anfang des nächsten wird keine Verbindung angenommen. Eine Länge genau auf der Grenze zweier Pfade gehört zum Ende des früheren Pfades.

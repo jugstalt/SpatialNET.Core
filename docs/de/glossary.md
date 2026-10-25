@@ -34,6 +34,10 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | Strict-Semantik | strict semantics |
 | räumlicher Index | spatial index |
 | vorbereitete Geometrie | prepared geometry |
+| lineare Referenzierung | linear referencing |
+| M-Wert | measure (M) |
+| Kalibrieren | calibrating (`CalibrateM`) |
+| Ereignis | event (`LineEvent<T>`) |
 
 ## Playground und Tests
 
