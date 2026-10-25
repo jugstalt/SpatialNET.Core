@@ -56,3 +56,5 @@
   href: ../../adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md
 - name: "0029 Delaunay triangulation and concave hull"
   href: ../../adr/0029-delaunay-und-konkave-huelle.md
+- name: "0030 CalibrateM: M values from anchor points"
+  href: ../../adr/0030-calibratem-m-werte-aus-ankerpunkten.md

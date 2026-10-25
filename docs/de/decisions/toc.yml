@@ -56,3 +56,5 @@
   href: ../../adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.de.md
 - name: "0029 Delaunay-Triangulierung und konkave Hülle"
   href: ../../adr/0029-delaunay-und-konkave-huelle.de.md
+- name: "0030 CalibrateM: M-Werte aus Ankerpunkten"
+  href: ../../adr/0030-calibratem-m-werte-aus-ankerpunkten.de.md

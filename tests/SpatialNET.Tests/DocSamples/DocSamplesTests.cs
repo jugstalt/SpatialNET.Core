@@ -351,6 +351,22 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void CalibrateM()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: calibrate-m
+        var road = Wkt.Read<IPolyline2D>("LINESTRING (0 0, 10 0, 10 20)");
+        var posts = new[] { new Coordinate(5, 0, M: 100), new Coordinate(10, 15, M: 200) };
+
+        IPolyline2D withM = road.CalibrateM(posts, maxSnapDistance: 0.5);
+        double m = withM.ProjectToM(new Coordinate(10, 4)); // 145: 100 + (200 - 100) / (25 - 5) * (14 - 5)
+        // --- end
+
+        Assert.Equal(145, m, 9);
+    }
+
+    [Fact]
     public void ReadingAndWriting()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

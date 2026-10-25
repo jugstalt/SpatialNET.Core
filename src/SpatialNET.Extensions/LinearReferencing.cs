@@ -2,6 +2,19 @@ using SpatialNET.Internal;
 
 namespace SpatialNET;
 
+/// <summary>What <see cref="LinearReferencing.CalibrateM(IPolyline2D, IEnumerable{Coordinate}, double, MExtrapolation, IGeometryFactory?)"/> gives the line before its first and after its last anchor (ADR 0030).</summary>
+public enum MExtrapolation
+{
+    /// <summary>No M: that stretch cannot answer, as for any line without M (ADR 0017).</summary>
+    None,
+
+    /// <summary>The M of the nearest anchor.</summary>
+    Clamp,
+
+    /// <summary>M continues with the slope of the first or last interval between two anchors.</summary>
+    Linear,
+}
+
 /// <summary>
 /// Linear referencing on polylines (ADR 0017): a position on a line is addressed by its length along the
 /// line or by its M value (ADR 0015). Lengths are planar (like <see cref="Measures.Length(IPolyline2D)"/>); the
@@ -132,6 +145,183 @@ public static class LinearReferencing
             : f.CreatePolyline([], line);
     }
 
+    /// <summary>
+    /// Gives a polyline M values from anchor points that carry M: every anchor is projected onto the line, a vertex
+    /// is inserted at its position, and M is interpolated linearly in the length along the line between the anchors
+    /// (ADR 0030). With the result, <see cref="ProjectToM(IPolyline2D, Coordinate)"/> answers what interpolating
+    /// between the previous and the next anchor would.
+    /// </summary>
+    /// <remarks>
+    /// M of the line itself is ignored, Z is kept (and interpolated at inserted vertices). The anchors are sorted by
+    /// their position on the line; M need not be monotonic. Anchors at the same position (within 1e-9 of the line
+    /// length) are merged if their M is equal. Where the nearest point of an anchor is not unique (a line that
+    /// crosses itself) the smallest length is used, as in <see cref="Project(IPolyline2D, Coordinate)"/>.
+    /// </remarks>
+    /// <param name="line">The polyline, usually without M.</param>
+    /// <param name="anchors">Points with X, Y and M, in any order.</param>
+    /// <param name="maxSnapDistance">The largest distance of an anchor from the line, in map units.</param>
+    /// <param name="extrapolation">What M the line gets before the first and after the last anchor.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <returns>The polyline with M; an empty polyline for a line without points.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> or <paramref name="anchors"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxSnapDistance"/> is negative, <c>NaN</c> or infinite, or the X or Y of an anchor is not finite.</exception>
+    /// <exception cref="ArgumentException">
+    /// There is no anchor; an anchor has no finite M or is farther from the line than <paramref name="maxSnapDistance"/>;
+    /// two anchors at the same position have different M; <see cref="MExtrapolation.Linear"/> with anchors at fewer than two positions.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">No factory available, or it does not support M.</exception>
+    public static IPolyline2D CalibrateM(this IPolyline2D line, IEnumerable<Coordinate> anchors, double maxSnapDistance,
+        MExtrapolation extrapolation = MExtrapolation.None, IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        ArgumentNullException.ThrowIfNull(anchors);
+        if (!double.IsFinite(maxSnapDistance) || maxSnapDistance < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxSnapDistance), maxSnapDistance, "The distance must be finite and not negative.");
+        }
+
+        if (!Enum.IsDefined(extrapolation))
+        {
+            throw new ArgumentOutOfRangeException(nameof(extrapolation), extrapolation, "Unknown extrapolation.");
+        }
+
+        var f = GeometryFactory.Resolve(factory);
+        if (!f.SupportsM)
+        {
+            throw new InvalidOperationException("The factory does not support M values.");
+        }
+
+        var list = anchors as IReadOnlyList<Coordinate> ?? anchors.ToList();
+        for (int i = 0; i < list.Count; i++)
+        {
+            var a = list[i];
+            if (!double.IsFinite(a.X) || !double.IsFinite(a.Y))
+            {
+                throw new ArgumentOutOfRangeException(nameof(anchors), a, $"The coordinates of anchor {i} must be finite.");
+            }
+
+            if (!double.IsFinite(a.M))
+            {
+                throw new ArgumentException($"Anchor {i} has no finite M.", nameof(anchors));
+            }
+        }
+
+        if (list.Count == 0)
+        {
+            throw new ArgumentException("At least one anchor is needed.", nameof(anchors));
+        }
+
+        var index = new LineIndex(line);
+        if (index.IsEmpty)
+        {
+            return f.CreatePolyline([], line);
+        }
+
+        double eps = 1e-9 * Math.Max(1, index.Length);
+        var located = new List<(double Position, double M)>(list.Count);
+        for (int i = 0; i < list.Count; i++)
+        {
+            var hit = index.Nearest(list[i]);
+            double dx = hit.Point.X - list[i].X, dy = hit.Point.Y - list[i].Y;
+            double distance = Math.Sqrt(dx * dx + dy * dy);
+            if (distance > maxSnapDistance)
+            {
+                throw new ArgumentException($"Anchor {i} is {distance} from the line, more than the allowed {maxSnapDistance}.", nameof(anchors));
+            }
+
+            located.Add((index.SnapToVertex(hit.Position, eps), list[i].M));
+        }
+
+        located.Sort((a, b) => a.Position.CompareTo(b.Position));
+        var stations = new List<(double Position, double M)>();
+        foreach (var l in located)
+        {
+            if (stations.Count > 0 && l.Position - stations[^1].Position <= eps)
+            {
+                if (stations[^1].M != l.M)
+                {
+                    throw new ArgumentException($"Two anchors at the length {l.Position} have different M ({stations[^1].M} and {l.M}).", nameof(anchors));
+                }
+
+                continue;
+            }
+
+            stations.Add(l);
+        }
+
+        if (extrapolation == MExtrapolation.Linear && stations.Count < 2)
+        {
+            throw new ArgumentException("Linear extrapolation needs anchors at two different positions.", nameof(anchors));
+        }
+
+        var paths = new List<ReadOnlyMemory<Coordinate>>(index.PathCount);
+        for (int p = 0; p < index.PathCount; p++)
+        {
+            var path = index.PathAt(p);
+            var pos = index.PositionsAt(p);
+            var result = new List<Coordinate>(path.Length + stations.Count);
+            for (int i = 0; i < path.Length; i++)
+            {
+                if (i > 0)
+                {
+                    foreach (var s in stations)
+                    {
+                        if (s.Position > pos[i - 1] && s.Position < pos[i])
+                        {
+                            result.Add(index.PointAt(p, s.Position) with { M = s.M });
+                        }
+                    }
+                }
+
+                result.Add(path[i] with { M = MAt(stations, pos[i], extrapolation) });
+            }
+
+            paths.Add(GeometryAccess.Restrict(result.ToArray(), f));
+        }
+
+        return f.CreatePolyline(paths.ToArray(), line);
+    }
+
+    /// <inheritdoc cref="CalibrateM(IPolyline2D, IEnumerable{Coordinate}, double, MExtrapolation, IGeometryFactory?)"/>
+    /// <remarks>The anchors are read through <c>IPointM</c>; a point that does not implement it has no M, which is an error.</remarks>
+    public static IPolyline2D CalibrateM(this IPolyline2D line, IEnumerable<IPoint2D> anchors, double maxSnapDistance,
+        MExtrapolation extrapolation = MExtrapolation.None, IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(anchors);
+        return line.CalibrateM(anchors.Select(a => a.ToCoordinate()), maxSnapDistance, extrapolation, factory);
+    }
+
+    /// <summary>M at a length from anchors sorted by distinct position, or <see cref="double.NaN"/> where there is none.</summary>
+    private static double MAt(List<(double Position, double M)> stations, double d, MExtrapolation extrapolation)
+    {
+        var first = stations[0];
+        var last = stations[^1];
+        if (d < first.Position || d > last.Position)
+        {
+            return extrapolation switch
+            {
+                MExtrapolation.Clamp => d < first.Position ? first.M : last.M,
+                MExtrapolation.Linear => d < first.Position ? Extend(first, stations[1], d) : Extend(last, stations[^2], d),
+                _ => double.NaN,
+            };
+        }
+
+        for (int i = 1; i < stations.Count; i++)
+        {
+            if (d <= stations[i].Position)
+            {
+                var a = stations[i - 1];
+                var b = stations[i];
+                return d == b.Position ? b.M : a.M + (b.M - a.M) / (b.Position - a.Position) * (d - a.Position);
+            }
+        }
+
+        return first.M; // a single anchor: only its own position is inside the range
+    }
+
+    private static double Extend((double Position, double M) from, (double Position, double M) other, double d) =>
+        from.M + (other.M - from.M) / (other.Position - from.Position) * (d - from.Position);
+
     private static IPolyline2D Piece(LineIndex index, double from, double to, IGeometryFactory f, IPolyline2D source)
     {
         if (index.IsEmpty)
@@ -205,6 +395,29 @@ public static class LinearReferencing
 
         public bool IsEmpty => _paths.Count == 0;
 
+        public int PathCount => _paths.Count;
+
+        public Coordinate[] PathAt(int p) => _paths[p];
+
+        public double[] PositionsAt(int p) => _positions[p];
+
+        /// <summary>The length of a vertex within <paramref name="eps"/> of <paramref name="position"/>, or the position itself.</summary>
+        public double SnapToVertex(double position, double eps)
+        {
+            foreach (var positions in _positions)
+            {
+                foreach (var v in positions)
+                {
+                    if (Math.Abs(v - position) <= eps)
+                    {
+                        return v;
+                    }
+                }
+            }
+
+            return position;
+        }
+
         public double Length { get; }
 
         /// <summary>The point at a length in <c>[0, Length]</c>; at the boundary of two paths the end of the earlier one.</summary>
@@ -221,7 +434,8 @@ public static class LinearReferencing
             throw new InvalidOperationException();
         }
 
-        private Coordinate PointAt(int p, double d)
+        /// <summary>The point at a length within one path.</summary>
+        public Coordinate PointAt(int p, double d)
         {
             var path = _paths[p];
             var pos = _positions[p];

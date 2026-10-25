@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- `CalibrateM` and `MExtrapolation` (ADR 0030): gives a polyline M values from anchor points that carry M. Each anchor is projected onto the line, a vertex is inserted at its position, and M is interpolated linearly in the length along the line between the anchors, so `ProjectToM` and `InterpolateByM` answer from the calibrated line. `maxSnapDistance` is required and an anchor beyond it is an error; before the first and after the last anchor M stays empty (`None`), is clamped or continues linearly. The concept page "linear referencing" has a section on it.
+
 ## [0.5.0-preview.1] - 2026-10-22
 
 ### Changed

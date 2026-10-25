@@ -33,6 +33,24 @@ M spricht eine Position nur dort an, wo die Linie M trägt, und verändert die G
 - **Erster Treffer entlang der Linie.** Echte M-Werte sind nicht immer monoton: Eine Straße kann eine Schleife machen, oder M springt zurück. Die Linie wird in ihrer Reihenfolge durchlaufen, und das erste Segment, dessen M-Bereich den Wert enthält (geschlossenes Intervall), antwortet. Ein mehrfach vorkommender Wert wird also bei seinem ersten Vorkommen gefunden, und nichts wirft.
 - Z und M der Ergebnispunkte werden **auf dem Segment interpoliert**, wenn beide Enden sie tragen; an einem ursprünglichen Stützpunkt hat der Punkt genau dessen eigene Werte ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)).
 
+## Eine Linie aus Ankerpunkten kalibrieren
+
+Ein Straßenabschnitt hat oft kein M, und die Messwerte sitzen auf **Punkten entlang der Linie** (Kilometersteine). `CalibrateM` macht aus den Punkten einmal M auf der Linie ([ADR 0030](../../adr/0030-calibratem-m-werte-aus-ankerpunkten.de.md)); danach antworten `ProjectToM` und `InterpolateByM` aus der Linie.
+
+```csharp
+var road = Wkt.Read<IPolyline2D>("LINESTRING (0 0, 10 0, 10 20)");
+var posts = new[] { new Coordinate(5, 0, M: 100), new Coordinate(10, 15, M: 200) };
+
+IPolyline2D withM = road.CalibrateM(posts, maxSnapDistance: 0.5);
+double m = withM.ProjectToM(new Coordinate(10, 4)); // 145: 100 + (200 - 100) / (25 - 5) * (14 - 5)
+```
+
+- Jeder Anker wird auf die Linie **projiziert**, an seiner Position wird ein Stützpunkt eingefügt, und M wird **linear in der Länge entlang der Linie** zwischen den Ankern interpoliert, genau wie das Interpolieren zwischen dem vorherigen und dem nächsten Stein von Hand. Die Reihenfolge der Anker ist egal, M muss nicht monoton sein, und das M, das die Linie trägt, wird ersetzt.
+- `maxSnapDistance` (Karteneinheiten) ist Pflicht. Ein Anker, der weiter von der Linie entfernt ist, ist **ein Fehler** und wird nicht übersprungen: Ein Stein, der nicht auf der Straße liegt, ist ein Datenproblem.
+- Zwei Anker an derselben Position müssen in M übereinstimmen, sonst ist es ein Fehler.
+- Vor dem ersten und nach dem letzten Anker entscheidet `MExtrapolation`: `None` (Standard) lässt die Strecke ohne M, `ProjectToM` liefert dort also `NaN`; `Clamp` nimmt das M des nächsten Ankers; `Linear` setzt die Steigung des Endintervalls fort.
+- Auf einer Linie, die sich kreuzt, landet ein Anker nahe der Kreuzung auf dem früheren Durchgang, wie bei `Project`.
+
 ## Werte, keine Geometrien
 
 Wie sonst ([ADR 0012](../../adr/0012-api-signaturen-typisierte-overloads.de.md)) sind punktförmige und skalare Ergebnisse Werte (`Coordinate?`, `double`), die keine Factory brauchen. Nur die Stücke von `Substring` und `SubstringByM` sind Geometrien und entstehen über die Factory; sie werden auf das beschränkt, was diese unterstützt (`SupportsZ`, `SupportsM`).

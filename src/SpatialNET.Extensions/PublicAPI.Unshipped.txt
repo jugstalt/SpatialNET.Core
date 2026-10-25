@@ -1,1 +1,7 @@
 #nullable enable
+SpatialNET.MExtrapolation
+SpatialNET.MExtrapolation.Clamp = 1 -> SpatialNET.MExtrapolation
+SpatialNET.MExtrapolation.Linear = 2 -> SpatialNET.MExtrapolation
+SpatialNET.MExtrapolation.None = 0 -> SpatialNET.MExtrapolation
+static SpatialNET.LinearReferencing.CalibrateM(this SpatialNET.IPolyline2D! line, System.Collections.Generic.IEnumerable<SpatialNET.Coordinate>! anchors, double maxSnapDistance, SpatialNET.MExtrapolation extrapolation = SpatialNET.MExtrapolation.None, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.LinearReferencing.CalibrateM(this SpatialNET.IPolyline2D! line, System.Collections.Generic.IEnumerable<SpatialNET.IPoint2D!>! anchors, double maxSnapDistance, SpatialNET.MExtrapolation extrapolation = SpatialNET.MExtrapolation.None, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
