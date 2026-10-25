@@ -25,7 +25,8 @@ Eine Straße ist geometrisch eine Linie, fachlich aber eine **Route mit Kilometr
 2. **Ein Klick wird zum Messwert.** `ProjectToM` macht aus einem Klick auf die Karte „Kilometer 12,437“, zum Anzeigen oder zum Speichern als Position einer Meldung.
 3. **Ein Messwert wird zum Punkt.** `LocateAlong` beantwortet „zeige Kilometer 12,5“. Meist ist das ein Punkt; wo eine Route dieselbe Stelle zweimal passiert oder M zurückgesetzt wurde, sind es mehrere, und es liefert alle.
 4. **Ein Bereich wird zur Strecke.** `LocateBetween` zeichnet „Tempo 50 von 3,0 bis 5,5“ oder „Baustelle von 12 bis 15“ als Linie, die der Straße folgt, nicht nur ihren zwei Endpunkten. Sie läuft in Richtung der Linie und hat mehrere Pfade, wenn die Route den Bereich mehrfach durchläuft oder Lücken ohne M hat.
-5. **Spitzkehren und Schleifen.** Wo eine Linie sich selbst nahekommt, liegt ein Klick zwischen zwei Durchgängen, und `Project` liefert den früheren. `Project(point, from, to)` beschränkt die Suche auf den Abschnitt, in dem man arbeitet, oder auf den Teil nach dem letzten Treffer. Dasselbe hilft, wenn ein GPS-Track der Straße folgt: Jeder Punkt wird nahe dem vorigen projiziert.
+5. **Neben der Straße.** `Interpolate(distance, offset)` setzt ein Symbol oder eine Beschriftung links oder rechts der Achse, und `ProjectDetailed` sagt einem Klick nicht nur seinen Kilometer, sondern auch, wie weit von der Achse und auf welcher Seite er fiel, damit der Host entscheiden kann, ob der Klick die Straße überhaupt gemeint hat.
+6. **Spitzkehren und Schleifen.** Wo eine Linie sich selbst nahekommt, liegt ein Klick zwischen zwei Durchgängen, und `Project` liefert den früheren. `Project(point, from, to)` beschränkt die Suche auf den Abschnitt, in dem man arbeitet, oder auf den Teil nach dem letzten Treffer. Dasselbe hilft, wenn ein GPS-Track der Straße folgt: Jeder Punkt wird nahe dem vorigen projiziert.
 
 Das [Cookbook](../cookbook.md) hat diesen Ablauf als lauffähiges Rezept.
 
@@ -44,6 +45,24 @@ M spricht eine Position nur dort an, wo die Linie M trägt, und verändert die G
 - **Nur Segmente mit M an beiden Enden nehmen teil.** Eine Strecke ohne M wird weder überinterpoliert noch ist sie ein Fehler; sie kann einfach nicht antworten, deshalb liefert `InterpolateByM` dann `null`, `ProjectToM` `NaN` und `SubstringByM` eine leere Polylinie.
 - **Erster Treffer entlang der Linie.** Echte M-Werte sind nicht immer monoton: Eine Straße kann eine Schleife machen, oder M springt zurück. Die Linie wird in ihrer Reihenfolge durchlaufen, und das erste Segment, dessen M-Bereich den Wert enthält (geschlossenes Intervall), antwortet. Ein mehrfach vorkommender Wert wird also bei seinem ersten Vorkommen gefunden, und nichts wirft.
 - Z und M der Ergebnispunkte werden **auf dem Segment interpoliert**, wenn beide Enden sie tragen; an einem ursprünglichen Stützpunkt hat der Punkt genau dessen eigene Werte ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)).
+
+## Neben der Linie: Versatz und Seite
+
+Symbole, Beschriftungen und Ereignisse werden neben der Straße gezeichnet, und ein Klick sagt, auf welcher Seite er fiel. Beides ist eine Zahl, der **vorzeichenbehaftete Versatz** zur Linie: positiv links der Richtung der Linie, negativ rechts ([ADR 0035](../../adr/0035-seitlicher-versatz-und-projektion-mit-seite.de.md)).
+
+```csharp
+var road = Wkt.Read<IPolyline2D>("LINESTRING (0 0, 10 0, 10 10)");
+
+Coordinate? beside = road.Interpolate(5, -2);                     // (5 -2): 5 along, 2 to the right
+LineProjection? click = road.ProjectDetailed(new Coordinate(4, 3)); // position 4, distance 3, offset +3 (left)
+Coordinate? back = road.Interpolate(click!.Value.Position, click.Value.Offset); // (4 3): the click again
+```
+
+- `Interpolate(distance, offset)` und `InterpolateByM(m, offset)` verschieben den Punkt senkrecht zum Segment an dieser Position. Mit einem Versatz von 0 sind sie die Methoden ohne einen. Z und M sind die des Punktes auf der Linie.
+- `ProjectDetailed(point)` liefert die Position (wie `Project`), den nächsten Punkt auf der Linie (mit Z und M), den Abstand und den vorzeichenbehafteten Versatz. Ein Längenfenster `(from, to)` wie bei `Project` gibt es auch, damit ein Punkt nahe einer Schleife seinen Durchgang wählt und trotzdem seine Seite bekommt.
+- **An einem Stützpunkt** ist die Richtung die des Segments, das dort endet; NTS nimmt das, das dort beginnt. Der Punkt springt von einer Seite der Biegung auf die andere, einen Bogen um die Ecke gibt es nicht (das ist `OffsetCurve`).
+- **Ein Punkt jenseits des Linienendes** hat seinen nächsten Punkt am Ende und die Seite der Verlängerung des letzten Segments; genau auf dieser Verlängerung zählt er als links. Eine Linie ganz ohne Segment mit Länge hat keine Richtung, ein Versatz ungleich 0 ergibt also `null`.
+- Die Rundreise `Interpolate(Position, Offset)` ergibt den Punkt zurück, wenn sein nächster Punkt im Inneren eines Segments liegt; an einem Stützpunkt oder einem Ende ist die Senkrechte nicht eindeutig.
 
 ## Alle Strecken und alle Punkte zu M
 

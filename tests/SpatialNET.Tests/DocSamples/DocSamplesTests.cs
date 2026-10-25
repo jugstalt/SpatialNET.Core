@@ -385,6 +385,24 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void OffsetAndSide()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: offset-and-side
+        var road = Wkt.Read<IPolyline2D>("LINESTRING (0 0, 10 0, 10 10)");
+
+        Coordinate? beside = road.Interpolate(5, -2);                     // (5 -2): 5 along, 2 to the right
+        LineProjection? click = road.ProjectDetailed(new Coordinate(4, 3)); // position 4, distance 3, offset +3 (left)
+        Coordinate? back = road.Interpolate(click!.Value.Position, click.Value.Offset); // (4 3): the click again
+        // --- end
+
+        Assert.Equal((5d, -2d), (beside!.Value.X, beside.Value.Y));
+        Assert.Equal((4d, 3d, 3d), (click.Value.Position, click.Value.Distance, click.Value.Offset));
+        Assert.Equal((4d, 3d), (back!.Value.X, back.Value.Y));
+    }
+
+    [Fact]
     public void LocateFeature()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

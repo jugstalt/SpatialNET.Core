@@ -38,6 +38,7 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | M-Wert | measure (M) |
 | Kalibrieren | calibrating (`CalibrateM`) |
 | Ereignis | event (`LineEvent<T>`) |
+| seitlicher Versatz | offset to the side (`Interpolate(distance, offset)`) |
 
 ## Playground und Tests
 

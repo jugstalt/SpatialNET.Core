@@ -25,7 +25,8 @@ A road is a line geometrically, but for the business it is a **route with a chai
 2. **A click becomes a measure.** `ProjectToM` turns a click on the map into "kilometre 12.437", to show or to store as the position of a report.
 3. **A measure becomes a point.** `LocateAlong` answers "show kilometre 12.5". Usually that is one point; where a route passes the same place twice or M was reset, there are several, and it returns all of them.
 4. **A range becomes a stretch.** `LocateBetween` draws "speed limit 50 from 3.0 to 5.5" or "roadworks from 12 to 15" as a line that follows the road, not only its two end points. It runs in the direction of the line and has several paths if the route passes the range more than once or has gaps without M.
-5. **Hairpin bends and loops.** Where a line comes near itself, a click lies between two passes and `Project` gives the earlier one. `Project(point, from, to)` restricts the search to the section you are working in, or to the part after the last hit. The same helps when a GPS track follows the road: every point is projected near the previous one.
+5. **Beside the road.** `Interpolate(distance, offset)` puts a symbol or a label to the left or right of the axis, and `ProjectDetailed` tells a click not only its kilometre but also how far from the axis and on which side it fell, so that the host can decide whether the click meant the road at all.
+6. **Hairpin bends and loops.** Where a line comes near itself, a click lies between two passes and `Project` gives the earlier one. `Project(point, from, to)` restricts the search to the section you are working in, or to the part after the last hit. The same helps when a GPS track follows the road: every point is projected near the previous one.
 
 The [cookbook](../cookbook.md#a-road-with-kilometre-posts) has this flow as a runnable recipe.
 
@@ -44,6 +45,24 @@ M addresses a position only where the line carries M, and it never changes the g
 - **Only segments with M at both ends take part.** A stretch without M is neither interpolated across nor an error; it simply cannot answer, so `InterpolateByM` returns `null`, `ProjectToM` returns `NaN` and `SubstringByM` returns an empty polyline.
 - **First hit along the line.** Real M values are not always monotonic: a road may loop, or M may reset. The line is scanned in its order, and the first segment whose M range contains the value (closed interval) answers. A value that occurs several times is therefore found at its first occurrence, and nothing throws.
 - Z and M of the resulting points are **interpolated on the segment** if both ends carry them; at an original vertex, the point has exactly that vertex's own values ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md)).
+
+## Beside the line: offset and side
+
+Symbols, labels and events are drawn beside the road, and a click says on which side of it it fell. Both are one number, the **signed offset** from the line: positive to the left of the direction of the line, negative to the right ([ADR 0035](../../adr/0035-seitlicher-versatz-und-projektion-mit-seite.md)).
+
+```csharp
+var road = Wkt.Read<IPolyline2D>("LINESTRING (0 0, 10 0, 10 10)");
+
+Coordinate? beside = road.Interpolate(5, -2);                     // (5 -2): 5 along, 2 to the right
+LineProjection? click = road.ProjectDetailed(new Coordinate(4, 3)); // position 4, distance 3, offset +3 (left)
+Coordinate? back = road.Interpolate(click!.Value.Position, click.Value.Offset); // (4 3): the click again
+```
+
+- `Interpolate(distance, offset)` and `InterpolateByM(m, offset)` move the point perpendicular to the segment at that position. With an offset of 0 they are the methods without one. Z and M are those of the point on the line.
+- `ProjectDetailed(point)` returns the position (as `Project`), the nearest point on the line (with Z and M), the distance, and the signed offset. A window of lengths `(from, to)` as for `Project` is available, so that a point near a loop chooses its pass and still gets its side.
+- **At a vertex** the direction is that of the segment that ends there; NTS takes the one that starts there. The point jumps from one side of the bend to the other, there is no arc around the corner (that is `OffsetCurve`).
+- **A point beyond the end of the line** has its nearest point at the end and the side of the extension of the last segment; exactly on that extension it counts as left. A line without any segment of length has no direction, so an offset other than 0 gives `null`.
+- The round trip `Interpolate(Position, Offset)` gives the point back when its nearest point lies inside a segment; at a vertex or an end the perpendicular is not unique.
 
 ## All stretches and all points for M
 

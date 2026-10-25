@@ -28,3 +28,20 @@ static SpatialNET.LineEvents.Dissolve<T>(System.Collections.Generic.IEnumerable<
 static SpatialNET.LineEvents.Intersect<TA, TB, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b, System.Func<TA, TB, TResult>! combine) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TResult>>!
 static SpatialNET.LineEvents.Union<TA, TB, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b, System.Func<TA, TB, TResult>! both, System.Func<TA, TResult>! onlyA, System.Func<TB, TResult>! onlyB) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TResult>>!
 static SpatialNET.LinearReferencing.LocateFeature(this SpatialNET.IPolyline2D! route, SpatialNET.IGeometry2D! feature, double tolerance, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(double From, double To)>!
+SpatialNET.LineProjection
+SpatialNET.LineProjection.Distance.get -> double
+SpatialNET.LineProjection.Distance.init -> void
+SpatialNET.LineProjection.LineProjection() -> void
+SpatialNET.LineProjection.LineProjection(double Position, SpatialNET.Coordinate Point, double Distance, double Offset) -> void
+SpatialNET.LineProjection.Offset.get -> double
+SpatialNET.LineProjection.Offset.init -> void
+SpatialNET.LineProjection.Point.get -> SpatialNET.Coordinate
+SpatialNET.LineProjection.Point.init -> void
+SpatialNET.LineProjection.Position.get -> double
+SpatialNET.LineProjection.Position.init -> void
+static SpatialNET.LinearReferencing.Interpolate(this SpatialNET.IPolyline2D! line, double distance, double offset) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.InterpolateByM(this SpatialNET.IPolyline2D! line, double m, double offset) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point) -> SpatialNET.LineProjection?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> SpatialNET.LineProjection?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point, double from, double to) -> SpatialNET.LineProjection?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> SpatialNET.LineProjection?

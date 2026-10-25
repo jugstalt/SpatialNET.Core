@@ -61,6 +61,10 @@ _Avoid_: Measure, Messwert
 Die Linie bekommt M-Werte aus Ankerpunkten, die M tragen: Die Anker werden auf die Linie projiziert, an ihnen werden Stützpunkte eingefügt, und dazwischen wird M linear in der Länge interpoliert.
 _Avoid_: Eichen, Messwerte zuweisen
 
+**Seitlicher Versatz**:
+Der Abstand eines Punktes von einer Linie mit Vorzeichen: positiv links der Richtung der Linie, negativ rechts; nicht die Offset-Kurve.
+_Avoid_: Offset, Querabstand
+
 **Ereignis**:
 Eine Aussage über einen Bereich von M-Werten auf einer Route mit Attributen nach Wahl des Hosts, z.B. ein Tempolimit von Kilometer 3 bis 5,5; hat keine eigene Geometrie.
 _Avoid_: Event, Streckenobjekt

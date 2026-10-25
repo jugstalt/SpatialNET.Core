@@ -66,3 +66,5 @@
   href: ../../adr/0033-ereignistabellen-intervallrechnung.md
 - name: "0034 LocateFeature: from a geometry to ranges of M"
   href: ../../adr/0034-locatefeature-geometrie-zu-m-bereichen.md
+- name: "0035 Offset to the side and projection with distance and side"
+  href: ../../adr/0035-seitlicher-versatz-und-projektion-mit-seite.md

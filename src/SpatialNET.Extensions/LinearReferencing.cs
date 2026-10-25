@@ -16,6 +16,15 @@ public enum MExtrapolation
 }
 
 /// <summary>
+/// Where a point lies relative to a line (ADR 0035), the result of <see cref="LinearReferencing.ProjectDetailed(IPolyline2D, Coordinate)"/>.
+/// </summary>
+/// <param name="Position">The length along the line of the nearest point.</param>
+/// <param name="Point">The nearest point on the line, with Z and M interpolated on the segment.</param>
+/// <param name="Distance">The distance of the point to the line; not negative.</param>
+/// <param name="Offset">The distance with a sign: positive to the left of the direction of the line, negative to the right.</param>
+public readonly record struct LineProjection(double Position, Coordinate Point, double Distance, double Offset);
+
+/// <summary>
 /// Linear referencing on polylines (ADR 0017): a position on a line is addressed by its length along the
 /// line or by its M value (ADR 0015). Lengths are planar (like <see cref="Measures.Length(IPolyline2D)"/>); the
 /// paths of a polyline are laid end to end in their order. Point-like and scalar results are values, only
@@ -141,6 +150,137 @@ public static class LinearReferencing
     {
         ArgumentNullException.ThrowIfNull(point);
         return line.ProjectToM(point.ToCoordinate(), from, to);
+    }
+
+    /// <summary>
+    /// The point at <paramref name="distance"/> along the line, moved sideways by <paramref name="offset"/> (ADR 0035): to the left of the
+    /// direction of the line for a positive offset, to the right for a negative one. With an offset of 0 it is <see cref="Interpolate(IPolyline2D, double)"/>.
+    /// </summary>
+    /// <remarks>
+    /// The direction is that of the segment that contains the position; at a vertex it is the segment that ends there (the earlier one,
+    /// as for the boundary of two paths in ADR 0017), at the start of the line the first one. A distance beyond the line is clamped and
+    /// uses the first or last segment. Z and M are those of the point on the line.
+    /// </remarks>
+    /// <param name="line">The polyline.</param>
+    /// <param name="distance">The length from the start of the line.</param>
+    /// <param name="offset">The distance to the side, in map units; positive left, negative right.</param>
+    /// <returns>The point, or <c>null</c> for a line without points, or for a line without length if the offset is not 0 (it has no direction).</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="distance"/> or <paramref name="offset"/> is <c>NaN</c> or infinite.</exception>
+    public static Coordinate? Interpolate(this IPolyline2D line, double distance, double offset)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsureFinite(distance, nameof(distance));
+        EnsureFinite(offset, nameof(offset));
+        var index = new LineIndex(line);
+        if (index.IsEmpty)
+        {
+            return null;
+        }
+
+        double position = Math.Clamp(distance, 0, index.Length);
+        return Shifted(index, index.PointAt(position), position, offset);
+    }
+
+    /// <summary>
+    /// The point where the line first reaches the M value, moved sideways by <paramref name="offset"/> (see
+    /// <see cref="Interpolate(IPolyline2D, double, double)"/> for the direction; ADR 0035).
+    /// </summary>
+    /// <param name="line">The polyline.</param>
+    /// <param name="m">The M value.</param>
+    /// <param name="offset">The distance to the side, in map units; positive left, negative right.</param>
+    /// <returns>The point, or <c>null</c> if no segment with M at both ends contains the value or the line has no direction.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="m"/> or <paramref name="offset"/> is <c>NaN</c> or infinite.</exception>
+    public static Coordinate? InterpolateByM(this IPolyline2D line, double m, double offset)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsureFinite(m, nameof(m));
+        EnsureFinite(offset, nameof(offset));
+        var index = new LineIndex(line);
+        return index.FirstHit(m) is { } hit ? Shifted(index, hit.Point, hit.Position, offset) : null;
+    }
+
+    /// <summary>
+    /// Where a point lies relative to the line (ADR 0035): the length of the nearest point on the line, that point, the distance to it and
+    /// the signed offset to the side (positive left of the direction of the line, negative right), so that
+    /// <c>Interpolate(Position, Offset)</c> gives the point back when it lies beside the line.
+    /// </summary>
+    /// <remarks>
+    /// The nearest point and the length are those of <see cref="Project(IPolyline2D, Coordinate)"/>. The side is that of the segment of the
+    /// nearest point. A point beyond the end of the line has its nearest point at the end, the distance to it, and the side of the
+    /// extension of the end segment; on that extension itself (and for a line without direction) the side counts as left.
+    /// </remarks>
+    /// <param name="line">The polyline.</param>
+    /// <param name="point">The point.</param>
+    /// <returns>The result, or <c>null</c> for a line without points.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The coordinates of <paramref name="point"/> are not finite.</exception>
+    public static LineProjection? ProjectDetailed(this IPolyline2D line, Coordinate point)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsurePoint(point);
+        var index = new LineIndex(line);
+        return index.IsEmpty ? null : Detailed(point, index.Nearest(point));
+    }
+
+    /// <inheritdoc cref="ProjectDetailed(IPolyline2D, Coordinate)"/>
+    public static LineProjection? ProjectDetailed(this IPolyline2D line, IPoint2D point)
+    {
+        ArgumentNullException.ThrowIfNull(point);
+        return line.ProjectDetailed(point.ToCoordinate());
+    }
+
+    /// <summary>
+    /// <see cref="ProjectDetailed(IPolyline2D, Coordinate)"/> within a window of lengths: the nearest point on the part of the line between
+    /// two lengths, as for <see cref="Project(IPolyline2D, Coordinate, double, double)"/> (ADR 0031).
+    /// </summary>
+    /// <param name="line">The polyline.</param>
+    /// <param name="point">The point.</param>
+    /// <param name="from">The length where the search window starts.</param>
+    /// <param name="to">The length where the search window ends; swapped with <paramref name="from"/> if lower.</param>
+    /// <returns>The result, or <c>null</c> for a line without points.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The coordinates of <paramref name="point"/> are not finite, or <paramref name="from"/> or <paramref name="to"/> is <c>NaN</c> or infinite.</exception>
+    public static LineProjection? ProjectDetailed(this IPolyline2D line, Coordinate point, double from, double to)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsurePoint(point);
+        EnsureFinite(from, nameof(from));
+        EnsureFinite(to, nameof(to));
+        var index = new LineIndex(line);
+        if (index.IsEmpty)
+        {
+            return null;
+        }
+
+        var (a, b) = Window(index, from, to);
+        return Detailed(point, index.Nearest(point, a, b));
+    }
+
+    /// <inheritdoc cref="ProjectDetailed(IPolyline2D, Coordinate, double, double)"/>
+    public static LineProjection? ProjectDetailed(this IPolyline2D line, IPoint2D point, double from, double to)
+    {
+        ArgumentNullException.ThrowIfNull(point);
+        return line.ProjectDetailed(point.ToCoordinate(), from, to);
+    }
+
+    private static LineProjection Detailed(Coordinate point, (Coordinate Point, double Position, double Dx, double Dy) nearest)
+    {
+        double ex = point.X - nearest.Point.X, ey = point.Y - nearest.Point.Y;
+        double distance = Math.Sqrt(ex * ex + ey * ey);
+        bool right = nearest.Dx * ey - nearest.Dy * ex < 0;
+        return new LineProjection(nearest.Position, nearest.Point, distance, right ? -distance : distance);
+    }
+
+    private static Coordinate? Shifted(LineIndex index, Coordinate point, double position, double offset)
+    {
+        if (offset == 0)
+        {
+            return point;
+        }
+
+        return index.Direction(position) is { } u ? point with { X = point.X - offset * u.Uy, Y = point.Y + offset * u.Ux } : null;
     }
 
     private static (double From, double To) Window(LineIndex index, double from, double to)
@@ -502,7 +642,7 @@ public static class LinearReferencing
     /// <summary>
     /// Every point of the line where M has the value, in the order along the line (ADR 0032): a hit at a vertex shared
     /// by two segments counts once, and a segment with constant M equal to the value answers with its start, as
-    /// <see cref="InterpolateByM"/> does. Unlike <c>InterpolateByM</c>, which gives the first hit, this finds them all.
+    /// <see cref="InterpolateByM(IPolyline2D, double)"/> does. Unlike <c>InterpolateByM</c>, which gives the first hit, this finds them all.
     /// </summary>
     /// <param name="line">The polyline.</param>
     /// <param name="m">The M value.</param>
@@ -717,6 +857,57 @@ public static class LinearReferencing
 
         public bool IsEmpty => _paths.Count == 0;
 
+        private (double End, double Ux, double Uy)[]? _directions;
+
+        /// <summary>
+        /// The unit direction of the line at a length: of the first segment with length that ends at or after it (at a vertex the earlier
+        /// segment), of the last one beyond the end. <c>null</c> if no segment has length.
+        /// </summary>
+        public (double Ux, double Uy)? Direction(double d)
+        {
+            _directions ??= BuildDirections();
+            if (_directions.Length == 0)
+            {
+                return null;
+            }
+
+            int lo = 0, hi = _directions.Length - 1;
+            while (lo < hi)
+            {
+                int mid = (lo + hi) / 2;
+                if (d <= _directions[mid].End)
+                {
+                    hi = mid;
+                }
+                else
+                {
+                    lo = mid + 1;
+                }
+            }
+
+            return (_directions[lo].Ux, _directions[lo].Uy);
+        }
+
+        private (double End, double Ux, double Uy)[] BuildDirections()
+        {
+            var list = new List<(double End, double Ux, double Uy)>();
+            for (int k = 0; k < _paths.Count; k++)
+            {
+                var path = _paths[k];
+                for (int i = 1; i < path.Length; i++)
+                {
+                    double dx = path[i].X - path[i - 1].X, dy = path[i].Y - path[i - 1].Y;
+                    double length = Math.Sqrt(dx * dx + dy * dy);
+                    if (length > 0)
+                    {
+                        list.Add((_positions[k][i], dx / length, dy / length));
+                    }
+                }
+            }
+
+            return list.ToArray();
+        }
+
         public int PathCount => _paths.Count;
 
         public Coordinate[] PathAt(int p) => _paths[p];
@@ -779,16 +970,17 @@ public static class LinearReferencing
         }
 
         /// <summary>The nearest point on the line to <paramref name="p"/> and its length; the first of equally near points.</summary>
-        public (Coordinate Point, double Position) Nearest(Coordinate p) => Nearest(p, 0, Length);
+        public (Coordinate Point, double Position, double Dx, double Dy) Nearest(Coordinate p) => Nearest(p, 0, Length);
 
         /// <summary>
         /// The nearest point to <paramref name="p"/> on the part of the line between the lengths <paramref name="from"/> and
         /// <paramref name="to"/> (<paramref name="from"/> &lt;= <paramref name="to"/>, within <c>[0, Length]</c>), and its length on the whole
-        /// line; the first of equally near points.
+        /// line; the first of equally near points. <c>Dx</c> and <c>Dy</c> are the direction of the segment of the nearest point (not
+        /// normalised, zero for a point without a segment); a segment of length 0 gives way to a real one at the same vertex.
         /// </summary>
-        public (Coordinate Point, double Position) Nearest(Coordinate p, double from, double to)
+        public (Coordinate Point, double Position, double Dx, double Dy) Nearest(Coordinate p, double from, double to)
         {
-            var best = (Point: PointAt(from), Position: from);
+            var best = (Point: PointAt(from), Position: from, Dx: 0d, Dy: 0d);
             double bestDistance = double.PositiveInfinity;
             for (int k = 0; k < _paths.Count; k++)
             {
@@ -800,7 +992,7 @@ public static class LinearReferencing
                     if (d0 < bestDistance)
                     {
                         bestDistance = d0;
-                        best = (path[0], pos[0]);
+                        best = (path[0], pos[0], 0, 0);
                     }
                 }
 
@@ -820,10 +1012,11 @@ public static class LinearReferencing
                     double t = len2 == 0 ? 0 : Math.Clamp(((p.X - a.X) * dx + (p.Y - a.Y) * dy) / len2, tLo, tHi);
                     var q = Segments.Lerp(a, b, t);
                     double distance = Squared(p, q);
-                    if (distance < bestDistance)
+                    double position = pos[i - 1] + t * len;
+                    if (distance < bestDistance || (distance == bestDistance && len2 > 0 && best.Dx == 0 && best.Dy == 0 && position == best.Position))
                     {
                         bestDistance = distance;
-                        best = (q, pos[i - 1] + t * len);
+                        best = (q, position, dx, dy);
                     }
                 }
             }
