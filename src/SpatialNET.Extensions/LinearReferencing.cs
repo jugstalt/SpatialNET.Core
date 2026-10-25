@@ -402,6 +402,145 @@ public static class LinearReferencing
     private static double Extend((double Position, double M) from, (double Position, double M) other, double d) =>
         from.M + (other.M - from.M) / (other.Position - from.Position) * (d - from.Position);
 
+    /// <summary>
+    /// All stretches of the line where M lies between two values (closed interval), as one polyline: the stretches
+    /// of consecutive segments form one path, a gap starts a new one (ADR 0032). Unlike <see cref="SubstringByM"/>, which
+    /// follows the first hit of two values, this finds every stretch, also where M is not monotonic.
+    /// </summary>
+    /// <remarks>
+    /// Only segments with M at both ends take part (as in ADR 0017). M is interpolated linearly on a segment, the cut ends get
+    /// exactly the bound as M and an interpolated Z; original vertices keep their own values, and the direction of the
+    /// line is kept. Stretches without length (M touches the interval only at a point) are not part of the result;
+    /// <see cref="LocateAlong"/> finds such points. If <paramref name="fromM"/> is greater than <paramref name="toM"/> they are swapped.
+    /// </remarks>
+    /// <param name="line">The polyline.</param>
+    /// <param name="fromM">One bound of the M interval.</param>
+    /// <param name="toM">The other bound of the M interval.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <returns>The stretches; an empty polyline if there is none.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="fromM"/> or <paramref name="toM"/> is <c>NaN</c> or infinite.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
+    public static IPolyline2D LocateBetween(this IPolyline2D line, double fromM, double toM, IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsureFinite(fromM, nameof(fromM));
+        EnsureFinite(toM, nameof(toM));
+        var f = GeometryFactory.Resolve(factory);
+        double lo = Math.Min(fromM, toM), hi = Math.Max(fromM, toM);
+        var index = new LineIndex(line);
+        var result = new List<ReadOnlyMemory<Coordinate>>();
+        for (int p = 0; p < index.PathCount; p++)
+        {
+            var path = index.PathAt(p);
+            List<Coordinate>? current = null;
+
+            void Close()
+            {
+                if (current is { Count: >= 2 })
+                {
+                    result.Add(GeometryAccess.Restrict(current.ToArray(), f));
+                }
+
+                current = null;
+            }
+
+            for (int i = 1; i < path.Length; i++)
+            {
+                var a = path[i - 1];
+                var b = path[i];
+                if (a.X == b.X && a.Y == b.Y)
+                {
+                    continue; // no length, nothing to locate
+                }
+
+                if (!a.HasM || !b.HasM)
+                {
+                    Close();
+                    continue;
+                }
+
+                double t0, t1, enterM = lo, exitM = hi;
+                if (a.M == b.M)
+                {
+                    (t0, t1) = a.M < lo || a.M > hi ? (1, 0) : (0, 1);
+                }
+                else
+                {
+                    bool rising = b.M > a.M;
+                    double tLo = (lo - a.M) / (b.M - a.M), tHi = (hi - a.M) / (b.M - a.M);
+                    t0 = Math.Max(0, Math.Min(tLo, tHi));
+                    t1 = Math.Min(1, Math.Max(tLo, tHi));
+                    (enterM, exitM) = rising ? (lo, hi) : (hi, lo);
+                }
+
+                if (t0 >= t1)
+                {
+                    Close();
+                    continue;
+                }
+
+                if (current is not null && t0 > 0)
+                {
+                    Close();
+                }
+
+                current ??= [t0 > 0 ? Segments.Lerp(a, b, t0) with { M = enterM } : a];
+                current.Add(t1 < 1 ? Segments.Lerp(a, b, t1) with { M = exitM } : b);
+                if (t1 < 1)
+                {
+                    Close();
+                }
+            }
+
+            Close();
+        }
+
+        return f.CreatePolyline(result.ToArray(), line);
+    }
+
+    /// <summary>
+    /// Every point of the line where M has the value, in the order along the line (ADR 0032): a hit at a vertex shared
+    /// by two segments counts once, and a segment with constant M equal to the value answers with its start, as
+    /// <see cref="InterpolateByM"/> does. Unlike <c>InterpolateByM</c>, which gives the first hit, this finds them all.
+    /// </summary>
+    /// <param name="line">The polyline.</param>
+    /// <param name="m">The M value.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <returns>The points with Z and M interpolated on the segment; an empty multipoint if there is none.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="m"/> is <c>NaN</c> or infinite.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
+    public static IMultiPoint2D LocateAlong(this IPolyline2D line, double m, IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsureFinite(m, nameof(m));
+        var f = GeometryFactory.Resolve(factory);
+        var index = new LineIndex(line);
+        var hits = new List<Coordinate>();
+        for (int p = 0; p < index.PathCount; p++)
+        {
+            var path = index.PathAt(p);
+            for (int i = 1; i < path.Length; i++)
+            {
+                var a = path[i - 1];
+                var b = path[i];
+                if (!a.HasM || !b.HasM || (a.X == b.X && a.Y == b.Y) || m < Math.Min(a.M, b.M) || m > Math.Max(a.M, b.M))
+                {
+                    continue;
+                }
+
+                var hit = (a.M == b.M ? a : Segments.Lerp(a, b, (m - a.M) / (b.M - a.M))) with { M = m };
+                if (hits.Count == 0 || hits[^1].X != hit.X || hits[^1].Y != hit.Y)
+                {
+                    hits.Add(hit);
+                }
+            }
+        }
+
+        return f.CreateMultiPoint(GeometryAccess.Restrict(hits.ToArray(), f), line);
+    }
+
     private static IPolyline2D Piece(LineIndex index, double from, double to, IGeometryFactory f, IPolyline2D source)
     {
         if (index.IsEmpty)

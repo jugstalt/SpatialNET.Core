@@ -9,3 +9,5 @@ static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, S
 static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> double
 static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point, double from, double to) -> double
 static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> double
+static SpatialNET.LinearReferencing.LocateAlong(this SpatialNET.IPolyline2D! line, double m, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.LinearReferencing.LocateBetween(this SpatialNET.IPolyline2D! line, double fromM, double toM, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!

@@ -33,6 +33,19 @@ M spricht eine Position nur dort an, wo die Linie M trägt, und verändert die G
 - **Erster Treffer entlang der Linie.** Echte M-Werte sind nicht immer monoton: Eine Straße kann eine Schleife machen, oder M springt zurück. Die Linie wird in ihrer Reihenfolge durchlaufen, und das erste Segment, dessen M-Bereich den Wert enthält (geschlossenes Intervall), antwortet. Ein mehrfach vorkommender Wert wird also bei seinem ersten Vorkommen gefunden, und nichts wirft.
 - Z und M der Ergebnispunkte werden **auf dem Segment interpoliert**, wenn beide Enden sie tragen; an einem ursprünglichen Stützpunkt hat der Punkt genau dessen eigene Werte ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)).
 
+## Alle Strecken und alle Punkte zu M
+
+Die `...ByM`-Methoden oben folgen dem ersten Treffer. Ist M nicht monoton, oder soll alles zwischen zwei Werten gefunden werden, finden `LocateBetween` und `LocateAlong` alles ([ADR 0032](../../adr/0032-locatebetween-und-locatealong.de.md)):
+
+```csharp
+IPolyline2D km12to15 = route.LocateBetween(12_000, 15_000);  // jede Strecke mit M in [12000, 15000]
+IMultiPoint2D at12_5 = route.LocateAlong(12_500);            // jeder Punkt, an dem M 12500 ist
+```
+
+- `LocateBetween` liefert die Strecken als eine Polylinie: Aufeinanderfolgende Segmente bilden einen Pfad, eine Lücke (außerhalb des Intervalls oder ohne M) beginnt den nächsten. Das Intervall ist geschlossen, vertauschte Grenzen sind dasselbe Intervall, und die Richtung der Linie bleibt erhalten. Eine Strecke ohne Länge (M berührt das Intervall in einem Punkt) entfällt.
+- `LocateAlong` liefert jeden Treffer in der Reihenfolge entlang der Linie; ein Treffer an einem Stützpunkt zählt einmal, und ein Segment mit konstantem M antwortet mit seinem Anfang, wie `InterpolateByM`.
+- Beide nutzen nur Segmente mit M an beiden Enden; kein Treffer ergibt ein leeres Ergebnis.
+
 ## Linien, die sich kreuzen: ein Längenfenster
 
 Eine Spitzkehre oder eine Schleife gibt einem Klick mehrere nächste Punkte, und `Project` antwortet mit der kleinsten Länge, dem früheren Durchgang. `Project(point, from, to)` und `ProjectToM(point, from, to)` suchen nur in der Strecke zwischen zwei Längen und antworten trotzdem mit einer Länge (oder M) auf der ganzen Linie ([ADR 0031](../../adr/0031-project-mit-laengenfenster.de.md)):

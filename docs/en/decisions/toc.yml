@@ -60,3 +60,5 @@
   href: ../../adr/0030-calibratem-m-werte-aus-ankerpunkten.md
 - name: "0031 Project with a window of lengths"
   href: ../../adr/0031-project-mit-laengenfenster.md
+- name: "0032 LocateBetween and LocateAlong"
+  href: ../../adr/0032-locatebetween-und-locatealong.md

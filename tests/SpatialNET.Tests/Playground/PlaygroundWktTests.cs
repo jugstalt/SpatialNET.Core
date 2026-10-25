@@ -33,6 +33,17 @@ public class PlaygroundWktTests(WebApplicationFactory<Program> factory) : IClass
     }
 
     [Fact]
+    public async Task LocateBetween_and_LocateAlong_run_on_a_WKT_with_M()
+    {
+        var (status, between) = await Post("/api/run", new { algorithm = "locateBetween", wkt = new { a = RoadWithM }, @params = new { fromM = 50.0, toM = 150.0 }, local = true });
+        var (_, along) = await Post("/api/run", new { algorithm = "locateAlong", wkt = new { a = RoadWithM }, @params = new { m = 150.0 }, local = true });
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.StartsWith("LINESTRING ZM (", between["wkt"]!.GetValue<string>());
+        Assert.StartsWith("MULTIPOINT ZM (", along["wkt"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task WKT_wins_over_the_GeoJSON_of_the_same_input()
     {
         var geoJson = JsonNode.Parse("""{"type":"LineString","coordinates":[[0,0],[1,0]]}""");

@@ -33,6 +33,19 @@ M addresses a position only where the line carries M, and it never changes the g
 - **First hit along the line.** Real M values are not always monotonic: a road may loop, or M may reset. The line is scanned in its order, and the first segment whose M range contains the value (closed interval) answers. A value that occurs several times is therefore found at its first occurrence, and nothing throws.
 - Z and M of the resulting points are **interpolated on the segment** if both ends carry them; at an original vertex, the point has exactly that vertex's own values ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md)).
 
+## All stretches and all points for M
+
+The `...ByM` methods above follow the first hit. When M is not monotonic, or you want everything between two values, `LocateBetween` and `LocateAlong` find all of it ([ADR 0032](../../adr/0032-locatebetween-und-locatealong.md)):
+
+```csharp
+IPolyline2D km12to15 = route.LocateBetween(12_000, 15_000);  // every stretch with M in [12000, 15000]
+IMultiPoint2D at12_5 = route.LocateAlong(12_500);            // every point where M is 12500
+```
+
+- `LocateBetween` returns the stretches as one polyline: consecutive segments form one path, a gap (outside the interval, or without M) starts the next. The interval is closed, swapped bounds are the same interval, and the direction of the line is kept. A stretch without length (M touches the interval at one point) is left out.
+- `LocateAlong` returns every hit in the order along the line; a hit at a vertex counts once, and a segment with constant M answers with its start, like `InterpolateByM`.
+- Both use only segments with M at both ends; no hit gives an empty result.
+
 ## Lines that cross themselves: a window of lengths
 
 A hairpin bend or a loop gives a click several nearest points, and `Project` answers with the smallest length, the earlier pass. `Project(point, from, to)` and `ProjectToM(point, from, to)` search only the stretch between two lengths and still answer with a length (or M) on the whole line ([ADR 0031](../../adr/0031-project-mit-laengenfenster.md)):

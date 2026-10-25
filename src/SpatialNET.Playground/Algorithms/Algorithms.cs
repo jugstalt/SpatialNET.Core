@@ -280,6 +280,15 @@ public sealed class SubstringByMAlgorithm() : PlaygroundAlgorithm("substringByM"
     [new("fromM", "From (M)", "number", 50.0), new("toM", "To (M)", "number", 200.0)],
     (i, p, f, _) => ((IPolyline2D)i["a"]).SubstringByM(p.Number("fromM"), p.Number("toM"), f));
 
+public sealed class LocateBetweenAlgorithm() : PlaygroundAlgorithm("locateBetween", "LocateBetween", "Linear referencing",
+    [In.A(In.Lines, "Line (WKT with M)")],
+    [new("fromM", "From (M)", "number", 50.0), new("toM", "To (M)", "number", 200.0)],
+    (i, p, f, _) => ((IPolyline2D)i["a"]).LocateBetween(p.Number("fromM"), p.Number("toM"), f));
+
+public sealed class LocateAlongAlgorithm() : PlaygroundAlgorithm("locateAlong", "LocateAlong", "Linear referencing",
+    [In.A(In.Lines, "Line (WKT with M)")], [new("m", "M value", "number", 150.0)],
+    (i, p, f, _) => ((IPolyline2D)i["a"]).LocateAlong(p.Number("m"), f));
+
 // ---------- Delaunay triangulation and concave hull (ADR 0029) ----------
 
 public sealed class DelaunayTrianglesAlgorithm() : PlaygroundAlgorithm("delaunayTriangles", "DelaunayTriangles", "Construction",

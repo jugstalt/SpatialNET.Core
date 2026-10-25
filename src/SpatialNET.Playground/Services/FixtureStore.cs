@@ -21,6 +21,8 @@ public sealed class FixtureStore(string root)
         ["interpolateByM"] = "interpolate",
         ["projectToM"] = "project",
         ["substringByM"] = "substring",
+        ["locateBetween"] = "substring",
+        ["locateAlong"] = "interpolate",
     };
 
     /// <summary>The fixtures of an algorithm; without <paramref name="all"/> only those with the tag <c>playground</c>.</summary>
