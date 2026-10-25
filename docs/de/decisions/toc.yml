@@ -58,3 +58,5 @@
   href: ../../adr/0029-delaunay-und-konkave-huelle.de.md
 - name: "0030 CalibrateM: M-Werte aus Ankerpunkten"
   href: ../../adr/0030-calibratem-m-werte-aus-ankerpunkten.de.md
+- name: "0031 Project mit Längenfenster"
+  href: ../../adr/0031-project-mit-laengenfenster.de.md

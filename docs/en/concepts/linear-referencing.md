@@ -33,6 +33,17 @@ M addresses a position only where the line carries M, and it never changes the g
 - **First hit along the line.** Real M values are not always monotonic: a road may loop, or M may reset. The line is scanned in its order, and the first segment whose M range contains the value (closed interval) answers. A value that occurs several times is therefore found at its first occurrence, and nothing throws.
 - Z and M of the resulting points are **interpolated on the segment** if both ends carry them; at an original vertex, the point has exactly that vertex's own values ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.md)).
 
+## Lines that cross themselves: a window of lengths
+
+A hairpin bend or a loop gives a click several nearest points, and `Project` answers with the smallest length, the earlier pass. `Project(point, from, to)` and `ProjectToM(point, from, to)` search only the stretch between two lengths and still answer with a length (or M) on the whole line ([ADR 0031](../../adr/0031-project-mit-laengenfenster.md)):
+
+```csharp
+double first = road.Project(click);                     // the earlier pass
+double second = road.Project(click, 11, road.Length()); // only after length 11
+```
+
+Both lengths are clamped, swapped if `from` is greater than `to`, and the window is closed. A point that is nearer to the line outside the window gets the nearest point inside it. "After a position" is the window `[position, Length()]`.
+
 ## Calibrating a line from anchor points
 
 A road section often has no M, and the measures sit on **points along it** (kilometre posts). `CalibrateM` turns the points into M on the line, once ([ADR 0030](../../adr/0030-calibratem-m-werte-aus-ankerpunkten.md)); after that, `ProjectToM` and `InterpolateByM` answer from the line.

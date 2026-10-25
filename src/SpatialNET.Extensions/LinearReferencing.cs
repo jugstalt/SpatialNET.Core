@@ -70,6 +70,86 @@ public static class LinearReferencing
     }
 
     /// <summary>
+    /// The length along the line of the point nearest to <paramref name="point"/> on the part of the line between two
+    /// lengths (ADR 0031). It tells apart the passes of a line that crosses itself or doubles back: restrict the search
+    /// to the stretch where the point is expected. The result is a length on the whole line.
+    /// </summary>
+    /// <remarks>
+    /// Both lengths are clamped to <c>[0, length]</c>; if <paramref name="from"/> is greater than <paramref name="to"/> they are
+    /// swapped (the direction does not matter for a search). Among equally near points the smallest length wins. For
+    /// "after a position" pass the line's <c>Length()</c> as <paramref name="to"/>.
+    /// </remarks>
+    /// <param name="line">The polyline.</param>
+    /// <param name="point">The point.</param>
+    /// <param name="from">The length where the search window starts.</param>
+    /// <param name="to">The length where the search window ends.</param>
+    /// <returns>The length, or <see cref="double.NaN"/> for a line without points.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The coordinates of <paramref name="point"/> are not finite, or <paramref name="from"/> or <paramref name="to"/> is <c>NaN</c> or infinite.</exception>
+    public static double Project(this IPolyline2D line, Coordinate point, double from, double to)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsurePoint(point);
+        EnsureFinite(from, nameof(from));
+        EnsureFinite(to, nameof(to));
+        var index = new LineIndex(line);
+        if (index.IsEmpty)
+        {
+            return double.NaN;
+        }
+
+        var (a, b) = Window(index, from, to);
+        return index.Nearest(point, a, b).Position;
+    }
+
+    /// <inheritdoc cref="Project(IPolyline2D, Coordinate, double, double)"/>
+    public static double Project(this IPolyline2D line, IPoint2D point, double from, double to)
+    {
+        ArgumentNullException.ThrowIfNull(point);
+        return line.Project(point.ToCoordinate(), from, to);
+    }
+
+    /// <summary>
+    /// The M value at the point nearest to <paramref name="point"/> on the part of the line between two lengths: the
+    /// M of <c>Project(point, from, to)</c> (ADR 0031).
+    /// </summary>
+    /// <param name="line">The polyline.</param>
+    /// <param name="point">The point.</param>
+    /// <param name="from">The length where the search window starts.</param>
+    /// <param name="to">The length where the search window ends.</param>
+    /// <returns>The M value, or <see cref="double.NaN"/> if the line has no M there.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="line"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The coordinates of <paramref name="point"/> are not finite, or <paramref name="from"/> or <paramref name="to"/> is <c>NaN</c> or infinite.</exception>
+    public static double ProjectToM(this IPolyline2D line, Coordinate point, double from, double to)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        EnsurePoint(point);
+        EnsureFinite(from, nameof(from));
+        EnsureFinite(to, nameof(to));
+        var index = new LineIndex(line);
+        if (index.IsEmpty)
+        {
+            return double.NaN;
+        }
+
+        var (a, b) = Window(index, from, to);
+        return index.Nearest(point, a, b).Point.M;
+    }
+
+    /// <inheritdoc cref="ProjectToM(IPolyline2D, Coordinate, double, double)"/>
+    public static double ProjectToM(this IPolyline2D line, IPoint2D point, double from, double to)
+    {
+        ArgumentNullException.ThrowIfNull(point);
+        return line.ProjectToM(point.ToCoordinate(), from, to);
+    }
+
+    private static (double From, double To) Window(LineIndex index, double from, double to)
+    {
+        double a = Math.Clamp(from, 0, index.Length), b = Math.Clamp(to, 0, index.Length);
+        return a <= b ? (a, b) : (b, a);
+    }
+
+    /// <summary>
     /// The piece of the line between two lengths, one path per touched path. Both lengths are clamped; if
     /// <paramref name="from"/> is greater than <paramref name="to"/> the piece runs in the opposite direction.
     /// </summary>
@@ -457,15 +537,22 @@ public static class LinearReferencing
         }
 
         /// <summary>The nearest point on the line to <paramref name="p"/> and its length; the first of equally near points.</summary>
-        public (Coordinate Point, double Position) Nearest(Coordinate p)
+        public (Coordinate Point, double Position) Nearest(Coordinate p) => Nearest(p, 0, Length);
+
+        /// <summary>
+        /// The nearest point to <paramref name="p"/> on the part of the line between the lengths <paramref name="from"/> and
+        /// <paramref name="to"/> (<paramref name="from"/> &lt;= <paramref name="to"/>, within <c>[0, Length]</c>), and its length on the whole
+        /// line; the first of equally near points.
+        /// </summary>
+        public (Coordinate Point, double Position) Nearest(Coordinate p, double from, double to)
         {
-            var best = (Point: _paths[0][0], Position: _positions[0][0]);
+            var best = (Point: PointAt(from), Position: from);
             double bestDistance = double.PositiveInfinity;
             for (int k = 0; k < _paths.Count; k++)
             {
                 var path = _paths[k];
                 var pos = _positions[k];
-                if (path.Length == 1)
+                if (path.Length == 1 && pos[0] >= from && pos[0] <= to)
                 {
                     double d0 = Squared(p, path[0]);
                     if (d0 < bestDistance)
@@ -477,16 +564,24 @@ public static class LinearReferencing
 
                 for (int i = 1; i < path.Length; i++)
                 {
+                    if (pos[i] < from || pos[i - 1] > to)
+                    {
+                        continue;
+                    }
+
                     var a = path[i - 1];
                     var b = path[i];
+                    double len = pos[i] - pos[i - 1];
+                    double tLo = len == 0 || from <= pos[i - 1] ? 0 : (from - pos[i - 1]) / len;
+                    double tHi = len == 0 || to >= pos[i] ? 1 : (to - pos[i - 1]) / len;
                     double dx = b.X - a.X, dy = b.Y - a.Y, len2 = dx * dx + dy * dy;
-                    double t = len2 == 0 ? 0 : Math.Clamp(((p.X - a.X) * dx + (p.Y - a.Y) * dy) / len2, 0, 1);
+                    double t = len2 == 0 ? 0 : Math.Clamp(((p.X - a.X) * dx + (p.Y - a.Y) * dy) / len2, tLo, tHi);
                     var q = Segments.Lerp(a, b, t);
                     double distance = Squared(p, q);
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
-                        best = (q, pos[i - 1] + t * (pos[i] - pos[i - 1]));
+                        best = (q, pos[i - 1] + t * len);
                     }
                 }
             }

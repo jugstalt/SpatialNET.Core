@@ -33,6 +33,17 @@ M spricht eine Position nur dort an, wo die Linie M trägt, und verändert die G
 - **Erster Treffer entlang der Linie.** Echte M-Werte sind nicht immer monoton: Eine Straße kann eine Schleife machen, oder M springt zurück. Die Linie wird in ihrer Reihenfolge durchlaufen, und das erste Segment, dessen M-Bereich den Wert enthält (geschlossenes Intervall), antwortet. Ein mehrfach vorkommender Wert wird also bei seinem ersten Vorkommen gefunden, und nichts wirft.
 - Z und M der Ergebnispunkte werden **auf dem Segment interpoliert**, wenn beide Enden sie tragen; an einem ursprünglichen Stützpunkt hat der Punkt genau dessen eigene Werte ([ADR 0015](../../adr/0015-m-werte-mitgefuehrt-nicht-ausgewertet.de.md)).
 
+## Linien, die sich kreuzen: ein Längenfenster
+
+Eine Spitzkehre oder eine Schleife gibt einem Klick mehrere nächste Punkte, und `Project` antwortet mit der kleinsten Länge, dem früheren Durchgang. `Project(point, from, to)` und `ProjectToM(point, from, to)` suchen nur in der Strecke zwischen zwei Längen und antworten trotzdem mit einer Länge (oder M) auf der ganzen Linie ([ADR 0031](../../adr/0031-project-mit-laengenfenster.de.md)):
+
+```csharp
+double first = road.Project(click);                     // der frühere Durchgang
+double second = road.Project(click, 11, road.Length()); // nur nach der Länge 11
+```
+
+Beide Längen werden begrenzt und vertauscht, wenn `from` größer als `to` ist; das Fenster ist geschlossen. Ein Punkt, der der Linie außerhalb des Fensters näher ist, bekommt den nächsten Punkt innerhalb. „Nach einer Position“ ist das Fenster `[Position, Length()]`.
+
 ## Eine Linie aus Ankerpunkten kalibrieren
 
 Ein Straßenabschnitt hat oft kein M, und die Messwerte sitzen auf **Punkten entlang der Linie** (Kilometersteine). `CalibrateM` macht aus den Punkten einmal M auf der Linie ([ADR 0030](../../adr/0030-calibratem-m-werte-aus-ankerpunkten.de.md)); danach antworten `ProjectToM` und `InterpolateByM` aus der Linie.

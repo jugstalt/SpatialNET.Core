@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- `Project(point, from, to)` and `ProjectToM(point, from, to)` (ADR 0031): the nearest point within a window of lengths, so that a line that crosses itself or doubles back (hairpin, loop) can be told apart by pass. The result is still a length (or M) on the whole line; "after a position" is the window `[position, Length()]`.
 - `CalibrateM` and `MExtrapolation` (ADR 0030): gives a polyline M values from anchor points that carry M. Each anchor is projected onto the line, a vertex is inserted at its position, and M is interpolated linearly in the length along the line between the anchors, so `ProjectToM` and `InterpolateByM` answer from the calibrated line. `maxSnapDistance` is required and an anchor beyond it is an error; before the first and after the last anchor M stays empty (`None`), is clamped or continues linearly. The concept page "linear referencing" has a section on it.
 
 ## [0.5.0-preview.1] - 2026-10-22
