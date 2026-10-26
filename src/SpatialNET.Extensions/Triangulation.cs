@@ -230,7 +230,7 @@ public sealed partial class Triangulation
     }
 
     /// <summary>The triangulation of the kept triangles of a mesh (all of them if <paramref name="keep"/> is <c>null</c>); <paramref name="borderConstrained"/>: the border of the mesh consists of constraints.</summary>
-    private static Triangulation From(DelaunayMesh mesh, bool[]? keep, bool borderConstrained = false)
+    private static Triangulation From(DelaunayMesh mesh, bool[]? keep, bool borderConstrained = false, Func<int, int, bool>? isConstrained = null)
     {
         int count = mesh.TriangleCount;
         var map = new int[count];
@@ -257,7 +257,7 @@ public sealed partial class Triangulation
                 int slot = 3 * map[t] + k;
                 triangles[slot] = mesh.Triangles[e];
                 neighbours[slot] = h == -1 ? -1 : map[h / 3];
-                constrained[slot] = (borderConstrained && h == -1) || mesh.IsConstrained(mesh.Triangles[e], mesh.Triangles[DelaunayMesh.Next(e)]);
+                constrained[slot] = (borderConstrained && h == -1) || (isConstrained ?? mesh.IsConstrained)(mesh.Triangles[e], mesh.Triangles[DelaunayMesh.Next(e)]);
             }
         }
 

@@ -101,7 +101,7 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest`, `Join`, `SelfJoin` |
 | Lineare Referenzierung | `Interpolate` (auch mit seitlichem Versatz), `Project` (auch in einem Längenfenster), `ProjectDetailed`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM`, `CalibrateM`, `LocateBetween`, `LocateAlong`, `LocateFeature`, `LocateEvents` |
 | Ereignistabellen (Routenereignisse, ohne Geometrie) | `LineEvents` (`Intersect`, `Union`, `Difference`, `Dissolve`, `Clip`, `At`), `PointEvents` (`Between`, `Within`, `Outside`) |
-| Triangulierung, Voronoi und Gelände | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate` und die Klasse `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`) |
+| Triangulierung, Voronoi und Gelände | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate` und die Klasse `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`, `InterpolateNaturalNeighbour`, `Refine`, `SlopeZones`, `LineOfSight`) |
 | Gültigkeit | `IsValid`, `Validate`, `MakeValid` |
 | Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
 | Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio` |

@@ -130,7 +130,7 @@ internal static class VoronoiBuilder
     /// away is wrong, or the result is infinite), so that is computed exactly with integers and rounded once. A centre beyond
     /// <see cref="Limit"/> is shortened, in the same direction.
     /// </summary>
-    private static (double X, double Y) Centre(Coordinate a, Coordinate b, Coordinate c)
+    internal static (double X, double Y) Centre(Coordinate a, Coordinate b, Coordinate c)
     {
         var (x, y) = DelaunayMesh.Circumcentre(a, b, c);
         double twiceArea = Math.Abs((b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X));

@@ -12,6 +12,7 @@ Punkte, eine Delaunay-Triangulierung und das Voronoi-Diagramm sind drei Sichten 
 | Rücken, Gräben oder Grenzen als Kanten erhalten | `Triangulation.FromPointsAndLines(points, lines)` | eine `Triangulation`, die sie enthält |
 | ein Polygon in Dreiecke zerlegen | `polygon.Triangulate()` oder `Triangulation.FromPolygon(polygon)` | die Dreiecke innerhalb des Polygons |
 | Neigung, Volumen über einer Höhe, Höhenprofil einer Straße wissen | `Slope`, `Aspect`, `Volume`, `Drape` an einer `Triangulation` | Zahlen, oder die Straße mit Z und M |
+| eine glatte Höhe, ein feineres Netz, die Erde zwischen zwei Flächen, Neigungszonen, eine Sicht | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `LineOfSight` | eine Zahl, eine `Triangulation`, Polygone, ein Ja/Nein |
 
 Überall sind die Punkte die **Stützpunkte einer beliebigen Geometrie**: eines Multipoints, einer Polylinie oder eines Polygons. Stützpunkte mit gleichem X und Y zählen einmal, nicht endliche werden ignoriert, und Z bleibt erhalten, wo das Ergebnis es tragen kann.
 
@@ -85,6 +86,32 @@ IPolyline2D onTerrain = terrain.Drape(road);        // Z the height, M the dista
 - Teile der Linie außerhalb der Fläche oder über einem Dreieck ohne Z fallen weg; das Ergebnis hat dann einen Pfad für jeden Teil innen.
 - Z braucht eine Factory mit `SupportsZ`, M eine mit `SupportsM`.
 
+## Glatter, feiner und verglichen
+
+Über das einzelne Dreieck hinaus beantwortet eine `Triangulation` vier weitere Fragen.
+
+```csharp
+// eine glatte Höhe, ohne die Knicke der linearen (natürliche Nachbarn, Sibson)
+double smooth = terrain.InterpolateNaturalNeighbour(new Coordinate(45, 55));
+
+// ein feineres Netz ohne spitze Dreiecke, für eine Berechnung oder eine glattere Höhenlinienkarte
+Triangulation fine = terrain.Refine(minAngle: 25, maxArea: 50);
+double worst = fine.MinAngle();                      // mindestens 25 Grad
+
+// die Erde zwischen zwei Flächen: vor und nach einem Aushub
+var (fill, cut) = after.Volume(before);              // Above: wo "after" höher liegt (Auftrag), Below: wo es tiefer liegt (Abtrag)
+
+// die Flächen des Geländes nach Neigungsklassen, und was von wo aus zu sehen ist
+IReadOnlyList<IPolygon2D> zones = terrain.SlopeZones([10, 30]);   // unter 10, 10 bis 30, 30 und mehr Grad
+bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50), observerHeight: 1.7);
+```
+
+- **`InterpolateNaturalNeighbour`** gewichtet die Höhen der Nachbarn, die ein neuer Punkt bekäme, mit der Fläche ihrer Voronoi-Zellen, die er übernähme. Sie ist stetig und glatt, gibt eine Ebene exakt wieder, geht nie über die Höhen um den Punkt hinaus und ist so einfach aufzurufen wie `InterpolateZ`. Mit Bruchkanten (Zwangskanten) in der Triangulierung gibt sie die lineare Höhe, da die Fläche dort einen Knick haben soll.
+- **`Refine`** fügt Punkte hinzu (die Delaunay-Verfeinerung nach Ruppert), bis kein Winkel unter `minAngle` und kein Dreieck größer als `maxArea` ist. Der Rand und die Bruchkanten bleiben, in kürzere Kanten zerlegt, und die neuen Punkte liegen auf der Fläche. `maxSteinerPoints` begrenzt die Arbeit; Winkel über 34 Grad werden abgelehnt, und ein spitzer Winkel zwischen zwei Bruchkanten der Eingabe lässt sich nicht verbessern.
+- **`Volume(other)`** ist das Volumen zwischen zwei Flächen über ihrer gemeinsamen Fläche, exakt: `Above` ist dort, wo diese Fläche über der anderen liegt, `Below` wo darunter.
+- **`SlopeZones(limits)`** gibt für jede Neigungsklasse ein Polygon, eines mehr als Grenzen (ein leeres Polygon für eine Klasse ohne Fläche).
+- **`LineOfSight`** fragt, ob die gerade Linie vom Auge zum Ziel unter dem Gelände verläuft. Ein Punkt außerhalb der Fläche ist nicht sichtbar.
+
 ## Bruchkanten und Polygone
 
 Eine einfache Triangulierung legt ihre Kanten dorthin, wo die Leerkreis-Regel es sagt. Eine **Bruchkante** (ein Rücken, ein Graben, eine Böschung) muss eine Kante sein, was die Regel auch sagt. `FromPointsAndLines` behält die Segmente von Linien (oder die Ringe von Polygonen) als Ketten von Kanten und ist überall sonst Delaunay (die *Constrained*-Delaunay-Triangulierung).
@@ -153,4 +180,4 @@ double forced = Triangulation.FromPointsAndLines(points, ditch).InterpolateZ(mid
 - **Punkte auf einem gemeinsamen Kreis** (die Ecken eines Rechtecks, ein regelmäßiges Gitter) erlauben mehrere gleich gute Delaunay-Triangulierungen. Welche herauskommt, ist deterministisch, aber nicht festgelegt; alles andere ist der Vertrag.
 - **Eine lange Grenze zu triangulieren ist langsamer, als dieselbe Zahl verstreuter Punkte zu triangulieren**, weil die Delaunay-Triangulierung von Punkten auf einer Kurve aus langen dünnen Dreiecken besteht. Ein Ring aus 10.000 Stützpunkten braucht etwa eine zehntel Sekunde; Polygone ab 100.000 Stützpunkten brauchen Sekunden ([ADR 0038](../../adr/0038-constrained-delaunay-und-polygon-triangulierung.de.md)).
 - **Z ist die Höhe**, und nur Z: Eine Triangulierung von Punkten ohne Z hat keine Höhen (`InterpolateZ` ist `NaN`, `Contour` ist leer), und M bleibt nicht erhalten.
-- **Nicht dabei:** andere Interpolationen als linear im Dreieck (natürliche Nachbarn, inverse Distanz), Abtrag und Auftrag zwischen zwei Flächen, das Verändern einer Triangulierung nach dem Bauen, und Triangulierungen, die Punkte ergänzen (konforme oder Qualitätsnetze).
+- **Nicht dabei:** andere Interpolationen als linear und natürliche Nachbarn (inverse Distanz, Laplace), eine Sichtbarkeitsfläche, das Verändern einer Triangulierung nach dem Bauen und konforme Netze mit garantierter Mindestgröße.

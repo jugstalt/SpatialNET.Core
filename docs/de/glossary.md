@@ -42,6 +42,9 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | Neigung | slope (`Triangulation.Slope`) |
 | Exposition | aspect (`Triangulation.Aspect`) |
 | Drapieren | draping (`Triangulation.Drape`) |
+| Natürliche Nachbarn | natural neighbour (`Triangulation.InterpolateNaturalNeighbour`) |
+| Qualitätsnetz | quality mesh (`Triangulation.Refine`) |
+| Sichtlinie | line of sight (`Triangulation.LineOfSight`) |
 | Voronoi-Zelle | Voronoi cell (`VoronoiCell`) |
 | Triangulierung | triangulation (`Triangulation`) |
 | Bruchkante | break line (constraint) |

@@ -91,3 +91,10 @@ static SpatialNET.PointEvents.Outside<TPoint, TLine>(System.Collections.Generic.
 static SpatialNET.PointEvents.Within<TPoint, TLine, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<TPoint>>! points, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TLine>>! lines, System.Func<TPoint, TLine, TResult>! combine) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<TResult>>!
 static SpatialNET.LinearReferencing.LocateEvents<T>(this SpatialNET.IPolyline2D! route, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(SpatialNET.LineEvent<T> Event, SpatialNET.IPolyline2D! Shape)>!
 static SpatialNET.LinearReferencing.LocateEvents<T>(this SpatialNET.IPolyline2D! route, System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<T>>! events, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(SpatialNET.PointEvent<T> Event, SpatialNET.IMultiPoint2D! Points)>!
+SpatialNET.Triangulation.InterpolateNaturalNeighbour(SpatialNET.Coordinate point) -> double
+SpatialNET.Triangulation.Volume(SpatialNET.Triangulation! other) -> (double Above, double Below)
+SpatialNET.Triangulation.SlopeZones(System.Collections.Generic.IReadOnlyList<double>! limits, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+SpatialNET.Triangulation.LineOfSight(SpatialNET.Coordinate from, SpatialNET.Coordinate to, double observerHeight = 0, double targetHeight = 0) -> bool
+SpatialNET.Triangulation.MinAngle() -> double
+SpatialNET.Triangulation.MinAngle(int triangle) -> double
+SpatialNET.Triangulation.Refine(double minAngle = 20, double? maxArea = null, int maxSteinerPoints = 100000) -> SpatialNET.Triangulation!

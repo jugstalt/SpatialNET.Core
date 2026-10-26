@@ -101,7 +101,7 @@ Reading always goes through the factory (parameter `factory`, otherwise `Geometr
 | Spatial index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest`, `Join`, `SelfJoin` |
 | Linear referencing | `Interpolate` (also with a side offset), `Project` (also within a window of lengths), `ProjectDetailed`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM`, `CalibrateM`, `LocateBetween`, `LocateAlong`, `LocateFeature`, `LocateEvents` |
 | Event tables (route events, no geometry) | `LineEvents` (`Intersect`, `Union`, `Difference`, `Dissolve`, `Clip`, `At`), `PointEvents` (`Between`, `Within`, `Outside`) |
-| Triangulation, Voronoi and terrain | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate`, and the class `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`) |
+| Triangulation, Voronoi and terrain | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate`, and the class `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`, `InterpolateNaturalNeighbour`, `Refine`, `SlopeZones`, `LineOfSight`) |
 | Validity | `IsValid`, `Validate`, `MakeValid` |
 | Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
 | Constructions | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio` |

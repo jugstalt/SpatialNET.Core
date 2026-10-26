@@ -389,6 +389,54 @@ public sealed class TerrainVolumeAlgorithm() : PlaygroundAlgorithm("terrainVolum
         return above - below;    // the net volume: positive if more of the terrain lies above the plane than is missing below it
     });
 
+// ---------- Natural neighbour, quality meshes, surfaces (ADR 0041) ----------
+
+public sealed class NaturalNeighbourAlgorithm() : PlaygroundAlgorithm("naturalNeighbour", "InterpolateNaturalNeighbour (smooth height)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)"), In.B(["Point"], "Point")], [],
+    (i, _, _, _) =>
+    {
+        var point = (IPoint2D)i["b"];
+        return Triangulation.FromPoints(i["a"]).InterpolateNaturalNeighbour(new Coordinate(point.X, point.Y));
+    });
+
+public sealed class RefineAlgorithm() : PlaygroundAlgorithm("refine", "Refine (quality mesh)", "Triangulation",
+    [In.A(In.Any, "Points (with Z) or a polygon")],
+    [new("minAngle", "Smallest angle (degrees, 0 to 34)", "number", 25.0), new("maxArea", "Largest area (empty = no limit)", "number")],
+    (i, p, f, _) =>
+    {
+        var triangulation = i["a"] is IPolygon2D polygon ? Triangulation.FromPolygon(polygon, f) : Triangulation.FromPoints(i["a"]);
+        return triangulation.Refine(p.Number("minAngle"), p.OptionalNumber("maxArea")).ToPolygons(f).Cast<IGeometry2D>().ToList();
+    });
+
+public sealed class SlopeZonesAlgorithm() : PlaygroundAlgorithm("slopeZones", "SlopeZones (areas by slope)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)")],
+    [new("limits", "Limits in degrees, separated by commas", "text", "10, 30, 50")],
+    (i, p, f, _) =>
+    {
+        var limits = p.Text("limits").Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => double.Parse(t, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+        return Triangulation.FromPoints(i["a"]).SlopeZones(limits, f).Cast<IGeometry2D>().ToList();
+    });
+
+public sealed class LineOfSightAlgorithm() : PlaygroundAlgorithm("lineOfSight", "LineOfSight (can it be seen)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)"), In.B(In.Lines, "Line from the observer to the target")],
+    [new("observerHeight", "Height of the eye", "number", 1.7), new("targetHeight", "Height of the target", "number", 0.0)],
+    (i, p, _, _) =>
+    {
+        var path = ((IPolyline2D)i["b"])[0];
+        var from = path[0];
+        var to = path[path.PointCount - 1];
+        return Triangulation.FromPoints(i["a"]).LineOfSight(new Coordinate(from.X, from.Y), new Coordinate(to.X, to.Y), p.Number("observerHeight"), p.Number("targetHeight"));
+    });
+
+public sealed class SurfaceVolumeAlgorithm() : PlaygroundAlgorithm("surfaceVolume", "Volume between two surfaces", "Triangulation",
+    [In.A(In.Any, "Surface 1: points with Z (WKT)"), In.B(In.Any, "Surface 2: points with Z (WKT)")], [],
+    (i, _, _, _) =>
+    {
+        var (above, below) = Triangulation.FromPoints(i["a"]).Volume(Triangulation.FromPoints(i["b"]));
+        return above - below;    // the net volume: positive if surface 1 lies above surface 2 on the whole
+    });
+
 /// <summary>The tables of events that a text parameter holds: <c>from..to value</c> for a line event, <c>m value</c> for a point event; <c>#</c> starts a comment.</summary>
 internal static class EventText
 {

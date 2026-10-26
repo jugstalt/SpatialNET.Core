@@ -429,4 +429,58 @@ public class TriangulationStressTests
             }
         });
     }
+
+    // ---------- natural neighbour and refinement (ADR 0041) ----------
+
+    [StressFact]
+    public void Natural_neighbour_reproduces_a_plane_and_stays_within_the_heights_for_dirty_sites()
+    {
+        Gen.Select(SanePoints(4, 30), Gen.Double[-3, 3], Gen.Double[-3, 3], SanePoints(1, 6)).Run((points, a, b, queries) =>
+        {
+            var withZ = Distinct(points).Select(p => p with { Z = a * p.X + b * p.Y + 7 }).ToArray();
+            if (withZ.Length < 3)
+            {
+                return;
+            }
+
+            var t = Triangulation.FromPoints(F.CreateMultiPoint(withZ, null));
+            if (t.TriangleCount == 0)
+            {
+                return;
+            }
+
+            double scale = 1 + withZ.Max(p => Math.Max(Math.Abs(p.X), Math.Abs(p.Y)));
+            foreach (var q in queries)
+            {
+                double z = t.InterpolateNaturalNeighbour(q);
+                if (!double.IsNaN(z))
+                {
+                    Assert.True(Math.Abs(z - (a * q.X + b * q.Y + 7)) <= 1e-6 * scale * (1 + Math.Abs(a) + Math.Abs(b)), $"{z:R} against {a * q.X + b * q.Y + 7:R} at ({q.X:R} {q.Y:R}): {Raw(withZ)}");
+                }
+            }
+        });
+    }
+
+    [StressFact]
+    public void Refine_gives_a_mesh_without_small_angles_that_tiles_the_square_for_dirty_sites()
+    {
+        SanePoints(1, 25).Run(points =>
+        {
+            var inner = Distinct(points).Where(p => Math.Abs(p.X) < 50 && Math.Abs(p.Y) < 50).ToArray();
+            var corners = new Coordinate[] { new(-60, -60), new(60, -60), new(60, 60), new(-60, 60) };
+            var all = inner.Concat(corners).GroupBy(p => (p.X, p.Y)).Select(g => g.First()).Select(p => p with { Z = p.X + 2 * p.Y }).ToArray();
+            var t = Triangulation.FromPoints(F.CreateMultiPoint(all, null));
+
+            var fine = t.Refine(20, maxSteinerPoints: 5000);
+
+            double area = fine.ToPolygons(F).Sum(p => p.Area());
+            Assert.True(Math.Abs(area - 14400) <= 1e-6 * 14400, $"area {area:R}: {Raw(all)}");
+            if (fine.Vertices.Count - t.Vertices.Count < 5000)
+            {
+                Assert.True(fine.MinAngle() >= 20 - 1e-6, $"{fine.MinAngle():R}: {Raw(all)}");
+            }
+
+            Assert.All(fine.Vertices, v => Assert.True(Math.Abs(v.Z - (v.X + 2 * v.Y)) <= 1e-6 * 200, $"({v.X:R} {v.Y:R} {v.Z:R}): {Raw(all)}"));
+        });
+    }
 }

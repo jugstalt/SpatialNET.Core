@@ -27,6 +27,9 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | contour line | Höhenlinie | The line where a surface has one height (`Triangulation.Contour`) |
 | slope | Neigung | The angle of a triangle's plane to the horizontal, in degrees (`Triangulation.Slope`) |
 | aspect | Exposition | The compass direction that a triangle faces, the direction of steepest descent, clockwise from north (`Triangulation.Aspect`) |
+| natural neighbour | Natürliche Nachbarn | A smooth interpolation: the heights of the neighbours that a new point would get, weighted by the area of their Voronoi cells that it takes over (`Triangulation.InterpolateNaturalNeighbour`) |
+| quality mesh | Qualitätsnetz | A triangulation without sharp triangles, made by adding points (`Triangulation.Refine`) |
+| line of sight | Sichtlinie | Whether the straight line from an eye to a target passes above the ground (`Triangulation.LineOfSight`) |
 | draping | Drapieren | Laying a line over a surface: the same line in the map, with the height as Z and the distance along it as M (`Triangulation.Drape`) |
 | point event | Punktereignis | An event at a single M value, such as a bridge (`PointEvent<T>`) |
 | event | Ereignis | A fact about a range of M values on a route, with attributes of the host's choice: a speed limit from kilometre 3 to 5.5 (`LineEvent<T>`); the arithmetic between event tables is `LineEvents` |

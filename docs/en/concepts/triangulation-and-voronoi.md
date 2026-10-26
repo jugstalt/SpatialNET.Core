@@ -12,6 +12,7 @@ Points, a Delaunay triangulation and the Voronoi diagram are three views of one 
 | keep ridges, ditches or boundaries as edges | `Triangulation.FromPointsAndLines(points, lines)` | a `Triangulation` that contains them |
 | cut a polygon into triangles | `polygon.Triangulate()` or `Triangulation.FromPolygon(polygon)` | the triangles inside the polygon |
 | know the slope, the volume above a height, the height profile of a road | `Slope`, `Aspect`, `Volume`, `Drape` on a `Triangulation` | numbers, or the road with Z and M |
+| a smooth height, a finer mesh, the earth between two surfaces, slope zones, a view | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `LineOfSight` | a number, a `Triangulation`, polygons, a yes/no |
 
 Everywhere, the points are the **vertices of any geometry**: a multipoint, a polyline or a polygon. Vertices with the same X and Y count once, vertices that are not finite are ignored, and Z is kept where the result can carry it.
 
@@ -85,6 +86,32 @@ IPolyline2D onTerrain = terrain.Drape(road);        // Z the height, M the dista
 - Parts of the line outside the surface, or over a triangle without Z, are left out; the result then has one path for every part inside.
 - Z needs a factory with `SupportsZ`, M one with `SupportsM`.
 
+## Smoother, finer and compared
+
+Beyond the triangle itself, a `Triangulation` answers four more questions.
+
+```csharp
+// a smooth height, without the creases of the linear one (natural neighbour, Sibson)
+double smooth = terrain.InterpolateNaturalNeighbour(new Coordinate(45, 55));
+
+// a finer mesh without sharp triangles, for a calculation or a smoother contour map
+Triangulation fine = terrain.Refine(minAngle: 25, maxArea: 50);
+double worst = fine.MinAngle();                      // at least 25 degrees
+
+// the earth between two surfaces: before and after an excavation
+var (fill, cut) = after.Volume(before);              // Above: where "after" lies higher (fill), Below: where it lies lower (cut)
+
+// the areas of the terrain by slope class, and what can be seen from where
+IReadOnlyList<IPolygon2D> zones = terrain.SlopeZones([10, 30]);   // below 10, 10 to 30, 30 and more degrees
+bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50), observerHeight: 1.7);
+```
+
+- **`InterpolateNaturalNeighbour`** weights the heights of the neighbours that a new point would get by the area of their Voronoi cells that it would take over. It is continuous and smooth, reproduces a plane exactly, never goes beyond the heights around it, and is as easy to call as `InterpolateZ`. With break lines (constraints) in the triangulation it gives the linear height, since the surface is meant to have a crease there.
+- **`Refine`** adds points (the Delaunay refinement of Ruppert) until no angle is below `minAngle` and no triangle is larger than `maxArea`. The border and the break lines stay, cut into shorter edges, and the new points lie on the surface. `maxSteinerPoints` limits the work; angles above 34 degrees are rejected, and a sharp angle between two break lines in the input cannot be improved.
+- **`Volume(other)`** is the volume between two surfaces over the area they share, exact: `Above` is where this surface lies above the other, `Below` where it lies below.
+- **`SlopeZones(limits)`** gives one polygon for every slope class, one more than there are limits (an empty polygon for a class without area).
+- **`LineOfSight`** asks whether the straight line from the eye to the target passes below the ground. A point outside the surface is not visible.
+
 ## Break lines and polygons
 
 A plain triangulation puts its edges where the empty-circle rule says. A **break line** (a ridge, a ditch, a bank) must be an edge, whatever the rule says. `FromPointsAndLines` keeps the segments of lines (or the rings of polygons) as chains of edges and is Delaunay everywhere else (the *constrained* Delaunay triangulation).
@@ -153,4 +180,4 @@ double forced = Triangulation.FromPointsAndLines(points, ditch).InterpolateZ(mid
 - **Points on a common circle** (the corners of a rectangle, a regular grid) allow several equally Delaunay triangulations. Which one comes out is deterministic but not specified; everything else is the contract.
 - **Triangulating a long boundary is slower than triangulating the same number of scattered points**, because the Delaunay triangulation of points on a curve consists of long thin triangles. A ring of 10,000 vertices takes about a tenth of a second; polygons of 100,000 vertices and more take seconds ([ADR 0038](../../adr/0038-constrained-delaunay-und-polygon-triangulierung.md)).
 - **Z is the height**, and only Z: a triangulation of points without Z has no heights (`InterpolateZ` is `NaN`, `Contour` is empty), and M is not kept.
-- **Not included:** other interpolations than linear in the triangle (natural neighbour, inverse distance), cut and fill between two surfaces, changing a triangulation after it is built, and triangulations that add points (conforming or quality meshes).
+- **Not included:** other interpolations than linear and natural neighbour (inverse distance, Laplace), a viewshed, changing a triangulation after it is built, and conforming meshes with a guaranteed minimum size.
