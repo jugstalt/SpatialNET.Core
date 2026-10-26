@@ -84,6 +84,9 @@ these projects.
   edge flips that make a triangulation Delaunay. S. W. Sloan: *A fast algorithm for generating constrained Delaunay
   triangulations*, Computers & Structures 47, 1993 – inserting constraints by edge flips
   (`Triangulation.FromPointsAndLines`, `FromPolygon`).
+- G. H. Meisters: *Polygons have ears*, The American Mathematical Monthly 82, 1975, and D. Eberly: *Triangulation by
+  Ear Clipping*, Geometric Tools, 2002 – ear clipping and the bridges that join holes to the outer ring (the fast path
+  of `Triangulation.FromPolygon`).
 - I. E. Sutherland, G. W. Hodgman: *Reentrant polygon clipping*, Communications of the ACM 17, 1974 – cutting a
   Voronoi cell to a rectangle.
 - J. D. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13, 1999 –

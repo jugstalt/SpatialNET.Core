@@ -21,20 +21,20 @@ public class TriangulationTests
 
     private static IGeometry2D Points(IEnumerable<Coordinate> pts) => F.CreateMultiPoint(pts.ToArray(), null);
 
-    private static Coordinate[] Corners(Triangulation t, int tri)
+    internal static Coordinate[] Corners(Triangulation t, int tri)
     {
         var (a, b, c) = t.Triangle(tri);
         return [t.Vertices[a], t.Vertices[b], t.Vertices[c]];
     }
 
-    private static double Area(Triangulation t) => Enumerable.Range(0, t.TriangleCount).Sum(i =>
+    internal static double Area(Triangulation t) => Enumerable.Range(0, t.TriangleCount).Sum(i =>
     {
         var c = Corners(t, i);
         return ((c[1].X - c[0].X) * (c[2].Y - c[0].Y) - (c[2].X - c[0].X) * (c[1].Y - c[0].Y)) / 2;
     });
 
     /// <summary>Everything that makes a triangulation a triangulation: counter-clockwise triangles, neighbours that agree, no repeated vertex.</summary>
-    private static void AssertStructure(Triangulation t)
+    internal static void AssertStructure(Triangulation t)
     {
         for (int i = 0; i < t.TriangleCount; i++)
         {
@@ -261,7 +261,7 @@ public class TriangulationTests
 
     // ---------- the constrained triangulation ----------
 
-    private static void AssertConstrainedDelaunay(Triangulation t)
+    internal static void AssertConstrainedDelaunay(Triangulation t)
     {
         for (int i = 0; i < t.TriangleCount; i++)
         {
@@ -282,7 +282,7 @@ public class TriangulationTests
         }
     }
 
-    private static bool OnSegment(Coordinate p, Coordinate a, Coordinate b)
+    internal static bool OnSegment(Coordinate p, Coordinate a, Coordinate b)
     {
         double len2 = (b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y);
         double u = ((p.X - a.X) * (b.X - a.X) + (p.Y - a.Y) * (b.Y - a.Y)) / len2;
@@ -549,6 +549,91 @@ public class TriangulationTests
             Assert.Equal(nts.NumGeometries, ours.TriangleCount);
             Assert.Equal(nts.Area, Area(ours), 1e-6 * nts.Area);
         }, iter: 200);
+    }
+
+    [Fact]
+    [Covers("FromPolygon")]
+    public void The_fast_path_and_the_general_path_give_the_same_triangulation()
+    {
+        // a star-shaped outer ring with up to nine holes of three to five vertices, one in each cell of a 3 × 3 grid; the vertices are
+        // random, so there are no points on a common circle and the constrained Delaunay triangulation is unique
+        Gen.Select(Gen.Int[5, 60], Gen.Double[0.5, 1].Array[60], Gen.Int[0, 511], Gen.Double[0, 1].Array[10], Gen.Int[3, 5].Array[9]).Sample((n, radii, mask, jitter, sizes) =>
+        {
+            var rings = new List<Coordinate[]>();
+            var shell = Enumerable.Range(0, n).Select(i =>
+            {
+                double angle = 2 * Math.PI * i / n;
+                double radius = 100 * radii[i] * (1 + 0.003 * Math.Sin(12.9898 * i + 1)), skew = 0.001 * Math.Sin(78.233 * i);   // no four on a circle
+                return new Coordinate(radius * Math.Cos(angle + skew), radius * Math.Sin(angle + skew));
+            }).ToList();
+            shell.Add(shell[0]);
+            rings.Add(shell.ToArray());
+            int holes = 0;
+            for (int cell = 0; cell < 9; cell++)
+            {
+                if ((mask >> cell & 1) == 0)
+                {
+                    continue;
+                }
+
+                double cx = (cell % 3 - 1) * 20, cy = (cell / 3 - 1) * 20;
+                int k = sizes[cell];
+                var hole = Enumerable.Range(0, k).Select(i =>
+                {
+                    double angle = 2 * Math.PI * i / k, radius = 3 + 5 * jitter[(cell + i) % 10] + 0.01 * (5 * cell + i);
+                    return new Coordinate(cx + radius * Math.Cos(angle), cy + radius * Math.Sin(angle));
+                }).ToList();
+                hole.Add(hole[0]);
+                if (cell % 2 == 1)
+                {
+                    hole.Reverse();     // holes in either direction
+                }
+
+                rings.Add(hole.ToArray());
+                holes += k;
+            }
+
+            var polygon = F.CreatePolygon([new PolygonPart(rings[0], rings.Skip(1).Select(r => (ReadOnlyMemory<Coordinate>)r).ToArray())], null);
+            if (!polygon.IsValid())
+            {
+                return;
+            }
+
+            Assert.NotNull(PolygonMesh.TryBuild(polygon));
+            var fast = Triangulation.FromPolygon(polygon, F);
+            var general = Triangulation.FromPolygonGeneral(polygon, F);
+
+            Assert.Equal(n + holes - 2 + 2 * (rings.Count - 1), fast.TriangleCount);
+            Assert.Equal(general.TriangleCount, fast.TriangleCount);
+            Assert.Equal(general.Vertices.Count, fast.Vertices.Count);
+            AssertStructure(fast);
+            AssertConstrainedDelaunay(fast);
+            Assert.Equal(general.ConstrainedEdges(F).Length(), fast.ConstrainedEdges(F).Length(), 6);
+            Assert.Equal(Triples(general), Triples(fast));
+        }, iter: 300);
+    }
+
+    private static string[] Triples(Triangulation t) => Enumerable.Range(0, t.TriangleCount)
+        .Select(i => string.Join(";", Corners(t, i).Select(c => $"{c.X:R},{c.Y:R}").Order(StringComparer.Ordinal)))
+        .Order(StringComparer.Ordinal).ToArray();
+
+    [Fact]
+    [Covers("FromPolygon")]
+    public void A_polygon_that_the_fast_path_cannot_take_is_still_triangulated()
+    {
+        // a vertex touching an edge, a hole touching the outer ring, and a vertex used twice: the general path takes them
+        foreach (var wkt in new[]
+        {
+            "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (5 0, 3 3, 7 3, 5 0))",
+            "POLYGON ((0 0, 10 0, 10 10, 5 5, 0 10, 0 0))",
+            "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 2 4, 4 4, 4 2, 2 2), (3 3, 3 8, 8 8, 8 3, 3 3))",
+        })
+        {
+            var polygon = (IPolygon2D)G(wkt);
+            var t = Triangulation.FromPolygon(polygon, F);
+            AssertStructure(t);
+            Assert.Equal(Triangulation.FromPolygonGeneral(polygon, F).TriangleCount, t.TriangleCount);
+        }
     }
 
     [Fact]

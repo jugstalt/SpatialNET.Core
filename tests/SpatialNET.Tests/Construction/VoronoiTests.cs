@@ -179,6 +179,87 @@ public class VoronoiTests
         Assert.All(cells, c => Assert.True(c.Cell.IsValid()));
     }
 
+    /// <summary>The cell of one site by cutting the rectangle with the bisector to every other site: independent of the library.</summary>
+    internal static double ReferenceArea(Coordinate[] sites, Coordinate site, double minX, double minY, double maxX, double maxY)
+    {
+        var polygon = new List<(double X, double Y)> { (minX, minY), (maxX, minY), (maxX, maxY), (minX, maxY) };
+        foreach (var other in sites.Where(o => o != site))
+        {
+            double mx = (site.X + other.X) / 2, my = (site.Y + other.Y) / 2, nx = other.X - site.X, ny = other.Y - site.Y;
+            double Side((double X, double Y) p) => (p.X - mx) * nx + (p.Y - my) * ny;   // not above 0: nearer to the site
+            var next = new List<(double X, double Y)>();
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var cur = polygon[i];
+                var prev = polygon[(i + polygon.Count - 1) % polygon.Count];
+                double fc = Side(cur), fp = Side(prev);
+                if ((fc <= 0) != (fp <= 0))
+                {
+                    double t = fp / (fp - fc);
+                    next.Add((prev.X + t * (cur.X - prev.X), prev.Y + t * (cur.Y - prev.Y)));
+                }
+
+                if (fc <= 0)
+                {
+                    next.Add(cur);
+                }
+            }
+
+            polygon = next;
+            if (polygon.Count < 3)
+            {
+                return 0;
+            }
+        }
+
+        double sum = 0;
+        for (int i = 0; i < polygon.Count; i++)
+        {
+            var p = polygon[i];
+            var q = polygon[(i + 1) % polygon.Count];
+            sum += p.X * q.Y - q.X * p.Y;
+        }
+
+        return Math.Abs(sum) / 2;
+    }
+
+    [Fact]
+    [Covers("VoronoiDiagram")]
+    public void Cells_at_the_border_with_a_circumcentre_far_away_are_exact()
+    {
+        // almost collinear sites at the border give a circumcentre about 1e17 away; the closure of the cell lies at 1e18, where a crossing
+        // with the rectangle computed from the far end is off by 16 (found by a stress test)
+        var sites = new Coordinate[]
+        {
+            new(-43.79, 42), new(30, 48), new(-16, 35.031), new(25, 7), new(30, 9.3), new(13, 48), new(17.646, -39), new(34, -39.1), new(-0, 37),
+            new(18.8, -25), new(-20, -4), new(30.2, 6.222), new(-35.1, -7.389), new(-43, 5.328), new(36, -13), new(0, 0), new(-44.4, 5.125),
+            new(-47, -0), new(-0, 35), new(-19, 48), new(36.2, -23), new(-1, -45), new(-13, 2.5), new(34.8, 47),
+        };
+        double minX = sites.Min(p => p.X), maxX = sites.Max(p => p.X), minY = sites.Min(p => p.Y), maxY = sites.Max(p => p.Y);
+        double margin = Math.Max(maxX - minX, maxY - minY) / 2;
+
+        var cells = Points(sites).VoronoiDiagram(factory: F);
+
+        Assert.All(cells, c => Assert.Equal(ReferenceArea(sites, c.Site, minX - margin, minY - margin, maxX + margin, maxY + margin), c.Cell.Area(), 1e-6));
+    }
+
+    [Fact]
+    [Covers("VoronoiDiagram")]
+    public void Two_sites_that_differ_by_5e_20_are_split_along_their_bisector()
+    {
+        // the third site is far away: seen from it, the two close sites are the same point, and the circumcentre must not be computed from there
+        var sites = new Coordinate[] { new(29.262840339965408, -46), new(-8.57E-78, -4.877E-20), new(8.177E-87, 6.054E-29) };
+
+        var cells = Points(sites).VoronoiDiagram(factory: F);
+
+        var lower = cells[1].Cell.Envelope();
+        var upper = cells[2].Cell.Envelope();
+        Assert.Equal(0, lower.MaxY, 1e-9);                              // the bisector is y = -2.4e-20
+        Assert.Equal(0, upper.MinY, 1e-9);
+        Assert.Equal(75.26284033996541 * 92, cells.Sum(c => c.Cell.Area()), 1e-6);
+        Assert.All(cells, c => Assert.True(c.Cell.IsValid()));
+    }
+
     [Fact]
     [Covers("VoronoiDiagram")]
     public void A_site_lies_in_its_own_cell()

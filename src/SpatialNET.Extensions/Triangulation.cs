@@ -122,7 +122,24 @@ public sealed partial class Triangulation
     {
         ArgumentNullException.ThrowIfNull(polygon);
         GeometryAccess.EnsureKnown(polygon, nameof(polygon));
+        CheckGridSize(gridSize);
+        if (PolygonMesh.TryBuild(polygon) is { } fast)
+        {
+            // a valid polygon (it has no crossing and no touching, which TryBuild has checked): ear clipping and flips with the rings
+            // fixed, without the Delaunay triangulation of all vertices
+            return From(fast, null, borderConstrained: true);
+        }
+
         var segments = Prepare(ConstraintSet.Segments(polygon), factory, gridSize);
+        return FromPolygonGeneral(segments);
+    }
+
+    /// <summary>The general path of <see cref="FromPolygon"/>: all vertices are triangulated, then the rings are forced in. Internal for the tests.</summary>
+    internal static Triangulation FromPolygonGeneral(IPolygon2D polygon, IGeometryFactory? factory = null, double? gridSize = null)
+        => FromPolygonGeneral(Prepare(ConstraintSet.Segments(polygon), factory, gridSize));
+
+    private static Triangulation FromPolygonGeneral(List<(Coordinate A, Coordinate B)> segments)
+    {
         var vertices = new VertexSet([]);
         foreach (var (a, b) in segments)
         {
@@ -133,13 +150,17 @@ public sealed partial class Triangulation
         return Constrained(vertices, segments, polygon: true);
     }
 
-    private static List<(Coordinate A, Coordinate B)> Prepare(List<(Coordinate A, Coordinate B)> segments, IGeometryFactory? factory, double? gridSize)
+    private static void CheckGridSize(double? gridSize)
     {
         if (gridSize is { } size && (!double.IsFinite(size) || size <= 0))
         {
             throw new ArgumentOutOfRangeException(nameof(gridSize), gridSize, "The grid size must be finite and greater than 0.");
         }
+    }
 
+    private static List<(Coordinate A, Coordinate B)> Prepare(List<(Coordinate A, Coordinate B)> segments, IGeometryFactory? factory, double? gridSize)
+    {
+        CheckGridSize(gridSize);
         return ConstraintSet.HasProperCrossing(segments) ? ConstraintSet.Noded(segments, GeometryFactory.Resolve(factory), gridSize) : segments;
     }
 
@@ -208,8 +229,8 @@ public sealed partial class Triangulation
         return inside;
     }
 
-    /// <summary>The triangulation of the kept triangles of a mesh (all of them if <paramref name="keep"/> is <c>null</c>).</summary>
-    private static Triangulation From(DelaunayMesh mesh, bool[]? keep)
+    /// <summary>The triangulation of the kept triangles of a mesh (all of them if <paramref name="keep"/> is <c>null</c>); <paramref name="borderConstrained"/>: the border of the mesh consists of constraints.</summary>
+    private static Triangulation From(DelaunayMesh mesh, bool[]? keep, bool borderConstrained = false)
     {
         int count = mesh.TriangleCount;
         var map = new int[count];
@@ -236,7 +257,7 @@ public sealed partial class Triangulation
                 int slot = 3 * map[t] + k;
                 triangles[slot] = mesh.Triangles[e];
                 neighbours[slot] = h == -1 ? -1 : map[h / 3];
-                constrained[slot] = mesh.IsConstrained(mesh.Triangles[e], mesh.Triangles[DelaunayMesh.Next(e)]);
+                constrained[slot] = (borderConstrained && h == -1) || mesh.IsConstrained(mesh.Triangles[e], mesh.Triangles[DelaunayMesh.Next(e)]);
             }
         }
 

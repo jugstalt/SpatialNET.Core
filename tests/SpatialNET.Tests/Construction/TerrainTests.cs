@@ -221,6 +221,23 @@ public class TerrainTests
 
     [Fact]
     [Covers("Drape")]
+    public void A_line_that_runs_almost_along_an_edge_keeps_the_height_of_the_plane()
+    {
+        // found by a stress test: the position of the crossing on the edge came from the cross product of two almost parallel directions
+        var t = Triangulation.FromPoints(G("MULTIPOINT Z ((0 0 7), (10 0 27), (10 10 57), (0 10 37))"));
+
+        var draped = t.Drape(Line("LINESTRING (1 1.000000000000002, 9 8.999999999999998)"), ZM);
+
+        Assert.Equal(1, draped.PathCount);
+        for (int i = 0; i < draped[0].PointCount; i++)
+        {
+            var v = (IPoint3D)draped[0][i];
+            Assert.Equal(2 * v.X + 3 * v.Y + 7, v.Z, 1e-9);
+        }
+    }
+
+    [Fact]
+    [Covers("Drape")]
     public void Parts_outside_the_surface_are_cut_off_and_the_rest_splits_into_paths()
     {
         var t = Plane([new(30, 20), new(70, 60)], 1, 0, 0);

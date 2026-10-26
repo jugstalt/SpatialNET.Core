@@ -1,3 +1,4 @@
+using System.Numerics;
 using SpatialNET.Internal.Noding;
 
 namespace SpatialNET.Internal.Triangulation;
@@ -6,7 +7,7 @@ namespace SpatialNET.Internal.Triangulation;
 /// The cells of a Voronoi diagram (ADR 0036) from the Delaunay triangulation: the corners of the cell of a site are the circumcentres
 /// of the triangles around it, so two cells share their corners bit for bit. The cells at the hull are unbounded; they are closed
 /// far away, outside the clip rectangle, and cut with it. Where an edge of a cell is cut by the rectangle the crossing is computed
-/// from the two end points in a fixed order, so both cells that share the edge get the same point.
+/// from the end that lies inside, so both cells that share the edge get the same point.
 /// </summary>
 internal static class VoronoiBuilder
 {
@@ -33,7 +34,7 @@ internal static class VoronoiBuilder
         double reach = 0;
         for (int t = 0; t < triangles; t++)
         {
-            var (x, y) = DelaunayMesh.Circumcentre(mesh.Points[mesh.Triangles[3 * t]], mesh.Points[mesh.Triangles[3 * t + 1]], mesh.Points[mesh.Triangles[3 * t + 2]]);
+            var (x, y) = Centre(mesh.Points[mesh.Triangles[3 * t]], mesh.Points[mesh.Triangles[3 * t + 1]], mesh.Points[mesh.Triangles[3 * t + 2]]);
             x = double.IsNaN(x) ? rcx : Math.Clamp(x, -Limit, Limit);
             y = double.IsNaN(y) ? rcy : Math.Clamp(y, -Limit, Limit);
             centres[t] = new Coordinate(x, y);
@@ -56,7 +57,7 @@ internal static class VoronoiBuilder
             }
         }
 
-        var polygon = new List<Coordinate>();
+        var polygon = new List<Corner>();
         for (int v = 0; v < sites.Length; v++)
         {
             polygon.Clear();
@@ -82,9 +83,11 @@ internal static class VoronoiBuilder
             }
 
             // the chain runs clockwise around the vertex; the ring counter-clockwise
+            // every edge of the ring is a piece of the bisector of the site and one neighbour, remembered for the clipping
             for (int i = chain.Count - 1; i >= 0; i--)
             {
-                polygon.Add(centres[chain[i]]);
+                int next = i > 0 ? i - 1 : (closed ? chain.Count - 1 : -1);
+                polygon.Add(new Corner(centres[chain[i]], next >= 0 ? (sites[v], sites[CommonNeighbour(mesh, chain[i], chain[next], v)]) : null));
             }
 
             if (!closed)
@@ -93,7 +96,8 @@ internal static class VoronoiBuilder
                 var n2 = OutwardNormal(mesh, e);                       // the hull edge that starts at it
                 var c1 = centres[chain[0]];
                 var ck = centres[chain[^1]];
-                polygon.Add(new Coordinate(c1.X + n1.X * far, c1.Y + n1.Y * far));
+                polygon.Add(new Corner(new Coordinate(c1.X + n1.X * far, c1.Y + n1.Y * far), null));
+                polygon[^2] = polygon[^2] with { Edge = (sites[v], sites[mesh.Triangles[DelaunayMesh.Prev(e0)]]) };
 
                 double theta = Math.Atan2(n1.Y, n1.X);
                 double psi = Math.Atan2(n1.X * n2.Y - n1.Y * n2.X, n1.X * n2.X + n1.Y * n2.Y);
@@ -108,17 +112,90 @@ internal static class VoronoiBuilder
                     for (int j = 1; j < steps; j++)
                     {
                         double angle = theta + j * psi / steps;
-                        polygon.Add(new Coordinate(rcx + 1.5 * far * Math.Cos(angle), rcy + 1.5 * far * Math.Sin(angle)));
+                        polygon.Add(new Corner(new Coordinate(rcx + 1.5 * far * Math.Cos(angle), rcy + 1.5 * far * Math.Sin(angle)), null));
                     }
                 }
 
-                polygon.Add(new Coordinate(ck.X + n2.X * far, ck.Y + n2.Y * far));
+                polygon.Add(new Corner(new Coordinate(ck.X + n2.X * far, ck.Y + n2.Y * far), (sites[v], sites[mesh.Triangles[DelaunayMesh.Next(e)]])));
             }
 
             cells[v] = Finish(polygon, rect);
         }
 
         return cells;
+    }
+
+    /// <summary>
+    /// The circumcentre. For an almost flat triangle the formula divides a difference that is lost in rounding (the direction of a centre far
+    /// away is wrong, or the result is infinite), so that is computed exactly with integers and rounded once. A centre beyond
+    /// <see cref="Limit"/> is shortened, in the same direction.
+    /// </summary>
+    private static (double X, double Y) Centre(Coordinate a, Coordinate b, Coordinate c)
+    {
+        var (x, y) = DelaunayMesh.Circumcentre(a, b, c);
+        double twiceArea = Math.Abs((b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X));
+        double terms = Math.Abs((b.X - a.X) * (c.Y - a.Y)) + Math.Abs((b.Y - a.Y) * (c.X - a.X));
+        if (!double.IsFinite(x) || !double.IsFinite(y) || twiceArea <= 1e-6 * terms)
+        {
+            (x, y) = ExactCircumcentre(a, b, c);
+        }
+
+        double m = Math.Max(Math.Abs(x), Math.Abs(y));
+        if (m > Limit)
+        {
+            (x, y) = (x / m * Limit, y / m * Limit);
+        }
+
+        return (x, y);
+    }
+
+    private static (double X, double Y) ExactCircumcentre(Coordinate a, Coordinate b, Coordinate c)
+    {
+        // every number is an integer times 2^shift
+        int shift = int.MaxValue;
+        foreach (double v in new[] { a.X, a.Y, b.X, b.Y, c.X, c.Y })
+        {
+            if (v != 0)
+            {
+                shift = Math.Min(shift, Mantissa(v).Exponent);
+            }
+        }
+
+        if (shift == int.MaxValue)
+        {
+            return (double.NaN, double.NaN);
+        }
+
+        BigInteger Units(double v)
+        {
+            var (m, e) = Mantissa(v);
+            return v == 0 ? BigInteger.Zero : m << (e - shift);
+        }
+
+        BigInteger ax = Units(a.X), ay = Units(a.Y);
+        BigInteger dx = Units(b.X) - ax, dy = Units(b.Y) - ay, ex = Units(c.X) - ax, ey = Units(c.Y) - ay;
+        BigInteger bl = dx * dx + dy * dy, cl = ex * ex + ey * ey;
+        BigInteger d = 2 * (dx * ey - dy * ex);
+        if (d.IsZero)
+        {
+            return (double.NaN, double.NaN);
+        }
+
+        // the offset from a is (…)/d times the unit; 128 more bits keep the quotient exact enough for one rounding
+        double Offset(BigInteger numerator) => (double)((numerator << 128) / d) * Math.ScaleB(1.0, shift - 128);
+        double ox = Offset(ey * bl - dy * cl), oy = Offset(dx * cl - ex * bl);
+        return (a.X + ox, a.Y + oy);
+    }
+
+    /// <summary>The value as an integer mantissa times a power of two.</summary>
+    private static (BigInteger Mantissa, int Exponent) Mantissa(double v)
+    {
+        long bits = BitConverter.DoubleToInt64Bits(v);
+        int exponent = (int)((bits >> 52) & 0x7FF);
+        long fraction = bits & 0xFFFFFFFFFFFFFL;
+        long mantissa = exponent == 0 ? fraction : fraction | (1L << 52);
+        exponent = exponent == 0 ? -1074 : exponent - 1075;
+        return (bits < 0 ? -mantissa : mantissa, exponent);
     }
 
     /// <summary>The unit normal of a hull half-edge that points away from the triangulation (to the right of the edge).</summary>
@@ -182,10 +259,28 @@ internal static class VoronoiBuilder
         return output;
     }
 
-    private static Coordinate[] Finish(List<Coordinate> polygon, Envelope2D rect)
+    /// <summary>A corner of a cell and the two sites whose bisector the edge to the next corner lies on (<c>null</c> for an edge that does not).</summary>
+    private readonly record struct Corner(Coordinate Point, (Coordinate A, Coordinate B)? Edge);
+
+    /// <summary>The vertex, other than <paramref name="v"/>, that two triangles around it have in common.</summary>
+    private static int CommonNeighbour(DelaunayMesh mesh, int t1, int t2, int v)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            int w = mesh.Triangles[3 * t1 + i];
+            if (w != v && (mesh.Triangles[3 * t2] == w || mesh.Triangles[3 * t2 + 1] == w || mesh.Triangles[3 * t2 + 2] == w))
+            {
+                return w;
+            }
+        }
+
+        return v;
+    }
+
+    private static Coordinate[] Finish(List<Corner> polygon, Envelope2D rect)
     {
         var clipped = ClipToRectangle(polygon, rect);
-        return clipped.Count >= 3 ? Oriented(clipped) : [];
+        return clipped.Count >= 3 ? Oriented(clipped.Select(c => c.Point).ToList()) : [];
     }
 
     private static Coordinate[] Oriented(List<Coordinate> ring)
@@ -209,8 +304,13 @@ internal static class VoronoiBuilder
 
     private static int Compare(Coordinate a, Coordinate b) => a.X != b.X ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y);
 
-    /// <summary>Sutherland–Hodgman against the four sides in a fixed order; the crossing of an edge does not depend on its direction.</summary>
-    private static List<Coordinate> ClipToRectangle(List<Coordinate> polygon, Envelope2D r)
+    /// <summary>
+    /// Sutherland–Hodgman against the four sides in a fixed order. Where an edge of the diagram crosses a side, the point is computed from the
+    /// bisector of the two sites (which both cells that share the edge know exactly), not from the ends of the edge: those can be far outside
+    /// and have lost the position to rounding (the circumcentre of almost collinear sites at the hull is 1e17 away or more). An edge without a
+    /// bisector (an arc of the closure) is cut from its end inside.
+    /// </summary>
+    private static List<Corner> ClipToRectangle(List<Corner> polygon, Envelope2D r)
     {
         var p = Clip(polygon, true, r.MinX, true);
         p = Clip(p, false, r.MinY, true);
@@ -218,9 +318,9 @@ internal static class VoronoiBuilder
         return Clip(p, false, r.MaxY, false);
     }
 
-    private static List<Coordinate> Clip(List<Coordinate> input, bool xAxis, double bound, bool keepGreater)
+    private static List<Corner> Clip(List<Corner> input, bool xAxis, double bound, bool keepGreater)
     {
-        var output = new List<Coordinate>(input.Count + 2);
+        var output = new List<Corner>(input.Count + 2);
         int n = input.Count;
         double V(Coordinate c) => xAxis ? c.X : c.Y;
         bool Inside(Coordinate c) => keepGreater ? V(c) >= bound : V(c) <= bound;
@@ -229,14 +329,12 @@ internal static class VoronoiBuilder
         {
             var cur = input[i];
             var prev = input[(i + n - 1) % n];
-            bool curIn = Inside(cur), prevIn = Inside(prev);
+            bool curIn = Inside(cur.Point), prevIn = Inside(prev.Point);
             if (curIn != prevIn)
             {
-                var (a, b) = Compare(prev, cur) <= 0 ? (prev, cur) : (cur, prev);
-                double t = (bound - V(a)) / (V(b) - V(a));
-                output.Add(xAxis
-                    ? new Coordinate(bound, a.Y + t * (b.Y - a.Y))
-                    : new Coordinate(a.X + t * (b.X - a.X), bound));
+                var crossing = Cross(prev, cur, curIn, xAxis, bound);
+                // leaving: the edge goes on along the side, which is not an edge of the diagram; entering: the rest of the edge to cur
+                output.Add(curIn ? new Corner(crossing, prev.Edge) : new Corner(crossing, null));
             }
 
             if (curIn)
@@ -246,6 +344,32 @@ internal static class VoronoiBuilder
         }
 
         return output;
+    }
+
+    private static Coordinate Cross(Corner prev, Corner cur, bool curIn, bool xAxis, double bound)
+    {
+        if (prev.Edge is { } edge)
+        {
+            var (p, q) = edge;
+            double mx = (p.X + q.X) / 2, my = (p.Y + q.Y) / 2, dx = q.X - p.X, dy = q.Y - p.Y;
+            if (xAxis && dy != 0)
+            {
+                return new Coordinate(bound, my - (bound - mx) * (dx / dy));
+            }
+
+            if (!xAxis && dx != 0)
+            {
+                return new Coordinate(mx - (bound - my) * (dy / dx), bound);
+            }
+        }
+
+        // from the end inside: both cells that share the edge classify its ends alike, so they get the same point
+        var (a, b) = curIn ? (cur.Point, prev.Point) : (prev.Point, cur.Point);
+        double v0 = xAxis ? a.X : a.Y, v1 = xAxis ? b.X : b.Y;
+        double t = (bound - v0) / (v1 - v0);
+        return xAxis
+            ? new Coordinate(bound, a.Y + t * (b.Y - a.Y))
+            : new Coordinate(a.X + t * (b.X - a.X), bound);
     }
 
     /// <summary>

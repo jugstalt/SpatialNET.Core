@@ -16,6 +16,19 @@ internal sealed partial class DelaunayMesh
     private int[]? _vertexEdge;                 // for every vertex an outgoing half-edge, kept up to date by Flip once it exists
     private HashSet<(int, int)>? _constrained;  // by vertex pair (smaller id first): robust against the re-indexing of half-edges by flips
 
+    /// <summary>
+    /// A mesh from a given triangulation: counter-clockwise triangles (three vertex ids each) and the opposite half-edges (−1 at the
+    /// border). It has no hull; it is made for <see cref="MakeBorderConstrainedDelaunay"/> (ADR 0038).
+    /// </summary>
+    public static DelaunayMesh FromTriangles(Coordinate[] points, int[] triangles, int[] halfEdges)
+        => new(points, triangles, halfEdges);
+
+    /// <summary>
+    /// Flips edges until every edge that is not on the border is locally Delaunay. The border edges (no opposite half-edge) stay as they are,
+    /// so for the triangles of a polygon this ends in the constrained Delaunay triangulation of its rings.
+    /// </summary>
+    public void MakeBorderConstrainedDelaunay() => MakeConstrainedDelaunay();
+
     /// <summary>Whether the edge between two vertices is a constraint.</summary>
     public bool IsConstrained(int u, int v) => _constrained is not null && _constrained.Contains(u < v ? (u, v) : (v, u));
 

@@ -65,7 +65,8 @@ public sealed partial class Triangulation
         }
 
         double bearing = Math.Atan2(-dx, -dy) * 180 / Math.PI;   // downhill is (-dx, -dy): east first, north second
-        return bearing < 0 ? bearing + 360 : bearing;
+        double aspect = bearing < 0 ? bearing + 360 : bearing;
+        return aspect >= 360 ? 0 : aspect;                       // a bearing of -1e-15 gives 360 after the addition
     }
 
     /// <summary>The area of a triangle on the surface, in the plane through its three vertices: larger than its area in the map when it slopes (ADR 0039).</summary>
@@ -166,8 +167,11 @@ public sealed partial class Triangulation
                 var (hp, hq, hr) = h0 > 0 ? (h0, h1, h2) : h1 > 0 ? (h1, h0, h2) : (h2, h0, h1);
                 return area * (hp / (hp - hq)) * (hp / (hp - hr)) * hp / 3;
             default:
-                // two corners above: everything minus what lies below, which is the small triangle at the one corner below
-                return area * (h0 + h1 + h2) / 3 + Positive(-h0, -h1, -h2, area);
+                // two corners above (a, b) and one on or below the plane (c): the part above is a quadrilateral, cut into two triangles; a sum
+                // of products of non-negative numbers, so that no cancellation can make it negative
+                var (ha, hb, hc) = h0 <= 0 ? (h1, h2, h0) : h1 <= 0 ? (h0, h2, h1) : (h0, h1, h2);
+                double sa = ha / (ha - hc), sb = hb / (hb - hc);   // where the plane cuts the edges from c to a and to b, from a and from b
+                return area * (sb * (ha + hb) + (1 - sb) * sa * ha) / 3;
         }
     }
 
@@ -312,7 +316,10 @@ public sealed partial class Triangulation
                     double s = ((u.X - a.X) * ey - (u.Y - a.Y) * ex) / cross;
                     if (s > 0 && s < 1)
                     {
-                        double along = ((a.X - u.X) * dy - (a.Y - u.Y) * dx) / (ex * dy - ey * dx);   // where on the edge, from u to v
+                        // where on the edge, from u to v: the crossing projected onto the edge, which stays exact for a segment that runs almost
+                        // along the edge (the cross products of two almost parallel directions are lost in rounding)
+                        double px = a.X + s * dx - u.X, py = a.Y + s * dy - u.Y;
+                        double along = (px * ex + py * ey) / (ex * ex + ey * ey);
                         ts.Add((s, u.Z + Math.Clamp(along, 0, 1) * (v.Z - u.Z)));
                     }
                 }

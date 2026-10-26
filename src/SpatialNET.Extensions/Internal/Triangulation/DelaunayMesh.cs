@@ -51,6 +51,18 @@ internal sealed partial class DelaunayMesh
         Array.Fill(_hash, -1);
     }
 
+    private DelaunayMesh(Coordinate[] points, int[] triangles, int[] halfEdges)
+    {
+        _points = points;
+        _triangles = triangles;
+        _halfEdges = halfEdges;
+        _triangleCount = triangles.Length / 3;
+        _hullNext = [];
+        _hullPrev = [];
+        _hullEdge = new int[points.Length];   // Link writes into it
+        _hash = [];
+    }
+
     /// <summary>The distinct points; the vertex ids are indices into this array.</summary>
     public Coordinate[] Points => _points;
 
@@ -240,11 +252,25 @@ internal sealed partial class DelaunayMesh
 
     internal static (double X, double Y) Circumcentre(Coordinate a, Coordinate b, Coordinate c)
     {
+        // The differences from the origin lose what two close points say about the third: of (0, 0), (5e-20, 0) and (30, 46) seen from the
+        // third, the first two are the same. So the origin is an end of the shortest edge, from which that edge is exact.
+        double lab = Sq(b.X - a.X, b.Y - a.Y), lbc = Sq(c.X - b.X, c.Y - b.Y), lca = Sq(a.X - c.X, a.Y - c.Y);
+        if (lbc < lab && lbc <= lca)
+        {
+            (a, b, c) = (b, c, a);
+        }
+        else if (lca < lab && lca < lbc)
+        {
+            (a, b, c) = (c, a, b);
+        }
+
         double dx = b.X - a.X, dy = b.Y - a.Y, ex = c.X - a.X, ey = c.Y - a.Y;
         double bl = dx * dx + dy * dy, cl = ex * ex + ey * ey;
         double d = 0.5 / (dx * ey - dy * ex);
         return (a.X + (ey * bl - dy * cl) * d, a.Y + (dx * cl - ex * bl) * d);
     }
+
+    private static double Sq(double dx, double dy) => dx * dx + dy * dy;
 
     private int HashKey(Coordinate c)
     {
