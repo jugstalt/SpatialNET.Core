@@ -188,6 +188,10 @@ All algorithms follow the same rules ([ADR 0012](../adr/0012-api-signaturen-typi
 | Merge many polygons, lines or points | `UnionAll`, not a loop of `Union` |
 | Show geometry at a small scale | `Simplify`, `Clip` |
 | Keep user input clean | `Validate` and `MakeValid` |
+| Give a road its kilometres, and ask by kilometre or by click | `CalibrateM` once, then `ProjectToM`, `LocateAlong`, `LocateBetween` |
+| Combine tables of route events (speed limit, surface, bridges) | `LineEvents` and `PointEvents`, then `LocateEvents` to draw them |
+| Heights, slopes, contour lines or a height profile | one `Triangulation`, asked many times |
+| Which point is the nearest, as areas | `VoronoiDiagram`, cut to a boundary |
 
 ## Reading and writing
 

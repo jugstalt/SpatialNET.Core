@@ -5,7 +5,7 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen, die au
 - **[Erste Schritte](getting-started.md)**: Installation, erstes Programm, Optionen und Genauigkeit, Lesen und Schreiben, der Playground.
 - **[Host-Anbindung](host-integration.md)**: die Geometrie-Interfaces und die Geometrie-Factory in der eigenen GIS-Anwendung umsetzen.
 - **[Rezepte](cookbook.md)**: kurze, getestete Rezepte für alltägliche Aufgaben: Flurstücke finden, Verschnitt, gezeichnete Polygone reparieren, Teilen, Stationierung, Straße mit Kilometersteinen, Ereignistabellen, Einzugsgebiete, Gelände, Kartendarstellung, Austausch.
-- **[Konzepte](concepts/geometry-model.md)**: das Geometriemodell, Overlays und das Gitter, Prädikate, Buffer und Offset-Kurven, Vereinfachen und Validieren, Cut, räumlicher Index.
+- **[Konzepte](concepts/geometry-model.md)**: das Geometriemodell, Overlays und das Gitter, Prädikate, Buffer und Offset-Kurven, Vereinfachen und Validieren, Cut, räumlicher Index, lineare Referenzierung, Ereignistabellen, Triangulierung, Voronoi und Gelände.
 - **[Glossar](glossary.md)**: die Begriffe in Code und Dokumentation, Deutsch und Englisch.
 - **API-Referenz**: aus den XML-Kommentaren generiert, nur auf Englisch (Link in der Fußzeile).
 - **[Entscheidungen](decisions/toc.yml)**: die Architecture Decision Records, die Begründungen hinter dem Design.

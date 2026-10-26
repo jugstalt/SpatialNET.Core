@@ -48,7 +48,7 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
    ```
 
 8. **Approve and watch the workflow.** Open the *Release* run in the Actions tab. If you required a reviewer for the environment `nuget`, approve the run there. The workflow builds, runs the tests, packs the libraries (with symbol packages), pushes them to nuget.org and creates a GitHub release with the packages attached and generated release notes.
-9. **Verify.** On nuget.org, each of the four packages shows the new version, the README and the license. On GitHub, the release is marked as a pre-release if the version has a suffix. New versions can take a few minutes to appear in the nuget.org search.
+9. **Verify.** On nuget.org, each of the four packages shows the new version, the README and the license (the package also contains `THIRD-PARTY-NOTICES.md` and `licenses/JTS-EDL-1.0.txt`). On GitHub, the release is marked as a pre-release if the version has a suffix. New versions can take a few minutes to appear in the nuget.org search.
 10. **Polish the GitHub release notes** if needed (Releases → edit), for example by pasting the matching section of the changelog.
 
 ## If something goes wrong

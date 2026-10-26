@@ -188,6 +188,10 @@ Alle Algorithmen folgen denselben Regeln ([ADR 0012](../adr/0012-api-signaturen-
 | Viele Polygone, Linien oder Punkte verschmelzen | `UnionAll`, keine Schleife aus `Union` |
 | Geometrie in kleinem Maßstab zeigen | `Simplify`, `Clip` |
 | Benutzereingaben sauber halten | `Validate` und `MakeValid` |
+| Einer Straße ihre Kilometer geben und nach Kilometer oder Klick fragen | einmal `CalibrateM`, dann `ProjectToM`, `LocateAlong`, `LocateBetween` |
+| Tabellen von Routenereignissen verrechnen (Tempolimit, Belag, Brücken) | `LineEvents` und `PointEvents`, dann `LocateEvents` zum Zeichnen |
+| Höhen, Neigungen, Höhenlinien oder ein Höhenprofil | eine `Triangulation`, oft gefragt |
+| Welcher Punkt der nächste ist, als Flächen | `VoronoiDiagram`, auf eine Grenze zugeschnitten |
 
 ## Lesen und Schreiben
 

@@ -52,4 +52,11 @@
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
+  <!-- Die Hinweise zu Drittanbietern und der Text der EDL 1.0 (JTS) liegen in jedem Paket: Die EDL verlangt bei Weitergabe in Binärform,
+       Copyright-Vermerk und Haftungsausschluss beizulegen (THIRD-PARTY-NOTICES.md). -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.md')">
+    <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)samples\external\jts\LICENSE_EDLv1.txt" Pack="true" PackagePath="licenses\JTS-EDL-1.0.txt" Visible="false" />
+  </ItemGroup>
+
 </Project>

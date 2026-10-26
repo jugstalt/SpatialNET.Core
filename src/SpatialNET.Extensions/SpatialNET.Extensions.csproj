@@ -4,7 +4,7 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <Description>Planar spatial algorithms (overlay, buffer, cut, predicates …) as extension methods on the SpatialNET interfaces.</Description>
+    <Description>Planar spatial algorithms (overlay, buffer, cut, predicates, linear referencing, triangulation …) as extension methods on the SpatialNET interfaces.</Description>
   </PropertyGroup>
 
   <ItemGroup>

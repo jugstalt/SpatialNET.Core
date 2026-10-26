@@ -45,13 +45,14 @@ Several algorithms follow the JTS Topology Suite in structure and behavior, amon
 OverlayNG (overlay core, RingClipper), offset/buffer construction (OffsetCurveBuilder,
 BufferInputLineSimplifier) and TopologyPreservingSimplifier, and in behavior the concave hull (the edge length
 ratio and the removal of border triangles, `ConcaveHull`), the discrete Hausdorff distance, `LineMerge`,
-`Polygonize` and the predicates. The places are marked in the source code with "as in JTS" or "after JTS"
+`Polygonize`, the predicates, and the linear referencing (the offset to the side of `Interpolate` follows
+`LengthIndexedLine.ExtractPoint`, and the window of `Project` the idea of `IndexOfAfter`). The places are marked in the source code with "as in JTS" or "after JTS"
 ("wie JTS" / "Muster JTS" in the German inline comments).
 
 - License: JTS is dual-licensed under the Eclipse Public License 2.0 and the Eclipse Distribution License 1.0;
   SpatialNET relies on the Eclipse Distribution License 1.0
 - Copyright (c) Vivid Solutions, Inc. and further JTS contributors
-- License text: same as [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt)
+- License text: same as [`samples/external/jts/LICENSE_EDLv1.txt`](samples/external/jts/LICENSE_EDLv1.txt); the NuGet packages contain this document and the text as `licenses/JTS-EDL-1.0.txt`
 - Project: <https://github.com/locationtech/jts>
 
 ### Delaunator and polylabel (Mapbox)
@@ -77,6 +78,14 @@ these projects.
 - G. T. Toussaint: *Solving geometric problems with the rotating calipers*, Proceedings of IEEE MELECON, 1983 –
   the minimum rotated rectangle.
 - B. Delaunay: *Sur la sphère vide*, Izvestia Akademii Nauk SSSR, 1934 – the Delaunay triangulation.
+- G. Voronoi: *Nouvelles applications des paramètres continus à la théorie des formes quadratiques*, Journal für
+  die reine und angewandte Mathematik 133, 1908 – the Voronoi diagram (`VoronoiDiagram`).
+- C. L. Lawson: *Software for C¹ surface interpolation*, in Mathematical Software III, Academic Press, 1977 – the
+  edge flips that make a triangulation Delaunay. S. W. Sloan: *A fast algorithm for generating constrained Delaunay
+  triangulations*, Computers & Structures 47, 1993 – inserting constraints by edge flips
+  (`Triangulation.FromPointsAndLines`, `FromPolygon`).
+- I. E. Sutherland, G. W. Hodgman: *Reentrant polygon clipping*, Communications of the ACM 17, 1974 – cutting a
+  Voronoi cell to a rectangle.
 - J. D. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13, 1999 –
   snap rounding.
 - D. H. Douglas, T. K. Peucker: *Algorithms for the reduction of the number of points required to represent a

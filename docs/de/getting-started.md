@@ -92,17 +92,19 @@ Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactor
 
 ## Was es gibt
 
-| Bereich | Methoden (Extension-Methoden im Namespace `SpatialNET`) |
+| Bereich | Methoden (Extension-Methoden im Namespace `SpatialNET`; die Ereignistabellen und die Triangulierung sind statische Methoden und Klassen dieses Namespace) |
 |---|---|
 | Overlays | `Intersection`, `Union`, `UnionAll`, `Difference`, `SymDifference`, `Clip`, `Polygonize` |
 | Lage eines Punktes | `Locate` (`Location`), auch auf `PreparedGeometry` |
 | Abgeleitete Geometrien | `Buffer`, `OffsetCurve`, `ConvexHull`, `Simplify`, `Cut` |
 | Prädikate | `Intersects`, `Disjoint`, `Contains`, `Within`, `Covers`, `CoveredBy`, `Touches`, `Crosses`, `Overlaps`, `EqualsTopo`, `Relate`, `Prepare` |
 | Räumlicher Index | `SpatialIndex<T>`, `ToSpatialIndex`, `Query`, `Nearest`, `Join`, `SelfJoin` |
-| Lineare Referenzierung | `Interpolate`, `Project`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM` |
+| Lineare Referenzierung | `Interpolate` (auch mit seitlichem Versatz), `Project` (auch in einem Längenfenster), `ProjectDetailed`, `Substring`, `InterpolateByM`, `ProjectToM`, `SubstringByM`, `CalibrateM`, `LocateBetween`, `LocateAlong`, `LocateFeature`, `LocateEvents` |
+| Ereignistabellen (Routenereignisse, ohne Geometrie) | `LineEvents` (`Intersect`, `Union`, `Difference`, `Dissolve`, `Clip`, `At`), `PointEvents` (`Between`, `Within`, `Outside`) |
+| Triangulierung, Voronoi und Gelände | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate` und die Klasse `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`) |
 | Gültigkeit | `IsValid`, `Validate`, `MakeValid` |
 | Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
-| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio`, `DelaunayTriangles` |
+| Konstruktionen | `Boundary`, `Densify`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio` |
 | Bereinigen | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
 | Formprüfungen | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |
 | Umwandlung | `AsList` (LINQ-taugliche Sichten), `ToWkt`, `ToGeoJson`, `ToWkb` |
