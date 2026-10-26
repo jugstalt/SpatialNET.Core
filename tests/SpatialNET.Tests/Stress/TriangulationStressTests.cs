@@ -483,4 +483,29 @@ public class TriangulationStressTests
             Assert.All(fine.Vertices, v => Assert.True(Math.Abs(v.Z - (v.X + 2 * v.Y)) <= 1e-6 * 200, $"({v.X:R} {v.Y:R} {v.Z:R}): {Raw(all)}"));
         });
     }
+
+    [StressFact]
+    public void Slope_zones_are_valid_and_tile_the_surface_for_dirty_sites()
+    {
+        Gen.Select(SanePoints(3, 40), Gen.Double[-30, 30].Array[40]).Run((points, heights) =>
+        {
+            var withZ = Distinct(points).Select((p, i) => p with { Z = Math.Round(heights[i % heights.Length], 2) }).ToArray();
+            var t = Triangulation.FromPoints(F.CreateMultiPoint(withZ, null));
+            if (t.TriangleCount == 0)
+            {
+                return;
+            }
+
+            double[] limits = [1, 10, 30];
+            var zones = t.SlopeZones(limits, F);
+
+            double total = t.ToPolygons(F).Sum(p => p.Area());
+            double sum = zones.Sum(z => z.Area());
+            Assert.True(Math.Abs(sum - total) <= 1e-6 * (1 + total), $"{sum:R} against {total:R}: {Raw(withZ)}");
+            for (int i = 0; i < zones.Count; i++)
+            {
+                Assert.True(zones[i].IsValid(), $"zone {i} is not valid: {zones[i].Validate()} {zones[i].ToWkt()}: {Raw(withZ)}");
+            }
+        });
+    }
 }

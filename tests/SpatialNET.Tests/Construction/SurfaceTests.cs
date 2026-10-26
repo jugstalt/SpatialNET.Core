@@ -154,6 +154,67 @@ public class SurfaceTests
         }, iter: 100);
     }
 
+    [Fact]
+    [Covers("SlopeZones")]
+    public void Slope_zones_are_valid_and_equal_the_union_of_their_triangles()
+    {
+        Gen.Select(Pt.Array[3, 40], Gen.Double[-20, 20].Array[44]).Sample((points, heights) =>
+        {
+            var t = Terrain(points, heights);
+            double[] limits = [4, 15, 40];
+
+            var zones = t.SlopeZones(limits, F);
+
+            var triangles = t.ToPolygons(F);
+            for (int cls = 0; cls <= limits.Length; cls++)
+            {
+                var inClass = Enumerable.Range(0, t.TriangleCount).Where(i => limits.Count(l => t.Slope(i) >= l) == cls).Select(i => triangles[i]).ToList();
+                Assert.True(zones[cls].IsValid(), $"zone {cls} is not valid: {zones[cls].Validate()} {zones[cls].ToWkt()}");
+                if (inClass.Count == 0)
+                {
+                    Assert.Equal(0, zones[cls].Area());
+                    continue;
+                }
+
+                var union = inClass.UnionAll(factory: F);
+                Assert.Equal(union.Area(), zones[cls].Area(), 1e-6 * (1 + union.Area()));
+                Assert.Equal(0, union.Difference(zones[cls], factory: F).Area() + zones[cls].Difference(union, factory: F).Area(), 1e-5 * (1 + union.Area()));
+            }
+        }, iter: 100);
+    }
+
+    [Fact]
+    [Covers("SlopeZones")]
+    public void Slope_zones_keep_holes_and_parts_that_touch_in_a_vertex()
+    {
+        // a 4 x 4 grid of squares with the heights of a chessboard-like relief: flat cells and steep cells, the flat ones touch at the corners
+        var rows = new List<string>();
+        for (int x = 0; x <= 4; x++)
+        {
+            for (int y = 0; y <= 4; y++)
+            {
+                double z = (x + y) % 2 == 0 ? 0 : 10;
+                rows.Add($"({x} {y} {z})");
+            }
+        }
+
+        var t = Triangulation.FromPoints(G("MULTIPOINT Z (" + string.Join(", ", rows) + ")"));
+
+        var zones = t.SlopeZones([5], F);
+
+        Assert.Equal(16, zones[0].Area() + zones[1].Area(), 1e-9);
+        Assert.All(zones, z => Assert.True(z.IsValid()));
+
+        // a flat island in a steep ring: the ring has a hole
+        var island = Triangulation.FromPoints(G("MULTIPOINT Z ((0 0 5), (6 0 5), (6 6 5), (0 6 5), (2 2 0), (4 2 0), (4 4 0), (2 4 0))"));
+        var rings = island.SlopeZones([1], F);
+
+        Assert.Equal(36, rings[0].Area() + rings[1].Area(), 1e-9);
+        Assert.Equal(4, rings[0].Area(), 1e-9);
+        Assert.True(rings[1].IsValid());
+        Assert.Equal(2, rings[1].RingCount);   // the shell and the hole
+    }
+
     private static Coordinate Centroid(Triangulation t, int i)
     {
         var (a, b, c) = t.Triangle(i);
