@@ -15,7 +15,11 @@ public class ConcaveHullTests
 
     private static IGeometry2D G(string wkt) => Wkt.Read(wkt, F);
 
-    private static readonly Gen<Coordinate> Pt = Gen.Select(Gen.Int[-50, 50], Gen.Int[-50, 50], Gen.Double[0, 1], Gen.Double[0, 1]).Select((x, y, a, b) => new Coordinate(x + a, y + b));
+    // The fractions are multiples of 1e-4 and never 0: Gen.Double also produces values like 3e-34, which put a point practically on its neighbour
+    // on the integer grid (a tie or a near tie that NTS, with its inexact predicates, decides differently from the exact ones here).
+    private static readonly Gen<double> Fraction = Gen.Int[1, 9999].Select(i => i / 10000.0);
+
+    private static readonly Gen<Coordinate> Pt = Gen.Select(Gen.Int[-50, 50], Gen.Int[-50, 50], Fraction, Fraction).Select((x, y, a, b) => new Coordinate(x + a, y + b));
 
     private static IGeometry2D Points(Coordinate[] pts) => F.CreateMultiPoint(pts, null);
 
