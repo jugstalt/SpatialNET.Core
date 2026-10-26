@@ -399,13 +399,15 @@ function loadFixture(fixture) {
   }
 
   state.fixture = fixture;
+  // only the inputs that the algorithm has: a shared example (a star for Triangulate and ConstrainedDelaunay) may carry more
+  const takes = new Set(state.algorithm.inputs.map(i => i.key));
   state.inputs = {};
-  if (fixture.a) state.inputs.a = fixture.a;
-  if (fixture.b) state.inputs.b = fixture.b;
+  if (fixture.a && takes.has('a')) state.inputs.a = fixture.a;
+  if (fixture.b && takes.has('b')) state.inputs.b = fixture.b;
   // examples with M come with their WKT, because GeoJSON carries no M (ADR 0015)
   state.wkt = {};
-  if (fixture.aWkt) state.wkt.a = fixture.aWkt;
-  if (fixture.bWkt) state.wkt.b = fixture.bWkt;
+  if (fixture.aWkt && takes.has('a')) state.wkt.a = fixture.aWkt;
+  if (fixture.bWkt && takes.has('b')) state.wkt.b = fixture.bWkt;
   state.shown = {};
   state.params = { ...defaults(state.algorithm), ...fixture.params };
   setMode(fixture.local);
