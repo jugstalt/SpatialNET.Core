@@ -25,6 +25,10 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | triangulation | Triangulierung | Triangles that tile a set of points or a polygon, with their neighbours (`Triangulation`) |
 | break line | Bruchkante | A line that must be an edge of the triangulation, such as a ridge or a ditch (a constraint, `FromPointsAndLines`) |
 | contour line | Höhenlinie | The line where a surface has one height (`Triangulation.Contour`) |
+| slope | Neigung | The angle of a triangle's plane to the horizontal, in degrees (`Triangulation.Slope`) |
+| aspect | Exposition | The compass direction that a triangle faces, the direction of steepest descent, clockwise from north (`Triangulation.Aspect`) |
+| draping | Drapieren | Laying a line over a surface: the same line in the map, with the height as Z and the distance along it as M (`Triangulation.Drape`) |
+| point event | Punktereignis | An event at a single M value, such as a bridge (`PointEvent<T>`) |
 | event | Ereignis | A fact about a range of M values on a route, with attributes of the host's choice: a speed limit from kilometre 3 to 5.5 (`LineEvent<T>`); the arithmetic between event tables is `LineEvents` |
 | envelope | Envelope | The axis-aligned rectangle that encloses a geometry (`Envelope2D`) |
 | reference implementation | Referenz-Implementierung | The implementation of the geometry interfaces in `SpatialNET.Imp`, meant for tests, the playground and hosts without geometries of their own |

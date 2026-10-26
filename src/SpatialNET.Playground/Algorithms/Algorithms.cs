@@ -362,3 +362,94 @@ public sealed class ContourAlgorithm() : PlaygroundAlgorithm("contour", "Contour
 
         return levels;
     });
+
+// ---------- Terrain analysis (ADR 0039) and events on a route (ADR 0040) ----------
+
+public sealed class DrapeAlgorithm() : PlaygroundAlgorithm("drape", "Drape (line over terrain)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)"), In.B(In.Lines, "Line")], [],
+    (i, _, f, _) => Triangulation.FromPoints(i["a"]).Drape((IPolyline2D)i["b"], f));
+
+public sealed class SteepTrianglesAlgorithm() : PlaygroundAlgorithm("steepTriangles", "Steep triangles (slope)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)")],
+    [new("minSlope", "At least this steep (degrees)", "number", 55.0)],
+    (i, p, f, _) =>
+    {
+        var triangulation = Triangulation.FromPoints(i["a"]);
+        double min = p.Number("minSlope");
+        var triangles = triangulation.ToPolygons(f);
+        return Enumerable.Range(0, triangulation.TriangleCount).Where(t => triangulation.Slope(t) >= min).Select(t => (IGeometry2D)triangles[t]).ToList();
+    });
+
+public sealed class TerrainVolumeAlgorithm() : PlaygroundAlgorithm("terrainVolume", "Volume above a height", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)")],
+    [new("z", "Height of the plane", "number", 50.0)],
+    (i, p, _, _) =>
+    {
+        var (above, below) = Triangulation.FromPoints(i["a"]).Volume(p.Number("z"));
+        return above - below;    // the net volume: positive if more of the terrain lies above the plane than is missing below it
+    });
+
+/// <summary>The tables of events that a text parameter holds: <c>from..to value</c> for a line event, <c>m value</c> for a point event; <c>#</c> starts a comment.</summary>
+internal static class EventText
+{
+    public static (List<LineEvent<string>> Lines, List<PointEvent<string>> Points) Parse(string text)
+    {
+        var lines = new List<LineEvent<string>>();
+        var points = new List<PointEvent<string>>();
+        int number = 0;
+        foreach (var raw in text.Split('\n'))
+        {
+            number++;
+            var line = raw.Trim();
+            if (line.Length == 0 || line.StartsWith('#'))
+            {
+                continue;
+            }
+
+            var parts = line.Split((char[]?)null, 2, StringSplitOptions.RemoveEmptyEntries);
+            var value = parts.Length > 1 ? parts[1].Trim() : "";
+            var range = parts[0].Split("..", 2);
+            bool Read(string s, out double d) => double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d) && double.IsFinite(d);
+
+            if (range.Length == 2 && Read(range[0], out double from) && Read(range[1], out double to))
+            {
+                lines.Add(new LineEvent<string>(from, to, value));
+            }
+            else if (range.Length == 1 && Read(range[0], out double m))
+            {
+                points.Add(new PointEvent<string>(m, value));
+            }
+            else
+            {
+                throw new ArgumentException($"Line {number} of the events is not \"from..to value\" or \"m value\": {line}");
+            }
+        }
+
+        return (lines, points);
+    }
+}
+
+public sealed class LocateEventsAlgorithm() : PlaygroundAlgorithm("locateEvents", "LocateEvents (draw on the route)", "Linear referencing",
+    [In.A(In.Lines, "Route (WKT with M)")],
+    [new("events", "Events: from..to value, or m value", "text", "12000..12150 50\n12150..12360 70\n12360..12520 30\n12080 bridge\n12300 bridge")],
+    (i, p, f, _) =>
+    {
+        var route = (IPolyline2D)i["a"];
+        var (lines, points) = EventText.Parse(p.Text("events"));
+        var shapes = route.LocateEvents(lines, f).Select(x => (IGeometry2D)x.Shape);
+        var spots = route.LocateEvents(points, f).Select(x => (IGeometry2D)x.Points);
+        return shapes.Concat(spots).ToList();
+    });
+
+public sealed class IntersectEventsAlgorithm() : PlaygroundAlgorithm("intersectEvents", "IntersectEvents (where both hold)", "Linear referencing",
+    [In.A(In.Lines, "Route (WKT with M)")],
+    [
+        new("tableA", "Table A: from..to value", "text", "12000..12150 50\n12150..12520 70"),
+        new("tableB", "Table B: from..to value", "text", "12000..12100 asphalt\n12100..12400 gravel\n12400..12520 asphalt"),
+    ],
+    (i, p, f, _) =>
+    {
+        var route = (IPolyline2D)i["a"];
+        var both = LineEvents.Intersect(EventText.Parse(p.Text("tableA")).Lines, EventText.Parse(p.Text("tableB")).Lines, (a, b) => $"{a}, {b}");
+        return route.LocateEvents(both, f).Select(x => (IGeometry2D)x.Shape).ToList();
+    });

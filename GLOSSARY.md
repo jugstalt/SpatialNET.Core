@@ -81,6 +81,22 @@ _Avoid_: Constraint, Zwangslinie
 Die Linie, auf der eine Fläche eine bestimmte Höhe hat.
 _Avoid_: Isolinie, Contour
 
+**Neigung**:
+Der Winkel der Ebene eines Dreiecks zur Waagerechten, in Grad.
+_Avoid_: Gefälle, Steigung
+
+**Exposition**:
+Die Himmelsrichtung, in die ein Dreieck schaut, also die Richtung des steilsten Gefälles, im Uhrzeigersinn von Norden.
+_Avoid_: Ausrichtung, Aspect
+
+**Drapieren**:
+Eine Linie über eine Fläche legen: dieselbe Linie in der Karte, mit der Höhe als Z und dem Abstand entlang der Linie als M.
+_Avoid_: Projizieren auf das Gelände
+
+**Punktereignis**:
+Ein Ereignis bei einem einzigen M-Wert, z.B. eine Brücke.
+_Avoid_: Punktobjekt
+
 **Ereignis**:
 Eine Aussage über einen Bereich von M-Werten auf einer Route mit Attributen nach Wahl des Hosts, z.B. ein Tempolimit von Kilometer 3 bis 5,5; hat keine eigene Geometrie.
 _Avoid_: Event, Streckenobjekt

@@ -298,6 +298,31 @@ public sealed class CookbookSamplesTests : IDisposable
     }
 
     [Fact]
+    public void HeightProfileAlongARoad()
+    {
+        // --- snippet: cookbook-profile
+        var terrain = Triangulation.FromPoints(Wkt.Read(
+            "MULTIPOINT Z ((0 0 0), (100 0 10), (100 100 30), (0 100 20), (50 50 15), (50 0 5), (50 100 25))"));
+        var road = Wkt.Read<IPolyline2D>("LINESTRING (0 50, 100 50)");
+
+        // The road over the terrain: Z is the height, M the distance along the road.
+        var draped = terrain.Drape(road);
+
+        var profile = Enumerable.Range(0, draped[0].PointCount)
+            .Select(i => (Distance: ((IPointM)draped[0][i]).M, Height: ((IPoint3D)draped[0][i]).Z))
+            .ToArray();
+        foreach (var (distance, height) in profile)
+        {
+            Console.WriteLine($"{distance:0} m: {height:0.0} m");   // 0 m: 10.0 m, ..., 100 m: 20.0 m
+        }
+        // --- end
+
+        Assert.Equal((0d, 10d), (profile[0].Distance, Math.Round(profile[0].Height, 6)));
+        Assert.Equal((100d, 20d), (profile[^1].Distance, Math.Round(profile[^1].Height, 6)));
+        Assert.True(profile.Length >= 3);
+    }
+
+    [Fact]
     public void ForTheMap()
     {
         // --- snippet: cookbook-display

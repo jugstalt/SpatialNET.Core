@@ -252,6 +252,28 @@ foreach (double level in new[] { 20.0, 30.0 })
 
 ```
 
+## Height profile along a road
+
+Laid over a terrain model, a road gets a vertex wherever it crosses an edge of the triangulation, with the height as Z and the distance along the road as M. Z against M is the height profile ([Triangulation, Voronoi and terrain](concepts/triangulation-and-voronoi.md)).
+
+```csharp
+var terrain = Triangulation.FromPoints(Wkt.Read(
+    "MULTIPOINT Z ((0 0 0), (100 0 10), (100 100 30), (0 100 20), (50 50 15), (50 0 5), (50 100 25))"));
+var road = Wkt.Read<IPolyline2D>("LINESTRING (0 50, 100 50)");
+
+// The road over the terrain: Z is the height, M the distance along the road.
+var draped = terrain.Drape(road);
+
+var profile = Enumerable.Range(0, draped[0].PointCount)
+    .Select(i => (Distance: ((IPointM)draped[0][i]).M, Height: ((IPoint3D)draped[0][i]).Z))
+    .ToArray();
+foreach (var (distance, height) in profile)
+{
+    Console.WriteLine($"{distance:0} m: {height:0.0} m");   // 0 m: 10.0 m, ..., 100 m: 20.0 m
+}
+
+```
+
 ## For the map
 
 Simplify for small scales, clip to the screen, and find a good place for the label ([Simplify, convex hull and validation](concepts/simplify-and-validation.md), [Overlays](concepts/overlay-and-grid.md), [Measures and constructions](concepts/measures-and-constructions.md)).

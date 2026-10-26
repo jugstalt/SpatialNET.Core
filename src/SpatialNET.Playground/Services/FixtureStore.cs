@@ -38,6 +38,11 @@ public sealed class FixtureStore(string root)
         ["constrainedDelaunay"] = "triangulation",
         ["interpolateZ"] = "terrain",
         ["contour"] = "terrain",
+        ["steepTriangles"] = "terrain",
+        ["terrainVolume"] = "terrain",
+        ["drape"] = "terrain-profile",
+        ["locateEvents"] = "events",
+        ["intersectEvents"] = "events",
     };
 
     /// <summary>The fixtures of an algorithm; without <paramref name="all"/> only those with the tag <c>playground</c>.</summary>

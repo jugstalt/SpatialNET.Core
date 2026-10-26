@@ -74,3 +74,7 @@
   href: ../../adr/0037-triangulation-netz-hoehe-hoehenlinien.md
 - name: "0038 Constrained Delaunay triangulation and the triangulation of a polygon"
   href: ../../adr/0038-constrained-delaunay-und-polygon-triangulierung.md
+- name: "0039 Terrain analysis: slope, aspect, area, volume and a line over the surface"
+  href: ../../adr/0039-gelaendeanalyse-neigung-flaeche-volumen-drape.md
+- name: "0040 Point events and drawing events on the route"
+  href: ../../adr/0040-punktereignisse-und-ereignisse-auf-der-karte.md

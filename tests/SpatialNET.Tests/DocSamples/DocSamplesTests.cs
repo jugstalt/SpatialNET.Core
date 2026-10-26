@@ -385,6 +385,87 @@ public sealed class DocSamplesTests : IDisposable
     }
 
     [Fact]
+    public void SlopeAreaVolumeAndDrape()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: terrain-analysis
+        // A plane that rises to the north: 0 at y = 0, 50 at y = 100 (the unit of X, Y and Z is the same).
+        var terrain = Triangulation.FromPoints(Wkt.Read("MULTIPOINT Z ((0 0 0), (100 0 0), (100 100 50), (0 100 50), (50 50 25))"));
+        int triangle = terrain.Locate(new Coordinate(20, 80));
+
+        double slope = terrain.Slope(triangle);             // 26.565 degrees: atan(0.5)
+        double aspect = terrain.Aspect(triangle);           // 180: it faces south, downhill
+        double area = terrain.SurfaceArea();                // 11180.34: the map area 10000 times sqrt(1 + 0.5²)
+        var (above, below) = terrain.Volume(25);            // 62500 above the height 25 (to cut away), 62500 below it (to fill)
+        // --- end
+
+        Assert.Equal(Math.Atan(0.5) * 180 / Math.PI, slope, 9);
+        Assert.Equal(180, aspect, 9);
+        Assert.Equal(10000 * Math.Sqrt(1.25), area, 6);
+        Assert.Equal(62500, above, 4);
+        Assert.Equal(62500, below, 4);
+
+        // --- snippet: drape
+        var road = Wkt.Read<IPolyline2D>("LINESTRING (10 10, 90 90)");
+
+        IPolyline2D onTerrain = terrain.Drape(road);        // Z the height, M the distance along the road, a vertex on every edge it crosses
+        // --- end
+
+        var last = onTerrain[0][onTerrain[0].PointCount - 1];
+        Assert.Equal(45, ((IPoint3D)last).Z, 9);
+        Assert.Equal(Math.Sqrt(2) * 80, ((IPointM)last).M, 9);
+        Assert.True(onTerrain[0].PointCount > 2);
+    }
+
+    [Fact]
+    public void PointEventsAndDrawingEvents()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: point-events
+        var bridges = new[] { new PointEvent<string>(8200, "bridge"), new PointEvent<string>(11450, "culvert") };
+        var limits = new[] { new LineEvent<int>(0, 5000, 50), new LineEvent<int>(5000, 12000, 70) };
+
+        // Which speed limit holds at each? One result per pair, at the M of the point.
+        var withLimit = PointEvents.Within(bridges, limits, (b, kmh) => $"{b}: {kmh} km/h");   // bridge 70, culvert 70
+
+        // Which have no speed limit in a table that stops at 9000?
+        var uncovered = PointEvents.Outside(bridges, [new LineEvent<int>(0, 9000, 50)]);       // the culvert
+
+        // Draw a table on the calibrated route: one entry per event, with its stretch.
+        var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 0, 12000 0 12000)");
+        var drawn = route.LocateEvents(limits);                                                // (event, shape) for 0-5000 and 5000-12000
+        // --- end
+
+        Assert.Equal(["bridge: 70 km/h", "culvert: 70 km/h"], withLimit.Select(e => e.Value));
+        Assert.Equal("culvert", Assert.Single(uncovered).Value);
+        Assert.Equal([5000d, 7000d], drawn.Select(d => d.Shape.Length()));
+    }
+
+    [Fact]
+    public void PlainOrConstrained()
+    {
+        GeometryFactory.Default = ImpGeometryFactory.Instance;
+
+        // --- snippet: plain-or-constrained
+        // A ditch (height 5) between two banks (height 20); the banks have points right next to the ditch.
+        var points = Wkt.Read("MULTIPOINT Z ((0 0 20), (100 0 20), (0 40 20), (100 40 20), (0 20 5), (100 20 5), (50 15 20), (50 25 20))");
+        var ditch = Wkt.Read("LINESTRING Z (0 20 5, 100 20 5)");
+        var middle = new Coordinate(50, 20);
+
+        // Delaunay alone does not know about the ditch: the short edge from bank to bank (50 15)-(50 25) crosses it.
+        double plain = Triangulation.FromPoints(points).InterpolateZ(middle);                   // 20
+
+        // With the ditch as a break line it is an edge, and the surface follows it.
+        double forced = Triangulation.FromPointsAndLines(points, ditch).InterpolateZ(middle);   // 5
+        // --- end
+
+        Assert.Equal(20, plain, 9);
+        Assert.Equal(5, forced, 9);
+    }
+
+    [Fact]
     public void VoronoiDiagram()
     {
         GeometryFactory.Default = ImpGeometryFactory.Instance;

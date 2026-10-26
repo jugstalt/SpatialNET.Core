@@ -14,6 +14,7 @@ public class PlaygroundTriangulationTests(WebApplicationFactory<Program> factory
     public static TheoryData<string> Ids() => new()
     {
         "voronoiDiagram", "voronoiEdges", "delaunayEdges", "triangulate", "constrainedDelaunay", "interpolateZ", "contour",
+        "steepTriangles", "terrainVolume", "drape", "locateEvents", "intersectEvents",
     };
 
     [Theory]
@@ -35,7 +36,17 @@ public class PlaygroundTriangulationTests(WebApplicationFactory<Program> factory
                 }
             }
 
-            var response = await _client.PostAsJsonAsync("/api/run", new { algorithm = id, inputs, @params = fixture!["params"], local = true });
+            // an example with M comes with its WKT, because GeoJSON carries no M
+            var wkt = new JsonObject();
+            foreach (var input in descriptor.Inputs)
+            {
+                if (fixture![input.Key + "Wkt"] is { } text)
+                {
+                    wkt[input.Key] = text.DeepClone();
+                }
+            }
+
+            var response = await _client.PostAsJsonAsync("/api/run", new { algorithm = id, inputs, wkt, @params = fixture!["params"], local = true });
             var body = (await response.Content.ReadFromJsonAsync<JsonObject>())!;
 
             Assert.True(response.StatusCode == HttpStatusCode.OK, $"{id}/{fixture["id"]}: {body}");

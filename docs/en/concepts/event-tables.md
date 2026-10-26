@@ -92,6 +92,34 @@ Dictionary<string, LineEvent<int>[]> byRoute = rows
 
 Tables are in M values, not in lengths: if your events are stored as metres from the start of the route, convert them first (or calibrate the route so that M is that length).
 
+## Point events and drawing a table
+
+An event at a single M value (a bridge, a damage report) is a `PointEvent<T>(M, Value)` ([ADR 0040](../../adr/0040-punktereignisse-und-ereignisse-auf-der-karte.md)). `PointEvents` answers the questions that go with it, again on the numbers alone:
+
+```csharp
+var bridges = new[] { new PointEvent<string>(8200, "bridge"), new PointEvent<string>(11450, "culvert") };
+var limits = new[] { new LineEvent<int>(0, 5000, 50), new LineEvent<int>(5000, 12000, 70) };
+
+// Which speed limit holds at each? One result per pair, at the M of the point.
+var withLimit = PointEvents.Within(bridges, limits, (b, kmh) => $"{b}: {kmh} km/h");   // bridge 70, culvert 70
+
+// Which have no speed limit in a table that stops at 9000?
+var uncovered = PointEvents.Outside(bridges, [new LineEvent<int>(0, 9000, 50)]);       // the culvert
+
+// Draw a table on the calibrated route: one entry per event, with its stretch.
+var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 0, 12000 0 12000)");
+var drawn = route.LocateEvents(limits);                                                // (event, shape) for 0-5000 and 5000-12000
+```
+
+| Operation | Question | Result |
+|---|---|---|
+| `PointEvents.Between(points, from, to)` | which lie in this range? | the point events with M in the closed range |
+| `PointEvents.Within(points, lines, combine)` | what holds at each? | one result per point event and line event that contains it (two on a boundary) |
+| `PointEvents.Outside(points, lines)` | which lie in no line event? | the point events without one: the check for gaps |
+| `route.LocateEvents(events)` | where on the map? | one entry per event, in the input order: the stretch of a line event, the points of a point event; an empty shape if the route does not reach it |
+
+Ranges are closed and line events without length are ignored, as in `LineEvents`. `LocateEvents` builds the index of the route once for the whole table.
+
 ## From a geometry to an event
 
 The reverse direction is `LocateFeature` on the route: a parcel, a pipe or a flooded area becomes the ranges of M where it lies, and from there an event ([ADR 0034](../../adr/0034-locatefeature-geometrie-zu-m-bereichen.md)):
@@ -105,4 +133,4 @@ The events can then be combined with the others, for example with `Intersect` ag
 
 ## Not included
 
-Point events as a type of their own are not part of this step: a point in a line event is `At`, a point on the map is `ProjectToM`.
+Several routes in one call (the host groups), and a tolerance for "near" a line event: a point event lies exactly in a range or not. A point on the map becomes a measure with `ProjectToM`.

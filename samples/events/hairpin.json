@@ -1,0 +1,13 @@
+{
+  "name": "A hairpin: M values that occur twice",
+  "description": "The route comes back along itself with falling M, so a range or a value is found on both passes.",
+  "tags": [
+    "playground"
+  ],
+  "a": "LINESTRING M (0 0 0, 100 0 100, 100 20 120, 0 20 20)",
+  "params": {
+    "events": "40..60 twice\n50 twice\n110 once",
+    "tableA": "0..70 slow\n70..120 fast",
+    "tableB": "30..110 wet"
+  }
+}

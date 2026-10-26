@@ -92,6 +92,34 @@ Dictionary<string, LineEvent<int>[]> byRoute = rows
 
 Die Tabellen sind in M-Werten, nicht in Längen: Liegen Ihre Ereignisse als Meter ab Routenanfang vor, rechnen Sie sie zuerst um (oder kalibrieren die Route so, dass M diese Länge ist).
 
+## Punktereignisse und das Zeichnen einer Tabelle
+
+Ein Ereignis bei einem einzigen M-Wert (eine Brücke, eine Schadensmeldung) ist ein `PointEvent<T>(M, Value)` ([ADR 0040](../../adr/0040-punktereignisse-und-ereignisse-auf-der-karte.de.md)). `PointEvents` beantwortet die Fragen dazu, wieder allein auf den Zahlen:
+
+```csharp
+var bridges = new[] { new PointEvent<string>(8200, "bridge"), new PointEvent<string>(11450, "culvert") };
+var limits = new[] { new LineEvent<int>(0, 5000, 50), new LineEvent<int>(5000, 12000, 70) };
+
+// Which speed limit holds at each? One result per pair, at the M of the point.
+var withLimit = PointEvents.Within(bridges, limits, (b, kmh) => $"{b}: {kmh} km/h");   // bridge 70, culvert 70
+
+// Which have no speed limit in a table that stops at 9000?
+var uncovered = PointEvents.Outside(bridges, [new LineEvent<int>(0, 9000, 50)]);       // the culvert
+
+// Draw a table on the calibrated route: one entry per event, with its stretch.
+var route = Wkt.Read<IPolyline2D>("LINESTRING M (0 0 0, 12000 0 12000)");
+var drawn = route.LocateEvents(limits);                                                // (event, shape) for 0-5000 and 5000-12000
+```
+
+| Operation | Frage | Ergebnis |
+|---|---|---|
+| `PointEvents.Between(points, from, to)` | welche liegen in diesem Bereich? | die Punktereignisse mit M im geschlossenen Bereich |
+| `PointEvents.Within(points, lines, combine)` | was gilt an jedem? | ein Ergebnis je Punktereignis und Linienereignis, das es enthält (zwei auf einer Grenze) |
+| `PointEvents.Outside(points, lines)` | welche liegen in keinem Linienereignis? | die Punktereignisse ohne eines: die Prüfung auf Lücken |
+| `route.LocateEvents(events)` | wo auf der Karte? | ein Eintrag je Ereignis, in der Eingabereihenfolge: die Strecke eines Linienereignisses, die Punkte eines Punktereignisses; eine leere Geometrie, wenn die Route es nicht erreicht |
+
+Bereiche sind geschlossen und Linienereignisse ohne Länge werden ignoriert, wie bei `LineEvents`. `LocateEvents` baut den Index der Route einmal für die ganze Tabelle.
+
 ## Von einer Geometrie zu einem Ereignis
 
 Die Gegenrichtung ist `LocateFeature` auf der Route: Ein Flurstück, eine Leitung oder eine überflutete Fläche wird zu den Bereichen von M, in denen sie liegt, und von dort zu einem Ereignis ([ADR 0034](../../adr/0034-locatefeature-geometrie-zu-m-bereichen.de.md)):
@@ -105,4 +133,4 @@ Die Ereignisse lassen sich dann mit den anderen verrechnen, etwa mit `Intersect`
 
 ## Nicht dabei
 
-Punktereignisse als eigener Typ gehören nicht zu diesem Schritt: Ein Punkt in einem Linienereignis ist `At`, ein Punkt auf der Karte ist `ProjectToM`.
+Mehrere Routen in einem Aufruf (der Host gruppiert) und eine Toleranz für „nahe“ an einem Linienereignis: Ein Punktereignis liegt genau in einem Bereich oder nicht. Ein Punkt auf der Karte wird mit `ProjectToM` zu einem Messwert.

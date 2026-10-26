@@ -252,6 +252,28 @@ foreach (double level in new[] { 20.0, 30.0 })
 
 ```
 
+## Höhenprofil entlang einer Straße
+
+Über ein Geländemodell gelegt, bekommt eine Straße einen Stützpunkt überall, wo sie eine Kante der Triangulierung kreuzt, mit der Höhe als Z und dem Abstand entlang der Straße als M. Z gegen M ist das Höhenprofil ([Triangulierung, Voronoi und Gelände](concepts/triangulation-and-voronoi.md)).
+
+```csharp
+var terrain = Triangulation.FromPoints(Wkt.Read(
+    "MULTIPOINT Z ((0 0 0), (100 0 10), (100 100 30), (0 100 20), (50 50 15), (50 0 5), (50 100 25))"));
+var road = Wkt.Read<IPolyline2D>("LINESTRING (0 50, 100 50)");
+
+// The road over the terrain: Z is the height, M the distance along the road.
+var draped = terrain.Drape(road);
+
+var profile = Enumerable.Range(0, draped[0].PointCount)
+    .Select(i => (Distance: ((IPointM)draped[0][i]).M, Height: ((IPoint3D)draped[0][i]).Z))
+    .ToArray();
+foreach (var (distance, height) in profile)
+{
+    Console.WriteLine($"{distance:0} m: {height:0.0} m");   // 0 m: 10.0 m, ..., 100 m: 20.0 m
+}
+
+```
+
 ## Für die Karte
 
 Für kleine Maßstäbe vereinfachen, auf den Bildschirm zuschneiden und einen guten Ort für die Beschriftung finden ([Vereinfachen, konvexe Hülle und Validierung](concepts/simplify-and-validation.md), [Overlays](concepts/overlay-and-grid.md), [Maße und Konstruktionen](concepts/measures-and-constructions.md)).

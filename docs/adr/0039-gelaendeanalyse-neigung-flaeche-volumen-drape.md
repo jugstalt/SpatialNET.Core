@@ -1,0 +1,51 @@
+# Terrain analysis: slope, aspect, area, volume and a line over the surface
+
+A terrain model (ADR 0037) is asked more than "how high is it here". A planner wants to know **how steep** a slope is and **which way it faces**, an engineer **how much earth** must be moved to reach a level, a road designer **the height profile along a road**. These are properties of the triangles, and because the surface is linear in every triangle they can be answered **exactly**, without a raster. They are methods of `Triangulation`: **`Gradient`**, **`Slope`**, **`Aspect`**, **`SurfaceArea`**, **`Volume`** and **`Drape`**.
+
+*German version: [0039-gelaendeanalyse-neigung-flaeche-volumen-drape.de.md](0039-gelaendeanalyse-neigung-flaeche-volumen-drape.de.md)*
+
+## Consequences
+
+- **Placement:** members of the class `Triangulation` (ADR 0037), in their own file (`Triangulation.Terrain.cs`, a partial class) in `SpatialNET.Extensions`. For the package validation and the API tracking this is an addition only (ADR 0028).
+- **One unit.** X, Y and Z are taken to be **in the same unit** (metres, say). A triangulation in degrees with heights in metres gives slopes that are meaningless; project first (ADR 0010). Volumes are in the cube of that unit, areas in its square.
+- **API** (a triangle is addressed by its index, ADR 0037):
+
+  | Member | Result |
+  |---|---|
+  | `Gradient(t)` | `(Dx, Dy)`: the change of height per unit in X and in Y in the plane of the triangle |
+  | `Slope(t)` | the angle of the plane to the horizontal in **degrees**, 0 (flat) to 90 |
+  | `Aspect(t)` | the compass direction that the plane faces, which is the direction of steepest **descent**, in degrees **clockwise from north** (0 north, 90 east, 180 south, 270 west), in `[0, 360)` |
+  | `SurfaceArea(t)` | the area of the triangle on the surface (in 3D) |
+  | `SurfaceArea()` | the sum over all triangles |
+  | `Volume(z)` | `(Above, Below)`: the volume between the surface and the horizontal plane at the height `z` |
+  | `Drape(line, factory)` | the line over the surface, as a polyline with Z and M |
+
+  A triangle with a vertex without Z gives `NaN` for the gradient, slope, aspect and area; `Aspect` is also `NaN` for a flat triangle, since it faces nowhere. An index out of range is an `ArgumentOutOfRangeException`.
+- **Slope in degrees.** The GIS convention, and what a map legend says ("slopes steeper than 30°"). The gradient, from which a percentage or a ratio follows, is also public. **Aspect is the direction of descent**, as in GIS packages: a slope that rises to the east faces west (270). The angle is measured clockwise from north, like a compass bearing.
+- **`SurfaceArea()`** adds the triangles that have Z and leaves out the others, so it is 0 for a triangulation without heights; it is the area that a roof or a coat of paint would need, larger than the map area where the ground slopes (by `sqrt(1 + a² + b²)` on a plane).
+- **`Volume(z)`** returns **both** parts, not their difference: `Above` is what lies above the plane (earth to cut away), `Below` what is missing up to it (to fill), both not negative. The net volume is `Above − Below`. It is **exact** for the linear surface: a triangle is integrated by its area times the mean of the heights at its corners; a triangle that the plane cuts is split along the cut, and only the part above (or below) counts. Triangles with a vertex without Z are not counted. A height that is not finite is an `ArgumentOutOfRangeException`. The cut and fill between two surfaces is not part of this (see below).
+- **`Drape(line)`** lays a polyline over the surface:
+  - The result is the **same line in the map**, with **Z = the height** of the surface and **M = the distance along the input line** (the planar length, with its paths laid end to end, exactly as `LinearReferencing` measures it, ADR 0017). So the profile of a road is its Z against its M, and every method of linear referencing (`Interpolate`, `Project`, `LocateBetween`, …) applies to the result.
+  - **A vertex is inserted** wherever the line crosses an edge of the triangulation or passes through a vertex of it, so that the height between two vertices is linear and the result follows the surface exactly. The original vertices stay.
+  - **Parts outside the triangulation, and parts over a triangle with a vertex without Z, are left out**; the result then has one path for every part that is inside. A line that lies entirely outside gives an empty polyline. A line along an edge of the triangulation, along its border or through its vertices is handled; the decision whether a stretch is inside allows a tolerance of 1e-10 of the size of the surface, so that a line drawn on the border is not lost to rounding.
+  - **How the heights are computed.** At a vertex where the line crosses an edge, the height is the **linear interpolation along that edge** (a one-dimensional calculation between its two end points; at a vertex of the triangulation it is that vertex's Z). Only at the two ends of a segment, which lie inside a triangle, is the plane of the triangle asked, **from the vertex of the triangle that is nearest to the point**. The surface is never asked at a computed point with `InterpolateZ`: a point that lies on an edge by construction can lie outside both triangles by a rounding error, and the question would answer "outside". Evaluating the plane from a vertex far away is no better for a thin triangle (a sliver has an inexact plane far from its vertices, which a property test on random points found), so the nearest vertex and the edge are used.
+  - Z needs a factory with `SupportsZ`, M one with `SupportsM`; what the factory does not support is dropped, as everywhere (ADR 0015). The 3D length of the line is not a method of its own: it follows from the vertices.
+  - **Cost:** for every segment, the triangles in its envelope are examined, so it is proportional to what the envelope covers. A very long diagonal segment over a very large surface examines many triangles that it does not touch; the segments of a road are short. A walk through the neighbours would be proportional to the triangles that are crossed, and can replace this later without a change of the contract.
+- **Exceptions (ADR 0012):** `ArgumentNullException` for `null`, `ArgumentOutOfRangeException` for an index out of range or a height that is not finite, `InvalidOperationException` without a factory (`Drape` only). A triangulation without triangles gives empty results and zeros, no exception.
+- **Tests (ADR 0008):** `[Covers]` tests, no fixtures (NTS has no terrain model). The gradient of a plane is its coefficients in every triangle; slope and aspect for the four compass directions, a diagonal, a flat plane and a triangle without Z; the surface area of planes against the formula; the volume of a flat surface, a tilted plane and **a random terrain against numerical integration** (a midpoint rule on a fine grid, within 1 %); drape on a plane (every vertex on the plane, the line unchanged in the map and of the same length, M rising to the length), a line that crosses a bent surface (a vertex on each edge, the height linear between), a line that leaves the surface (cut off at the border, the rest split into paths), along a hull edge and through vertices, M over several paths, a factory without M or without Z, a triangle without Z.
+- **Playground and documentation:** descriptors for `Drape` (a line over a terrain; the result shows its vertices and, in the WKT, Z and M), `SteepTriangles` (the triangles at least as steep as a limit) and `TerrainVolume` (the net volume above a height) with the example terrains (ADR 0011). The concept page "triangulation, Voronoi and terrain" has a section on analysis and one on draping; the cookbook has a recipe for the height profile of a road.
+- **Not now:** **other interpolations** than linear in the triangle (natural neighbour, inverse distance weighting), **quality meshes** that add points to remove thin triangles, curvature, visibility and watersheds, **cut and fill between two surfaces**, a raster export, and classes of aspect (eight directions). Several of them are a design of their own and can be added without a change of this contract.
+
+## Considered Options
+
+- Slope as a ratio or a percentage (rejected: the angle is the common answer, and the gradient gives the ratio to a caller who wants it)
+- Aspect as the direction of ascent (rejected: GIS packages and every map legend use the direction that the slope faces, which is the direction of descent)
+- Aspect as `0` for a flat triangle (rejected: "north" would be a wrong answer; `NaN` says that there is none)
+- Slope and aspect per vertex or per point (rejected for now: they are properties of the planes, and a point answers by its triangle: `Slope(Locate(point))`; a smooth normal at the vertices is a different, interpolating surface)
+- The volume by sampling a grid (rejected: it is approximate and slow, and the surface is linear, so the integral is exact and cheap)
+- A single net volume (rejected: cut and fill are two different quantities, and the difference loses them; the net volume is one subtraction)
+- `Drape` returning a profile type (distance, height) of its own (rejected: a polyline with Z and M is a geometry that every host can store, draw and measure, and linear referencing applies to it; the pairs are a loop over its points)
+- `Drape` that samples at a fixed spacing (rejected: it would miss the break of every edge and cannot be exact; the vertices at the crossings are exactly the points where the slope changes)
+- Asking `InterpolateZ` for the height at each inserted vertex (rejected: see above, the point may lie outside both triangles by a rounding error)
+- Evaluating the plane of the triangle at the cuts, from its first vertex (tried and rejected: for a thin triangle the extrapolation lost about 6e-7 in a property test; the interpolation along the edge is exact to rounding)
+- Dropping the stretches over triangles without Z silently versus an error (the stretches are left out, as the other methods answer "cannot" with an empty result instead of an exception, ADR 0017)

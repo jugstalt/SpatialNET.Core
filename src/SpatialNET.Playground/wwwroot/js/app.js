@@ -209,6 +209,13 @@ function renderParams() {
       p.values.forEach(v => input.add(new Option(v, v)));
       input.value = state.params[p.key] ?? p.default;
       input.onchange = () => set(p.key, input.value);
+    } else if (p.type === 'text') {
+      input = document.createElement('textarea');
+      input.rows = 5;
+      input.spellcheck = false;
+      input.value = state.params[p.key] ?? p.default ?? '';
+      input.oninput = () => set(p.key, input.value);
+      row.classList.add('stacked');
     } else if (p.type === 'bool') {
       input = document.createElement('input');
       input.type = 'checkbox';

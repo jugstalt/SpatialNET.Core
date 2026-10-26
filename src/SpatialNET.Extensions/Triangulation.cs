@@ -22,7 +22,7 @@ namespace SpatialNET;
 /// is deterministic but not specified.
 /// </para>
 /// </remarks>
-public sealed class Triangulation
+public sealed partial class Triangulation
 {
     private readonly Coordinate[] _vertices;
     private readonly int[] _triangles;      // three vertex ids per triangle, counter-clockwise

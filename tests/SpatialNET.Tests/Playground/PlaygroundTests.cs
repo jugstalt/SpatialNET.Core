@@ -27,6 +27,8 @@ public class PlaygroundCompletenessTests
         ["ProjectDetailed"] = "Das Ergebnis ist eine Struktur (Position, Punkt, Abstand, Versatz), die die Oberfläche nicht darstellt; project und interpolate decken die Bestandteile ab (ADR 0035)",
         ["LocateFeature"] = "Das Ergebnis ist eine Liste von Zahlenpaaren (M-Bereiche), die die Oberfläche nicht darstellt, und es braucht eine Route mit M und eine zweite Geometrie (ADR 0034)",
         ["Intersect"] = "Rechnet mit Ereignistabellen (Messwert-Intervalle mit Attributen), nicht mit Geometrien (ADR 0033); wie Union, Difference und Clip gleichen Namens",
+        ["Between"] = "Rechnet mit Punktereignissen (Messwerte mit Attributen), nicht mit Geometrien (ADR 0040); Within gleichen Namens wie das Prädikat",
+        ["Outside"] = "Rechnet mit Punkt- und Linienereignissen, nicht mit Geometrien (ADR 0040)",
         ["Dissolve"] = "Rechnet mit Ereignistabellen, nicht mit Geometrien (ADR 0033)",
         ["At"] = "Rechnet mit Ereignistabellen, nicht mit Geometrien (ADR 0033)",
         ["CalibrateM"] = "Braucht Ankerpunkte mit M als zusätzliche Eingabe, die die Oberfläche nicht darstellt (ADR 0030)",
@@ -55,7 +57,7 @@ public class PlaygroundCompletenessTests
             Assert.NotEmpty(a.Inputs);
             foreach (var p in a.Parameters)
             {
-                Assert.Contains(p.Type, new[] { "number", "int", "bool", "enum" });
+                Assert.Contains(p.Type, new[] { "number", "int", "bool", "enum", "text" });
                 Assert.True(p.Type != "enum" || p.Values?.Contains((string)p.Default!) == true, $"{a.Id}.{p.Key}");
             }
         }

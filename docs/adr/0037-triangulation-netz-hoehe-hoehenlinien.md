@@ -44,7 +44,7 @@
   The building includes the vertices and the neighbours; a question takes about 1 to 2 microseconds, almost independent of the size, which is what the index is for.
 - **Tests (ADR 0008):** `[Covers]` tests. The structure on random points (counter-clockwise triangles, neighbours that agree and name each other's edge, the area is the area of the hull, the count and the edges match `DelaunayTriangles` and `DelaunayEdges`); `Locate` against a brute-force search for random points inside and outside, on vertices and edges, and from many threads at once; `InterpolateZ` on a plane (exact up to rounding), at vertices, outside and without Z; contours of a plane (a straight line, every vertex at the height), of a cone (a closed ring whose points interpolate to the height) and for heights that the surface does not reach; index and argument errors.
 - **Playground and documentation:** descriptors for `InterpolateZ` (the height at a point) and `Contour` (one height, or all heights at an interval) with the example terrains (ADR 0011); the concept page "triangulation, Voronoi and terrain" and a cookbook recipe.
-- **Not now:** slope, aspect and volume, other interpolations (natural neighbour, inverse distance), smoothing of contour lines, **changing a triangulation** (inserting or removing a point; it is built once), and quality triangulations with added points.
+- **Not now:** other interpolations (natural neighbour, inverse distance), smoothing of contour lines, **changing a triangulation** (inserting or removing a point; it is built once), and quality triangulations with added points. Slope, aspect, area, volume and draping a line came later, in [ADR 0039](0039-gelaendeanalyse-neigung-flaeche-volumen-drape.md).
 
 ## Considered Options
 

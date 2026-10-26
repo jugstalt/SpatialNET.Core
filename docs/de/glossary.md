@@ -38,6 +38,10 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | M-Wert | measure (M) |
 | Kalibrieren | calibrating (`CalibrateM`) |
 | Ereignis | event (`LineEvent<T>`) |
+| Punktereignis | point event (`PointEvent<T>`) |
+| Neigung | slope (`Triangulation.Slope`) |
+| Exposition | aspect (`Triangulation.Aspect`) |
+| Drapieren | draping (`Triangulation.Drape`) |
 | Voronoi-Zelle | Voronoi cell (`VoronoiCell`) |
 | Triangulierung | triangulation (`Triangulation`) |
 | Bruchkante | break line (constraint) |

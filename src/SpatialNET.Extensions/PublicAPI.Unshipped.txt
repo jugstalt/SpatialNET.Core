@@ -71,3 +71,23 @@ static SpatialNET.Shapes.Triangulate(this SpatialNET.IPolygon2D! polygon, Spatia
 static SpatialNET.Triangulation.FromPoints(SpatialNET.IGeometry2D! points) -> SpatialNET.Triangulation!
 static SpatialNET.Triangulation.FromPointsAndLines(SpatialNET.IGeometry2D! points, SpatialNET.IGeometry2D! lines, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.Triangulation!
 static SpatialNET.Triangulation.FromPolygon(SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.Triangulation!
+SpatialNET.Triangulation.Aspect(int triangle) -> double
+SpatialNET.Triangulation.Drape(SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Gradient(int triangle) -> (double Dx, double Dy)
+SpatialNET.Triangulation.Slope(int triangle) -> double
+SpatialNET.Triangulation.SurfaceArea() -> double
+SpatialNET.Triangulation.SurfaceArea(int triangle) -> double
+SpatialNET.Triangulation.Volume(double referenceZ) -> (double Above, double Below)
+SpatialNET.PointEvent<T>
+SpatialNET.PointEvent<T>.M.get -> double
+SpatialNET.PointEvent<T>.M.init -> void
+SpatialNET.PointEvent<T>.PointEvent() -> void
+SpatialNET.PointEvent<T>.PointEvent(double M, T Value) -> void
+SpatialNET.PointEvent<T>.Value.get -> T
+SpatialNET.PointEvent<T>.Value.init -> void
+SpatialNET.PointEvents
+static SpatialNET.PointEvents.Between<T>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<T>>! events, double from, double to) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<T>>!
+static SpatialNET.PointEvents.Outside<TPoint, TLine>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<TPoint>>! points, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TLine>>! lines) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<TPoint>>!
+static SpatialNET.PointEvents.Within<TPoint, TLine, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<TPoint>>! points, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TLine>>! lines, System.Func<TPoint, TLine, TResult>! combine) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<TResult>>!
+static SpatialNET.LinearReferencing.LocateEvents<T>(this SpatialNET.IPolyline2D! route, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(SpatialNET.LineEvent<T> Event, SpatialNET.IPolyline2D! Shape)>!
+static SpatialNET.LinearReferencing.LocateEvents<T>(this SpatialNET.IPolyline2D! route, System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<T>>! events, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(SpatialNET.PointEvent<T> Event, SpatialNET.IMultiPoint2D! Points)>!

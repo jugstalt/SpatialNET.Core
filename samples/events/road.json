@@ -1,0 +1,13 @@
+{
+  "name": "A road with speed limits, surfaces and bridges",
+  "description": "LocateEvents draws the table (line events as stretches, point events as points). IntersectEvents draws where both tables hold.",
+  "tags": [
+    "playground"
+  ],
+  "a": "LINESTRING M (0 0 12000, 100 0 12200, 100 80 12360, 20 80 12520)",
+  "params": {
+    "events": "# speed limits\n12000..12150 50\n12150..12360 70\n12360..12520 30\n# bridges\n12080 bridge\n12300 bridge",
+    "tableA": "12000..12150 50\n12150..12520 70",
+    "tableB": "12000..12100 asphalt\n12100..12400 gravel\n12400..12520 asphalt"
+  }
+}

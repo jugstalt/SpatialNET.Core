@@ -49,7 +49,7 @@ The test `FixtureCompletenessTests` enforces the catalog and the coverage of eve
 
 ## Example folders without an oracle
 
-`voronoi/`, `triangulation/` and `terrain/` hold **examples for the playground** only (tag `playground`), no oracle cases: the playground entries `voronoiDiagram`, `voronoiEdges` and `delaunayEdges` share `voronoi/`, `triangulate` and `constrainedDelaunay` share `triangulation/`, and `interpolateZ` and `contour` share `terrain/` (`FixtureStore.SharedFolders`, ADR 0036 to 0038). The folders carry no tag catalog; these methods are tested by properties and against NTS in their own tests.
+`voronoi/`, `triangulation/`, `terrain/`, `terrain-profile/` and `events/` hold **examples for the playground** only (tag `playground`), no oracle cases: the playground entries `voronoiDiagram`, `voronoiEdges` and `delaunayEdges` share `voronoi/`, `triangulate` and `constrainedDelaunay` share `triangulation/`, `interpolateZ`, `contour`, `steepTriangles` and `terrainVolume` share `terrain/`, `drape` has `terrain-profile/`, and `locateEvents` and `intersectEvents` share `events/` (`FixtureStore.SharedFolders`, ADR 0036 to 0040). The folders carry no tag catalog; these methods are tested by properties and against NTS in their own tests.
 
 ## External corpora
 

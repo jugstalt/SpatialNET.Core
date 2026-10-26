@@ -567,8 +567,11 @@ public static class LinearReferencing
         EnsureFinite(fromM, nameof(fromM));
         EnsureFinite(toM, nameof(toM));
         var f = GeometryFactory.Resolve(factory);
-        double lo = Math.Min(fromM, toM), hi = Math.Max(fromM, toM);
-        var index = new LineIndex(line);
+        return LocateBetweenIn(new LineIndex(line), Math.Min(fromM, toM), Math.Max(fromM, toM), f, line);
+    }
+
+    private static IPolyline2D LocateBetweenIn(LineIndex index, double lo, double hi, IGeometryFactory f, IPolyline2D line)
+    {
         var result = new List<ReadOnlyMemory<Coordinate>>();
         for (int p = 0; p < index.PathCount; p++)
         {
@@ -656,7 +659,11 @@ public static class LinearReferencing
         ArgumentNullException.ThrowIfNull(line);
         EnsureFinite(m, nameof(m));
         var f = GeometryFactory.Resolve(factory);
-        var index = new LineIndex(line);
+        return LocateAlongIn(new LineIndex(line), m, f, line);
+    }
+
+    private static IMultiPoint2D LocateAlongIn(LineIndex index, double m, IGeometryFactory f, IPolyline2D line)
+    {
         var hits = new List<Coordinate>();
         for (int p = 0; p < index.PathCount; p++)
         {
@@ -679,6 +686,67 @@ public static class LinearReferencing
         }
 
         return f.CreateMultiPoint(GeometryAccess.Restrict(hits.ToArray(), f), line);
+    }
+
+    /// <summary>
+    /// Draws the line events of a table on the route (ADR 0040): for every event the stretch of the route whose M lies in its range, as
+    /// <see cref="LocateBetween"/> gives it. The result has <b>one entry per event, in the order of the input</b>; an event whose range the
+    /// route does not reach has an empty polyline. The index of the route is built once, so many events cost little more than one.
+    /// </summary>
+    /// <typeparam name="T">The values of the events.</typeparam>
+    /// <param name="route">The route, a polyline with M.</param>
+    /// <param name="events">The line events.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <returns>The events with their stretches.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="route"/> or <paramref name="events"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">An event has a <c>From</c> or <c>To</c> that is <c>NaN</c> or infinite.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
+    public static IReadOnlyList<(LineEvent<T> Event, IPolyline2D Shape)> LocateEvents<T>(this IPolyline2D route, IEnumerable<LineEvent<T>> events,
+        IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(events);
+        var f = GeometryFactory.Resolve(factory);
+        var index = new LineIndex(route);
+        var result = new List<(LineEvent<T>, IPolyline2D)>();
+        foreach (var e in events)
+        {
+            EnsureFinite(e.From, nameof(events));
+            EnsureFinite(e.To, nameof(events));
+            result.Add((e, LocateBetweenIn(index, Math.Min(e.From, e.To), Math.Max(e.From, e.To), f, route)));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Draws the point events of a table on the route (ADR 0040): for every event the points of the route where M has its value, as
+    /// <see cref="LocateAlong"/> gives them (several where the route passes the value more than once). The result has <b>one entry per event,
+    /// in the order of the input</b>; an event whose M the route does not reach has an empty multipoint.
+    /// </summary>
+    /// <typeparam name="T">The values of the events.</typeparam>
+    /// <param name="route">The route, a polyline with M.</param>
+    /// <param name="events">The point events.</param>
+    /// <param name="factory">The factory; <c>null</c> = <see cref="GeometryFactory.Default"/>.</param>
+    /// <returns>The events with their points.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="route"/> or <paramref name="events"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">An event has an M that is <c>NaN</c> or infinite.</exception>
+    /// <exception cref="InvalidOperationException">No factory available.</exception>
+    public static IReadOnlyList<(PointEvent<T> Event, IMultiPoint2D Points)> LocateEvents<T>(this IPolyline2D route, IEnumerable<PointEvent<T>> events,
+        IGeometryFactory? factory = null)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(events);
+        var f = GeometryFactory.Resolve(factory);
+        var index = new LineIndex(route);
+        var result = new List<(PointEvent<T>, IMultiPoint2D)>();
+        foreach (var e in events)
+        {
+            EnsureFinite(e.M, nameof(events));
+            result.Add((e, LocateAlongIn(index, e.M, f, route)));
+        }
+
+        return result;
     }
 
     /// <summary>

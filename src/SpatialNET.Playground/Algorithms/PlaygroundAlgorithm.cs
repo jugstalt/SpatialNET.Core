@@ -12,7 +12,7 @@ public sealed record InputDescriptor(string Key, string Label, string[] Types, b
 /// <summary>A parameter of an algorithm in the playground.</summary>
 /// <param name="Key">The key.</param>
 /// <param name="Label">The label.</param>
-/// <param name="Type">number, int, bool or enum.</param>
+/// <param name="Type">number, int, bool, enum or text (several lines).</param>
 /// <param name="Default">The default value (or null).</param>
 /// <param name="Unit">"kbs" = the unit of the computation CRS (ADR 0010), otherwise null.</param>
 /// <param name="Values">The values of an enum.</param>
@@ -47,6 +47,10 @@ public sealed class PlaygroundParameters(IReadOnlyDictionary<string, JsonElement
 
     public double? OptionalNumber(string key) =>
         values.TryGetValue(key, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : null;
+
+    /// <summary>The text of a parameter of the type <c>text</c>; empty if there is none.</summary>
+    public string Text(string key) =>
+        values.TryGetValue(key, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : Default(key) as string ?? "";
 
     public bool Bool(string key) =>
         values.TryGetValue(key, out var v) && v.ValueKind is JsonValueKind.True or JsonValueKind.False ? v.GetBoolean() : Default(key) is true;

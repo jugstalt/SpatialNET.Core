@@ -74,3 +74,7 @@
   href: ../../adr/0037-triangulation-netz-hoehe-hoehenlinien.de.md
 - name: "0038 Constrained-Delaunay-Triangulierung und die Triangulierung eines Polygons"
   href: ../../adr/0038-constrained-delaunay-und-polygon-triangulierung.de.md
+- name: "0039 Geländeanalyse: Neigung, Exposition, Fläche, Volumen und eine Linie über der Oberfläche"
+  href: ../../adr/0039-gelaendeanalyse-neigung-flaeche-volumen-drape.de.md
+- name: "0040 Punktereignisse und Ereignisse auf der Karte zeichnen"
+  href: ../../adr/0040-punktereignisse-und-ereignisse-auf-der-karte.de.md
