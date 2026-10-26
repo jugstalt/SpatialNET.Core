@@ -96,7 +96,7 @@ public sealed partial class Triangulation
 
         var points = new List<Coordinate>(_vertices);
         var known = new HashSet<(double, double)>(_vertices.Select(v => (v.X, v.Y)));
-        var segments = new Dictionary<(int, int), bool>();   // the edges of the border and the constraints; the value: whether it is a constraint
+        var segments = new Dictionary<(int, int), Segment>();   // the edges of the border and the constraints
         for (int t = 0; t < TriangleCount; t++)
         {
             for (int k = 0; k < 3; k++)
@@ -106,7 +106,10 @@ public sealed partial class Triangulation
                 {
                     int u = _triangles[3 * t + k], v = _triangles[3 * t + (k + 1) % 3];
                     var key = u < v ? (u, v) : (v, u);
-                    segments[key] = constrained || (segments.TryGetValue(key, out bool before) && before);
+                    bool isBorder = _neighbours[3 * t + k] < 0;
+                    segments.TryGetValue(key, out var before);
+                    // the triangle lies on the left of its edge u → v: for the border that is the inside
+                    segments[key] = isBorder ? new Segment(constrained || before.Constrained, u, v) : new Segment(true, -1, -1);
                 }
             }
         }
@@ -155,7 +158,7 @@ public sealed partial class Triangulation
 
                     var (cx, cy) = VoronoiBuilder.Centre(current._vertices[current._triangles[3 * t]], current._vertices[current._triangles[3 * t + 1]], current._vertices[current._triangles[3 * t + 2]]);
                     var centre = new Coordinate(cx, cy);
-                    if (!double.IsFinite(cx) || !double.IsFinite(cy) || !known.Add((cx, cy)) || Locate(centre) < 0)
+                    if (!double.IsFinite(cx) || !double.IsFinite(cy) || !known.Add((cx, cy)))
                     {
                         continue;
                     }
@@ -173,6 +176,16 @@ public sealed partial class Triangulation
                             {
                                 split.Add(key);
                             }
+                        }
+                    }
+
+                    if (!encroaching && Locate(centre) < 0)
+                    {
+                        // a sliver at the border has its centre outside (or far away): the edge that is in the way is split instead
+                        encroaching = true;
+                        if (current.EdgeInTheWay(t, cx, cy, segments) is { } blocking && Length(points[blocking.Item1], points[blocking.Item2]) >= 2 * floor)
+                        {
+                            split.Add(blocking);
                         }
                     }
 
@@ -203,7 +216,12 @@ public sealed partial class Triangulation
             {
                 var a = points[key.Item1];
                 var b = points[key.Item2];
-                var middle = a.HasZ && b.HasZ ? new Coordinate((a.X + b.X) / 2, (a.Y + b.Y) / 2, (a.Z + b.Z) / 2) : new Coordinate((a.X + b.X) / 2, (a.Y + b.Y) / 2);
+                if (!segments.TryGetValue(key, out var segment))
+                {
+                    continue;
+                }
+
+                var middle = Middle(a, b, segment.From >= 0 ? points[segment.From] : null, segment.From >= 0 ? points[segment.To] : null);
                 if (!known.Add((middle.X, middle.Y)))
                 {
                     continue;
@@ -211,10 +229,11 @@ public sealed partial class Triangulation
 
                 int id = points.Count;
                 points.Add(middle);
-                bool constrained = segments[key];
                 segments.Remove(key);
-                segments[key.Item1 < id ? (key.Item1, id) : (id, key.Item1)] = constrained;
-                segments[key.Item2 < id ? (key.Item2, id) : (id, key.Item2)] = constrained;
+                // the halves keep the direction of a border edge, with the middle in place of the end that it replaces
+                int from = segment.From, to = segment.To;
+                segments[key.Item1 < id ? (key.Item1, id) : (id, key.Item1)] = new Segment(segment.Constrained, from >= 0 ? (from == key.Item1 ? key.Item1 : id) : -1, from >= 0 ? (from == key.Item1 ? id : key.Item1) : -1);
+                segments[key.Item2 < id ? (key.Item2, id) : (id, key.Item2)] = new Segment(segment.Constrained, from >= 0 ? (from == key.Item2 ? key.Item2 : id) : -1, from >= 0 ? (from == key.Item2 ? id : key.Item2) : -1);
                 added++;
             }
 
@@ -237,6 +256,80 @@ public sealed partial class Triangulation
         }
 
         return current;
+    }
+
+    /// <summary>The first edge of the border or of a constraint on the straight way from the centre of a triangle to a point, or <c>null</c> if there is none.</summary>
+    private (int, int)? EdgeInTheWay(int triangle, double x, double y, Dictionary<(int, int), Segment> segments)
+    {
+        var a0 = _vertices[_triangles[3 * triangle]];
+        var b0 = _vertices[_triangles[3 * triangle + 1]];
+        var c0 = _vertices[_triangles[3 * triangle + 2]];
+        var from = new Coordinate((a0.X + b0.X + c0.X) / 3, (a0.Y + b0.Y + c0.Y) / 3);
+        var to = new Coordinate(x, y);
+        int t = triangle;
+        for (int step = 0; step <= TriangleCount; step++)
+        {
+            int next = -1;
+            for (int k = 0; k < 3; k++)
+            {
+                int u = _triangles[3 * t + k], v = _triangles[3 * t + (k + 1) % 3];
+                var pu = _vertices[u];
+                var pv = _vertices[v];
+                // the way leaves the triangle through this edge: the target is on the outer side, and the edge separates the two ends of the way
+                if (Orientation.Orient2D(pu, pv, to) < 0 && Orientation.Orient2D(from, to, pu) * Orientation.Orient2D(from, to, pv) <= 0)
+                {
+                    var key = u < v ? (u, v) : (v, u);
+                    if (_neighbours[3 * t + k] < 0 || segments.ContainsKey(key))
+                    {
+                        return key;
+                    }
+
+                    next = _neighbours[3 * t + k];
+                    break;
+                }
+            }
+
+            if (next < 0)
+            {
+                return null;
+            }
+
+            t = next;
+        }
+
+        return null;
+    }
+
+    /// <summary>An edge of the border or a constraint; <c>From</c> and <c>To</c> are its ends in the direction that has the inside on the left, or −1 for an edge that is not on the border.</summary>
+    private readonly record struct Segment(bool Constrained, int From, int To);
+
+    /// <summary>
+    /// The middle of an edge. On the border it is moved to the inside by as many units in the last place as it takes to lie on that side of the
+    /// edge, so that the rounding never puts it outside: a middle outside would make a triangle of the edge with the chord that no refinement can improve.
+    /// </summary>
+    private static Coordinate Middle(Coordinate a, Coordinate b, Coordinate? from, Coordinate? to)
+    {
+        double x = (a.X + b.X) / 2, y = (a.Y + b.Y) / 2;
+        if (from is { } start && to is { } end)
+        {
+            double nx = -(end.Y - start.Y), ny = end.X - start.X, length = Math.Sqrt(nx * nx + ny * ny);
+            nx /= length;
+            ny /= length;
+            double size = Math.Max(Math.Abs(x), Math.Abs(y));
+            double step = Math.BitIncrement(size) - size;
+            double mx = x, my = y;
+            for (int i = 0; i < 80 && Orientation.Orient2D(start, end, new Coordinate(mx, my)) < 0; i++)
+            {
+                mx = x + nx * step;
+                my = y + ny * step;
+                step *= 2;
+            }
+
+            x = mx;
+            y = my;
+        }
+
+        return a.HasZ && b.HasZ ? new Coordinate(x, y, (a.Z + b.Z) / 2) : new Coordinate(x, y);
     }
 
     /// <summary>Whether a point lies strictly inside the circle with the segment as its diameter, and the segment is long enough to be split.</summary>
@@ -279,7 +372,7 @@ public sealed partial class Triangulation
     }
 
     /// <summary>The constrained triangulation of the points with the segments, inside the domain of this triangulation; <c>null</c> if it cannot be made.</summary>
-    private Triangulation? Rebuild(List<Coordinate> points, Dictionary<(int, int), bool> segments)
+    private Triangulation? Rebuild(List<Coordinate> points, Dictionary<(int, int), Segment> segments)
     {
         var mesh = DelaunayMesh.Create(points.ToArray());
         if (mesh is null)
@@ -296,15 +389,43 @@ public sealed partial class Triangulation
             return null;
         }
 
+        // The inside is what can be reached from the inner side of the border edges without crossing one (a border edge has the inside on its
+        // left). That is topology, not geometry: where the middle of a split edge is a hair off the line, the slivers between the edge and its
+        // chord are outside, whatever a test of their position would say.
         var keep = new bool[mesh.TriangleCount];
-        for (int t = 0; t < keep.Length; t++)
+        var queue = new Queue<int>();
+        for (int e = 0; e < keep.Length * 3; e++)
         {
-            var a = mesh.Points[mesh.Triangles[3 * t]];
-            var b = mesh.Points[mesh.Triangles[3 * t + 1]];
-            var c = mesh.Points[mesh.Triangles[3 * t + 2]];
-            keep[t] = Locate(new Coordinate((a.X + b.X + c.X) / 3, (a.Y + b.Y + c.Y) / 3)) >= 0;
+            int u = mesh.Triangles[e], v = mesh.Triangles[DelaunayMesh.Next(e)];
+            if (segments.TryGetValue(u < v ? (u, v) : (v, u), out var seed) && seed.From == u && seed.To == v && !keep[e / 3])
+            {
+                keep[e / 3] = true;
+                queue.Enqueue(e / 3);
+            }
         }
 
-        return From(mesh, keep, borderConstrained: false, (u, v) => segments.TryGetValue(u < v ? (u, v) : (v, u), out bool constrained) && constrained);
+        while (queue.Count > 0)
+        {
+            int t = queue.Dequeue();
+            for (int k = 0; k < 3; k++)
+            {
+                int e = 3 * t + k, h = mesh.HalfEdges[e];
+                if (h == -1 || keep[h / 3])
+                {
+                    continue;
+                }
+
+                int u = mesh.Triangles[e], v = mesh.Triangles[DelaunayMesh.Next(e)];
+                if (segments.TryGetValue(u < v ? (u, v) : (v, u), out var segment) && segment.From >= 0)
+                {
+                    continue;   // a border edge: the other side is outside
+                }
+
+                keep[h / 3] = true;
+                queue.Enqueue(h / 3);
+            }
+        }
+
+        return From(mesh, keep, borderConstrained: false, (u, v) => segments.TryGetValue(u < v ? (u, v) : (v, u), out var segment) && segment.Constrained);
     }
 }

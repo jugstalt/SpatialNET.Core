@@ -77,6 +77,22 @@ public class RefineTests
 
     [Fact]
     [Covers("Refine")]
+    public void Scattered_points_with_an_irregular_hull_are_refined_too()
+    {
+        // found by a measurement: the middle of a hull edge is a hair off the edge, which made a sliver of the edge with its chord, never to be repaired
+        var random = new Random(3);
+        var points = Enumerable.Range(0, 400).Select(_ => new Coordinate(random.NextDouble() * 1000, random.NextDouble() * 1000, random.NextDouble() * 10)).ToArray();
+        var t = Triangulation.FromPoints(F.CreateMultiPoint(points, null));
+
+        var fine = t.Refine(25);
+
+        Assert.True(t.MinAngle() < 5);
+        Assert.True(fine.MinAngle() >= 25 - 1e-6, $"{fine.MinAngle()}");
+        Assert.Equal(Area(t), Area(fine), 1e-6 * Area(t));
+    }
+
+    [Fact]
+    [Covers("Refine")]
     public void The_largest_area_is_respected()
     {
         var t = Square([new(50, 50)]);

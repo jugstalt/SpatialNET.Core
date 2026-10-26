@@ -89,6 +89,47 @@ if (args.Contains("--quick-voronoi"))
     return;
 }
 
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-terrain → natural neighbour, Refine, Volume(other), SlopeZones, LineOfSight (ADR 0041)
+if (args.Contains("--quick-terrain"))
+{
+    GeometryFactory.Default = ImpGeometryFactory.Instance;
+    foreach (int n in new[] { 10_000, 50_000 })
+    {
+        var terrain = TriangulationBenchmarks.CreateTerrain(PointLayout.Uniform, n);
+        var tin = Triangulation.FromPoints(terrain);
+        var envelope = terrain.Envelope();
+        var random = new Random(7);
+        Coordinate Random() => new(envelope.MinX + random.NextDouble() * envelope.Width, envelope.MinY + random.NextDouble() * envelope.Height);
+        var queries = Enumerable.Range(0, 100_000).Select(_ => Random()).ToArray();
+        tin.Locate(queries[0]);    // builds the index
+        double linear = Measure(() => { foreach (var q in queries) tin.InterpolateZ(q); });
+        double natural = Measure(() => { foreach (var q in queries) tin.InterpolateNaturalNeighbour(q); });
+        var other = Triangulation.FromPoints(TriangulationBenchmarks.CreateTerrain(PointLayout.Clustered, n));
+        double volume = Measure(() => tin.Volume(other));
+        double zones = Measure(() => tin.SlopeZones([5, 15, 30]));
+        // sight lines of a twentieth of the extent (a person looking around), and 1000 across the whole surface
+        var near = Enumerable.Range(0, 10_000).Select(_ =>
+        {
+            var a = Random();
+            return (a, new Coordinate(Math.Clamp(a.X + (random.NextDouble() - 0.5) * envelope.Width / 10, envelope.MinX, envelope.MaxX), Math.Clamp(a.Y + (random.NextDouble() - 0.5) * envelope.Height / 10, envelope.MinY, envelope.MaxY)));
+        }).ToArray();
+        var far = Enumerable.Range(0, 1_000).Select(_ => (Random(), Random())).ToArray();
+        double sightNear = Measure(() => { foreach (var (a, b) in near) tin.LineOfSight(a, b, 1.7); });
+        double sightFar = Measure(() => { foreach (var (a, b) in far) tin.LineOfSight(a, b, 1.7); });
+        Console.WriteLine($"N={n,8}  100k InterpolateZ {linear,8:F1} ms  100k NaturalNeighbour {natural,8:F1} ms  Volume(other) {volume,8:F1} ms  SlopeZones {zones,8:F1} ms  10k short LineOfSight {sightNear,8:F1} ms  1k long LineOfSight {sightFar,8:F1} ms");
+    }
+
+    foreach (int n in new[] { 1_000, 10_000, 100_000 })
+    {
+        var tin = Triangulation.FromPoints(TriangulationBenchmarks.CreateTerrain(PointLayout.Uniform, n));
+        Triangulation? fine = null;
+        double refine = Measure(() => fine = tin.Refine(25, maxSteinerPoints: 1_000_000));
+        Console.WriteLine($"Refine     N={n,8}  25 degrees {refine,9:F1} ms  {tin.TriangleCount} -> {fine!.TriangleCount} triangles, smallest angle {tin.MinAngle():F2} -> {fine.MinAngle():F2}");
+    }
+
+    return;
+}
+
 if (args.Contains("--quick-triangulation"))
 {
     GeometryFactory.Default = ImpGeometryFactory.Instance;
