@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- `Smooth` (ADR 0043): rounds the corners of a polyline or the rings of a polygon, for any kind of line (contour lines, rivers, roads). Two methods: `SmoothingMethod.Chaikin` (corner cutting; the curve stays inside the hull of the vertices) and `SmoothingMethod.CatmullRom` (a centripetal spline through every vertex). The ends of an open path stay, a closed path is smoothed all the way round, and Z and M are interpolated linearly, so a contour line keeps its height. `Triangulation.Resample(cellSize)` smooths the surface: the heights of a grid by natural neighbour take the place of the inner measurements, border and break lines stay; contour lines and bands of it have no creases at the old triangle edges. Playground entry `smooth`, parameters `cellSize` and `smooth` for `contour` and `contourBands`, a cookbook recipe, and a `--quick-terrain` measurement.
 - `Triangulation.ContourBands` (ADR 0042): the areas of a surface between heights, the filled version of the contour lines. One polygon per band (below the first height, between two, above the last), the bands tile the surface and share their boundaries along the contour lines exactly. Playground entry `contourBands`.
 
 ## [0.6.0-preview.1] - 2026-10-27

@@ -252,6 +252,26 @@ foreach (double level in new[] { 20.0, 30.0 })
 
 ```
 
+## Smooth contour lines
+
+The contour lines of a triangulation have a small crease at every edge of its triangles. Two steps take them out: **smooth the surface** (`Resample` puts a grid of heights, interpolated by natural neighbour, in place of the measurements) and then **round the lines** (`Smooth`). The first step is the one that keeps lines of different heights apart: over a triangle they are parallel straight lines, so they cannot cross, however fine the triangles are. The second works on any line, a river or a road as well, and can bring two lines that run very close to each other so close that they cross, which is why it comes second and gets few iterations.
+
+```csharp
+var points = Wkt.Read("MULTIPOINT Z ((0 0 10), (100 0 20), (100 100 40), (0 100 30), (50 50 25))");
+var terrain = Triangulation.FromPoints(points);
+
+// Smooth the surface first: a grid of 10 by natural neighbour. Contour lines of different heights of it cannot cross.
+var smooth = terrain.Resample(10);
+
+// Then round the last corners of the lines (Chaikin, two iterations); the height stays as Z.
+IPolyline2D line = smooth.Contour(30).Smooth(2);
+IPolyline2D plain = terrain.Contour(30);
+
+Console.WriteLine($"{plain[0].PointCount} -> {line[0].PointCount} vertices");
+```
+
+A cell of about half the distance between the measurements is a good start. `Resample` drops the inner measurements by default (they are points of the interpolated surface and would stay as kinks); `keepVertices: true` keeps them. The plain `Smooth` of a polyline or a polygon has two methods: `Chaikin` cuts the corners (the curve stays inside the hull of the vertices and moves away from them), `CatmullRom` is a spline through every vertex.
+
 ## Height profile along a road
 
 Laid over a terrain model, a road gets a vertex wherever it crosses an edge of the triangulation, with the height as Z and the distance along the road as M. Z against M is the height profile ([Triangulation, Voronoi and terrain](concepts/triangulation-and-voronoi.md)).

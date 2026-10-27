@@ -298,6 +298,29 @@ public sealed class CookbookSamplesTests : IDisposable
     }
 
     [Fact]
+    public void SmoothContourLines()
+    {
+        // --- snippet: cookbook-smooth-contours
+        var points = Wkt.Read("MULTIPOINT Z ((0 0 10), (100 0 20), (100 100 40), (0 100 30), (50 50 25))");
+        var terrain = Triangulation.FromPoints(points);
+
+        // Smooth the surface first: a grid of 10 by natural neighbour. Contour lines of different heights of it cannot cross.
+        var smooth = terrain.Resample(10);
+
+        // Then round the last corners of the lines (Chaikin, two iterations); the height stays as Z.
+        IPolyline2D line = smooth.Contour(30).Smooth(2);
+        IPolyline2D plain = terrain.Contour(30);
+
+        Console.WriteLine($"{plain[0].PointCount} -> {line[0].PointCount} vertices");
+        // --- end
+
+        Assert.True(line[0].PointCount > plain[0].PointCount);
+        Assert.True(line.Length() > 0);
+        Assert.False(smooth.Contour(20).Smooth(2).Intersects(line));
+        Assert.All(Enumerable.Range(0, line[0].PointCount), i => Assert.Equal(30, ((IPoint3D)line[0][i]).Z, 6));
+    }
+
+    [Fact]
     public void HeightProfileAlongARoad()
     {
         // --- snippet: cookbook-profile

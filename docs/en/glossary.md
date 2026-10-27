@@ -29,6 +29,7 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | aspect | Exposition | The compass direction that a triangle faces, the direction of steepest descent, clockwise from north (`Triangulation.Aspect`) |
 | natural neighbour | Natürliche Nachbarn | A smooth interpolation: the heights of the neighbours that a new point would get, weighted by the area of their Voronoi cells that it takes over (`Triangulation.InterpolateNaturalNeighbour`) |
 | quality mesh | Qualitätsnetz | A triangulation without sharp triangles, made by adding points (`Triangulation.Refine`) |
+| smoothing | Glättung | Replacing the corners of a line by a curve (`Smooth`: corner cutting or a spline), or the surface by its interpolation on a grid (`Triangulation.Resample`) |
 | height band | Höhenstufe | The area of a surface between two heights, bounded by contour lines (`Triangulation.ContourBands`) |
 | line of sight | Sichtlinie | Whether the straight line from an eye to a target passes above the ground (`Triangulation.LineOfSight`) |
 | draping | Drapieren | Laying a line over a surface: the same line in the map, with the height as Z and the distance along it as M (`Triangulation.Drape`) |

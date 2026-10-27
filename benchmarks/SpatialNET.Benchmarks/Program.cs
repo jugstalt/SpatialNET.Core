@@ -108,6 +108,10 @@ if (args.Contains("--quick-terrain"))
         double volume = Measure(() => tin.Volume(other));
         double zones = Measure(() => tin.SlopeZones([5, 15, 30]));
         double bands = Measure(() => tin.ContourBands([-150, -100, -50, 0, 50, 100, 150]));
+        double cell = Math.Sqrt(envelope.Width * envelope.Height / n) / 2;   // half the mean distance of the points: four grid points for every point
+        Triangulation? fine = null;
+        double resample = Measure(() => fine = tin.Resample(cell));
+        Console.WriteLine($"           Resample (cell {cell:F1}) {resample,8:F1} ms -> {fine!.Vertices.Count} vertices, {fine.TriangleCount} triangles");
         // sight lines of a twentieth of the extent (a person looking around), and 1000 across the whole surface
         var near = Enumerable.Range(0, 10_000).Select(_ =>
         {
@@ -118,6 +122,15 @@ if (args.Contains("--quick-terrain"))
         double sightNear = Measure(() => { foreach (var (a, b) in near) tin.LineOfSight(a, b, 1.7); });
         double sightFar = Measure(() => { foreach (var (a, b) in far) tin.LineOfSight(a, b, 1.7); });
         Console.WriteLine($"N={n,8}  100k InterpolateZ {linear,8:F1} ms  100k NaturalNeighbour {natural,8:F1} ms  Volume(other) {volume,8:F1} ms  SlopeZones {zones,8:F1} ms  7 ContourBands {bands,8:F1} ms  10k short LineOfSight {sightNear,8:F1} ms  1k long LineOfSight {sightFar,8:F1} ms");
+    }
+
+    // a line of 100,000 vertices (a random walk), smoothed
+    {
+        var walk = new Random(9);
+        double x = 0, y = 0;
+        var path = Enumerable.Range(0, 100_000).Select(_ => new Coordinate(x += walk.NextDouble() * 2 - 0.5, y += walk.NextDouble() * 2 - 1)).ToArray();
+        var line = ImpGeometryFactory.Instance.CreatePolyline([path], null);
+        Console.WriteLine($"Smooth     100k vertices  Chaikin x3 {Measure(() => line.Smooth(3)),8:F1} ms  CatmullRom x3 {Measure(() => line.Smooth(3, SmoothingMethod.CatmullRom)),8:F1} ms");
     }
 
     foreach (int n in new[] { 1_000, 10_000, 100_000 })

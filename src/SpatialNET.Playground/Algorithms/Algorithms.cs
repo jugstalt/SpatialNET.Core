@@ -178,6 +178,11 @@ public sealed class DensifyAlgorithm() : PlaygroundAlgorithm("densify", "Densify
     [In.A(In.Any)], [new("maxSegmentLength", "Maximum segment length", "number", 5.0, "kbs")],
     (i, p, f, _) => i["a"].Densify(p.Number("maxSegmentLength"), f));
 
+public sealed class SmoothAlgorithm() : PlaygroundAlgorithm("smooth", "Smooth", "Construction",
+    [In.A(In.Any, "Line or polygon")],
+    [new("iterations", "Iterations (each halves the segments)", "int", 3), new("method", "Method", "enum", "Chaikin", null, ["Chaikin", "CatmullRom"])],
+    (i, p, f, _) => i["a"].Smooth((int)p.Number("iterations"), p.Enum<SmoothingMethod>("method"), f));
+
 public sealed class ReverseAlgorithm() : PlaygroundAlgorithm("reverse", "Reverse", "Construction",
     [In.A(In.Lines, "Line")], [], (i, _, f, _) => ((IPolyline2D)i["a"]).Reverse(f));
 
@@ -338,14 +343,22 @@ public sealed class InterpolateZAlgorithm() : PlaygroundAlgorithm("interpolateZ"
 
 public sealed class ContourAlgorithm() : PlaygroundAlgorithm("contour", "Contour (lines of equal height)", "Triangulation",
     [In.A(In.Any, "Points with Z (WKT)")],
-    [new("z", "Height", "number", 50.0), new("interval", "Interval (0 = only the height above)", "number", 0.0)],
+    [new("z", "Height", "number", 50.0), new("interval", "Interval (0 = only the height above)", "number", 0.0),
+     new("cellSize", "Smooth the surface: grid cell size (0 = no)", "number", 0.0), new("smooth", "Smooth the lines: iterations (0 = no)", "int", 0)],
     (i, p, f, _) =>
     {
         var triangulation = Triangulation.FromPoints(i["a"]);
+        if (p.Number("cellSize") > 0)
+        {
+            triangulation = triangulation.Resample(p.Number("cellSize"));
+        }
+
+        int smooth = (int)p.Number("smooth");
+        IGeometry2D Line(double level) => smooth > 0 ? triangulation.Contour(level, f).Smooth(smooth, SmoothingMethod.Chaikin, f) : triangulation.Contour(level, f);
         double interval = p.Number("interval");
         if (!(interval > 0))
         {
-            return triangulation.Contour(p.Number("z"), f);
+            return Line(p.Number("z"));
         }
 
         var heights = triangulation.Vertices.Where(v => v.HasZ).Select(v => v.Z).ToList();
@@ -357,7 +370,7 @@ public sealed class ContourAlgorithm() : PlaygroundAlgorithm("contour", "Contour
         var levels = new List<IGeometry2D>();
         for (double level = Math.Ceiling(heights.Min() / interval) * interval; level <= heights.Max() && levels.Count < 200; level += interval)
         {
-            levels.Add(triangulation.Contour(level, f));
+            levels.Add(Line(level));
         }
 
         return levels;
@@ -420,10 +433,16 @@ public sealed class SlopeZonesAlgorithm() : PlaygroundAlgorithm("slopeZones", "S
 
 public sealed class ContourBandsAlgorithm() : PlaygroundAlgorithm("contourBands", "ContourBands (areas between heights)", "Triangulation",
     [In.A(In.Any, "Points with Z (WKT)")],
-    [new("levels", "Heights, separated by commas", "text", "20, 40, 60, 80"), new("interval", "Interval (0 = use the heights)", "number", 0.0)],
+    [new("levels", "Heights, separated by commas", "text", "20, 40, 60, 80"), new("interval", "Interval (0 = use the heights)", "number", 0.0),
+     new("cellSize", "Smooth the surface: grid cell size (0 = no)", "number", 0.0)],
     (i, p, f, _) =>
     {
         var triangulation = Triangulation.FromPoints(i["a"]);
+        if (p.Number("cellSize") > 0)
+        {
+            triangulation = triangulation.Resample(p.Number("cellSize"));
+        }
+
         double interval = p.Number("interval");
         double[] levels;
         if (interval > 0)

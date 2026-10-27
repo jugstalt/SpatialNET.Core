@@ -533,4 +533,58 @@ public class TriangulationStressTests
             }
         });
     }
+
+    // ---------- smoothing (ADR 0043) ----------
+
+    [StressFact]
+    public void Smooth_gives_finite_lines_that_keep_their_ends_for_dirty_points()
+    {
+        Gen.Select(Points(2, 30), Gen.Int[0, 4], Gen.Bool, Gen.Bool).Run((points, iterations, spline, close) =>
+        {
+            var path = close ? points.Append(points[0]).ToArray() : points;
+            var line = F.CreatePolyline([path], null);
+            var method = spline ? SmoothingMethod.CatmullRom : SmoothingMethod.Chaikin;
+
+            var smooth = line.Smooth(iterations, method, F);
+
+            Assert.Equal(1, smooth.PathCount);
+            var result = Internal.Rings.Coordinates(smooth[0]);
+            Assert.All(result, c => Assert.True(double.IsFinite(c.X) && double.IsFinite(c.Y), $"{Raw(points)}"));
+            Assert.True(result.Length >= 2);
+
+            // the rule of the library: consecutive equal points count once, and a path that ends where it starts (with three different points) is closed
+            var single = path.Where((c, i) => i == 0 || c.X != path[i - 1].X || c.Y != path[i - 1].Y).ToList();
+            bool closed = single.Count >= 4 && single[0].X == single[^1].X && single[0].Y == single[^1].Y;
+            if (closed)
+            {
+                Assert.True(result[0].X == result[^1].X && result[0].Y == result[^1].Y, "a closed path is not closed any more");
+            }
+            else
+            {
+                Assert.True(result[0].X == path[0].X && result[0].Y == path[0].Y, "the start moved");
+                Assert.True(result[^1].X == path[^1].X && result[^1].Y == path[^1].Y, "the end moved");
+            }
+        });
+    }
+
+    [StressFact]
+    public void Resample_keeps_the_area_and_gives_finite_vertices_for_dirty_sites()
+    {
+        Gen.Select(SanePoints(3, 30), Gen.Double[-30, 30].Array[30], Gen.Int[2, 20]).Run((points, heights, cell) =>
+        {
+            var withZ = Distinct(points).Select((p, i) => p with { Z = Math.Round(heights[i % heights.Length], 2) }).ToArray();
+            var t = Triangulation.FromPoints(F.CreateMultiPoint(withZ, null));
+            if (t.TriangleCount == 0)
+            {
+                return;
+            }
+
+            var fine = t.Resample(cell);
+
+            double before = t.ToPolygons(F).Sum(p => p.Area());
+            double after = fine.ToPolygons(F).Sum(p => p.Area());
+            Assert.True(Math.Abs(after - before) <= 1e-6 * (1 + before), $"{after:R} against {before:R}, cell {cell}: {Raw(withZ)}");
+            Assert.All(fine.Vertices, v => Assert.True(double.IsFinite(v.X) && double.IsFinite(v.Y) && double.IsFinite(v.Z), $"{v}: {Raw(withZ)}"));
+        });
+    }
 }

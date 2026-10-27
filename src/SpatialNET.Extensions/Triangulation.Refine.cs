@@ -96,23 +96,7 @@ public sealed partial class Triangulation
 
         var points = new List<Coordinate>(_vertices);
         var known = new HashSet<(double, double)>(_vertices.Select(v => (v.X, v.Y)));
-        var segments = new Dictionary<(int, int), Segment>();   // the edges of the border and the constraints
-        for (int t = 0; t < TriangleCount; t++)
-        {
-            for (int k = 0; k < 3; k++)
-            {
-                bool constrained = _constrained[3 * t + k];
-                if (_neighbours[3 * t + k] < 0 || constrained)
-                {
-                    int u = _triangles[3 * t + k], v = _triangles[3 * t + (k + 1) % 3];
-                    var key = u < v ? (u, v) : (v, u);
-                    bool isBorder = _neighbours[3 * t + k] < 0;
-                    segments.TryGetValue(key, out var before);
-                    // the triangle lies on the left of its edge u → v: for the border that is the inside
-                    segments[key] = isBorder ? new Segment(constrained || before.Constrained, u, v) : new Segment(true, -1, -1);
-                }
-            }
-        }
+        var segments = BorderAndConstraintSegments();
 
         double minX = _vertices.Min(v => v.X), maxX = _vertices.Max(v => v.X), minY = _vertices.Min(v => v.Y), maxY = _vertices.Max(v => v.Y);
         double floor = 1e-7 * Math.Sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
@@ -298,6 +282,30 @@ public sealed partial class Triangulation
         }
 
         return null;
+    }
+
+    /// <summary>The edges of the border and the constraints, with the direction of a border edge that has the inside on its left.</summary>
+    private Dictionary<(int, int), Segment> BorderAndConstraintSegments()
+    {
+        var segments = new Dictionary<(int, int), Segment>();
+        for (int t = 0; t < TriangleCount; t++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                bool constrained = _constrained[3 * t + k];
+                if (_neighbours[3 * t + k] < 0 || constrained)
+                {
+                    int u = _triangles[3 * t + k], v = _triangles[3 * t + (k + 1) % 3];
+                    var key = u < v ? (u, v) : (v, u);
+                    bool isBorder = _neighbours[3 * t + k] < 0;
+                    segments.TryGetValue(key, out var before);
+                    // the triangle lies on the left of its edge u → v: for the border that is the inside
+                    segments[key] = isBorder ? new Segment(constrained || before.Constrained, u, v) : new Segment(true, -1, -1);
+                }
+            }
+        }
+
+        return segments;
     }
 
     /// <summary>An edge of the border or a constraint; <c>From</c> and <c>To</c> are its ends in the direction that has the inside on the left, or −1 for an edge that is not on the border.</summary>

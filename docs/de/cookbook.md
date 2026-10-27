@@ -252,6 +252,26 @@ foreach (double level in new[] { 20.0, 30.0 })
 
 ```
 
+## Höhenlinien glätten
+
+Die Höhenlinien einer Triangulierung haben an jeder Dreieckskante einen kleinen Knick. Zwei Schritte nehmen ihn heraus: die **Fläche glätten** (`Resample` setzt ein Raster aus Höhen, durch natürliche Nachbarn interpoliert, an die Stelle der Messpunkte) und dann die **Linien runden** (`Smooth`). Der erste Schritt hält Linien verschiedener Höhen auseinander: Über einem Dreieck sind sie parallele Strecken, sie können sich also nicht kreuzen, wie fein die Dreiecke auch sind. Der zweite funktioniert für jede Linie, auch für einen Fluss oder eine Straße, und kann zwei Linien, die sehr dicht nebeneinander laufen, so weit annähern, dass sie sich kreuzen; deshalb kommt er zweiter und bekommt wenige Durchläufe.
+
+```csharp
+var points = Wkt.Read("MULTIPOINT Z ((0 0 10), (100 0 20), (100 100 40), (0 100 30), (50 50 25))");
+var terrain = Triangulation.FromPoints(points);
+
+// Smooth the surface first: a grid of 10 by natural neighbour. Contour lines of different heights of it cannot cross.
+var smooth = terrain.Resample(10);
+
+// Then round the last corners of the lines (Chaikin, two iterations); the height stays as Z.
+IPolyline2D line = smooth.Contour(30).Smooth(2);
+IPolyline2D plain = terrain.Contour(30);
+
+Console.WriteLine($"{plain[0].PointCount} -> {line[0].PointCount} vertices");
+```
+
+Eine Zelle von etwa der Hälfte des Abstands der Messpunkte ist ein guter Anfang. `Resample` lässt die inneren Messpunkte standardmäßig weg (sie sind Punkte der interpolierten Fläche und blieben als Knicke stehen); `keepVertices: true` behält sie. Das einfache `Smooth` einer Polylinie oder eines Polygons hat zwei Verfahren: `Chaikin` schneidet die Ecken ab (die Kurve bleibt in der Hülle der Stützpunkte und entfernt sich von ihnen), `CatmullRom` ist ein Spline durch jeden Stützpunkt.
+
 ## Höhenprofil entlang einer Straße
 
 Über ein Geländemodell gelegt, bekommt eine Straße einen Stützpunkt überall, wo sie eine Kante der Triangulierung kreuzt, mit der Höhe als Z und dem Abstand entlang der Straße als M. Z gegen M ist das Höhenprofil ([Triangulierung, Voronoi und Gelände](concepts/triangulation-and-voronoi.md)).

@@ -14,7 +14,7 @@ public class PlaygroundTriangulationTests(WebApplicationFactory<Program> factory
     public static TheoryData<string> Ids() => new()
     {
         "voronoiDiagram", "voronoiEdges", "delaunayEdges", "triangulate", "constrainedDelaunay", "interpolateZ", "contour",
-        "steepTriangles", "terrainVolume", "drape", "locateEvents", "intersectEvents", "naturalNeighbour", "refine", "slopeZones", "contourBands", "lineOfSight", "surfaceVolume",
+        "steepTriangles", "terrainVolume", "drape", "locateEvents", "intersectEvents", "naturalNeighbour", "refine", "slopeZones", "contourBands", "smooth", "lineOfSight", "surfaceVolume",
     };
 
     [Theory]
