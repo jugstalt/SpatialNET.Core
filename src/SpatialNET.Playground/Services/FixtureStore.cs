@@ -43,6 +43,7 @@ public sealed class FixtureStore(string root)
         ["naturalNeighbour"] = "terrain",
         ["refine"] = "terrain",
         ["slopeZones"] = "terrain",
+        ["viewshed"] = "terrain",
         ["smooth"] = "smoothing",
         ["contourBands"] = "terrain",
         ["lineOfSight"] = "terrain-sight",

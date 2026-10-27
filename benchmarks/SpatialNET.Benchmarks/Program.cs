@@ -108,6 +108,11 @@ if (args.Contains("--quick-terrain"))
         double volume = Measure(() => tin.Volume(other));
         double zones = Measure(() => tin.SlopeZones([5, 15, 30]));
         double bands = Measure(() => tin.ContourBands([-150, -100, -50, 0, 50, 100, 150]));
+        var centre = new Coordinate((envelope.MinX + envelope.MaxX) / 2, (envelope.MinY + envelope.MaxY) / 2);
+        double reach = Math.Min(envelope.Width, envelope.Height) / 3;
+        double view360 = Measure(() => tin.Viewshed(centre, reach, 1.7, 0, 360));
+        double view1440 = Measure(() => tin.Viewshed(centre, reach, 1.7, 0, 1440));
+        Console.WriteLine($"           Viewshed (distance {reach:F0}, observer 1.7) 360 rays {view360,8:F1} ms  1440 rays {view1440,8:F1} ms");
         double cell = Math.Sqrt(envelope.Width * envelope.Height / n) / 2;   // half the mean distance of the points: four grid points for every point
         Triangulation? fine = null;
         double resample = Measure(() => fine = tin.Resample(cell));

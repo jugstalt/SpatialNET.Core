@@ -216,6 +216,101 @@ public class SmoothingTests
         Assert.All(chaikin, c => Assert.InRange(Math.Sqrt((c.X - 50) * (c.X - 50) + (c.Y - 50) * (c.Y - 50)), 37.5, 40));
     }
 
+    // ---------- smooth to a distance ----------
+
+    /// <summary>The largest distance of a vertex from the segment between its neighbours, as the documentation defines the tolerance.</summary>
+    private static double Flatness(Coordinate[] p, bool closed = false)
+    {
+        double worst = 0;
+        int n = p.Length - (closed ? 1 : 0);
+        for (int i = closed ? 0 : 1; i < (closed ? n : n - 1); i++)
+        {
+            var a = p[(i + n - 1) % n];
+            var b = p[(i + 1) % n];
+            double ex = b.X - a.X, ey = b.Y - a.Y, l2 = ex * ex + ey * ey;
+            double t = l2 == 0 ? 0 : Math.Clamp(((p[i].X - a.X) * ex + (p[i].Y - a.Y) * ey) / l2, 0, 1);
+            worst = Math.Max(worst, Math.Sqrt(Math.Pow(a.X + t * ex - p[i].X, 2) + Math.Pow(a.Y + t * ey - p[i].Y, 2)));
+        }
+
+        return worst;
+    }
+
+    [Fact]
+    [Covers("SmoothToTolerance")]
+    public void A_line_that_is_smooth_to_the_tolerance_is_returned_as_it_is_and_a_finer_tolerance_gives_more_vertices()
+    {
+        var line = Line("LINESTRING (0 0, 10 1, 20 0, 30 1, 40 0)");
+
+        Assert.Equal(5, Path(line.SmoothToTolerance(5, SmoothingMethod.Chaikin, F)).Length);
+        int coarse = Path(line.SmoothToTolerance(0.2, SmoothingMethod.Chaikin, F)).Length;
+        int fine = Path(line.SmoothToTolerance(0.01, SmoothingMethod.Chaikin, F)).Length;
+        Assert.True(5 < coarse && coarse < fine, $"{coarse} {fine}");
+        Assert.Equal(2, Path(Line("LINESTRING (0 0, 5 5)").SmoothToTolerance(0.001, SmoothingMethod.CatmullRom, F)).Length);
+    }
+
+    [Fact]
+    [Covers("SmoothToTolerance")]
+    public void The_result_is_flat_to_the_tolerance_unless_the_limit_of_iterations_was_reached()
+    {
+        Pt.Array[3, 12].Sample(points =>
+        {
+            var d = Distinct(points);
+            if (d.Length < 3)
+            {
+                return;
+            }
+
+            var line = Open(d);
+            const double tolerance = 1.5;
+
+            var chaikin = Path(line.SmoothToTolerance(tolerance, SmoothingMethod.Chaikin, F));
+            var spline = Path(line.SmoothToTolerance(tolerance, SmoothingMethod.CatmullRom, F));
+
+            Assert.True(Flatness(chaikin) <= tolerance || chaikin.Length == (d.Length - 2) * 1024 + 2, $"{Flatness(chaikin)}");
+            Assert.True(Flatness(spline) <= tolerance || spline.Length == (d.Length - 1) * 1024 + 1, $"{Flatness(spline)}");
+            Assert.Equal((d[0].X, d[0].Y), (chaikin[0].X, chaikin[0].Y));
+            Assert.Equal((d[^1].X, d[^1].Y), (spline[^1].X, spline[^1].Y));
+            foreach (var v in d)
+            {
+                Assert.Contains(spline, c => c.X == v.X && c.Y == v.Y);   // the spline passes through every vertex
+            }
+        }, iter: 200);
+    }
+
+    [Fact]
+    [Covers("SmoothToTolerance")]
+    public void A_closed_ring_stays_closed_and_the_height_stays()
+    {
+        var ring = Line("LINESTRING Z (0 0 30, 20 0 30, 20 20 30, 0 20 30, 0 0 30)");
+
+        var smooth = Path(ring.SmoothToTolerance(0.1, SmoothingMethod.Chaikin, ZM));
+
+        Assert.Equal((smooth[0].X, smooth[0].Y), (smooth[^1].X, smooth[^1].Y));
+        Assert.True(Flatness(smooth, closed: true) <= 0.1);
+        Assert.All(smooth, c => Assert.Equal(30, c.Z, 1e-9));
+    }
+
+    [Fact]
+    [Covers("SmoothToTolerance")]
+    public void Polygons_and_other_geometries_follow_and_bad_arguments_are_rejected()
+    {
+        var polygon = (IPolygon2D)G("POLYGON ((0 0, 40 0, 40 40, 0 40, 0 0), (10 10, 10 30, 30 30, 30 10, 10 10))");
+        var line = Line("LINESTRING (0 0, 5 5, 9 1)");
+
+        var smooth = polygon.SmoothToTolerance(0.2, SmoothingMethod.Chaikin, F);
+
+        Assert.Equal(2, smooth.RingCount);
+        Assert.True(smooth.IsValid());
+        Assert.IsAssignableFrom<IPolyline2D>(G("LINESTRING (0 0, 5 5, 9 1)").SmoothToTolerance(0.5, SmoothingMethod.Chaikin, F));
+        Assert.Equal("POINT (3 4)", G("POINT (3 4)").SmoothToTolerance(0.5, SmoothingMethod.Chaikin, F).ToWkt());
+        Assert.Throws<ArgumentNullException>(() => ((IPolyline2D)null!).SmoothToTolerance(1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.SmoothToTolerance(0, SmoothingMethod.Chaikin, F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.SmoothToTolerance(-1, SmoothingMethod.Chaikin, F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.SmoothToTolerance(double.NaN, SmoothingMethod.Chaikin, F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.SmoothToTolerance(double.PositiveInfinity, SmoothingMethod.Chaikin, F));
+        Assert.Throws<ArgumentOutOfRangeException>(() => line.SmoothToTolerance(1, (SmoothingMethod)5, F));
+    }
+
     // ---------- polygons, other geometries, errors ----------
 
     [Fact]

@@ -568,6 +568,21 @@ public class TriangulationStressTests
     }
 
     [StressFact]
+    public void Smooth_to_a_tolerance_gives_finite_lines_that_keep_their_ends_for_dirty_points()
+    {
+        Gen.Select(Points(2, 30), Gen.Double[0.001, 50], Gen.Bool).Run((points, tolerance, spline) =>
+        {
+            var line = F.CreatePolyline([points], null);
+
+            var smooth = line.SmoothToTolerance(tolerance, spline ? SmoothingMethod.CatmullRom : SmoothingMethod.Chaikin, F);
+
+            var result = Internal.Rings.Coordinates(smooth[0]);
+            Assert.All(result, c => Assert.True(double.IsFinite(c.X) && double.IsFinite(c.Y), $"{Raw(points)}"));
+            Assert.True(result.Length >= 2 && result.Length <= 2_000_000, $"{result.Length} vertices");
+        });
+    }
+
+    [StressFact]
     public void Resample_keeps_the_area_and_gives_finite_vertices_for_dirty_sites()
     {
         Gen.Select(SanePoints(3, 30), Gen.Double[-30, 30].Array[30], Gen.Int[2, 20]).Run((points, heights, cell) =>
@@ -585,6 +600,32 @@ public class TriangulationStressTests
             double after = fine.ToPolygons(F).Sum(p => p.Area());
             Assert.True(Math.Abs(after - before) <= 1e-6 * (1 + before), $"{after:R} against {before:R}, cell {cell}: {Raw(withZ)}");
             Assert.All(fine.Vertices, v => Assert.True(double.IsFinite(v.X) && double.IsFinite(v.Y) && double.IsFinite(v.Z), $"{v}: {Raw(withZ)}"));
+        });
+    }
+
+    // ---------- what can be seen (ADR 0044) ----------
+
+    [StressFact]
+    public void Viewshed_is_a_valid_polygon_within_the_disc_and_grows_with_the_height_of_the_eye_for_dirty_sites()
+    {
+        Gen.Select(SanePoints(3, 30), Gen.Double[-30, 30].Array[30], SanePoints(1, 1), Gen.Double[5, 120], Gen.Int[8, 120]).Run((points, heights, observers, distance, rays) =>
+        {
+            var withZ = Distinct(points).Select((p, i) => p with { Z = Math.Round(heights[i % heights.Length], 2) }).ToArray();
+            var t = Triangulation.FromPoints(F.CreateMultiPoint(withZ, null));
+            if (t.TriangleCount == 0)
+            {
+                return;
+            }
+
+            var observer = observers[0];
+            var low = t.Viewshed(observer, distance, 1.7, 0, rays, F);
+            var high = t.Viewshed(observer, distance, 40, 0, rays, F);
+
+            Assert.True(low.IsValid(), $"{low.Validate()}: {observer}, {distance}, {rays}: {Raw(withZ)}");
+            Assert.True(high.IsValid(), $"{high.Validate()}: {observer}, {distance}, {rays}: {Raw(withZ)}");
+            double disc = Math.PI * distance * distance;
+            Assert.True(low.Area() <= disc * 1.0001, $"{low.Area():R} against the disc {disc:R}");
+            Assert.True(high.Area() >= low.Area() - 1e-6 * (1 + disc), $"{high.Area():R} against {low.Area():R}: {observer}, {distance}, {rays}: {Raw(withZ)}");
         });
     }
 }

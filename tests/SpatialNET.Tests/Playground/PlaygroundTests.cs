@@ -33,6 +33,7 @@ public class PlaygroundCompletenessTests
         ["At"] = "Rechnet mit Ereignistabellen, nicht mit Geometrien (ADR 0033)",
         ["CalibrateM"] = "Braucht Ankerpunkte mit M als zusätzliche Eingabe, die die Oberfläche nicht darstellt (ADR 0030)",
         ["Transform"] = "Nimmt eine Funktion als Parameter, die die Oberfläche nicht darstellt (ADR 0025); Translate, Scale und Rotate decken sie ab",
+        ["SmoothToTolerance"] = "Derselbe Algorithmus wie Smooth mit einer Toleranz statt der Durchläufe; der Eintrag smooth hat dafür den Parameter tolerance (ADR 0043)",
     };
 
     [Theory]

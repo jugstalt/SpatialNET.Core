@@ -180,8 +180,11 @@ public sealed class DensifyAlgorithm() : PlaygroundAlgorithm("densify", "Densify
 
 public sealed class SmoothAlgorithm() : PlaygroundAlgorithm("smooth", "Smooth", "Construction",
     [In.A(In.Any, "Line or polygon")],
-    [new("iterations", "Iterations (each halves the segments)", "int", 3), new("method", "Method", "enum", "Chaikin", null, ["Chaikin", "CatmullRom"])],
-    (i, p, f, _) => i["a"].Smooth((int)p.Number("iterations"), p.Enum<SmoothingMethod>("method"), f));
+    [new("iterations", "Iterations (each halves the segments)", "int", 3), new("method", "Method", "enum", "Chaikin", null, ["Chaikin", "CatmullRom"]),
+     new("tolerance", "Or smooth to a distance (empty = use the iterations)", "number", null, "kbs")],
+    (i, p, f, _) => p.OptionalNumber("tolerance") is { } tolerance && tolerance > 0
+        ? i["a"].SmoothToTolerance(tolerance, p.Enum<SmoothingMethod>("method"), f)
+        : i["a"].Smooth((int)p.Number("iterations"), p.Enum<SmoothingMethod>("method"), f));
 
 public sealed class ReverseAlgorithm() : PlaygroundAlgorithm("reverse", "Reverse", "Construction",
     [In.A(In.Lines, "Line")], [], (i, _, f, _) => ((IPolyline2D)i["a"]).Reverse(f));
@@ -468,6 +471,16 @@ public sealed class LineOfSightAlgorithm() : PlaygroundAlgorithm("lineOfSight", 
         var from = path[0];
         var to = path[path.PointCount - 1];
         return Triangulation.FromPoints(i["a"]).LineOfSight(new Coordinate(from.X, from.Y), new Coordinate(to.X, to.Y), p.Number("observerHeight"), p.Number("targetHeight"));
+    });
+
+public sealed class ViewshedAlgorithm() : PlaygroundAlgorithm("viewshed", "Viewshed (what can be seen)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)"), In.B(["Point"], "Observer")],
+    [new("maxDistance", "How far to look", "number", 60.0), new("observerHeight", "Height of the eye", "number", 1.7),
+     new("targetHeight", "Height of the target", "number", 0.0), new("rays", "Rays", "int", 360)],
+    (i, p, f, _) =>
+    {
+        var observer = (IPoint2D)i["b"];
+        return Triangulation.FromPoints(i["a"]).Viewshed(new Coordinate(observer.X, observer.Y), p.Number("maxDistance"), p.Number("observerHeight"), p.Number("targetHeight"), (int)p.Number("rays"), f);
     });
 
 public sealed class SurfaceVolumeAlgorithm() : PlaygroundAlgorithm("surfaceVolume", "Volume between two surfaces", "Triangulation",

@@ -298,6 +298,31 @@ public sealed class CookbookSamplesTests : IDisposable
     }
 
     [Fact]
+    public void WhatCanBeSeen()
+    {
+        // --- snippet: cookbook-viewshed
+        // A ridge across a square of 100 by 100: 10 high along x = 50, flat (height 0) on both sides.
+        var points = Wkt.Read("MULTIPOINT Z ((0 0 0), (100 0 0), (100 100 0), (0 100 0), (50 0 10), (50 25 10), (50 50 10), (50 75 10), (50 100 10))");
+        var terrain = Triangulation.FromPoints(points);
+
+        // Can I see the barn from the road? One target:
+        var road = new Coordinate(10, 50);
+        bool visible = terrain.LineOfSight(road, new Coordinate(30, 80), observerHeight: 1.7, targetHeight: 4);   // true: on the same side of the ridge
+        bool hidden = terrain.LineOfSight(road, new Coordinate(80, 50), observerHeight: 1.7, targetHeight: 4);    // false: behind the ridge
+
+        // Everything that can be seen from the road, within 200 m: a polygon
+        IPolygon2D seen = terrain.Viewshed(road, 200, observerHeight: 1.7);
+        Console.WriteLine(seen.Area());                                // about 5000: the half of the square in front of the ridge
+        // --- end
+
+        Assert.True(visible);
+        Assert.False(hidden);
+        Assert.InRange(seen.Area(), 4850, 5150);
+        Assert.Equal(Location.Inside, seen.Locate(new Coordinate(30, 80)));
+        Assert.Equal(Location.Outside, seen.Locate(new Coordinate(80, 50)));
+    }
+
+    [Fact]
     public void SmoothContourLines()
     {
         // --- snippet: cookbook-smooth-contours

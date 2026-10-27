@@ -216,64 +216,82 @@ public sealed partial class Triangulation
         for (int p = 0; p < line.PathCount; p++)
         {
             var path = Rings.Coordinates(line[p]);
+            var finished = new List<List<Coordinate>>();
             List<Coordinate>? current = null;
-
-            void Close()
-            {
-                if (current is { Count: >= 2 })
-                {
-                    paths.Add(GeometryAccess.Restrict(current.ToArray(), f));
-                }
-
-                current = null;
-            }
-
             for (int i = 1; i < path.Length; i++)
             {
-                var a = path[i - 1];
-                var b = path[i];
-                double length = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
-                if (length == 0)
-                {
-                    continue;
-                }
-
-                var cuts = CutParameters(a, b);
-                for (int k = 0; k + 1 < cuts.Count; k++)
-                {
-                    double t0 = cuts[k].T, t1 = cuts[k + 1].T;
-                    var mid = new Coordinate(a.X + (t0 + t1) / 2 * (b.X - a.X), a.Y + (t0 + t1) / 2 * (b.Y - a.Y));
-                    int triangle = LocateWithin(mid, tolerance);
-                    var (dx, dy) = triangle < 0 ? (double.NaN, double.NaN) : GradientOf(triangle);
-                    if (triangle < 0 || double.IsNaN(dx))
-                    {
-                        Close();
-                        continue;
-                    }
-
-                    // the height at a cut is that of the edge or vertex, computed in one dimension; only at the ends of the segment, which lie
-                    // inside the triangle, the plane of the triangle is asked, from its vertex nearest to the point (a thin triangle makes the
-                    // plane inexact far from its vertices)
-                    Coordinate At(double t, double cutZ)
-                    {
-                        double x = t == 0 ? a.X : t == 1 ? b.X : a.X + t * (b.X - a.X);
-                        double y = t == 0 ? a.Y : t == 1 ? b.Y : a.Y + t * (b.Y - a.Y);
-                        var origin = NearestVertex(triangle, x, y);
-                        double z = double.IsNaN(cutZ) ? origin.Z + dx * (x - origin.X) + dy * (y - origin.Y) : cutZ;
-                        return new Coordinate(x, y, z, along + t * length);
-                    }
-
-                    current ??= [At(t0, cuts[k].Z)];
-                    current.Add(At(t1, cuts[k + 1].Z));
-                }
-
+                double length = Math.Sqrt((path[i].X - path[i - 1].X) * (path[i].X - path[i - 1].X) + (path[i].Y - path[i - 1].Y) * (path[i].Y - path[i - 1].Y));
+                DrapeSegment(path[i - 1], path[i], along, tolerance, ref current, finished);
                 along += length;
             }
 
-            Close();
+            CloseDraped(ref current, finished);
+            foreach (var part in finished)
+            {
+                paths.Add(GeometryAccess.Restrict(part.ToArray(), f));
+            }
         }
 
         return f.CreatePolyline(paths.ToArray(), line);
+    }
+
+    /// <summary>The height profile of the straight line from a to b: the parts of it that lie over the surface, as chains with Z the height and M the distance from a.</summary>
+    internal List<List<Coordinate>> ProfileOf(Coordinate a, Coordinate b)
+    {
+        var finished = new List<List<Coordinate>>();
+        List<Coordinate>? current = null;
+        DrapeSegment(a, b, 0, Tolerance(), ref current, finished);
+        CloseDraped(ref current, finished);
+        return finished;
+    }
+
+    private static void CloseDraped(ref List<Coordinate>? current, List<List<Coordinate>> finished)
+    {
+        if (current is { Count: >= 2 })
+        {
+            finished.Add(current);
+        }
+
+        current = null;
+    }
+
+    /// <summary>One segment of a line over the surface: cut at the edges, with the height of the surface at every cut; the stretches outside close the chain.</summary>
+    private void DrapeSegment(Coordinate a, Coordinate b, double along, double tolerance, ref List<Coordinate>? current, List<List<Coordinate>> finished)
+    {
+        double length = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+        if (length == 0)
+        {
+            return;
+        }
+
+        var cuts = CutParameters(a, b);
+        for (int k = 0; k + 1 < cuts.Count; k++)
+        {
+            double t0 = cuts[k].T, t1 = cuts[k + 1].T;
+            var mid = new Coordinate(a.X + (t0 + t1) / 2 * (b.X - a.X), a.Y + (t0 + t1) / 2 * (b.Y - a.Y));
+            int triangle = LocateWithin(mid, tolerance);
+            var (dx, dy) = triangle < 0 ? (double.NaN, double.NaN) : GradientOf(triangle);
+            if (triangle < 0 || double.IsNaN(dx))
+            {
+                CloseDraped(ref current, finished);
+                continue;
+            }
+
+            // the height at a cut is that of the edge or vertex, computed in one dimension; only at the ends of the segment, which lie
+            // inside the triangle, the plane of the triangle is asked, from its vertex nearest to the point (a thin triangle makes the
+            // plane inexact far from its vertices)
+            Coordinate At(double t, double cutZ)
+            {
+                double x = t == 0 ? a.X : t == 1 ? b.X : a.X + t * (b.X - a.X);
+                double y = t == 0 ? a.Y : t == 1 ? b.Y : a.Y + t * (b.Y - a.Y);
+                var origin = NearestVertex(triangle, x, y);
+                double z = double.IsNaN(cutZ) ? origin.Z + dx * (x - origin.X) + dy * (y - origin.Y) : cutZ;
+                return new Coordinate(x, y, z, along + t * length);
+            }
+
+            current ??= [At(t0, cuts[k].Z)];
+            current.Add(At(t1, cuts[k + 1].Z));
+        }
     }
 
     private double _typicalSize;   // 0 = not known yet; racing threads compute the same value
