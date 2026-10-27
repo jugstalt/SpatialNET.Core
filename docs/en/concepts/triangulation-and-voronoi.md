@@ -12,7 +12,7 @@ Points, a Delaunay triangulation and the Voronoi diagram are three views of one 
 | keep ridges, ditches or boundaries as edges | `Triangulation.FromPointsAndLines(points, lines)` | a `Triangulation` that contains them |
 | cut a polygon into triangles | `polygon.Triangulate()` or `Triangulation.FromPolygon(polygon)` | the triangles inside the polygon |
 | know the slope, the volume above a height, the height profile of a road | `Slope`, `Aspect`, `Volume`, `Drape` on a `Triangulation` | numbers, or the road with Z and M |
-| a smooth height, a finer mesh, the earth between two surfaces, slope zones, a view | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `LineOfSight` | a number, a `Triangulation`, polygons, a yes/no |
+| a smooth height, a finer mesh, the earth between two surfaces, slope zones, a view | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `ContourBands`, `LineOfSight` | a number, a `Triangulation`, polygons, a yes/no |
 
 Everywhere, the points are the **vertices of any geometry**: a multipoint, a polyline or a polygon. Vertices with the same X and Y count once, vertices that are not finite are ignored, and Z is kept where the result can carry it.
 
@@ -109,6 +109,7 @@ bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50
 - **`InterpolateNaturalNeighbour`** weights the heights of the neighbours that a new point would get by the area of their Voronoi cells that it would take over. It is continuous and smooth, reproduces a plane exactly, never goes beyond the heights around it, and is as easy to call as `InterpolateZ`. With break lines (constraints) in the triangulation it gives the linear height, since the surface is meant to have a crease there.
 - **`Refine`** adds points (the Delaunay refinement of Ruppert) until no angle is below `minAngle` and no triangle is larger than `maxArea`. The border and the break lines stay, cut into shorter edges, and the new points lie on the surface. `maxSteinerPoints` limits the work; angles above 34 degrees are rejected, and a sharp angle between two break lines in the input cannot be improved.
 - **`Volume(other)`** is the volume between two surfaces over the area they share, exact: `Above` is where this surface lies above the other, `Below` where it lies below.
+- **`ContourBands(heights)`** gives the areas between contour lines: one polygon for every band (below the first height, between two heights, above the last), cut exactly along the lines; the bands tile the surface. `terrain.ContourBands([100, 120, 140])` has four polygons: below 100, 100 to 120, 120 to 140 and 140 and up.
 - **`SlopeZones(limits)`** gives one polygon for every slope class, one more than there are limits (an empty polygon for a class without area).
 - **`LineOfSight`** asks whether the straight line from the eye to the target passes below the ground. A point outside the surface is not visible.
 

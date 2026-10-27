@@ -107,6 +107,7 @@ if (args.Contains("--quick-terrain"))
         var other = Triangulation.FromPoints(TriangulationBenchmarks.CreateTerrain(PointLayout.Clustered, n));
         double volume = Measure(() => tin.Volume(other));
         double zones = Measure(() => tin.SlopeZones([5, 15, 30]));
+        double bands = Measure(() => tin.ContourBands([-150, -100, -50, 0, 50, 100, 150]));
         // sight lines of a twentieth of the extent (a person looking around), and 1000 across the whole surface
         var near = Enumerable.Range(0, 10_000).Select(_ =>
         {
@@ -116,7 +117,7 @@ if (args.Contains("--quick-terrain"))
         var far = Enumerable.Range(0, 1_000).Select(_ => (Random(), Random())).ToArray();
         double sightNear = Measure(() => { foreach (var (a, b) in near) tin.LineOfSight(a, b, 1.7); });
         double sightFar = Measure(() => { foreach (var (a, b) in far) tin.LineOfSight(a, b, 1.7); });
-        Console.WriteLine($"N={n,8}  100k InterpolateZ {linear,8:F1} ms  100k NaturalNeighbour {natural,8:F1} ms  Volume(other) {volume,8:F1} ms  SlopeZones {zones,8:F1} ms  10k short LineOfSight {sightNear,8:F1} ms  1k long LineOfSight {sightFar,8:F1} ms");
+        Console.WriteLine($"N={n,8}  100k InterpolateZ {linear,8:F1} ms  100k NaturalNeighbour {natural,8:F1} ms  Volume(other) {volume,8:F1} ms  SlopeZones {zones,8:F1} ms  7 ContourBands {bands,8:F1} ms  10k short LineOfSight {sightNear,8:F1} ms  1k long LineOfSight {sightFar,8:F1} ms");
     }
 
     foreach (int n in new[] { 1_000, 10_000, 100_000 })

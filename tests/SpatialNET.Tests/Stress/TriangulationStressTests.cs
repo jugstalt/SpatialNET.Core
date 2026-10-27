@@ -508,4 +508,29 @@ public class TriangulationStressTests
             }
         });
     }
+
+    [StressFact]
+    public void Contour_bands_are_valid_and_tile_the_surface_for_dirty_sites()
+    {
+        Gen.Select(SanePoints(3, 40), Gen.Double[-30, 30].Array[40], Gen.Double[-30, 30].Array[1, 6]).Run((points, heights, raw) =>
+        {
+            var withZ = Distinct(points).Select((p, i) => p with { Z = Math.Round(heights[i % heights.Length], 2) }).ToArray();
+            var t = Triangulation.FromPoints(F.CreateMultiPoint(withZ, null));
+            if (t.TriangleCount == 0)
+            {
+                return;
+            }
+
+            var levels = raw.Select(v => Math.Round(v, 2)).Distinct().OrderBy(v => v).ToArray();
+            var bands = t.ContourBands(levels, F);
+
+            double total = t.ToPolygons(F).Sum(p => p.Area());
+            double sum = bands.Sum(b => b.Area());
+            Assert.True(Math.Abs(sum - total) <= 1e-6 * (1 + total), $"{sum:R} against {total:R}, levels {string.Join(",", levels.Select(l => l.ToString("R")))}: {Raw(withZ)}");
+            for (int i = 0; i < bands.Count; i++)
+            {
+                Assert.True(bands[i].IsValid(), $"band {i} is not valid (smallest angle {t.MinAngle():R}): {string.Join("; ", bands[i].Validate().Issues.Select(x => $"{x.Kind} at ({x.Location.X:R} {x.Location.Y:R})"))} {bands[i].ToWkt()}, levels {string.Join(",", levels.Select(l => l.ToString("R")))}: {Raw(withZ)}");
+            }
+        });
+    }
 }

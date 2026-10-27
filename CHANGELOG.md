@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- `Triangulation.ContourBands` (ADR 0042): the areas of a surface between heights, the filled version of the contour lines. One polygon per band (below the first height, between two, above the last), the bands tile the surface and share their boundaries along the contour lines exactly. Playground entry `contourBands`.
+
 ## [0.6.0-preview.1] - 2026-10-27
 
 ### Added

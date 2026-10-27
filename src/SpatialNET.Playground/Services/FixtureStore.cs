@@ -43,6 +43,7 @@ public sealed class FixtureStore(string root)
         ["naturalNeighbour"] = "terrain",
         ["refine"] = "terrain",
         ["slopeZones"] = "terrain",
+        ["contourBands"] = "terrain",
         ["lineOfSight"] = "terrain-sight",
         ["surfaceVolume"] = "terrain-compare",
         ["drape"] = "terrain-profile",

@@ -12,7 +12,7 @@ Punkte, eine Delaunay-Triangulierung und das Voronoi-Diagramm sind drei Sichten 
 | Rücken, Gräben oder Grenzen als Kanten erhalten | `Triangulation.FromPointsAndLines(points, lines)` | eine `Triangulation`, die sie enthält |
 | ein Polygon in Dreiecke zerlegen | `polygon.Triangulate()` oder `Triangulation.FromPolygon(polygon)` | die Dreiecke innerhalb des Polygons |
 | Neigung, Volumen über einer Höhe, Höhenprofil einer Straße wissen | `Slope`, `Aspect`, `Volume`, `Drape` an einer `Triangulation` | Zahlen, oder die Straße mit Z und M |
-| eine glatte Höhe, ein feineres Netz, die Erde zwischen zwei Flächen, Neigungszonen, eine Sicht | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `LineOfSight` | eine Zahl, eine `Triangulation`, Polygone, ein Ja/Nein |
+| eine glatte Höhe, ein feineres Netz, die Erde zwischen zwei Flächen, Neigungszonen, eine Sicht | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `ContourBands`, `LineOfSight` | eine Zahl, eine `Triangulation`, Polygone, ein Ja/Nein |
 
 Überall sind die Punkte die **Stützpunkte einer beliebigen Geometrie**: eines Multipoints, einer Polylinie oder eines Polygons. Stützpunkte mit gleichem X und Y zählen einmal, nicht endliche werden ignoriert, und Z bleibt erhalten, wo das Ergebnis es tragen kann.
 
@@ -109,6 +109,7 @@ bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50
 - **`InterpolateNaturalNeighbour`** gewichtet die Höhen der Nachbarn, die ein neuer Punkt bekäme, mit der Fläche ihrer Voronoi-Zellen, die er übernähme. Sie ist stetig und glatt, gibt eine Ebene exakt wieder, geht nie über die Höhen um den Punkt hinaus und ist so einfach aufzurufen wie `InterpolateZ`. Mit Bruchkanten (Zwangskanten) in der Triangulierung gibt sie die lineare Höhe, da die Fläche dort einen Knick haben soll.
 - **`Refine`** fügt Punkte hinzu (die Delaunay-Verfeinerung nach Ruppert), bis kein Winkel unter `minAngle` und kein Dreieck größer als `maxArea` ist. Der Rand und die Bruchkanten bleiben, in kürzere Kanten zerlegt, und die neuen Punkte liegen auf der Fläche. `maxSteinerPoints` begrenzt die Arbeit; Winkel über 34 Grad werden abgelehnt, und ein spitzer Winkel zwischen zwei Bruchkanten der Eingabe lässt sich nicht verbessern.
 - **`Volume(other)`** ist das Volumen zwischen zwei Flächen über ihrer gemeinsamen Fläche, exakt: `Above` ist dort, wo diese Fläche über der anderen liegt, `Below` wo darunter.
+- **`ContourBands(heights)`** gibt die Flächen zwischen Höhenlinien: ein Polygon für jede Stufe (unter der ersten Höhe, zwischen zwei Höhen, über der letzten), exakt an den Linien geschnitten; die Stufen überdecken die Fläche. `terrain.ContourBands([100, 120, 140])` hat vier Polygone: unter 100, 100 bis 120, 120 bis 140 und 140 und mehr.
 - **`SlopeZones(limits)`** gibt für jede Neigungsklasse ein Polygon, eines mehr als Grenzen (ein leeres Polygon für eine Klasse ohne Fläche).
 - **`LineOfSight`** fragt, ob die gerade Linie vom Auge zum Ziel unter dem Gelände verläuft. Ein Punkt außerhalb der Fläche ist nicht sichtbar.
 

@@ -1,1 +1,2 @@
 #nullable enable
+SpatialNET.Triangulation.ContourBands(System.Collections.Generic.IReadOnlyList<double>! levels, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!

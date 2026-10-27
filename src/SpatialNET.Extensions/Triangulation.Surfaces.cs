@@ -181,7 +181,6 @@ public sealed partial class Triangulation
     {
         var from = new List<int>();
         var to = new List<int>();
-        var outgoing = new Dictionary<int, List<int>>();
         foreach (int t in triangles)
         {
             for (int k = 0; k < 3; k++)
@@ -192,16 +191,46 @@ public sealed partial class Triangulation
                     continue;
                 }
 
-                int u = _triangles[3 * t + k], v = _triangles[3 * t + (k + 1) % 3];
-                if (!outgoing.TryGetValue(u, out var list))
-                {
-                    outgoing[u] = list = [];
-                }
-
-                list.Add(from.Count);
-                from.Add(u);
-                to.Add(v);
+                from.Add(_triangles[3 * t + k]);
+                to.Add(_triangles[3 * t + (k + 1) % 3]);
             }
+        }
+
+        return AreaFromEdges(_vertices, from, to, f, repair: HasSliver);
+    }
+
+    private int _sliverState;   // 0 = not known yet, 1 = no sliver, 2 = a sliver; racing threads compute the same value
+
+    /// <summary>Whether a triangle has an angle of less than a millionth of a degree: its corners lie on one line to within a rounding error.</summary>
+    private bool HasSliver
+    {
+        get
+        {
+            if (_sliverState == 0)
+            {
+                _sliverState = TriangleCount > 0 && MinAngle() < 1e-6 ? 2 : 1;
+            }
+
+            return _sliverState == 2;
+        }
+    }
+
+    /// <summary>
+    /// The polygon whose boundary is a set of directed edges between vertices (<paramref name="from"/>[i] → <paramref name="to"/>[i], the area on the
+    /// left): the edges are chained to rings, a ring that touches itself in a vertex is cut there, clockwise rings are holes and belong to the smallest
+    /// ring around them.
+    /// </summary>
+    private static IPolygon2D AreaFromEdges(IReadOnlyList<Coordinate> vertices, List<int> from, List<int> to, IGeometryFactory f, bool repair)
+    {
+        var outgoing = new Dictionary<int, List<int>>();
+        for (int e = 0; e < from.Count; e++)
+        {
+            if (!outgoing.TryGetValue(from[e], out var list))
+            {
+                outgoing[from[e]] = list = [];
+            }
+
+            list.Add(e);
         }
 
         var used = new bool[from.Count];
@@ -220,7 +249,7 @@ public sealed partial class Triangulation
             {
                 used[edge] = true;
                 chain.Add(from[edge]);
-                int next = NextBoundaryEdge(edge, from, to, outgoing, used, start);
+                int next = NextBoundaryEdge(vertices, edge, from, to, outgoing, used, start);
                 if (next < 0)
                 {
                     break;
@@ -238,7 +267,7 @@ public sealed partial class Triangulation
                     continue;
                 }
 
-                var ring = piece.Select(id => _vertices[id]).ToList();
+                var ring = piece.Select(id => vertices[id]).ToList();
                 ring.Add(ring[0]);
                 double area = 0, minX = double.PositiveInfinity, minY = double.PositiveInfinity, maxX = double.NegativeInfinity, maxY = double.NegativeInfinity;
                 for (int i = 0; i + 1 < ring.Count; i++)
@@ -266,16 +295,20 @@ public sealed partial class Triangulation
         // hole (a hole may touch its shell in a vertex)
         var index = new SpatialIndex<int>(shells.Select((shell, i) => (shell.Box, i)));
         var holesOf = new List<ReadOnlyMemory<Coordinate>>[shells.Count];
+        bool uncertain = repair;   // set also by a hole that needed the tolerance, or that no shell holds: the rings may overlap by a rounding error
         foreach (var (ring, box) in holes)
         {
             int best = -1;
             foreach (int i in index.Query(box))
             {
-                if ((best < 0 || shells[i].Area < shells[best].Area) && Holds(shells[i].Ring, ring))
+                if ((best < 0 || shells[i].Area < shells[best].Area) && Holds(shells[i].Ring, ring, out bool tolerated))
                 {
                     best = i;
+                    uncertain |= tolerated;
                 }
             }
+
+            uncertain |= best < 0;
 
             if (best >= 0)
             {
@@ -284,7 +317,12 @@ public sealed partial class Triangulation
         }
 
         var parts = shells.Select((shell, i) => new PolygonPart(GeometryAccess.Restrict(shell.Ring, f), (holesOf[i] ?? []).ToArray())).ToArray();
-        return f.CreatePolygon(parts, null);
+        var polygon = f.CreatePolygon(parts, null);
+
+        // Along a sliver of a triangle (three corners that lie on one line to within a rounding error) the rings of a hole and its shell may overlap by
+        // that error; the structure of a polygon is read from the position of its rings, so such a polygon is made valid (only then, since the check
+        // of a large polygon is not free)
+        return uncertain && !polygon.IsValid() ? polygon.MakeValid(factory: f) : polygon;
     }
 
     /// <summary>Cuts a closed chain of vertex ids into pieces in which no vertex occurs twice: where it comes back to a vertex, the loop is a piece of its own.</summary>
@@ -322,7 +360,7 @@ public sealed partial class Triangulation
     /// clockwise from the way back, which keeps the area of the class on the left and separates the rings at a vertex where two parts touch.
     /// −1 when the ring is closed.
     /// </summary>
-    private int NextBoundaryEdge(int edge, List<int> from, List<int> to, Dictionary<int, List<int>> outgoing, bool[] used, int start)
+    private static int NextBoundaryEdge(IReadOnlyList<Coordinate> vertices, int edge, List<int> from, List<int> to, Dictionary<int, List<int>> outgoing, bool[] used, int start)
     {
         int end = to[edge];
         if (!outgoing.TryGetValue(end, out var candidates))
@@ -330,8 +368,8 @@ public sealed partial class Triangulation
             return -1;
         }
 
-        var here = _vertices[end];
-        var back = _vertices[from[edge]];
+        var here = vertices[end];
+        var back = vertices[from[edge]];
         double bx = back.X - here.X, by = back.Y - here.Y;
         int best = -1;
         double bestAngle = double.PositiveInfinity;
@@ -342,7 +380,7 @@ public sealed partial class Triangulation
                 continue;
             }
 
-            var target = _vertices[to[c]];
+            var target = vertices[to[c]];
             double dx = target.X - here.X, dy = target.Y - here.Y;
             double clockwise = -Math.Atan2(bx * dy - by * dx, bx * dx + by * dy);
             if (clockwise <= 0)
@@ -360,16 +398,37 @@ public sealed partial class Triangulation
         return best == start || best < 0 ? -1 : best;
     }
 
-    /// <summary>Whether a closed ring lies within another: no vertex outside, and one inside (a vertex on the other ring tells nothing).</summary>
-    private static bool Holds(Coordinate[] shell, Coordinate[] ring)
+    /// <summary>
+    /// Whether a closed ring lies within another: no vertex outside, and one inside. A vertex on the other ring tells nothing, and neither does one that
+    /// lies outside by less than a rounding error of the size of the ring (a hole that touches its shell along an edge, with a sliver of a triangle
+    /// between them, has corners that are computed a hair off the shell).
+    /// </summary>
+    private static bool Holds(Coordinate[] shell, Coordinate[] ring, out bool tolerated)
     {
+        tolerated = false;
+        double minX = double.PositiveInfinity, minY = double.PositiveInfinity, maxX = double.NegativeInfinity, maxY = double.NegativeInfinity;
+        foreach (var c in shell)
+        {
+            minX = Math.Min(minX, c.X);
+            maxX = Math.Max(maxX, c.X);
+            minY = Math.Min(minY, c.Y);
+            maxY = Math.Max(maxY, c.Y);
+        }
+
+        double tolerance = 1e-9 * Math.Max(maxX - minX, maxY - minY);
         bool inside = false;
         for (int i = 0; i + 1 < ring.Length; i++)
         {
             switch (Rings.Locate(ring[i], shell))
             {
                 case Location.Outside:
-                    return false;
+                    if (DistanceToRing(ring[i], shell) > tolerance)
+                    {
+                        return false;
+                    }
+
+                    tolerated = true;
+                    break;
                 case Location.Inside:
                     inside = true;
                     break;
@@ -377,6 +436,22 @@ public sealed partial class Triangulation
         }
 
         return inside;
+    }
+
+    private static double DistanceToRing(Coordinate p, Coordinate[] closed)
+    {
+        double best = double.PositiveInfinity;
+        for (int i = 1; i < closed.Length; i++)
+        {
+            var a = closed[i - 1];
+            var b = closed[i];
+            double ex = b.X - a.X, ey = b.Y - a.Y, length2 = ex * ex + ey * ey;
+            double t = length2 == 0 ? 0 : Math.Clamp(((p.X - a.X) * ex + (p.Y - a.Y) * ey) / length2, 0, 1);
+            double dx = a.X + t * ex - p.X, dy = a.Y + t * ey - p.Y;
+            best = Math.Min(best, Math.Sqrt(dx * dx + dy * dy));
+        }
+
+        return best;
     }
 
     // ---------- line of sight ----------

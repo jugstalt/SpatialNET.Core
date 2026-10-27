@@ -418,6 +418,28 @@ public sealed class SlopeZonesAlgorithm() : PlaygroundAlgorithm("slopeZones", "S
         return Triangulation.FromPoints(i["a"]).SlopeZones(limits, f).Cast<IGeometry2D>().ToList();
     });
 
+public sealed class ContourBandsAlgorithm() : PlaygroundAlgorithm("contourBands", "ContourBands (areas between heights)", "Triangulation",
+    [In.A(In.Any, "Points with Z (WKT)")],
+    [new("levels", "Heights, separated by commas", "text", "20, 40, 60, 80"), new("interval", "Interval (0 = use the heights)", "number", 0.0)],
+    (i, p, f, _) =>
+    {
+        var triangulation = Triangulation.FromPoints(i["a"]);
+        double interval = p.Number("interval");
+        double[] levels;
+        if (interval > 0)
+        {
+            var heights = triangulation.Vertices.Where(v => v.HasZ).Select(v => v.Z).ToList();
+            levels = heights.Count == 0 ? [] : Enumerable.Range(0, 200).Select(n => Math.Ceiling(heights.Min() / interval) * interval + n * interval).TakeWhile(h => h <= heights.Max()).ToArray();
+        }
+        else
+        {
+            levels = p.Text("levels").Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => double.Parse(t, System.Globalization.CultureInfo.InvariantCulture)).Distinct().Order().ToArray();
+        }
+
+        return triangulation.ContourBands(levels, f).Cast<IGeometry2D>().ToList();
+    });
+
 public sealed class LineOfSightAlgorithm() : PlaygroundAlgorithm("lineOfSight", "LineOfSight (can it be seen)", "Triangulation",
     [In.A(In.Any, "Points with Z (WKT)"), In.B(In.Lines, "Line from the observer to the target")],
     [new("observerHeight", "Height of the eye", "number", 1.7), new("targetHeight", "Height of the target", "number", 0.0)],
