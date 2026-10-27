@@ -1,6 +1,6 @@
 # SpatialNET
 
-SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen, die ausschließlich über Interfaces arbeitet, damit bestehende GIS-Software sie über ihre eigenen Geometrieklassen nutzen kann. Die Algorithmen sind selbst implementiert: Overlays, Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße.
+SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen, die ausschließlich über Interfaces arbeitet, damit bestehende GIS-Software sie über ihre eigenen Geometrieklassen nutzen kann. Die Algorithmen sind selbst implementiert: Overlays, Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße, lineare Referenzierung und Ereignistabellen sowie Triangulierungen (Delaunay, Voronoi, Geländemodelle mit Höhenlinien, Neigung, Volumen und Glättung).
 
 - **[Erste Schritte](getting-started.md)**: Installation, erstes Programm, Optionen und Genauigkeit, Lesen und Schreiben, der Playground.
 - **[Host-Anbindung](host-integration.md)**: die Geometrie-Interfaces und die Geometrie-Factory in der eigenen GIS-Anwendung umsetzen.

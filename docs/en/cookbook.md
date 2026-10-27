@@ -252,6 +252,27 @@ foreach (double level in new[] { 20.0, 30.0 })
 
 ```
 
+## What can be seen from a point
+
+`LineOfSight` answers for one target, `Viewshed` for all of them: the part of the surface that can be seen from a point, as a polygon. The ground along a line of sight must not rise above it, so a ridge hides what lies behind it.
+
+```csharp
+// A ridge across a square of 100 by 100: 10 high along x = 50, flat (height 0) on both sides.
+var points = Wkt.Read("MULTIPOINT Z ((0 0 0), (100 0 0), (100 100 0), (0 100 0), (50 0 10), (50 25 10), (50 50 10), (50 75 10), (50 100 10))");
+var terrain = Triangulation.FromPoints(points);
+
+// Can I see the barn from the road? One target:
+var road = new Coordinate(10, 50);
+bool visible = terrain.LineOfSight(road, new Coordinate(30, 80), observerHeight: 1.7, targetHeight: 4);   // true: on the same side of the ridge
+bool hidden = terrain.LineOfSight(road, new Coordinate(80, 50), observerHeight: 1.7, targetHeight: 4);    // false: behind the ridge
+
+// Everything that can be seen from the road, within 200 m: a polygon
+IPolygon2D seen = terrain.Viewshed(road, 200, observerHeight: 1.7);
+Console.WriteLine(seen.Area());                                // about 5000: the half of the square in front of the ridge
+```
+
+The eye is at `observerHeight` above the ground at the observer, the target at `targetHeight` above the ground at the target (a person: 1.7; a wind turbine hub: 100; the ground itself: 0). `Viewshed` sends a fan of rays (360 by default) out from the observer: along every ray the visible stretches are exact, and between the rays the edge of the area is approximate (about 1 % of the distance with 360 rays, 0.1 % with 3600). Use more rays for a long view, and `maxDistance` to look no further than you need.
+
 ## Smooth contour lines
 
 The contour lines of a triangulation have a small crease at every edge of its triangles. Two steps take them out: **smooth the surface** (`Resample` puts a grid of heights, interpolated by natural neighbour, in place of the measurements) and then **round the lines** (`Smooth`). The first step is the one that keeps lines of different heights apart: over a triangle they are parallel straight lines, so they cannot cross, however fine the triangles are. The second works on any line, a river or a road as well, and can bring two lines that run very close to each other so close that they cross, which is why it comes second and gets few iterations.

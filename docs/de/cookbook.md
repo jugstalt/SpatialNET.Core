@@ -252,6 +252,27 @@ foreach (double level in new[] { 20.0, 30.0 })
 
 ```
 
+## Was von einem Punkt aus zu sehen ist
+
+`LineOfSight` antwortet für ein Ziel, `Viewshed` für alle: der Teil der Fläche, der von einem Punkt aus zu sehen ist, als Polygon. Das Gelände entlang einer Sichtlinie darf nicht über sie hinausragen, ein Kamm verdeckt also, was dahinter liegt.
+
+```csharp
+// A ridge across a square of 100 by 100: 10 high along x = 50, flat (height 0) on both sides.
+var points = Wkt.Read("MULTIPOINT Z ((0 0 0), (100 0 0), (100 100 0), (0 100 0), (50 0 10), (50 25 10), (50 50 10), (50 75 10), (50 100 10))");
+var terrain = Triangulation.FromPoints(points);
+
+// Can I see the barn from the road? One target:
+var road = new Coordinate(10, 50);
+bool visible = terrain.LineOfSight(road, new Coordinate(30, 80), observerHeight: 1.7, targetHeight: 4);   // true: on the same side of the ridge
+bool hidden = terrain.LineOfSight(road, new Coordinate(80, 50), observerHeight: 1.7, targetHeight: 4);    // false: behind the ridge
+
+// Everything that can be seen from the road, within 200 m: a polygon
+IPolygon2D seen = terrain.Viewshed(road, 200, observerHeight: 1.7);
+Console.WriteLine(seen.Area());                                // about 5000: the half of the square in front of the ridge
+```
+
+Das Auge liegt `observerHeight` über dem Gelände am Standort, das Ziel `targetHeight` über dem Gelände am Ziel (eine Person: 1,7; eine Windradnabe: 100; das Gelände selbst: 0). `Viewshed` schickt einen Fächer von Strahlen (standardmäßig 360) vom Standort aus: Entlang jedes Strahls sind die sichtbaren Abschnitte exakt, zwischen den Strahlen ist der Rand der Fläche angenähert (etwa 1 % der Entfernung bei 360 Strahlen, 0,1 % bei 3600). Für eine weite Sicht mehr Strahlen nehmen und mit `maxDistance` nicht weiter schauen als nötig.
+
 ## Höhenlinien glätten
 
 Die Höhenlinien einer Triangulierung haben an jeder Dreieckskante einen kleinen Knick. Zwei Schritte nehmen ihn heraus: die **Fläche glätten** (`Resample` setzt ein Raster aus Höhen, durch natürliche Nachbarn interpoliert, an die Stelle der Messpunkte) und dann die **Linien runden** (`Smooth`). Der erste Schritt hält Linien verschiedener Höhen auseinander: Über einem Dreieck sind sie parallele Strecken, sie können sich also nicht kreuzen, wie fein die Dreiecke auch sind. Der zweite funktioniert für jede Linie, auch für einen Fluss oder eine Straße, und kann zwei Linien, die sehr dicht nebeneinander laufen, so weit annähern, dass sie sich kreuzen; deshalb kommt er zweiter und bekommt wenige Durchläufe.

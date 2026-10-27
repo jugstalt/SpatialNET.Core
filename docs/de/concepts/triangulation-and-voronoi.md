@@ -12,7 +12,10 @@ Punkte, eine Delaunay-Triangulierung und das Voronoi-Diagramm sind drei Sichten 
 | Rücken, Gräben oder Grenzen als Kanten erhalten | `Triangulation.FromPointsAndLines(points, lines)` | eine `Triangulation`, die sie enthält |
 | ein Polygon in Dreiecke zerlegen | `polygon.Triangulate()` oder `Triangulation.FromPolygon(polygon)` | die Dreiecke innerhalb des Polygons |
 | Neigung, Volumen über einer Höhe, Höhenprofil einer Straße wissen | `Slope`, `Aspect`, `Volume`, `Drape` an einer `Triangulation` | Zahlen, oder die Straße mit Z und M |
-| eine glatte Höhe, ein feineres Netz, die Erde zwischen zwei Flächen, Neigungszonen, eine Sicht | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `ContourBands`, `LineOfSight` | eine Zahl, eine `Triangulation`, Polygone, ein Ja/Nein |
+| die Flächen zwischen zwei Höhen, oder wo es steil ist | `ContourBands`, `SlopeZones` | ein Polygon je Stufe oder Klasse |
+| eine glatte Höhe, eine glattere Fläche, ein feineres Netz | `InterpolateNaturalNeighbour`, `Resample`, `Refine` | eine Zahl, oder eine `Triangulation` |
+| die Erde zwischen zwei Flächen (Abtrag und Auftrag) | `Volume(other)` | das Volumen darüber und darunter |
+| was von einem Punkt aus zu sehen ist | `LineOfSight`, `Viewshed` | ja oder nein, oder die sichtbare Fläche als Polygon |
 
 Überall sind die Punkte die **Stützpunkte einer beliebigen Geometrie**: eines Multipoints, einer Polylinie oder eines Polygons. Stützpunkte mit gleichem X und Y zählen einmal, nicht endliche werden ignoriert, und Z bleibt erhalten, wo das Ergebnis es tragen kann.
 
@@ -50,7 +53,7 @@ IPolyline2D contour = terrain.Contour(25);                      // the line at h
 - **Struktur.** `Vertices`, `TriangleCount`, `Triangle(t)` (drei Stützpunkt-Ids, gegen den Uhrzeigersinn), `Neighbour(t, side)` (das Dreieck jenseits der Kante von Stützpunkt `side` zu `side + 1`, oder −1 am Rand) und `IsConstrained(t, side)`. `ToPolygons`, `Edges` und `ConstrainedEdges` liefern Geometrien zum Zeichnen.
 - **`Locate(point)`** ist das Dreieck, das den Punkt auf seinem Rand oder innen enthält, oder −1. Der Test ist exakt; auf einer geteilten Kante oder einem Stützpunkt gewinnt der kleinste Index. Es nutzt einen Index der Dreiecke, eine Frage kostet also ein bis zwei Mikrosekunden, egal wie groß das Modell ist.
 - **`InterpolateZ(point)`** ist die Höhe in der Ebene des Dreiecks: linear, an den Stützpunkten exakt, auf einer Fläche, die eine Ebene ist, exakt. Es ist **`NaN`** außerhalb der Triangulierung und wo ein Stützpunkt kein Z hat.
-- **`Contour(z)`** ist die Linie einer Höhe: wo die Fläche, in jedem Dreieck linear, diese Höhe hat. Ihre Stützpunkte haben Z = `z`; sie ist geschlossen, wo sie zu ihrem Anfang zurückkehrt, und endet am Rand des Modells; ein Stützpunkt genau auf `z` zählt als über der Linie. Für Höhenlinien bei vielen Höhen einmal je Höhe aufrufen.
+- **`Contour(z)`** ist die Linie einer Höhe: wo die Fläche, in jedem Dreieck linear, diese Höhe hat. Ihre Stützpunkte haben Z = `z`; sie ist geschlossen, wo sie zu ihrem Anfang zurückkehrt, und endet am Rand des Modells; ein Stützpunkt genau auf `z` zählt als über der Linie. Für Höhenlinien bei vielen Höhen einmal je Höhe aufrufen. Die Linien haben an jeder Dreieckskante einen kleinen Knick; für glatte siehe `Resample` und `Smooth` weiter unten.
 
 ## Neigung, Exposition, Fläche und Volumen
 
@@ -65,11 +68,13 @@ double slope = terrain.Slope(triangle);             // 26.565 degrees: atan(0.5)
 double aspect = terrain.Aspect(triangle);           // 180: it faces south, downhill
 double area = terrain.SurfaceArea();                // 11180.34: the map area 10000 times sqrt(1 + 0.5²)
 var (above, below) = terrain.Volume(25);            // 62500 above the height 25 (to cut away), 62500 below it (to fill)
+var (fill, cut) = after.Volume(before);             // the same between two surfaces, say the ground after and before an excavation
 ```
 
 - **`Slope(t)`** ist der Winkel der Ebene des Dreiecks zur Waagerechten in Grad (0 eben, 90 senkrecht). **`Aspect(t)`** ist die Himmelsrichtung, in die es schaut, also die Richtung des steilsten **Gefälles**, im Uhrzeigersinn von Norden (0 Nord, 90 Ost, 180 Süd, 270 West); ein ebenes Dreieck schaut nirgendwohin und ergibt `NaN`. `Gradient(t)` liefert die Höhenänderung je Einheit in X und Y, woraus sich ein Prozentwert oder ein Verhältnis ergibt. Ein Punkt hat keine eigene Neigung: Fragen Sie sein Dreieck, `Slope(Locate(point))`.
 - **`SurfaceArea(t)`** und **`SurfaceArea()`** sind die Flächen auf der Oberfläche, größer als die Kartenfläche, wo das Gelände geneigt ist.
 - **`Volume(z)`** ist das Volumen zwischen der Fläche und der waagerechten Ebene auf der Höhe `z`, für die lineare Fläche **exakt**: `Above` ist, was darüber liegt (abzutragende Erde), `Below`, was bis dahin fehlt (aufzufüllen), und `Above − Below` das Nettovolumen. Abtrag und Auftrag zwischen zwei Flächen sind nicht enthalten.
+- **`Volume(other)`** ist das Volumen zwischen zwei Flächen über ihrer gemeinsamen Fläche, **exakt**: `Above` ist dort, wo diese Fläche über der anderen liegt, `Below` wo darunter. Mit dem Gelände vor und nach einem Aushub sind das die Erde zum Auffüllen und die Erde zum Abtragen.
 - Dreiecke mit einem Stützpunkt ohne Z ergeben `NaN` (Neigung, Exposition, Fläche) oder zählen nicht (Gesamtfläche, Volumen).
 
 ## Eine Linie über dem Gelände
@@ -80,39 +85,51 @@ var (above, below) = terrain.Volume(25);            // 62500 above the height 25
 var road = Wkt.Read<IPolyline2D>("LINESTRING (10 10, 90 90)");
 
 IPolyline2D onTerrain = terrain.Drape(road);        // Z the height, M the distance along the road, a vertex on every edge it crosses
+bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50), observerHeight: 1.7);   // can the second point be seen from the first?
 ```
 
 - Das Höhenprofil einer Straße ist das Z des Ergebnisses gegen sein M ([Cookbook](../cookbook.md)); die 3D-Länge folgt aus den Stützpunkten. M ist der Abstand, wie `LinearReferencing` ihn misst, `Interpolate`, `Project` und der Rest gelten also für das Ergebnis.
 - Teile der Linie außerhalb der Fläche oder über einem Dreieck ohne Z fallen weg; das Ergebnis hat dann einen Pfad für jeden Teil innen.
 - Z braucht eine Factory mit `SupportsZ`, M eine mit `SupportsM`.
+- **`LineOfSight`** fragt, ob die gerade Linie vom Auge zum Ziel unter dem Gelände verläuft. Ein Punkt außerhalb der Fläche ist nicht sichtbar.
+- **`Viewshed(observer, maxDistance, observerHeight, targetHeight, rays)`** ist dieselbe Frage für jeden Punkt: der Teil der Fläche, der vom Standort aus zu sehen ist, als Polygon ([ADR 0044](../../adr/0044-sichtbarkeitsflaeche.de.md)). Ein Fächer von Strahlen (standardmäßig 360) geht vom Standort aus; entlang jedes Strahls sind die sichtbaren Abschnitte exakt (der Horizont wird am Profil entlang verfolgt), und die Abschnitte werden zu Winkelscheiben zusammengesetzt. Zwischen zwei Strahlen ist der Rand angenähert, um etwa `r · π / rays` in der Entfernung `r`, für eine weite Sicht also mehr Strahlen nehmen. Es kostet so viele Linien über die Fläche, wie es Strahlen gibt, bei einer größeren Fläche nicht mehr.
 
-## Glatter, feiner und verglichen
+## Zonen und Stufen
 
-Über das einzelne Dreieck hinaus beantwortet eine `Triangulation` vier weitere Fragen.
+`SlopeZones` und `ContourBands` machen aus der Fläche **Flächen**: wo es steil ist, und was zwischen zwei Höhen liegt ([ADR 0041](../../adr/0041-natuerliche-nachbarn-qualitaetsnetze-und-flaechenfragen.de.md), [ADR 0042](../../adr/0042-hoehenstufen-als-flaechen.de.md)).
 
 ```csharp
-// eine glatte Höhe, ohne die Knicke der linearen (natürliche Nachbarn, Sibson)
+// the areas by slope class: below 10, 10 to 30, 30 and more degrees
+IReadOnlyList<IPolygon2D> zones = terrain.SlopeZones([10, 30]);
+
+// the areas between contour lines: below 100, 100 to 120, 120 to 140, 140 and up
+IReadOnlyList<IPolygon2D> bands = terrain.ContourBands([100, 120, 140]);
+```
+
+- **`SlopeZones(limits)`** gibt für jede Neigungsklasse ein Polygon, eines mehr als Grenzen (ein leeres Polygon für eine Klasse ohne Fläche).
+- **`ContourBands(heights)`** gibt die Flächen zwischen Höhenlinien: ein Polygon für jede Stufe (unter der ersten Höhe, zwischen zwei Höhen, über der letzten), exakt an den Linien geschnitten; die Stufen überdecken die Fläche. `terrain.ContourBands([100, 120, 140])` hat vier Polygone: unter 100, 100 bis 120, 120 bis 140 und 140 und mehr.
+- Beide geben **ein Polygon mehr, als es Grenzen gibt** (ein leeres Polygon für eine Klasse ohne Fläche), und die Polygone überdecken die Fläche. Ein Dreieck, das genau auf einer Grenze eben ist, gehört zur Klasse darüber; Dreiecke ohne Z gehören zu keiner.
+
+## Eine glattere oder feinere Fläche
+
+Drei Aufrufe verändern die Fläche selbst, jeder für einen anderen Zweck ([ADR 0041](../../adr/0041-natuerliche-nachbarn-qualitaetsnetze-und-flaechenfragen.de.md), [ADR 0043](../../adr/0043-glaetten-von-linien-und-flaechen.de.md)).
+
+```csharp
+// a smooth height at one point, without the creases of the linear one (natural neighbour, Sibson)
 double smooth = terrain.InterpolateNaturalNeighbour(new Coordinate(45, 55));
 
-// ein feineres Netz ohne spitze Dreiecke, für eine Berechnung oder eine glattere Höhenlinienkarte
+// a smoother surface: a grid of 10 by natural neighbour instead of the measurements; contour lines of it have no creases
+Triangulation smoothed = terrain.Resample(10);
+
+// a finer mesh without sharp triangles, for a calculation
 Triangulation fine = terrain.Refine(minAngle: 25, maxArea: 50);
-double worst = fine.MinAngle();                      // mindestens 25 Grad
-
-// die Erde zwischen zwei Flächen: vor und nach einem Aushub
-var (fill, cut) = after.Volume(before);              // Above: wo "after" höher liegt (Auftrag), Below: wo es tiefer liegt (Abtrag)
-
-// die Flächen des Geländes nach Neigungsklassen, und was von wo aus zu sehen ist
-IReadOnlyList<IPolygon2D> zones = terrain.SlopeZones([10, 30]);   // unter 10, 10 bis 30, 30 und mehr Grad
-bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50), observerHeight: 1.7);
+double worst = fine.MinAngle();                      // at least 25 degrees
 ```
 
 - **`InterpolateNaturalNeighbour`** gewichtet die Höhen der Nachbarn, die ein neuer Punkt bekäme, mit der Fläche ihrer Voronoi-Zellen, die er übernähme. Sie ist stetig und glatt, gibt eine Ebene exakt wieder, geht nie über die Höhen um den Punkt hinaus und ist so einfach aufzurufen wie `InterpolateZ`. Mit Bruchkanten (Zwangskanten) in der Triangulierung gibt sie die lineare Höhe, da die Fläche dort einen Knick haben soll.
-- **`Refine`** fügt Punkte hinzu (die Delaunay-Verfeinerung nach Ruppert), bis kein Winkel unter `minAngle` und kein Dreieck größer als `maxArea` ist. Der Rand und die Bruchkanten bleiben, in kürzere Kanten zerlegt, und die neuen Punkte liegen auf der Fläche. `maxSteinerPoints` begrenzt die Arbeit; Winkel über 34 Grad werden abgelehnt, und ein spitzer Winkel zwischen zwei Bruchkanten der Eingabe lässt sich nicht verbessern.
-- **`Volume(other)`** ist das Volumen zwischen zwei Flächen über ihrer gemeinsamen Fläche, exakt: `Above` ist dort, wo diese Fläche über der anderen liegt, `Below` wo darunter.
 - **`Resample(cellSize)`** glättet die Fläche: Die Höhen eines Rasters durch natürliche Nachbarn treten an die Stelle der inneren Messpunkte, sodass Höhenlinien und Stufen davon keine Knicke an den alten Dreieckskanten haben. Linien verschiedener Höhen einer beliebigen Triangulierung können sich nicht kreuzen, also ist das der Weg, Höhenlinien zu glätten; `Smooth` rundet den Rest ([Kochbuch](../cookbook.md)).
-- **`ContourBands(heights)`** gibt die Flächen zwischen Höhenlinien: ein Polygon für jede Stufe (unter der ersten Höhe, zwischen zwei Höhen, über der letzten), exakt an den Linien geschnitten; die Stufen überdecken die Fläche. `terrain.ContourBands([100, 120, 140])` hat vier Polygone: unter 100, 100 bis 120, 120 bis 140 und 140 und mehr.
-- **`SlopeZones(limits)`** gibt für jede Neigungsklasse ein Polygon, eines mehr als Grenzen (ein leeres Polygon für eine Klasse ohne Fläche).
-- **`LineOfSight`** fragt, ob die gerade Linie vom Auge zum Ziel unter dem Gelände verläuft. Ein Punkt außerhalb der Fläche ist nicht sichtbar.
+- **`Refine`** fügt Punkte hinzu (die Delaunay-Verfeinerung nach Ruppert), bis kein Winkel unter `minAngle` und kein Dreieck größer als `maxArea` ist. Der Rand und die Bruchkanten bleiben, in kürzere Kanten zerlegt, und die neuen Punkte liegen auf der Fläche. `maxSteinerPoints` begrenzt die Arbeit; Winkel über 34 Grad werden abgelehnt, und ein spitzer Winkel zwischen zwei Bruchkanten der Eingabe lässt sich nicht verbessern.
+- **Welcher?** `InterpolateNaturalNeighbour` für die Höhe an einem Punkt, `Resample` für Höhenlinien und Karten, die glatt aussehen sollen, `Refine` für ein Netz, das eine Berechnung braucht (Finite Elemente, Strömung). Sie lassen sich verbinden; `Resample` auf einer mit `Refine` verfeinerten Fläche ist nicht nötig, denn `Refine` behält die Fläche und fügt nur Punkte auf ihr hinzu.
 
 ## Bruchkanten und Polygone
 
@@ -182,4 +199,4 @@ double forced = Triangulation.FromPointsAndLines(points, ditch).InterpolateZ(mid
 - **Punkte auf einem gemeinsamen Kreis** (die Ecken eines Rechtecks, ein regelmäßiges Gitter) erlauben mehrere gleich gute Delaunay-Triangulierungen. Welche herauskommt, ist deterministisch, aber nicht festgelegt; alles andere ist der Vertrag.
 - **Eine lange Grenze zu triangulieren ist langsamer, als dieselbe Zahl verstreuter Punkte zu triangulieren**, weil die Delaunay-Triangulierung von Punkten auf einer Kurve aus langen dünnen Dreiecken besteht. Ein Ring aus 10.000 Stützpunkten braucht etwa eine zehntel Sekunde; Polygone ab 100.000 Stützpunkten brauchen Sekunden ([ADR 0038](../../adr/0038-constrained-delaunay-und-polygon-triangulierung.de.md)).
 - **Z ist die Höhe**, und nur Z: Eine Triangulierung von Punkten ohne Z hat keine Höhen (`InterpolateZ` ist `NaN`, `Contour` ist leer), und M bleibt nicht erhalten.
-- **Nicht dabei:** andere Interpolationen als linear und natürliche Nachbarn (inverse Distanz, Laplace), eine Sichtbarkeitsfläche, das Verändern einer Triangulierung nach dem Bauen und konforme Netze mit garantierter Mindestgröße.
+- **Nicht dabei:** andere Interpolationen als linear und natürliche Nachbarn (inverse Distanz, Laplace), das Verändern einer Triangulierung nach dem Bauen und konforme Netze mit garantierter Mindestgröße.

@@ -2,7 +2,7 @@
 
 *[English version](README.md)*
 
-SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overlays (Schnitt, Vereinigung, Differenz), Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße, lineare Referenzierung und Triangulierungen (Delaunay, Voronoi, Geländemodelle).
+SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overlays (Schnitt, Vereinigung, Differenz), Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße, lineare Referenzierung und Triangulierungen (Delaunay, Voronoi, Geländemodelle mit Höhenlinien, Neigung, Volumen und Glättung).
 
 - **Eigene Algorithmen, keine fremde Engine.** Alles ist selbst implementiert, es gibt keine Abhängigkeit zu NetTopologySuite, Clipper o. ä. ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.de.md)). NetTopologySuite kommt nur im Testprojekt als Vergleichs-Orakel vor.
 - **Interfaces statt eigener Geometrieklassen.** Die Algorithmen sind Extension-Methoden auf kleinen, lesenden Interfaces (`IPolygon2D`, `IPolyline2D`, …). Bestehende GIS-Software wie gView oder WebGIS kann sie damit über ihre eigenen Geometrieklassen nutzen. Ergebnisse entstehen über eine Geometrie-Factory, die der Host bereitstellt.
@@ -63,7 +63,7 @@ Dann `http://localhost:5003` öffnen. Die Beispielgeometrien stammen aus [sample
 
 ## Qualität
 
-Die Testsuite (xUnit, rund 6.350 Tests) vergleicht jeden Algorithmus mit NetTopologySuite als Orakel auf gemeinsamen Fixtures und lässt jedes Fixture gegen die Referenz-Implementierung und gegen eine absichtlich unbequeme, host-artige Implementierung laufen ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.de.md)). Benchmarks liegen in [benchmarks/](benchmarks/).
+Die Testsuite (xUnit, rund 7.800 Tests) vergleicht jeden Algorithmus mit NetTopologySuite als Orakel auf gemeinsamen Fixtures und lässt jedes Fixture gegen die Referenz-Implementierung und gegen eine absichtlich unbequeme, host-artige Implementierung laufen ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.de.md)). Benchmarks liegen in [benchmarks/](benchmarks/).
 
 ## Mitwirken
 

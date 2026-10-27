@@ -1,6 +1,6 @@
 # SpatialNET
 
-SpatialNET is a .NET library for planar spatial computations that works exclusively through interfaces, so that existing GIS software can use it through its own geometry classes. The algorithms are implemented in-house: overlays, buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures.
+SpatialNET is a .NET library for planar spatial computations that works exclusively through interfaces, so that existing GIS software can use it through its own geometry classes. The algorithms are implemented in-house: overlays, buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures, linear referencing and event tables, and triangulations (Delaunay, Voronoi, terrain models with contour lines, slope, volume and smoothing).
 
 - **[Getting started](getting-started.md)**: install, first program, options and precision, reading and writing, the playground.
 - **[Host integration](host-integration.md)**: implement the geometry interfaces and the geometry factory in your own GIS application.

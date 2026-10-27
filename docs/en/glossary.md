@@ -31,6 +31,7 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | quality mesh | Qualitätsnetz | A triangulation without sharp triangles, made by adding points (`Triangulation.Refine`) |
 | smoothing | Glättung | Replacing the corners of a line by a curve (`Smooth`: corner cutting or a spline), or the surface by its interpolation on a grid (`Triangulation.Resample`) |
 | height band | Höhenstufe | The area of a surface between two heights, bounded by contour lines (`Triangulation.ContourBands`) |
+| viewshed | Sichtbarkeitsfläche | The part of a surface that can be seen from a point (`Triangulation.Viewshed`) |
 | line of sight | Sichtlinie | Whether the straight line from an eye to a target passes above the ground (`Triangulation.LineOfSight`) |
 | draping | Drapieren | Laying a line over a surface: the same line in the map, with the height as Z and the distance along it as M (`Triangulation.Drape`) |
 | point event | Punktereignis | An event at a single M value, such as a bridge (`PointEvent<T>`) |

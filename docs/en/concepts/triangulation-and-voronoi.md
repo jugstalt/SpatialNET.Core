@@ -12,7 +12,10 @@ Points, a Delaunay triangulation and the Voronoi diagram are three views of one 
 | keep ridges, ditches or boundaries as edges | `Triangulation.FromPointsAndLines(points, lines)` | a `Triangulation` that contains them |
 | cut a polygon into triangles | `polygon.Triangulate()` or `Triangulation.FromPolygon(polygon)` | the triangles inside the polygon |
 | know the slope, the volume above a height, the height profile of a road | `Slope`, `Aspect`, `Volume`, `Drape` on a `Triangulation` | numbers, or the road with Z and M |
-| a smooth height, a finer mesh, the earth between two surfaces, slope zones, a view | `InterpolateNaturalNeighbour`, `Refine`, `Volume(other)`, `SlopeZones`, `ContourBands`, `LineOfSight` | a number, a `Triangulation`, polygons, a yes/no |
+| the areas between two heights, or where it is steep | `ContourBands`, `SlopeZones` | one polygon per band or class |
+| a smooth height, a smoother surface, a finer mesh | `InterpolateNaturalNeighbour`, `Resample`, `Refine` | a number, or a `Triangulation` |
+| the earth between two surfaces (cut and fill) | `Volume(other)` | the volume above and below |
+| what can be seen from a point | `LineOfSight`, `Viewshed` | yes or no, or the visible area as a polygon |
 
 Everywhere, the points are the **vertices of any geometry**: a multipoint, a polyline or a polygon. Vertices with the same X and Y count once, vertices that are not finite are ignored, and Z is kept where the result can carry it.
 
@@ -50,7 +53,7 @@ IPolyline2D contour = terrain.Contour(25);                      // the line at h
 - **Structure.** `Vertices`, `TriangleCount`, `Triangle(t)` (three vertex ids, counter-clockwise), `Neighbour(t, side)` (the triangle across the edge from vertex `side` to `side + 1`, or −1 at the border) and `IsConstrained(t, side)`. `ToPolygons`, `Edges` and `ConstrainedEdges` give geometries to draw.
 - **`Locate(point)`** is the triangle that contains the point, on its border or inside, or −1. The test is exact; on a shared edge or vertex the smallest index wins. It uses an index of the triangles, so a question costs about a microsecond or two, however large the model.
 - **`InterpolateZ(point)`** is the height in the plane of the triangle: linear, exact at the vertices, exact on a surface that is a plane. It is **`NaN`** outside the triangulation and where a vertex has no Z.
-- **`Contour(z)`** is the line of one height: where the surface, linear in every triangle, has that height. Its vertices have Z = `z`; it is closed where it returns to its start and ends at the border of the model; a vertex exactly at `z` counts as above the line. For contours at many heights call it once per height.
+- **`Contour(z)`** is the line of one height: where the surface, linear in every triangle, has that height. Its vertices have Z = `z`; it is closed where it returns to its start and ends at the border of the model; a vertex exactly at `z` counts as above the line. For contours at many heights call it once per height. The lines have a small crease at every edge of a triangle; for smooth ones see `Resample` and `Smooth` below.
 
 ## Slope, aspect, area and volume
 
@@ -65,11 +68,13 @@ double slope = terrain.Slope(triangle);             // 26.565 degrees: atan(0.5)
 double aspect = terrain.Aspect(triangle);           // 180: it faces south, downhill
 double area = terrain.SurfaceArea();                // 11180.34: the map area 10000 times sqrt(1 + 0.5²)
 var (above, below) = terrain.Volume(25);            // 62500 above the height 25 (to cut away), 62500 below it (to fill)
+var (fill, cut) = after.Volume(before);             // the same between two surfaces, say the ground after and before an excavation
 ```
 
 - **`Slope(t)`** is the angle of the triangle's plane to the horizontal, in degrees (0 flat, 90 vertical). **`Aspect(t)`** is the compass direction that it faces, which is the direction of steepest **descent**, clockwise from north (0 north, 90 east, 180 south, 270 west); a flat triangle faces nowhere and gives `NaN`. `Gradient(t)` gives the change of height per unit in X and Y, from which a percentage or a ratio follows. A point has no slope of its own: ask its triangle, `Slope(Locate(point))`.
 - **`SurfaceArea(t)`** and **`SurfaceArea()`** are the areas on the surface, larger than the map area where the ground slopes.
 - **`Volume(z)`** is the volume between the surface and the horizontal plane at the height `z`, **exact** for the linear surface: `Above` is what lies above (earth to cut away), `Below` what is missing up to it (to fill), and `Above − Below` the net volume. The cut and fill between two surfaces is not included.
+- **`Volume(other)`** is the volume between two surfaces over the area they share, **exact**: `Above` is where this surface lies above the other, `Below` where it lies below. With the ground before and after an excavation these are the earth to fill and the earth to cut away.
 - Triangles with a vertex without Z give `NaN` (slope, aspect, area) or are not counted (total area, volume).
 
 ## A line over the terrain
@@ -80,39 +85,51 @@ var (above, below) = terrain.Volume(25);            // 62500 above the height 25
 var road = Wkt.Read<IPolyline2D>("LINESTRING (10 10, 90 90)");
 
 IPolyline2D onTerrain = terrain.Drape(road);        // Z the height, M the distance along the road, a vertex on every edge it crosses
+bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50), observerHeight: 1.7);   // can the second point be seen from the first?
 ```
 
 - The height profile of a road is the Z of the result against its M ([Cookbook](../cookbook.md)); the 3D length follows from the vertices. M is the distance as `LinearReferencing` measures it, so `Interpolate`, `Project` and the rest apply to the result.
 - Parts of the line outside the surface, or over a triangle without Z, are left out; the result then has one path for every part inside.
 - Z needs a factory with `SupportsZ`, M one with `SupportsM`.
+- **`LineOfSight`** asks whether the straight line from the eye to the target passes below the ground. A point outside the surface is not visible.
+- **`Viewshed(observer, maxDistance, observerHeight, targetHeight, rays)`** is the same question for every point: the part of the surface that can be seen from the observer, as a polygon ([ADR 0044](../../adr/0044-sichtbarkeitsflaeche.md)). A fan of rays (360 by default) leaves the observer; along each the visible stretches are exact (the horizon is followed along the profile), and the stretches are put together to slices of the angle. Between two rays the edge is approximate, by about `r · π / rays` at the distance `r`, so use more rays for a long view. It costs as many lines over the surface as there are rays, not more for a larger surface.
 
-## Smoother, finer and compared
+## Zones and bands
 
-Beyond the triangle itself, a `Triangulation` answers four more questions.
+`SlopeZones` and `ContourBands` turn the surface into **areas**: where it is steep, and what lies between two heights ([ADR 0041](../../adr/0041-natuerliche-nachbarn-qualitaetsnetze-und-flaechenfragen.md), [ADR 0042](../../adr/0042-hoehenstufen-als-flaechen.md)).
 
 ```csharp
-// a smooth height, without the creases of the linear one (natural neighbour, Sibson)
+// the areas by slope class: below 10, 10 to 30, 30 and more degrees
+IReadOnlyList<IPolygon2D> zones = terrain.SlopeZones([10, 30]);
+
+// the areas between contour lines: below 100, 100 to 120, 120 to 140, 140 and up
+IReadOnlyList<IPolygon2D> bands = terrain.ContourBands([100, 120, 140]);
+```
+
+- **`SlopeZones(limits)`** gives one polygon for every slope class, one more than there are limits (an empty polygon for a class without area).
+- **`ContourBands(heights)`** gives the areas between contour lines: one polygon for every band (below the first height, between two heights, above the last), cut exactly along the lines; the bands tile the surface. `terrain.ContourBands([100, 120, 140])` has four polygons: below 100, 100 to 120, 120 to 140 and 140 and up.
+- Both give **one more polygon than there are limits** (an empty polygon for a class without area), and the polygons tile the surface. A triangle that is flat at exactly a limit belongs to the class above it; triangles without Z belong to none.
+
+## A smoother or finer surface
+
+Three calls change the surface itself, each for another purpose ([ADR 0041](../../adr/0041-natuerliche-nachbarn-qualitaetsnetze-und-flaechenfragen.md), [ADR 0043](../../adr/0043-glaetten-von-linien-und-flaechen.md)).
+
+```csharp
+// a smooth height at one point, without the creases of the linear one (natural neighbour, Sibson)
 double smooth = terrain.InterpolateNaturalNeighbour(new Coordinate(45, 55));
 
-// a finer mesh without sharp triangles, for a calculation or a smoother contour map
+// a smoother surface: a grid of 10 by natural neighbour instead of the measurements; contour lines of it have no creases
+Triangulation smoothed = terrain.Resample(10);
+
+// a finer mesh without sharp triangles, for a calculation
 Triangulation fine = terrain.Refine(minAngle: 25, maxArea: 50);
 double worst = fine.MinAngle();                      // at least 25 degrees
-
-// the earth between two surfaces: before and after an excavation
-var (fill, cut) = after.Volume(before);              // Above: where "after" lies higher (fill), Below: where it lies lower (cut)
-
-// the areas of the terrain by slope class, and what can be seen from where
-IReadOnlyList<IPolygon2D> zones = terrain.SlopeZones([10, 30]);   // below 10, 10 to 30, 30 and more degrees
-bool visible = terrain.LineOfSight(new Coordinate(10, 50), new Coordinate(90, 50), observerHeight: 1.7);
 ```
 
 - **`InterpolateNaturalNeighbour`** weights the heights of the neighbours that a new point would get by the area of their Voronoi cells that it would take over. It is continuous and smooth, reproduces a plane exactly, never goes beyond the heights around it, and is as easy to call as `InterpolateZ`. With break lines (constraints) in the triangulation it gives the linear height, since the surface is meant to have a crease there.
-- **`Refine`** adds points (the Delaunay refinement of Ruppert) until no angle is below `minAngle` and no triangle is larger than `maxArea`. The border and the break lines stay, cut into shorter edges, and the new points lie on the surface. `maxSteinerPoints` limits the work; angles above 34 degrees are rejected, and a sharp angle between two break lines in the input cannot be improved.
-- **`Volume(other)`** is the volume between two surfaces over the area they share, exact: `Above` is where this surface lies above the other, `Below` where it lies below.
 - **`Resample(cellSize)`** smooths the surface: the heights of a grid by natural neighbour take the place of the inner measurements, so that contour lines and bands of it have no creases at the old triangle edges. Lines of different heights of any triangulation cannot cross, so this is the way to smooth contour lines; `Smooth` rounds the rest ([Cookbook](../cookbook.md)).
-- **`ContourBands(heights)`** gives the areas between contour lines: one polygon for every band (below the first height, between two heights, above the last), cut exactly along the lines; the bands tile the surface. `terrain.ContourBands([100, 120, 140])` has four polygons: below 100, 100 to 120, 120 to 140 and 140 and up.
-- **`SlopeZones(limits)`** gives one polygon for every slope class, one more than there are limits (an empty polygon for a class without area).
-- **`LineOfSight`** asks whether the straight line from the eye to the target passes below the ground. A point outside the surface is not visible.
+- **`Refine`** adds points (the Delaunay refinement of Ruppert) until no angle is below `minAngle` and no triangle is larger than `maxArea`. The border and the break lines stay, cut into shorter edges, and the new points lie on the surface. `maxSteinerPoints` limits the work; angles above 34 degrees are rejected, and a sharp angle between two break lines in the input cannot be improved.
+- **Which one?** `InterpolateNaturalNeighbour` for the height at a point, `Resample` for contour lines and maps that must look smooth, `Refine` for a mesh that a calculation needs (finite elements, flow). They can be combined; `Resample` of a `Refine`d surface is not needed, since `Refine` keeps the surface and only adds points on it.
 
 ## Break lines and polygons
 
@@ -182,4 +199,4 @@ double forced = Triangulation.FromPointsAndLines(points, ditch).InterpolateZ(mid
 - **Points on a common circle** (the corners of a rectangle, a regular grid) allow several equally Delaunay triangulations. Which one comes out is deterministic but not specified; everything else is the contract.
 - **Triangulating a long boundary is slower than triangulating the same number of scattered points**, because the Delaunay triangulation of points on a curve consists of long thin triangles. A ring of 10,000 vertices takes about a tenth of a second; polygons of 100,000 vertices and more take seconds ([ADR 0038](../../adr/0038-constrained-delaunay-und-polygon-triangulierung.md)).
 - **Z is the height**, and only Z: a triangulation of points without Z has no heights (`InterpolateZ` is `NaN`, `Contour` is empty), and M is not kept.
-- **Not included:** other interpolations than linear and natural neighbour (inverse distance, Laplace), a viewshed, changing a triangulation after it is built, and conforming meshes with a guaranteed minimum size.
+- **Not included:** other interpolations than linear and natural neighbour (inverse distance, Laplace), changing a triangulation after it is built, and conforming meshes with a guaranteed minimum size.

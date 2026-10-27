@@ -46,6 +46,7 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | Qualitätsnetz | quality mesh (`Triangulation.Refine`) |
 | Glättung | smoothing (`Smooth`, `Triangulation.Resample`) |
 | Höhenstufe | height band (`Triangulation.ContourBands`) |
+| Sichtbarkeitsfläche | viewshed (`Triangulation.Viewshed`) |
 | Sichtlinie | line of sight (`Triangulation.LineOfSight`) |
 | Voronoi-Zelle | Voronoi cell (`VoronoiCell`) |
 | Triangulierung | triangulation (`Triangulation`) |

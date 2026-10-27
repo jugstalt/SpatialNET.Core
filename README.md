@@ -2,7 +2,7 @@
 
 *[Deutsche Fassung](README.de.md)*
 
-SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures, linear referencing, and triangulations (Delaunay, Voronoi, terrain models).
+SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures, linear referencing, and triangulations (Delaunay, Voronoi, terrain models with contour lines, slope, volume and smoothing).
 
 - **Own algorithms, no third-party engine.** Everything is implemented in-house; there is no dependency on NetTopologySuite, Clipper or similar ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.md)). NetTopologySuite appears only in the test project, as a comparison oracle.
 - **Interfaces instead of geometry classes.** The algorithms are extension methods on small read-only interfaces (`IPolygon2D`, `IPolyline2D`, …), so existing GIS software such as gView or WebGIS can use them through its own geometry classes. Results are created through a geometry factory that the host provides.
@@ -63,7 +63,7 @@ Then open `http://localhost:5003`. The sample geometries come from [samples/](sa
 
 ## Quality
 
-The test suite (xUnit, about 6,350 tests) compares every algorithm against NetTopologySuite as an oracle on shared fixtures and runs each fixture against the reference implementation and against a deliberately awkward host-style implementation ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). Benchmarks are in [benchmarks/](benchmarks/).
+The test suite (xUnit, about 7,800 tests) compares every algorithm against NetTopologySuite as an oracle on shared fixtures and runs each fixture against the reference implementation and against a deliberately awkward host-style implementation ([ADR 0008](docs/adr/0008-teststrategie-fixtures-nts-orakel.md)). Benchmarks are in [benchmarks/](benchmarks/).
 
 ## Contributing
 
