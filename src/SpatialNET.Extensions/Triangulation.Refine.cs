@@ -7,7 +7,6 @@ namespace SpatialNET;
 public sealed partial class Triangulation
 {
     private const double MaxMinAngle = 34;      // above this the refinement is not known to stop
-    private const int MaxRounds = 400;
 
     /// <summary>
     /// The smallest angle of a triangle in degrees (ADR 0041): 60 for an equilateral triangle, near 0 for a sliver.
@@ -37,9 +36,11 @@ public sealed partial class Triangulation
         return min;
     }
 
-    private double MinAngleOf(int t)
+    private double MinAngleOf(int t) => MinAngleDegrees(_vertices[_triangles[3 * t]], _vertices[_triangles[3 * t + 1]], _vertices[_triangles[3 * t + 2]]);
+
+    private static double MinAngleDegrees(Coordinate p0, Coordinate p1, Coordinate p2)
     {
-        var p = new[] { _vertices[_triangles[3 * t]], _vertices[_triangles[3 * t + 1]], _vertices[_triangles[3 * t + 2]] };
+        var p = new[] { p0, p1, p2 };
         double min = double.PositiveInfinity;
         for (int k = 0; k < 3; k++)
         {
@@ -89,199 +90,257 @@ public sealed partial class Triangulation
             throw new ArgumentOutOfRangeException(nameof(maxSteinerPoints), maxSteinerPoints, "The number must not be negative.");
         }
 
-        if (TriangleCount == 0)
+        if (TriangleCount == 0 || maxSteinerPoints == 0)
         {
             return this;
         }
 
-        var points = new List<Coordinate>(_vertices);
-        var known = new HashSet<(double, double)>(_vertices.Select(v => (v.X, v.Y)));
-        var segments = BorderAndConstraintSegments();
-
+        var mesh = new RefinementMesh(_vertices, _triangles, _neighbours, _constrained);
         double minX = _vertices.Min(v => v.X), maxX = _vertices.Max(v => v.X), minY = _vertices.Min(v => v.Y), maxY = _vertices.Max(v => v.Y);
         double floor = 1e-7 * Math.Sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
-        var current = this;
+        var segments = new Queue<(int A, int B, bool Forced)>();
+        var queued = new HashSet<(int, int, bool)>();
+        var bad = new PriorityQueue<(int T, int Stamp), double>();
+        var touched = new List<int>();
         int added = 0;
-        for (int round = 0; round < MaxRounds && added < maxSteinerPoints; round++)
+
+        // forced: a point that is to be inserted lies in the diametral circle of the edge, so that no vertex that is there already has to
+        void QueueSegment(int a, int b, bool forced = false)
         {
-            // 1. the edges of the border and the constraints come first: split those that a vertex lies in the diametral circle of
-            var split = new HashSet<(int, int)>();
-            for (int t = 0; t < current.TriangleCount; t++)
+            if (queued.Add(a < b ? (a, b, forced) : (b, a, forced)))
             {
-                for (int k = 0; k < 3; k++)
-                {
-                    int u = current._triangles[3 * t + k], v = current._triangles[3 * t + (k + 1) % 3];
-                    var key = u < v ? (u, v) : (v, u);
-                    if (segments.ContainsKey(key) && Encroaches(points[key.Item1], points[key.Item2], current._vertices[current._triangles[3 * t + (k + 2) % 3]], floor))
-                    {
-                        split.Add(key);
-                    }
-                }
+                segments.Enqueue((a, b, forced));
+            }
+        }
+
+        // the triangles that are too sharp or too large: the worst come first; those whose circumcircle is smaller than the floor are left
+        void CheckTriangle(int t)
+        {
+            var a = mesh.Corner(t, 0);
+            var b = mesh.Corner(t, 1);
+            var c = mesh.Corner(t, 2);
+            double area = Math.Abs((b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y)) / 2;
+            double radius = area > 0 ? Length(a, b) * Length(b, c) * Length(c, a) / (4 * area) : double.PositiveInfinity;
+            if (radius < floor)
+            {
+                return;
             }
 
-            var inserts = new List<Coordinate>();
-            if (split.Count == 0)
+            if (maxArea is { } limit && area > limit)
             {
-                // 2. the triangles that are too sharp or too large: the circumcentre, unless it encroaches an edge, which is split instead
-                var index = new SpatialIndex<(int, int)>(segments.Keys.Select(key =>
-                {
-                    var a = points[key.Item1];
-                    var b = points[key.Item2];
-                    double cx = (a.X + b.X) / 2, cy = (a.Y + b.Y) / 2, r = Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y)) / 2;
-                    return (new Envelope2D(cx - r, cy - r, cx + r, cy + r), key);
-                }));
-
-                var bad = current.BadTriangles(minAngle, maxArea, floor);
-                var touched = new HashSet<int>();
-                foreach (int t in bad)
-                {
-                    if (touched.Contains(t))
-                    {
-                        continue;
-                    }
-
-                    var (cx, cy) = VoronoiBuilder.Centre(current._vertices[current._triangles[3 * t]], current._vertices[current._triangles[3 * t + 1]], current._vertices[current._triangles[3 * t + 2]]);
-                    var centre = new Coordinate(cx, cy);
-                    if (!double.IsFinite(cx) || !double.IsFinite(cy) || !known.Add((cx, cy)))
-                    {
-                        continue;
-                    }
-
-                    known.Remove((cx, cy));
-                    bool encroaching = false;
-                    foreach (var key in index.Query(new Envelope2D(cx, cy, cx, cy)))
-                    {
-                        var a = points[key.Item1];
-                        var b = points[key.Item2];
-                        if ((cx - a.X) * (cx - b.X) + (cy - a.Y) * (cy - b.Y) < 0)
-                        {
-                            encroaching = true;
-                            if (Length(a, b) >= 2 * floor)
-                            {
-                                split.Add(key);
-                            }
-                        }
-                    }
-
-                    if (!encroaching && Locate(centre) < 0)
-                    {
-                        // a sliver at the border has its centre outside (or far away): the edge that is in the way is split instead
-                        encroaching = true;
-                        if (current.EdgeInTheWay(t, cx, cy, segments) is { } blocking && Length(points[blocking.Item1], points[blocking.Item2]) >= 2 * floor)
-                        {
-                            split.Add(blocking);
-                        }
-                    }
-
-                    touched.Add(t);
-                    for (int k = 0; k < 3; k++)
-                    {
-                        int n = current._neighbours[3 * t + k];
-                        if (n >= 0)
-                        {
-                            touched.Add(n);
-                        }
-                    }
-
-                    if (!encroaching)
-                    {
-                        double z = InterpolateZ(centre);
-                        inserts.Add(double.IsNaN(z) ? centre : new Coordinate(cx, cy, z));
-                    }
-                }
+                bad.Enqueue((t, mesh.Stamp(t)), -area / limit);
+                return;
             }
 
-            if (split.Count == 0 && inserts.Count == 0)
+            double angle = MinAngleDegrees(a, b, c);
+            if (angle < minAngle)
+            {
+                bad.Enqueue((t, mesh.Stamp(t)), angle / Math.Max(minAngle, 1e-300));
+            }
+        }
+
+        // the protected edges of a triangle that the vertex opposite lies in the diametral circle of
+        void CheckSegments(int t)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                if (mesh.IsProtected(t, k) && Encroaches(mesh.Corner(t, k), mesh.Corner(t, k + 1), mesh.Corner(t, k + 2), floor))
+                {
+                    QueueSegment(mesh.Vertex(t, k), mesh.Vertex(t, k + 1));
+                }
+            }
+        }
+
+        void Examine(List<int> changed)
+        {
+            foreach (int t in changed.Distinct())
+            {
+                CheckSegments(t);
+                CheckTriangle(t);
+            }
+
+            changed.Clear();
+        }
+
+        for (int t = 0; t < mesh.TriangleCount; t++)
+        {
+            CheckSegments(t);
+            CheckTriangle(t);
+        }
+
+        long guard = 100L * (maxSteinerPoints + TriangleCount) + 1000;
+        while (added < maxSteinerPoints && guard-- > 0)
+        {
+            if (segments.Count > 0)
+            {
+                // an edge of the border or of a constraint that a vertex lies in the diametral circle of: split in the middle
+                var (a, b, forced) = segments.Dequeue();
+                queued.Remove(a < b ? (a, b, forced) : (b, a, forced));
+                var (t, k) = mesh.FindEdge(a, b);
+                if (t < 0 || (forced ? Length(mesh.Corner(t, k), mesh.Corner(t, k + 1)) < 2 * floor : !EdgeEncroached(mesh, t, k, floor)))
+                {
+                    continue;
+                }
+
+                var pa = mesh.Points[mesh.Vertex(t, k)];
+                var pb = mesh.Points[mesh.Vertex(t, k + 1)];
+                var middle = pa.HasZ && pb.HasZ ? new Coordinate((pa.X + pb.X) / 2, (pa.Y + pb.Y) / 2, (pa.Z + pb.Z) / 2) : new Coordinate((pa.X + pb.X) / 2, (pa.Y + pb.Y) / 2);
+                if (mesh.Split(middle, t, k, touched) >= 0)
+                {
+                    added++;
+                }
+
+                Examine(touched);
+                continue;
+            }
+
+            if (bad.Count == 0)
             {
                 break;
             }
 
-            foreach (var key in split)
+            var (triangle, stamp) = bad.Dequeue();
+            if (mesh.Stamp(triangle) != stamp)
             {
-                var a = points[key.Item1];
-                var b = points[key.Item2];
-                if (!segments.TryGetValue(key, out var segment))
+                continue;   // changed since: it was examined again
+            }
+
+            var c0 = mesh.Corner(triangle, 0);
+            var c1 = mesh.Corner(triangle, 1);
+            var c2 = mesh.Corner(triangle, 2);
+            var (cx, cy) = VoronoiBuilder.Centre(c0, c1, c2);
+            if (!double.IsFinite(cx) || !double.IsFinite(cy))
+            {
+                continue;
+            }
+
+            var centre = new Coordinate(cx, cy);
+            var from = new Coordinate((c0.X + c1.X + c2.X) / 3, (c0.Y + c1.Y + c2.Y) / 3);
+            if (!mesh.Walk(triangle, from, centre, out int target, out int blockedSide))
+            {
+                // a sliver at the border or next to a constraint has its centre beyond it: the edge in the way is split instead
+                if (blockedSide >= 0 && Length(mesh.Corner(target, blockedSide), mesh.Corner(target, blockedSide + 1)) >= 2 * floor)
                 {
-                    continue;
+                    QueueSegment(mesh.Vertex(target, blockedSide), mesh.Vertex(target, blockedSide + 1), forced: true);
+                    bad.Enqueue((triangle, stamp), 0);   // and tried again afterwards
                 }
 
-                var middle = Middle(a, b, segment.From >= 0 ? points[segment.From] : null, segment.From >= 0 ? points[segment.To] : null);
-                if (!known.Add((middle.X, middle.Y)))
+                continue;
+            }
+
+            var encroached = EncroachedBy(mesh, target, centre, floor);
+            if (encroached.Count > 0)
+            {
+                // the centre lies in the diametral circle of an edge: those edges are split, and the triangle is tried again
+                foreach (var (a, b) in encroached)
                 {
-                    continue;
+                    QueueSegment(a, b, forced: true);
                 }
 
-                int id = points.Count;
-                points.Add(middle);
-                segments.Remove(key);
-                // the halves keep the direction of a border edge, with the middle in place of the end that it replaces
-                int from = segment.From, to = segment.To;
-                segments[key.Item1 < id ? (key.Item1, id) : (id, key.Item1)] = new Segment(segment.Constrained, from >= 0 ? (from == key.Item1 ? key.Item1 : id) : -1, from >= 0 ? (from == key.Item1 ? id : key.Item1) : -1);
-                segments[key.Item2 < id ? (key.Item2, id) : (id, key.Item2)] = new Segment(segment.Constrained, from >= 0 ? (from == key.Item2 ? key.Item2 : id) : -1, from >= 0 ? (from == key.Item2 ? id : key.Item2) : -1);
+                bad.Enqueue((triangle, stamp), 0);
+                continue;
+            }
+
+            double z = InterpolateZ(centre);
+            if (mesh.Insert(double.IsNaN(z) ? centre : new Coordinate(cx, cy, z), target, touched) >= 0)
+            {
                 added++;
             }
 
-            foreach (var p in inserts)
-            {
-                if (known.Add((p.X, p.Y)))
-                {
-                    points.Add(p);
-                    added++;
-                }
-            }
-
-            var next = Rebuild(points, segments);
-            if (next is null)
-            {
-                break;
-            }
-
-            current = next;
+            Examine(touched);
         }
 
-        return current;
+        if (added == 0)
+        {
+            return this;
+        }
+
+        var (vertices, triangles, neighbours, constrained) = mesh.ToArrays();
+        return new Triangulation(vertices, triangles, neighbours, constrained);
     }
 
-    /// <summary>The first edge of the border or of a constraint on the straight way from the centre of a triangle to a point, or <c>null</c> if there is none.</summary>
-    private (int, int)? EdgeInTheWay(int triangle, double x, double y, Dictionary<(int, int), Segment> segments)
+    /// <summary>Whether a vertex lies in the diametral circle of the edge of a side, on either side of it.</summary>
+    private static bool EdgeEncroached(RefinementMesh mesh, int t, int k, double floor)
     {
-        var a0 = _vertices[_triangles[3 * triangle]];
-        var b0 = _vertices[_triangles[3 * triangle + 1]];
-        var c0 = _vertices[_triangles[3 * triangle + 2]];
-        var from = new Coordinate((a0.X + b0.X + c0.X) / 3, (a0.Y + b0.Y + c0.Y) / 3);
-        var to = new Coordinate(x, y);
-        int t = triangle;
-        for (int step = 0; step <= TriangleCount; step++)
+        var a = mesh.Corner(t, k);
+        var b = mesh.Corner(t, k + 1);
+        if (Encroaches(a, b, mesh.Corner(t, k + 2), floor))
         {
-            int next = -1;
-            for (int k = 0; k < 3; k++)
-            {
-                int u = _triangles[3 * t + k], v = _triangles[3 * t + (k + 1) % 3];
-                var pu = _vertices[u];
-                var pv = _vertices[v];
-                // the way leaves the triangle through this edge: the target is on the outer side, and the edge separates the two ends of the way
-                if (Orientation.Orient2D(pu, pv, to) < 0 && Orientation.Orient2D(from, to, pu) * Orientation.Orient2D(from, to, pv) <= 0)
-                {
-                    var key = u < v ? (u, v) : (v, u);
-                    if (_neighbours[3 * t + k] < 0 || segments.ContainsKey(key))
-                    {
-                        return key;
-                    }
-
-                    next = _neighbours[3 * t + k];
-                    break;
-                }
-            }
-
-            if (next < 0)
-            {
-                return null;
-            }
-
-            t = next;
+            return true;
         }
 
-        return null;
+        int u = mesh.Neighbour(t, k);
+        if (u < 0)
+        {
+            return false;
+        }
+
+        for (int j = 0; j < 3; j++)
+        {
+            if (mesh.Vertex(u, j) != mesh.Vertex(t, k) && mesh.Vertex(u, j) != mesh.Vertex(t, k + 1))
+            {
+                return Encroaches(a, b, mesh.Corner(u, j), floor);
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The protected edges that a point would encroach upon: those of the triangles whose circumcircle holds the point (what it would cut out)
+    /// and of their neighbours, that have it in their diametral circle.
+    /// </summary>
+    private static List<(int A, int B)> EncroachedBy(RefinementMesh mesh, int start, Coordinate p, double floor)
+    {
+        var found = new List<(int, int)>();
+        var cavity = new HashSet<int> { start };
+        var stack = new Stack<int>();
+        stack.Push(start);
+        while (stack.Count > 0)
+        {
+            int t = stack.Pop();
+            for (int k = 0; k < 3; k++)
+            {
+                int n = mesh.Neighbour(t, k);
+                if (!mesh.IsProtected(t, k) && n >= 0 && !cavity.Contains(n)
+                    && InCircle.Sign(mesh.Corner(n, 0), mesh.Corner(n, 1), mesh.Corner(n, 2), p) > 0)
+                {
+                    cavity.Add(n);
+                    stack.Push(n);
+                }
+            }
+        }
+
+        var seen = new HashSet<int>(cavity);
+        foreach (int t in cavity.ToArray())
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                int n = mesh.Neighbour(t, k);
+                if (n >= 0)
+                {
+                    seen.Add(n);
+                }
+            }
+        }
+
+        foreach (int t in seen)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                if (mesh.IsProtected(t, k))
+                {
+                    var a = mesh.Corner(t, k);
+                    var b = mesh.Corner(t, k + 1);
+                    if (Encroaches(a, b, p, floor))
+                    {
+                        found.Add((mesh.Vertex(t, k), mesh.Vertex(t, k + 1)));
+                    }
+                }
+            }
+        }
+
+        return found;
     }
 
     /// <summary>The edges of the border and the constraints, with the direction of a border edge that has the inside on its left.</summary>
@@ -311,73 +370,11 @@ public sealed partial class Triangulation
     /// <summary>An edge of the border or a constraint; <c>From</c> and <c>To</c> are its ends in the direction that has the inside on the left, or −1 for an edge that is not on the border.</summary>
     private readonly record struct Segment(bool Constrained, int From, int To);
 
-    /// <summary>
-    /// The middle of an edge. On the border it is moved to the inside by as many units in the last place as it takes to lie on that side of the
-    /// edge, so that the rounding never puts it outside: a middle outside would make a triangle of the edge with the chord that no refinement can improve.
-    /// </summary>
-    private static Coordinate Middle(Coordinate a, Coordinate b, Coordinate? from, Coordinate? to)
-    {
-        double x = (a.X + b.X) / 2, y = (a.Y + b.Y) / 2;
-        if (from is { } start && to is { } end)
-        {
-            double nx = -(end.Y - start.Y), ny = end.X - start.X, length = Math.Sqrt(nx * nx + ny * ny);
-            nx /= length;
-            ny /= length;
-            double size = Math.Max(Math.Abs(x), Math.Abs(y));
-            double step = Math.BitIncrement(size) - size;
-            double mx = x, my = y;
-            for (int i = 0; i < 80 && Orientation.Orient2D(start, end, new Coordinate(mx, my)) < 0; i++)
-            {
-                mx = x + nx * step;
-                my = y + ny * step;
-                step *= 2;
-            }
-
-            x = mx;
-            y = my;
-        }
-
-        return a.HasZ && b.HasZ ? new Coordinate(x, y, (a.Z + b.Z) / 2) : new Coordinate(x, y);
-    }
-
     /// <summary>Whether a point lies strictly inside the circle with the segment as its diameter, and the segment is long enough to be split.</summary>
     private static bool Encroaches(Coordinate a, Coordinate b, Coordinate p, double floor) =>
         (p.X - a.X) * (p.X - b.X) + (p.Y - a.Y) * (p.Y - b.Y) < 0 && Length(a, b) >= 2 * floor;
 
     private static double Length(Coordinate a, Coordinate b) => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
-
-    /// <summary>The triangles that are too sharp or too large, the worst first; those whose circumcircle is smaller than the floor are left out.</summary>
-    private List<int> BadTriangles(double minAngle, double? maxArea, double floor)
-    {
-        var bad = new List<(double Key, int T)>();
-        for (int t = 0; t < TriangleCount; t++)
-        {
-            var a = _vertices[_triangles[3 * t]];
-            var b = _vertices[_triangles[3 * t + 1]];
-            var c = _vertices[_triangles[3 * t + 2]];
-            double area = Math.Abs((b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y)) / 2;
-            double radius = area > 0 ? Length(a, b) * Length(b, c) * Length(c, a) / (4 * area) : double.PositiveInfinity;
-            if (radius < floor)
-            {
-                continue;
-            }
-
-            if (maxArea is { } limit && area > limit)
-            {
-                bad.Add((-area / limit, t));
-                continue;
-            }
-
-            double angle = MinAngleOf(t);
-            if (angle < minAngle)
-            {
-                bad.Add((angle / minAngle, t));
-            }
-        }
-
-        bad.Sort((x, y) => x.Key.CompareTo(y.Key));
-        return bad.Select(b => b.T).ToList();
-    }
 
     /// <summary>The constrained triangulation of the points with the segments, inside the domain of this triangulation; <c>null</c> if it cannot be made.</summary>
     private Triangulation? Rebuild(List<Coordinate> points, Dictionary<(int, int), Segment> segments)

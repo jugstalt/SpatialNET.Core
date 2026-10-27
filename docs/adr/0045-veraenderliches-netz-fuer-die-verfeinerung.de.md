@@ -1,0 +1,37 @@
+# Ein veränderliches Netz für die Delaunay-Verfeinerung
+
+`Refine` (ADR 0041) fügt einer Triangulierung Punkte hinzu, bis jedes Dreieck gut genug ist. Die erste Fassung baute nach jeder Runde von Einfügungen die ganze Constrained-Triangulierung neu: einfach, aber ein voller Aufbau je Runde, was für 100.000 Punkte 28 Sekunden brauchte. Dieser ADR beschreibt die Struktur, die sie ersetzt hat: ein Netz, in das Punkte einzeln eingefügt werden. Sie ist intern (`RefinementMesh`); der Vertrag von `Refine` hat sich nicht geändert.
+
+*English version: [0045-veraenderliches-netz-fuer-die-verfeinerung.md](0045-veraenderliches-netz-fuer-die-verfeinerung.md)*
+
+## Consequences
+
+- **Ort:** die interne Klasse `RefinementMesh` in `SpatialNET.Extensions` (`Internal/Triangulation/RefinementMesh.cs`), benutzt von `Triangulation.Refine`. Keine öffentliche API ändert sich; das Ergebnis ist eine gewöhnliche unveränderliche `Triangulation`.
+- **Die Struktur** ist die von `Triangulation` (ADR 0037): drei Eckpunkt-Ids je Dreieck, gegen den Uhrzeigersinn, und der Nachbar jenseits der Kante von Eckpunkt `k` zu `k + 1`. Jede Entscheidung benutzt die exakten Prädikate `Orient2D` und `InCircle` (ADR 0005). Dreiecke werden **nie entfernt**: Das Teilen eines Dreiecks behält seinen Index für einen der Teile, ein Index bleibt also gültig, und eine **Versionsnummer** (der Stempel) jedes Dreiecks sagt einer Warteschlange, ob ein Eintrag veraltet ist. Die Eckpunkt-Ids der ursprünglichen Triangulierung bleiben dieselben.
+- **Operationen:**
+  - **Einen Punkt in ein Dreieck einfügen** (das Dreieck wird in drei geteilt) **oder auf eine Kante** (zwei Dreiecke in vier, am Rand eines in zwei), und dann die Delaunay-Eigenschaft durch **Kantenwechsel** der Kanten um den neuen Eckpunkt wiederherstellen, solange eine Kante lokal nicht Delaunay und das Viereck streng konvex ist. Über eine geschützte Kante wird nie umgelegt.
+  - **Geschützte Kanten** sind die des Rands (kein Nachbar) und die Zwangskanten. Sie werden nie umgelegt, nur **geteilt**: Die Mitte wird topologisch auf die Kante eingefügt, sodass beide Hälften die Kennzeichen der Kante behalten (geschützt, und als Zwangskante gemeldet, was das Ergebnis behält). Weil die Kante in der Struktur geteilt und nicht aus den Punkten wiedergefunden wird, kann die Rundung der Mitte keinen Splitter aus den beiden Hälften mit ihrer Sehne machen (ein Neubau aus den Punkten konnte das und brauchte das Verschieben und die Flutung der ersten Fassung; beides entfällt).
+  - **Gang.** Ein gerader Gang vom Mittelpunkt eines Dreiecks zu einem Punkt, durch Orientierungstests, findet das Dreieck, das den Punkt enthält; ist eine geschützte Kante im Weg, wird stattdessen diese Kante zurückgegeben.
+- **Die Verfeinerung** (der Algorithmus von Ruppert) arbeitet auf diesem Netz mit zwei Warteschlangen:
+  - **Zuerst die Kanten.** Eine geschützte Kante, in deren Thaleskreis ein Eckpunkt liegt (der gegenüberliegende in einem ihrer beiden Dreiecke), wird in der Mitte geteilt. Nach jeder Änderung werden die geschützten Kanten der Dreiecke geprüft, die entstanden oder verändert wurden, was genügt, da nur dort ein neuer Eckpunkt gegenüberliegen kann.
+  - **Dann das schlechteste Dreieck** (der kleinste Winkel oder die größte Fläche zuerst, aus einer Prioritätswarteschlange; Einträge, deren Dreieck sich seitdem verändert hat, entfallen). Sein Umkreismittelpunkt wird durch einen Gang vom Dreieck aus gefunden. Ist eine geschützte Kante im Weg (ein Splitter am Rand hat seinen Mittelpunkt dahinter), wird diese Kante stattdessen geteilt. Sonst wird die Höhle (die Dreiecke, deren Umkreis den Mittelpunkt enthält, und ihre Nachbarn) nach geschützten Kanten durchsucht, die der Mittelpunkt bedrängen würde; gibt es welche, werden sie geteilt und das Dreieck danach erneut versucht, und nur wenn es keine gibt, wird der Mittelpunkt eingefügt, mit der Höhe aus der Fläche, die verfeinert wird.
+  - **Eine erzwungene Teilung** (weil der Mittelpunkt eines Dreiecks im Thaleskreis der Kante liegt) wird gemacht, ohne zu fragen, ob ein schon vorhandener Eckpunkt sie bedrängt: Die erste Fassung dieses Codes fragte, fand keinen, übersprang die Kante, und dasselbe Dreieck kam immer wieder (gefunden durch einen Test, der bei 12 Punkten mit einem Winkel von 1,1° stehen blieb).
+  - **Die Untergrenze.** Ein Dreieck, dessen Umkreis kleiner als 1e-7 der Ausdehnung ist, bleibt, wie es ist, und eine Kante, die kürzer als das Doppelte davon ist, wird nicht geteilt, wie bisher, damit ein spitzer Winkel in der Eingabe in einem endlichen Netz endet. Die Zahl der hinzugefügten Punkte begrenzt `maxSteinerPoints`, und eine Sicherung begrenzt die Arbeit.
+- **Geschwindigkeit.** Einmalmessungen (`--quick-terrain`, Release-Build), `Refine(25)` gleichmäßig verstreuter Punkte, gegen die erste Fassung, die die Triangulierung je Runde neu baute:
+
+  | Punkte | Neubau je Runde (ms) | Netz an Ort und Stelle verändert (ms) | Dreiecke danach |
+  |---|---|---|---|
+  | 1.000 | 204 | 31 | 7.333 → 5.705 |
+  | 10.000 | 1.814 | 181 | 69.864 → 51.884 |
+  | 100.000 | 27.707 | 2.195 | 680.104 → 510.423 |
+
+  Es ist zwölfmal schneller, und das Netz hat etwa ein Viertel weniger Dreiecke, da das schlechteste Dreieck zuerst und einzeln behoben wird (die Runden behoben alle Dreiecke, die sich nicht berührten, und viele davon waren weg, als die Nachbarn behoben waren).
+- **Tests (ADR 0008):** Die Tests von `Refine` (ADR 0041) sind unverändert und liefen gegen beide Fassungen: kein Winkel unter der Grenze, die Fläche, jeder ursprüngliche Eckpunkt bleibt, jeder neue Eckpunkt liegt auf der Fläche, die größte Fläche, eine Bruchkante, die eine Kette von Zwangskanten bleibt, ein Polygon mit seinem Rand, verstreute Punkte mit unregelmäßiger Hülle, die Grenze der Punkte, Fehler; der Stresstest auf schmutzigen Punkten (Fläche bleibt, kein Winkel unter der Grenze, Höhen auf der Fläche). Bei der Entwicklung wurde das Netz selbst nach je einigen Einfügungen geprüft: Dreiecke gegen den Uhrzeigersinn, Nachbarn, die zurückzeigen, keine Kante, die nicht Delaunay ist.
+- **Nicht jetzt:** eine Möglichkeit, einen Punkt einzufügen oder eine von außen gegebene Triangulierung zu verfeinern, als öffentliche Operation (das Verändern einer Triangulierung nach dem Bauen gehört nicht zur Bibliothek, ADR 0037; `RefinementMesh` ist ein Werkzeug von `Refine`), die Off-Center und die konzentrischen Schalen von Shewchuk für kleine Eingangswinkel (ADR 0041) und eine Verfeinerung mit einer Größe, die vom Ort abhängt (eine Größenfunktion).
+
+## Considered Options
+
+- Die Constrained-Delaunay-Triangulierung nach jeder Runde neu bauen (die erste Fassung, ADR 0041; nach der Messung verworfen: ein voller Aufbau je Runde)
+- Eine inkrementelle Delaunay-Triangulierung mit einer Struktur zur Punktsuche (ein Verlaufs-DAG oder ein Gitter) (verworfen: Der Gang vom Dreieck, dessen Umkreismittelpunkt gesucht ist, ist kurz, da der Mittelpunkt in seiner Nähe liegt; eine Struktur zum Finden von Punkten irgendwo wäre nötig, um beliebige Punkte einzufügen, was `Refine` nicht tut)
+- Dreiecke aus den Arrays entfernen, wenn sie geteilt werden (verworfen: Die Indizes werden von den Warteschlangen benutzt, und einen Teil an seinem Platz zu lassen macht einen veralteten Eintrag durch eine Versionsnummer erkennbar)
+- Nach jeder Änderung das ganze Netz auf bedrängte Kanten prüfen (verworfen: Die Kanten der Dreiecke, die verändert wurden, sind die einzigen, deren gegenüberliegender Eckpunkt neu sein kann; das war der Aufwand der Runden der ersten Fassung)
