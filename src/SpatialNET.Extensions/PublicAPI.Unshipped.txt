@@ -1,14 +1,1 @@
 #nullable enable
-SpatialNET.SnapEnds
-SpatialNET.SnapEnds.Extend = 1 -> SpatialNET.SnapEnds
-SpatialNET.SnapEnds.ExtendOrNearest = 2 -> SpatialNET.SnapEnds
-SpatialNET.SnapEnds.Nearest = 0 -> SpatialNET.SnapEnds
-SpatialNET.SnapMode
-SpatialNET.SnapMode.Ends = 0 -> SpatialNET.SnapMode
-SpatialNET.SnapMode.Vertices = 1 -> SpatialNET.SnapMode
-SpatialNET.Snapping
-static SpatialNET.Snapping.SnapTo(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.SnapMode? mode = null, SpatialNET.SnapEnds ends = SpatialNET.SnapEnds.Nearest, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
-static SpatialNET.Snapping.SnapTo(this SpatialNET.IMultiPoint2D! multiPoint, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
-static SpatialNET.Snapping.SnapTo(this SpatialNET.IPoint2D! point, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
-static SpatialNET.Snapping.SnapTo(this SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.SnapMode mode = SpatialNET.SnapMode.Vertices, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
-static SpatialNET.Snapping.SnapTo(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.SnapMode mode = SpatialNET.SnapMode.Ends, SpatialNET.SnapEnds ends = SpatialNET.SnapEnds.Nearest, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!

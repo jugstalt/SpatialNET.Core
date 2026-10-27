@@ -126,6 +126,14 @@ SpatialNET.Smoothing
 SpatialNET.SmoothingMethod
 SpatialNET.SmoothingMethod.CatmullRom = 1 -> SpatialNET.SmoothingMethod
 SpatialNET.SmoothingMethod.Chaikin = 0 -> SpatialNET.SmoothingMethod
+SpatialNET.SnapEnds
+SpatialNET.SnapEnds.Extend = 1 -> SpatialNET.SnapEnds
+SpatialNET.SnapEnds.ExtendOrNearest = 2 -> SpatialNET.SnapEnds
+SpatialNET.SnapEnds.Nearest = 0 -> SpatialNET.SnapEnds
+SpatialNET.SnapMode
+SpatialNET.SnapMode.Ends = 0 -> SpatialNET.SnapMode
+SpatialNET.SnapMode.Vertices = 1 -> SpatialNET.SnapMode
+SpatialNET.Snapping
 SpatialNET.SpatialIndex<T>
 SpatialNET.SpatialIndex<T>.Count.get -> int
 SpatialNET.SpatialIndex<T>.Extent.get -> SpatialNET.Envelope2D
@@ -345,6 +353,11 @@ static SpatialNET.Smoothing.Smooth(this SpatialNET.IPolyline2D! line, int iterat
 static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IGeometry2D! geometry, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IPolygon2D! polygon, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IPolyline2D! line, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Snapping.SnapTo(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.SnapMode? mode = null, SpatialNET.SnapEnds ends = SpatialNET.SnapEnds.Nearest, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Snapping.SnapTo(this SpatialNET.IMultiPoint2D! multiPoint, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.Snapping.SnapTo(this SpatialNET.IPoint2D! point, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
+static SpatialNET.Snapping.SnapTo(this SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.SnapMode mode = SpatialNET.SnapMode.Vertices, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Snapping.SnapTo(this SpatialNET.IPolyline2D! line, SpatialNET.IGeometry2D! target, double tolerance, SpatialNET.SnapMode mode = SpatialNET.SnapMode.Ends, SpatialNET.SnapEnds ends = SpatialNET.SnapEnds.Nearest, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.SpatialIndexing.Query<T>(this SpatialNET.SpatialIndex<T>! index, SpatialNET.IGeometry2D! geometry) -> System.Collections.Generic.IEnumerable<T>!
 static SpatialNET.SpatialIndexing.ToSpatialIndex<T>(this System.Collections.Generic.IEnumerable<T>! source, System.Func<T, SpatialNET.Envelope2D>! envelopeOf, int nodeCapacity = 16) -> SpatialNET.SpatialIndex<T>!
 static SpatialNET.SpatialIndexing.ToSpatialIndex<TGeometry>(this System.Collections.Generic.IEnumerable<TGeometry>! geometries, int nodeCapacity = 16) -> SpatialNET.SpatialIndex<TGeometry>!

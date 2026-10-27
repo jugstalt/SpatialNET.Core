@@ -4,6 +4,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.8.0-preview.1] - 2026-10-27
+
 ### Added
 
 - `SnapTo` (ADR 0046): moves the vertices of a geometry that lie within a tolerance of a target onto it, as the step before an exact operation when data misses by a little: `cutter.SnapTo(polygon, 0.01).Cut(polygon)`. A corner of the target wins over an edge. `SnapMode.Ends` (the default for lines) moves only the loose ends of open paths: an end short of the target moves to the nearest point or, with `SnapEnds.Extend`, along its last segment, and an end that runs over the target by less than the tolerance is cut back. `SnapMode.Vertices` (the default for polygons) snaps every vertex and inserts the corners of the target into the segments, so that neighbouring areas share their boundary. Points and multipoints snap as points. The tolerance is required, Z and M of a moved point stay, and the result is not made valid. Compared with the NTS `GeometrySnapper`, which moves vertices only onto vertices.
@@ -126,7 +128,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.7.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.8.0-preview.1...HEAD
+[0.8.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.7.0-preview.1...v0.8.0-preview.1
 [0.7.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.6.0-preview.1...v0.7.0-preview.1
 [0.6.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.5.0-preview.1...v0.6.0-preview.1
 [0.5.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.4.0-preview.1...v0.5.0-preview.1
