@@ -1,14 +1,1 @@
 #nullable enable
-SpatialNET.Triangulation.ContourBands(System.Collections.Generic.IReadOnlyList<double>! levels, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
-SpatialNET.Smoothing
-SpatialNET.SmoothingMethod
-SpatialNET.SmoothingMethod.CatmullRom = 1 -> SpatialNET.SmoothingMethod
-SpatialNET.SmoothingMethod.Chaikin = 0 -> SpatialNET.SmoothingMethod
-static SpatialNET.Smoothing.Smooth(this SpatialNET.IGeometry2D! geometry, int iterations = 2, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
-static SpatialNET.Smoothing.Smooth(this SpatialNET.IPolygon2D! polygon, int iterations = 2, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
-static SpatialNET.Smoothing.Smooth(this SpatialNET.IPolyline2D! line, int iterations = 2, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
-SpatialNET.Triangulation.Resample(double cellSize, bool keepVertices = false) -> SpatialNET.Triangulation!
-static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IGeometry2D! geometry, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
-static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IPolygon2D! polygon, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
-static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IPolyline2D! line, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
-SpatialNET.Triangulation.Viewshed(SpatialNET.Coordinate observer, double maxDistance, double observerHeight = 0, double targetHeight = 0, int rays = 360, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!

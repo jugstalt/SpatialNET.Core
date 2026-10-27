@@ -88,7 +88,19 @@ these projects.
   Ear Clipping*, Geometric Tools, 2002 – ear clipping and the bridges that join holes to the outer ring (the fast path
   of `Triangulation.FromPolygon`).
 - I. E. Sutherland, G. W. Hodgman: *Reentrant polygon clipping*, Communications of the ACM 17, 1974 – cutting a
-  Voronoi cell to a rectangle.
+  Voronoi cell to a rectangle, a triangle with another one (`Triangulation.Volume(Triangulation)`) and a triangle
+  with a height (`Triangulation.ContourBands`).
+- J. Ruppert: *A Delaunay refinement algorithm for quality 2-dimensional mesh generation*, Journal of Algorithms 18,
+  1995 – adding points until no triangle is too sharp or too large (`Triangulation.Refine`).
+- R. Sibson: *A brief description of natural neighbour interpolation*, in Interpreting Multivariate Data, Wiley,
+  1981 – the weights of the natural neighbours (`Triangulation.InterpolateNaturalNeighbour`, `Resample`).
+- G. M. Chaikin: *An algorithm for high-speed curve generation*, Computer Graphics and Image Processing 3, 1974 –
+  corner cutting (`Smooth`, `SmoothToTolerance`).
+- E. Catmull, R. Rom: *A class of local interpolating splines*, in Computer Aided Geometric Design, Academic Press,
+  1974; P. J. Barry, R. N. Goldman: *A recursive evaluation algorithm for a class of Catmull–Rom splines*, Computer
+  Graphics (SIGGRAPH) 22, 1988; C. Yuksel, S. Schaefer, J. Keyser: *Parameterization and applications of
+  Catmull–Rom curves*, Computer-Aided Design 43, 2011 – the centripetal spline through the vertices of a line
+  (`Smooth`, `SmoothToTolerance`).
 - J. D. Hobby: *Practical segment intersection with finite precision output*, Computational Geometry 13, 1999 –
   snap rounding.
 - D. H. Douglas, T. K. Peucker: *Algorithms for the reduction of the number of points required to represent a

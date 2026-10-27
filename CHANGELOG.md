@@ -4,6 +4,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.7.0-preview.1] - 2026-10-27
+
 ### Added
 
 - `Triangulation.Viewshed` (ADR 0044): the part of a surface that can be seen from a point, as a polygon, from the height of the eye, the height of the target, a distance and a number of rays. Along every ray the visible stretches are exact; the stretches are joined to slices of the angle without an overlay, so 360 rays on 10,000 points take about 75 ms. Playground entry `viewshed` and a cookbook recipe. `Drape` and `LineOfSight` share the height profile of a line with it.
@@ -119,7 +121,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.6.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.7.0-preview.1...HEAD
+[0.7.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.6.0-preview.1...v0.7.0-preview.1
 [0.6.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.5.0-preview.1...v0.6.0-preview.1
 [0.5.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.4.0-preview.1...v0.5.0-preview.1
 [0.4.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.3.0-preview.1...v0.4.0-preview.1

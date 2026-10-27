@@ -122,6 +122,10 @@ SpatialNET.PreparedGeometry.Within(SpatialNET.IGeometry2D! other) -> bool
 SpatialNET.Relations
 SpatialNET.Shapes
 SpatialNET.Simplification
+SpatialNET.Smoothing
+SpatialNET.SmoothingMethod
+SpatialNET.SmoothingMethod.CatmullRom = 1 -> SpatialNET.SmoothingMethod
+SpatialNET.SmoothingMethod.Chaikin = 0 -> SpatialNET.SmoothingMethod
 SpatialNET.SpatialIndex<T>
 SpatialNET.SpatialIndex<T>.Count.get -> int
 SpatialNET.SpatialIndex<T>.Extent.get -> SpatialNET.Envelope2D
@@ -138,6 +142,7 @@ SpatialNET.Triangulation
 SpatialNET.Triangulation.Aspect(int triangle) -> double
 SpatialNET.Triangulation.ConstrainedEdges(SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 SpatialNET.Triangulation.Contour(double z, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.ContourBands(System.Collections.Generic.IReadOnlyList<double>! levels, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
 SpatialNET.Triangulation.Drape(SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 SpatialNET.Triangulation.Edges(SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 SpatialNET.Triangulation.Gradient(int triangle) -> (double Dx, double Dy)
@@ -150,6 +155,7 @@ SpatialNET.Triangulation.MinAngle() -> double
 SpatialNET.Triangulation.MinAngle(int triangle) -> double
 SpatialNET.Triangulation.Neighbour(int triangle, int side) -> int
 SpatialNET.Triangulation.Refine(double minAngle = 20, double? maxArea = null, int maxSteinerPoints = 100000) -> SpatialNET.Triangulation!
+SpatialNET.Triangulation.Resample(double cellSize, bool keepVertices = false) -> SpatialNET.Triangulation!
 SpatialNET.Triangulation.Slope(int triangle) -> double
 SpatialNET.Triangulation.SlopeZones(System.Collections.Generic.IReadOnlyList<double>! limits, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
 SpatialNET.Triangulation.SurfaceArea() -> double
@@ -158,6 +164,7 @@ SpatialNET.Triangulation.ToPolygons(SpatialNET.IGeometryFactory? factory = null)
 SpatialNET.Triangulation.Triangle(int triangle) -> (int A, int B, int C)
 SpatialNET.Triangulation.TriangleCount.get -> int
 SpatialNET.Triangulation.Vertices.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Coordinate>!
+SpatialNET.Triangulation.Viewshed(SpatialNET.Coordinate observer, double maxDistance, double observerHeight = 0, double targetHeight = 0, int rays = 360, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
 SpatialNET.Triangulation.Volume(SpatialNET.Triangulation! other) -> (double Above, double Below)
 SpatialNET.Triangulation.Volume(double referenceZ) -> (double Above, double Below)
 SpatialNET.Validation
@@ -332,6 +339,12 @@ static SpatialNET.Shapes.VoronoiDiagram(this SpatialNET.IGeometry2D! sites, Spat
 static SpatialNET.Shapes.VoronoiEdges(this SpatialNET.IGeometry2D! sites, SpatialNET.IPolygon2D? clip = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.Simplification.Simplify(this SpatialNET.IPolygon2D! polygon, double tolerance, bool preserveTopology = false, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Simplification.Simplify(this SpatialNET.IPolyline2D! polyline, double tolerance, bool preserveTopology = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Smoothing.Smooth(this SpatialNET.IGeometry2D! geometry, int iterations = 2, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Smoothing.Smooth(this SpatialNET.IPolygon2D! polygon, int iterations = 2, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Smoothing.Smooth(this SpatialNET.IPolyline2D! line, int iterations = 2, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IGeometry2D! geometry, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IPolygon2D! polygon, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
+static SpatialNET.Smoothing.SmoothToTolerance(this SpatialNET.IPolyline2D! line, double tolerance, SpatialNET.SmoothingMethod method = SpatialNET.SmoothingMethod.Chaikin, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.SpatialIndexing.Query<T>(this SpatialNET.SpatialIndex<T>! index, SpatialNET.IGeometry2D! geometry) -> System.Collections.Generic.IEnumerable<T>!
 static SpatialNET.SpatialIndexing.ToSpatialIndex<T>(this System.Collections.Generic.IEnumerable<T>! source, System.Func<T, SpatialNET.Envelope2D>! envelopeOf, int nodeCapacity = 16) -> SpatialNET.SpatialIndex<T>!
 static SpatialNET.SpatialIndexing.ToSpatialIndex<TGeometry>(this System.Collections.Generic.IEnumerable<TGeometry>! geometries, int nodeCapacity = 16) -> SpatialNET.SpatialIndex<TGeometry>!
