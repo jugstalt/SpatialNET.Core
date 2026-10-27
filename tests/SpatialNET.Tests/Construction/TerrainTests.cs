@@ -238,6 +238,57 @@ public class TerrainTests
 
     [Fact]
     [Covers("Drape")]
+    public void A_long_line_over_a_fine_surface_gets_a_vertex_at_every_edge_it_crosses()
+    {
+        // 3000 points: the line is many triangles long, so it is looked up in pieces; the crossings are counted by looking at every edge
+        var random = new Random(11);
+        var points = Enumerable.Range(0, 3000).Select(_ =>
+        {
+            double x = random.NextDouble() * 1000, y = random.NextDouble() * 1000;
+            return new Coordinate(x, y, 0.3 * x - 0.2 * y + 5);
+        }).Concat([new Coordinate(0, 0, 5), new Coordinate(1000, 0, 305), new Coordinate(1000, 1000, 105), new Coordinate(0, 1000, -195)]).ToArray();
+        var t = Triangulation.FromPoints(F.CreateMultiPoint(points, null));
+        var a = new Coordinate(13.7, 21.3);
+        var b = new Coordinate(978.2, 957.9);
+
+        var draped = t.Drape(F.CreatePolyline([new[] { a, b }], null), ZM);
+
+        int crossings = 0;
+        var seen = new HashSet<(int, int)>();
+        for (int i = 0; i < t.TriangleCount; i++)
+        {
+            var (p0, p1, p2) = t.Triangle(i);
+            int[] ids = [p0, p1, p2];
+            for (int k = 0; k < 3; k++)
+            {
+                int u = ids[k], v = ids[(k + 1) % 3];
+                if (!seen.Add(u < v ? (u, v) : (v, u)))
+                {
+                    continue;
+                }
+
+                var pu = t.Vertices[u];
+                var pv = t.Vertices[v];
+                double Side(Coordinate p, Coordinate q, Coordinate r) => (q.X - p.X) * (r.Y - p.Y) - (q.Y - p.Y) * (r.X - p.X);
+                if (Side(a, b, pu) * Side(a, b, pv) < 0 && Side(pu, pv, a) * Side(pu, pv, b) < 0)
+                {
+                    crossings++;
+                }
+            }
+        }
+
+        Assert.Equal(1, draped.PathCount);
+        Assert.True(crossings > 100);
+        Assert.Equal(crossings + 2, draped[0].PointCount);
+        for (int i = 0; i < draped[0].PointCount; i++)
+        {
+            var v = (IPoint3D)draped[0][i];
+            Assert.Equal(0.3 * v.X - 0.2 * v.Y + 5, v.Z, 1e-6);
+        }
+    }
+
+    [Fact]
+    [Covers("Drape")]
     public void Parts_outside_the_surface_are_cut_off_and_the_rest_splits_into_paths()
     {
         var t = Plane([new(30, 20), new(70, 60)], 1, 0, 0);

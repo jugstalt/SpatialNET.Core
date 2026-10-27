@@ -38,8 +38,8 @@ Die Geländemethoden aus ADR 0037 und ADR 0039 beantworten, was eine Triangulier
 
   | Punkte | 100k `InterpolateZ` (ms) | 100k `InterpolateNaturalNeighbour` (ms) | `Volume(other)` (ms) | `SlopeZones` (ms) | 10k kurze `LineOfSight` (ms) | 1k lange `LineOfSight` (ms) |
   |---|---|---|---|---|---|---|
-  | 10.000 | 133 | 304 | 42 | 14 | 93 | 355 |
-  | 50.000 | 150 | 377 | 216 | 286 | 219 | 1.787 |
+  | 10.000 | 144 | 386 | 44 | 17 | 115 | 95 |
+  | 50.000 | 201 | 408 | 269 | 304 | 218 | 220 |
 
   | Punkte | `Refine(25)` (ms) | Dreiecke vorher → nachher | Kleinster Winkel vorher → nachher |
   |---|---|---|---|
@@ -47,7 +47,7 @@ Die Geländemethoden aus ADR 0037 und ADR 0039 beantworten, was eine Triangulier
   | 10.000 | 1.814 | 19.977 → 69.864 | 0,00 → 25,00 |
   | 100.000 | 27.707 | 199.974 → 680.104 | 0,00 → 25,00 |
 
-  Natürliche Nachbarn kosten etwa das Zwei- bis Zweieinhalbfache der linearen Höhe. `Refine` wächst etwa linear (der Neubau je Runde), und eine Fläche aus 100.000 Punkten wird in einer halben Minute verfeinert. `SlopeZones` braucht kein Overlay und für 100.000 Dreiecke eine Viertelsekunde (mit der Vereinigung der Dreiecke per `UnionAll` waren es 14 Sekunden). Eine Sichtlinie kostet die Dreiecke im Umschlag der Linie, wie bei `Drape` (ADR 0039): ein Rundumblick von einem Zehntel der Ausdehnung ist billig, eine Linie über die ganze Fläche kostet Millisekunden.
+  Natürliche Nachbarn kosten etwa das Zwei- bis Zweieinhalbfache der linearen Höhe. `Refine` wächst etwa linear (der Neubau je Runde), und eine Fläche aus 100.000 Punkten wird in einer halben Minute verfeinert. `SlopeZones` braucht kein Overlay und für 100.000 Dreiecke eine Viertelsekunde (mit der Vereinigung der Dreiecke per `UnionAll` waren es 14 Sekunden). Eine Sichtlinie (und `Drape`) kostet die Dreiecke entlang der Linie: Sie wird in Stücke von einigen Dreiecksgrößen geschnitten, und der Index wird nach der Envelope jedes Stücks gefragt, nicht nach der Envelope der ganzen Linie, die bei einer Diagonale mit dem Quadrat ihrer Länge wächst (vorher brauchten 1.000 Linien über 50.000 Punkte 1,8 Sekunden, jetzt 0,2).
 - **Ausnahmen (ADR 0012):** `ArgumentOutOfRangeException` für Koordinaten oder Höhen, die nicht endlich sind, für `minAngle` außerhalb von 0 bis 34, für ein `maxArea`, das nicht größer als 0 ist, für ein negatives `maxSteinerPoints` und für einen Dreiecksindex außerhalb des Bereichs; `ArgumentNullException` für `null`; `ArgumentException` für Grenzen, die nicht endlich oder nicht aufsteigend sind; `InvalidOperationException` ohne Factory.
 - **Playground und Dokumentation:** Einträge `naturalNeighbour`, `refine`, `slopeZones`, `lineOfSight` und `surfaceVolume` mit Beispielen (die Geländebeispiele werden geteilt, neu sind eines für die Sicht über einen Hügel und eines für einen Aushub), Abschnitte in der Konzeptseite „Triangulierung, Voronoi und Gelände“, Glossareinträge.
 - **Nicht jetzt:** ein Raster von interpolierten Werten (`InterpolateNaturalNeighbour` je Zelle aufrufen), natürliche Nachbarn unter Beachtung der Bruchkanten, Laplace oder andere Interpolationen, eine Sichtbarkeitsfläche (der Bereich, der von einem Punkt aus zu sehen ist) und die konformen und die Mindestgrößen-Netze von Shewchuk (Off-Center und konzentrische Schalen bei kleinen Eingangswinkeln).

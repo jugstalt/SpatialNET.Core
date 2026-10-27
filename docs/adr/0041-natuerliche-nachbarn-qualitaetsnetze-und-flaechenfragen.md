@@ -38,8 +38,8 @@ The terrain methods of ADR 0037 and ADR 0039 answer what a triangulation says *i
 
   | Points | 100k `InterpolateZ` (ms) | 100k `InterpolateNaturalNeighbour` (ms) | `Volume(other)` (ms) | `SlopeZones` (ms) | 10k short `LineOfSight` (ms) | 1k long `LineOfSight` (ms) |
   |---|---|---|---|---|---|---|
-  | 10,000 | 133 | 304 | 42 | 14 | 93 | 355 |
-  | 50,000 | 150 | 377 | 216 | 286 | 219 | 1,787 |
+  | 10,000 | 144 | 386 | 44 | 17 | 115 | 95 |
+  | 50,000 | 201 | 408 | 269 | 304 | 218 | 220 |
 
   | Points | `Refine(25)` (ms) | Triangles before → after | Smallest angle before → after |
   |---|---|---|---|
@@ -47,7 +47,7 @@ The terrain methods of ADR 0037 and ADR 0039 answer what a triangulation says *i
   | 10,000 | 1,814 | 19,977 → 69,864 | 0.00 → 25.00 |
   | 100,000 | 27,707 | 199,974 → 680,104 | 0.00 → 25.00 |
 
-  Natural neighbour costs about two to two and a half times the linear height. `Refine` grows about linearly (the rebuild per round), and a 100,000 point surface is refined in half a minute. `SlopeZones` needs no overlay and takes a quarter of a second for 100,000 triangles (it took 14 seconds when the triangles were united with `UnionAll`). A line of sight costs the triangles in the envelope of the line, as `Drape` does (ADR 0039): a look around of a tenth of the extent is cheap, a line across the whole surface costs milliseconds.
+  Natural neighbour costs about two to two and a half times the linear height. `Refine` grows about linearly (the rebuild per round), and a 100,000 point surface is refined in half a minute. `SlopeZones` needs no overlay and takes a quarter of a second for 100,000 triangles (it took 14 seconds when the triangles were united with `UnionAll`). A line of sight (and `Drape`) costs the triangles along the line: it is cut into pieces of a few triangle sizes and the index is asked for the envelope of every piece, not for the envelope of the whole line, which for a diagonal grows with the square of its length (before this, 1,000 lines across 50,000 points took 1.8 seconds, now 0.2).
 - **Exceptions (ADR 0012):** `ArgumentOutOfRangeException` for coordinates or heights that are not finite, for `minAngle` outside 0 to 34, for a `maxArea` that is not greater than 0, for a negative `maxSteinerPoints` and for a triangle index out of range; `ArgumentNullException` for `null`; `ArgumentException` for limits that are not finite or not ascending; `InvalidOperationException` without a factory.
 - **Playground and documentation:** entries `naturalNeighbour`, `refine`, `slopeZones`, `lineOfSight` and `surfaceVolume` with examples (the terrain examples are shared, a new one for the view over a hill and one for an excavation), sections in the concept page "Triangulation, Voronoi and terrain", glossary entries.
 - **Not now:** a grid or raster of interpolated values (call `InterpolateNaturalNeighbour` per cell), natural neighbour with the break lines respected, Laplace or other interpolations, a viewshed (the area that can be seen from a point), and the conforming and the minimum-size meshes of Shewchuk (the offcentre and the concentric shells at small input angles).

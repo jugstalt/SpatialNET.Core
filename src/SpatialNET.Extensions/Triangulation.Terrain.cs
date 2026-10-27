@@ -192,8 +192,8 @@ public sealed partial class Triangulation
     /// <para>
     /// Parts of the line outside the triangulation, and parts over a triangle with a vertex without Z, are left out; the result then has several
     /// paths, one for every part that is inside. A line along an edge or through vertices is handled exactly; the decision whether a stretch is
-    /// inside allows a tolerance of 1e-10 of the size of the surface. The cost is proportional to the triangles in the envelope of every segment
-    /// of the line, so a very long diagonal segment over a very large surface is slow; segments of a road are short.
+    /// inside allows a tolerance of 1e-10 of the size of the surface. The cost is proportional to the triangles along the line (it is looked up
+    /// in pieces of a few triangle sizes), so a long line over a large surface is cheap.
     /// </para>
     /// </remarks>
     /// <param name="line">The polyline.</param>
@@ -276,6 +276,66 @@ public sealed partial class Triangulation
         return f.CreatePolyline(paths.ToArray(), line);
     }
 
+    private double _typicalSize;   // 0 = not known yet; racing threads compute the same value
+
+    /// <summary>The side of a square of the area that one triangle has on average (the extent of the vertices divided by the number of triangles).</summary>
+    private double TypicalSize()
+    {
+        if (_typicalSize == 0)
+        {
+            double minX = double.PositiveInfinity, minY = double.PositiveInfinity, maxX = double.NegativeInfinity, maxY = double.NegativeInfinity;
+            foreach (var v in _vertices)
+            {
+                minX = Math.Min(minX, v.X);
+                maxX = Math.Max(maxX, v.X);
+                minY = Math.Min(minY, v.Y);
+                maxY = Math.Max(maxY, v.Y);
+            }
+
+            double width = maxX - minX, height = maxY - minY;
+            double area = Math.Max(width, 1e-300) * Math.Max(height, 1e-300);
+            _typicalSize = Math.Max(Math.Sqrt(area / Math.Max(TriangleCount, 1)), 1e-300);
+        }
+
+        return _typicalSize;
+    }
+
+    /// <summary>
+    /// The triangles that the segment a–b can touch, each once. The segment is cut into pieces of a few triangle sizes and the index is asked for the
+    /// envelope of every piece, so that a long diagonal line looks at the triangles along it and not at all that lie in its envelope (which grow with the
+    /// square of its length). A triangle that the segment crosses meets at least one piece, whose envelope is widened by a hair against rounding.
+    /// </summary>
+    private IEnumerable<int> AlongSegment(Coordinate a, Coordinate b)
+    {
+        double length = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+        int pieces = (int)Math.Clamp(Math.Ceiling(length / (6 * TypicalSize())), 1, 100_000);
+        if (pieces == 1)
+        {
+            return _index.Value.Query(new Envelope2D(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y)));
+        }
+
+        double margin = 1e-9 * Math.Max(length, 1e-300);
+        var found = new HashSet<int>();
+        var result = new List<int>();
+        double px = a.X, py = a.Y;
+        for (int i = 1; i <= pieces; i++)
+        {
+            double qx = i == pieces ? b.X : a.X + (b.X - a.X) * i / pieces, qy = i == pieces ? b.Y : a.Y + (b.Y - a.Y) * i / pieces;
+            var box = new Envelope2D(Math.Min(px, qx) - margin, Math.Min(py, qy) - margin, Math.Max(px, qx) + margin, Math.Max(py, qy) + margin);
+            foreach (int t in _index.Value.Query(box))
+            {
+                if (found.Add(t))
+                {
+                    result.Add(t);
+                }
+            }
+
+            (px, py) = (qx, qy);
+        }
+
+        return result;
+    }
+
     /// <summary>
     /// The parameters along the segment a–b, from 0 to 1, where it crosses an edge of the triangulation or passes through a vertex, sorted and
     /// without near duplicates, with the height of the surface there (<see cref="double.NaN"/> at 0 and 1, which lie inside a triangle).
@@ -285,9 +345,8 @@ public sealed partial class Triangulation
         var ts = new List<(double T, double Z)> { (0, double.NaN), (1, double.NaN) };
         var seenEdges = new HashSet<(int, int)>();
         var seenVertices = new HashSet<int>();
-        var envelope = new Envelope2D(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
         double dx = b.X - a.X, dy = b.Y - a.Y;
-        foreach (int t in _index.Value.Query(envelope))
+        foreach (int t in AlongSegment(a, b))
         {
             for (int k = 0; k < 3; k++)
             {
