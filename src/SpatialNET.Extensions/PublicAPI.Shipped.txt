@@ -49,6 +49,27 @@ SpatialNET.JoinStyle
 SpatialNET.JoinStyle.Bevel = 2 -> SpatialNET.JoinStyle
 SpatialNET.JoinStyle.Mitre = 1 -> SpatialNET.JoinStyle
 SpatialNET.JoinStyle.Round = 0 -> SpatialNET.JoinStyle
+SpatialNET.LineEvent<T>
+SpatialNET.LineEvent<T>.From.get -> double
+SpatialNET.LineEvent<T>.From.init -> void
+SpatialNET.LineEvent<T>.LineEvent() -> void
+SpatialNET.LineEvent<T>.LineEvent(double From, double To, T Value) -> void
+SpatialNET.LineEvent<T>.To.get -> double
+SpatialNET.LineEvent<T>.To.init -> void
+SpatialNET.LineEvent<T>.Value.get -> T
+SpatialNET.LineEvent<T>.Value.init -> void
+SpatialNET.LineEvents
+SpatialNET.LineProjection
+SpatialNET.LineProjection.Distance.get -> double
+SpatialNET.LineProjection.Distance.init -> void
+SpatialNET.LineProjection.LineProjection() -> void
+SpatialNET.LineProjection.LineProjection(double Position, SpatialNET.Coordinate Point, double Distance, double Offset) -> void
+SpatialNET.LineProjection.Offset.get -> double
+SpatialNET.LineProjection.Offset.init -> void
+SpatialNET.LineProjection.Point.get -> SpatialNET.Coordinate
+SpatialNET.LineProjection.Point.init -> void
+SpatialNET.LineProjection.Position.get -> double
+SpatialNET.LineProjection.Position.init -> void
 SpatialNET.LinearReferencing
 SpatialNET.ListViews
 SpatialNET.Location
@@ -56,6 +77,10 @@ SpatialNET.Location.Boundary = 1 -> SpatialNET.Location
 SpatialNET.Location.Inside = 2 -> SpatialNET.Location
 SpatialNET.Location.Outside = 0 -> SpatialNET.Location
 SpatialNET.Locations
+SpatialNET.MExtrapolation
+SpatialNET.MExtrapolation.Clamp = 1 -> SpatialNET.MExtrapolation
+SpatialNET.MExtrapolation.Linear = 2 -> SpatialNET.MExtrapolation
+SpatialNET.MExtrapolation.None = 0 -> SpatialNET.MExtrapolation
 SpatialNET.Measures
 SpatialNET.OffsetCurves
 SpatialNET.OffsetOptions
@@ -72,6 +97,14 @@ SpatialNET.OffsetOptions.QuadrantSegments.init -> void
 SpatialNET.OffsetOptions.SimplifyFactor.get -> double
 SpatialNET.OffsetOptions.SimplifyFactor.init -> void
 SpatialNET.Overlays
+SpatialNET.PointEvent<T>
+SpatialNET.PointEvent<T>.M.get -> double
+SpatialNET.PointEvent<T>.M.init -> void
+SpatialNET.PointEvent<T>.PointEvent() -> void
+SpatialNET.PointEvent<T>.PointEvent(double M, T Value) -> void
+SpatialNET.PointEvent<T>.Value.get -> T
+SpatialNET.PointEvent<T>.Value.init -> void
+SpatialNET.PointEvents
 SpatialNET.Preparation
 SpatialNET.PreparedGeometry
 SpatialNET.PreparedGeometry.Contains(SpatialNET.IGeometry2D! other) -> bool
@@ -101,6 +134,32 @@ SpatialNET.SpatialIndex<T>.SelfJoin(double distance = 0) -> System.Collections.G
 SpatialNET.SpatialIndex<T>.SpatialIndex(System.Collections.Generic.IEnumerable<(SpatialNET.Envelope2D Envelope, T Item)>! items, int nodeCapacity = 16) -> void
 SpatialNET.SpatialIndexing
 SpatialNET.Transformations
+SpatialNET.Triangulation
+SpatialNET.Triangulation.Aspect(int triangle) -> double
+SpatialNET.Triangulation.ConstrainedEdges(SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Contour(double z, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Drape(SpatialNET.IPolyline2D! line, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Edges(SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+SpatialNET.Triangulation.Gradient(int triangle) -> (double Dx, double Dy)
+SpatialNET.Triangulation.InterpolateNaturalNeighbour(SpatialNET.Coordinate point) -> double
+SpatialNET.Triangulation.InterpolateZ(SpatialNET.Coordinate point) -> double
+SpatialNET.Triangulation.IsConstrained(int triangle, int side) -> bool
+SpatialNET.Triangulation.LineOfSight(SpatialNET.Coordinate from, SpatialNET.Coordinate to, double observerHeight = 0, double targetHeight = 0) -> bool
+SpatialNET.Triangulation.Locate(SpatialNET.Coordinate point) -> int
+SpatialNET.Triangulation.MinAngle() -> double
+SpatialNET.Triangulation.MinAngle(int triangle) -> double
+SpatialNET.Triangulation.Neighbour(int triangle, int side) -> int
+SpatialNET.Triangulation.Refine(double minAngle = 20, double? maxArea = null, int maxSteinerPoints = 100000) -> SpatialNET.Triangulation!
+SpatialNET.Triangulation.Slope(int triangle) -> double
+SpatialNET.Triangulation.SlopeZones(System.Collections.Generic.IReadOnlyList<double>! limits, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+SpatialNET.Triangulation.SurfaceArea() -> double
+SpatialNET.Triangulation.SurfaceArea(int triangle) -> double
+SpatialNET.Triangulation.ToPolygons(SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+SpatialNET.Triangulation.Triangle(int triangle) -> (int A, int B, int C)
+SpatialNET.Triangulation.TriangleCount.get -> int
+SpatialNET.Triangulation.Vertices.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Coordinate>!
+SpatialNET.Triangulation.Volume(SpatialNET.Triangulation! other) -> (double Above, double Below)
+SpatialNET.Triangulation.Volume(double referenceZ) -> (double Above, double Below)
 SpatialNET.Validation
 SpatialNET.ValidationIssue
 SpatialNET.ValidationIssue.Kind.get -> SpatialNET.ValidationIssueKind
@@ -122,6 +181,13 @@ SpatialNET.ValidationResult.IsValid.get -> bool
 SpatialNET.ValidationResult.Issues.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.ValidationIssue>!
 SpatialNET.ValidationResult.Issues.init -> void
 SpatialNET.ValidationResult.ValidationResult(System.Collections.Generic.IReadOnlyList<SpatialNET.ValidationIssue>! Issues) -> void
+SpatialNET.VoronoiCell
+SpatialNET.VoronoiCell.Cell.get -> SpatialNET.IPolygon2D!
+SpatialNET.VoronoiCell.Cell.init -> void
+SpatialNET.VoronoiCell.Site.get -> SpatialNET.Coordinate
+SpatialNET.VoronoiCell.Site.init -> void
+SpatialNET.VoronoiCell.VoronoiCell() -> void
+SpatialNET.VoronoiCell.VoronoiCell(SpatialNET.Coordinate Site, SpatialNET.IPolygon2D! Cell) -> void
 const SpatialNET.SpatialIndex<T>.DefaultNodeCapacity = 16 -> int
 override SpatialNET.IntersectionMatrix.Equals(object? obj) -> bool
 override SpatialNET.IntersectionMatrix.GetHashCode() -> int
@@ -151,12 +217,35 @@ static SpatialNET.Cutting.Cut(this SpatialNET.IPolyline2D! polyline, SpatialNET.
 static SpatialNET.Envelopes.ToPolygon(this SpatialNET.Envelope2D envelope, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.IntersectionMatrix.operator !=(SpatialNET.IntersectionMatrix a, SpatialNET.IntersectionMatrix b) -> bool
 static SpatialNET.IntersectionMatrix.operator ==(SpatialNET.IntersectionMatrix a, SpatialNET.IntersectionMatrix b) -> bool
+static SpatialNET.LineEvents.At<T>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, double m) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<T>>!
+static SpatialNET.LineEvents.Clip<T>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, double from, double to) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<T>>!
+static SpatialNET.LineEvents.Difference<TA, TB>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TA>>!
+static SpatialNET.LineEvents.Dissolve<T>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<T>>!
+static SpatialNET.LineEvents.Intersect<TA, TB, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b, System.Func<TA, TB, TResult>! combine) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TResult>>!
+static SpatialNET.LineEvents.Union<TA, TB, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TA>>! a, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TB>>! b, System.Func<TA, TB, TResult>! both, System.Func<TA, TResult>! onlyA, System.Func<TB, TResult>! onlyB) -> System.Collections.Generic.IReadOnlyList<SpatialNET.LineEvent<TResult>>!
+static SpatialNET.LinearReferencing.CalibrateM(this SpatialNET.IPolyline2D! line, System.Collections.Generic.IEnumerable<SpatialNET.Coordinate>! anchors, double maxSnapDistance, SpatialNET.MExtrapolation extrapolation = SpatialNET.MExtrapolation.None, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.LinearReferencing.CalibrateM(this SpatialNET.IPolyline2D! line, System.Collections.Generic.IEnumerable<SpatialNET.IPoint2D!>! anchors, double maxSnapDistance, SpatialNET.MExtrapolation extrapolation = SpatialNET.MExtrapolation.None, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.LinearReferencing.Interpolate(this SpatialNET.IPolyline2D! line, double distance) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.Interpolate(this SpatialNET.IPolyline2D! line, double distance, double offset) -> SpatialNET.Coordinate?
 static SpatialNET.LinearReferencing.InterpolateByM(this SpatialNET.IPolyline2D! line, double m) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.InterpolateByM(this SpatialNET.IPolyline2D! line, double m, double offset) -> SpatialNET.Coordinate?
+static SpatialNET.LinearReferencing.LocateAlong(this SpatialNET.IPolyline2D! line, double m, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IMultiPoint2D!
+static SpatialNET.LinearReferencing.LocateBetween(this SpatialNET.IPolyline2D! line, double fromM, double toM, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.LinearReferencing.LocateEvents<T>(this SpatialNET.IPolyline2D! route, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<T>>! events, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(SpatialNET.LineEvent<T> Event, SpatialNET.IPolyline2D! Shape)>!
+static SpatialNET.LinearReferencing.LocateEvents<T>(this SpatialNET.IPolyline2D! route, System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<T>>! events, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(SpatialNET.PointEvent<T> Event, SpatialNET.IMultiPoint2D! Points)>!
+static SpatialNET.LinearReferencing.LocateFeature(this SpatialNET.IPolyline2D! route, SpatialNET.IGeometry2D! feature, double tolerance, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<(double From, double To)>!
 static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point) -> double
+static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point, double from, double to) -> double
 static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> double
+static SpatialNET.LinearReferencing.Project(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> double
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point) -> SpatialNET.LineProjection?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point, double from, double to) -> SpatialNET.LineProjection?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> SpatialNET.LineProjection?
+static SpatialNET.LinearReferencing.ProjectDetailed(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> SpatialNET.LineProjection?
 static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point) -> double
+static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.Coordinate point, double from, double to) -> double
 static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point) -> double
+static SpatialNET.LinearReferencing.ProjectToM(this SpatialNET.IPolyline2D! line, SpatialNET.IPoint2D! point, double from, double to) -> double
 static SpatialNET.LinearReferencing.Substring(this SpatialNET.IPolyline2D! line, double from, double to, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.LinearReferencing.SubstringByM(this SpatialNET.IPolyline2D! line, double fromM, double toM, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.ListViews.AsList(this SpatialNET.IPointCollection2D! points) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPoint2D!>!
@@ -214,6 +303,9 @@ static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<
 static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IMultiPoint2D!>! multiPoints, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IMultiPoint2D!
 static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IPolygon2D!>! polygons, SpatialNET.FillRule fillRule = SpatialNET.FillRule.EvenOdd, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Overlays.UnionAll(this System.Collections.Generic.IEnumerable<SpatialNET.IPolyline2D!>! polylines, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.PointEvents.Between<T>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<T>>! events, double from, double to) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<T>>!
+static SpatialNET.PointEvents.Outside<TPoint, TLine>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<TPoint>>! points, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TLine>>! lines) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<TPoint>>!
+static SpatialNET.PointEvents.Within<TPoint, TLine, TResult>(System.Collections.Generic.IEnumerable<SpatialNET.PointEvent<TPoint>>! points, System.Collections.Generic.IEnumerable<SpatialNET.LineEvent<TLine>>! lines, System.Func<TPoint, TLine, TResult>! combine) -> System.Collections.Generic.IReadOnlyList<SpatialNET.PointEvent<TResult>>!
 static SpatialNET.Preparation.Prepare(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.PreparedGeometry!
 static SpatialNET.Relations.Contains(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
 static SpatialNET.Relations.CoveredBy(this SpatialNET.IGeometry2D! a, SpatialNET.IGeometry2D! b) -> bool
@@ -230,10 +322,14 @@ static SpatialNET.Relations.Within(this SpatialNET.IGeometry2D! a, SpatialNET.IG
 static SpatialNET.Shapes.ConcaveHull(this SpatialNET.IGeometry2D! geometry, double maxEdgeLength, bool holesAllowed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Shapes.ConcaveHullByRatio(this SpatialNET.IGeometry2D! geometry, double edgeLengthRatio, bool holesAllowed = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Shapes.ConvexHull(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.Shapes.DelaunayEdges(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.Shapes.DelaunayTriangles(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
 static SpatialNET.Shapes.MinimumBoundingCircle(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.Circle?
 static SpatialNET.Shapes.MinimumRotatedRectangle(this SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.Shapes.Polylabel(this SpatialNET.IPolygon2D! polygon, double? tolerance = null) -> SpatialNET.Coordinate?
+static SpatialNET.Shapes.Triangulate(this SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IPolygon2D!>!
+static SpatialNET.Shapes.VoronoiDiagram(this SpatialNET.IGeometry2D! sites, SpatialNET.IPolygon2D? clip = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.VoronoiCell>!
+static SpatialNET.Shapes.VoronoiEdges(this SpatialNET.IGeometry2D! sites, SpatialNET.IPolygon2D? clip = null, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.Simplification.Simplify(this SpatialNET.IPolygon2D! polygon, double tolerance, bool preserveTopology = false, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Simplification.Simplify(this SpatialNET.IPolyline2D! polyline, double tolerance, bool preserveTopology = false, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
 static SpatialNET.SpatialIndexing.Query<T>(this SpatialNET.SpatialIndex<T>! index, SpatialNET.IGeometry2D! geometry) -> System.Collections.Generic.IEnumerable<T>!
@@ -259,5 +355,8 @@ static SpatialNET.Transformations.Translate(this SpatialNET.IMultiPoint2D! multi
 static SpatialNET.Transformations.Translate(this SpatialNET.IPoint2D! point, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPoint2D!
 static SpatialNET.Transformations.Translate(this SpatialNET.IPolygon2D! polygon, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolygon2D!
 static SpatialNET.Transformations.Translate(this SpatialNET.IPolyline2D! line, double dx, double dy, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!
+static SpatialNET.Triangulation.FromPoints(SpatialNET.IGeometry2D! points) -> SpatialNET.Triangulation!
+static SpatialNET.Triangulation.FromPointsAndLines(SpatialNET.IGeometry2D! points, SpatialNET.IGeometry2D! lines, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.Triangulation!
+static SpatialNET.Triangulation.FromPolygon(SpatialNET.IPolygon2D! polygon, SpatialNET.IGeometryFactory? factory = null, double? gridSize = null) -> SpatialNET.Triangulation!
 static SpatialNET.Validation.IsValid(this SpatialNET.IGeometry2D! geometry) -> bool
 static SpatialNET.Validation.Validate(this SpatialNET.IGeometry2D! geometry) -> SpatialNET.ValidationResult!

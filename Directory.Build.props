@@ -8,7 +8,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
     <!-- Vorab-Version; Versionierung und Release-Pipeline sind noch offen (Karte #1, Build/CI). -->
-    <VersionPrefix>0.5.0</VersionPrefix>
+    <VersionPrefix>0.6.0</VersionPrefix>
   </PropertyGroup>
 
   <!-- Paket-Metadaten; packbar sind nur die Bibliotheken (IsPackable im jeweiligen Projekt). -->
@@ -34,7 +34,7 @@
   <!-- API-Kompatibilitätsprüfung beim Packen (EnablePackageValidation in den Bibliotheksprojekten) gegen die zuletzt
        veröffentlichte Version. Nach jedem Release auf die neue Version setzen, siehe RELEASING.md. -->
   <PropertyGroup>
-    <PackageValidationBaselineVersion>0.4.0-preview.1</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>0.5.0-preview.1</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <!-- Öffentliche API (ADR 0028): PublicApiAnalyzers verlangt, dass jede öffentliche API in PublicAPI.Shipped.txt oder
