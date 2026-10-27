@@ -1,0 +1,14 @@
+{
+  "name": "Two neighbouring parcels with a gap",
+  "description": "Mode Vertices: the corners of the right parcel move onto the corners and the edge of the left one, so that both share their boundary without a gap or a sliver.",
+  "tags": [
+    "playground"
+  ],
+  "a": "POLYGON ((10.2 0.1, 20 0, 20 10, 10.1 9.8, 10.3 5.2, 10.2 0.1))",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "params": {
+    "tolerance": 0.5,
+    "mode": "Vertices",
+    "ends": "Nearest"
+  }
+}

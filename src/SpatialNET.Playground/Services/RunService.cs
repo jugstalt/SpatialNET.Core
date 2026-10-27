@@ -110,6 +110,16 @@ public sealed class RunService
         var inputs = raw.ToDictionary(kv => kv.Key, kv => projection is null ? kv.Value : projection.ToProjected(kv.Value));
         var parameters = new PlaygroundParameters(request.Params ?? [], algorithm.Parameters);
         var value = algorithm.Run(inputs, parameters, Factory, null);
+        if (value is Noted noted)
+        {
+            string unit = projection?.Unit ?? "units";
+            foreach (var note in noted.Notes)
+            {
+                warnings.Add(note.Replace("{unit}", unit, StringComparison.Ordinal));
+            }
+
+            value = noted.Value;
+        }
 
         var response = Describe(value, projection);
         response["algorithm"] = algorithm.Id;

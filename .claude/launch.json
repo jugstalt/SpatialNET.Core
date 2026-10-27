@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "playground-release",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/SpatialNET.Playground", "-c", "Release", "--no-launch-profile", "--urls", "http://localhost:5013"],
+      "port": 5013
+    }
+  ]
+}

@@ -72,6 +72,27 @@ public class PlaygroundCompletenessTests
         Assert.All(all.Where(p => p.Key == "join"), p => Assert.Equal(Enum.GetNames<JoinStyle>().Order(), p.Values!.Order()));
         Assert.All(all.Where(p => p.Key == "cap"), p => Assert.Equal(Enum.GetNames<CapStyle>().Order(), p.Values!.Order()));
         Assert.All(all.Where(p => p.Key == "fillRule"), p => Assert.Equal(Enum.GetNames<FillRule>().Order(), p.Values!.Order()));
+        Assert.All(all.Where(p => p.Key == "snapMode"), p => Assert.Equal(Enum.GetNames<SnapMode>().Order(), p.Values!.Order()));
+        Assert.All(all.Where(p => p.Key == "ends"), p => Assert.Equal(Enum.GetNames<SnapEnds>().Order(), p.Values!.Order()));
+    }
+
+    /// <summary>"Snap B to A" (ADR 0046) on every entry with two inputs and an exact topological result.</summary>
+    [Theory]
+    [InlineData("cut", "Ends")]
+    [InlineData("relate", "Vertices")]
+    [InlineData("intersects", "Vertices")]
+    [InlineData("touches", "Vertices")]
+    [InlineData("equalsTopo", "Vertices")]
+    [InlineData("intersection", "Vertices")]
+    [InlineData("union", "Vertices")]
+    [InlineData("difference", "Vertices")]
+    [InlineData("symDifference", "Vertices")]
+    public void Topological_entries_offer_snapping(string id, string mode)
+    {
+        var algorithm = PlaygroundAlgorithm.All.Single(a => a.Id == id);
+
+        Assert.Contains(algorithm.Parameters, p => p.Key == "snapTolerance" && p.Default is null && p.Unit == "kbs");
+        Assert.Contains(algorithm.Parameters, p => p.Key == "snapMode" && (string)p.Default! == mode);
     }
 
     /// <summary>Fixture-Parameter, die das Soll beschreiben statt den Aufruf (validate: erwartete Befunde).</summary>
@@ -212,6 +233,39 @@ public class PlaygroundEndpointTests(WebApplicationFactory<Program> factory) : I
         Assert.NotEmpty(validation["issues"]!.AsArray());
         var cut = await Local("cut", Square(0, 0, 10), JsonNode.Parse("""{"type":"LineString","coordinates":[[5,-1],[5,11]]}""")!.AsObject());
         Assert.Equal(2, cut["geometries"]!.AsArray().Count);
+    }
+
+    [Fact]
+    public async Task Cut_names_a_loose_end_near_the_edge_and_cuts_after_snapping()
+    {
+        var cutter = JsonNode.Parse("""{"type":"LineString","coordinates":[[5,-1],[5,9.996]]}""")!.AsObject();   // 4 thousandths short of the edge
+
+        var (_, plain) = await Run(new { algorithm = "cut", inputs = new { a = Square(0, 0, 10), b = cutter }, local = true });
+        Assert.Single(plain["geometries"]!.AsArray());
+        Assert.Contains(plain["warnings"]!.AsArray(), w => w!.GetValue<string>().Contains("loose end", StringComparison.Ordinal));
+
+        var (_, snapped) = await Run(new { algorithm = "cut", inputs = new { a = Square(0, 0, 10), b = cutter }, @params = new { snapTolerance = 0.01 }, local = true });
+        Assert.Equal(2, snapped["geometries"]!.AsArray().Count);
+        Assert.Contains(snapped["warnings"]!.AsArray(), w => w!.GetValue<string>().StartsWith("Snap moved 1 of 2 vertices of B", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_cutting_line_snapped_to_an_edge_in_Web_Mercator_cuts_in_UTM_after_snapping()
+    {
+        // The case that started ADR 0046: the map snaps the end onto the edge as it is straight in Web Mercator; in UTM it lies beside it.
+        static double MercatorY(double lat) => Math.Log(Math.Tan(Math.PI / 4 + lat * Math.PI / 360));
+        static double Latitude(double y) => (2 * Math.Atan(Math.Exp(y)) - Math.PI / 2) * 180 / Math.PI;
+        double[] p0 = [13.40, 52.500], p1 = [13.42, 52.512];               // a long diagonal edge of about 2 km
+        double t = 0.37, lon = p0[0] + t * (p1[0] - p0[0]);
+        double lat = Latitude(MercatorY(p0[1]) + t * (MercatorY(p1[1]) - MercatorY(p0[1])));
+        var polygon = JsonNode.Parse(FormattableString.Invariant(
+            $$"""{"type":"Polygon","coordinates":[[[{{p0[0]}},{{p0[1]}}],[{{p1[0]}},{{p1[1]}}],[13.42,52.49],[{{p0[0]}},{{p0[1]}}]]]}"""))!.AsObject();
+        var cutter = JsonNode.Parse(FormattableString.Invariant(
+            $$"""{"type":"LineString","coordinates":[[13.415,52.489],[{{lon}},{{lat}}]]}"""))!.AsObject();
+
+        var (_, snapped) = await Run(new { algorithm = "cut", inputs = new { a = polygon, b = cutter }, @params = new { snapTolerance = 0.5 } });
+
+        Assert.Equal(2, snapped["geometries"]!.AsArray().Count);
     }
 
     [Fact]

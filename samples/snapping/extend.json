@@ -1,0 +1,14 @@
+{
+  "name": "Extend a line that stops short",
+  "description": "Ends Extend: the last segment is extended in its own direction up to the edge; Nearest would move the end to the nearest point of the edge instead.",
+  "tags": [
+    "playground"
+  ],
+  "a": "LINESTRING (2 2, 9.5 5)",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "params": {
+    "tolerance": 1,
+    "mode": "Ends",
+    "ends": "Extend"
+  }
+}

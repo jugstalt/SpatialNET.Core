@@ -4,6 +4,11 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- `SnapTo` (ADR 0046): moves the vertices of a geometry that lie within a tolerance of a target onto it, as the step before an exact operation when data misses by a little: `cutter.SnapTo(polygon, 0.01).Cut(polygon)`. A corner of the target wins over an edge. `SnapMode.Ends` (the default for lines) moves only the loose ends of open paths: an end short of the target moves to the nearest point or, with `SnapEnds.Extend`, along its last segment, and an end that runs over the target by less than the tolerance is cut back. `SnapMode.Vertices` (the default for polygons) snaps every vertex and inserts the corners of the target into the segments, so that neighbouring areas share their boundary. Points and multipoints snap as points. The tolerance is required, Z and M of a moved point stay, and the result is not made valid. Compared with the NTS `GeometrySnapper`, which moves vertices only onto vertices.
+- Playground: the entry `snapTo`, and a snap tolerance ("Snap B to A") with a mode for `cut`, `relate`, all predicates and the overlays. The result says how far B moved, a cut that did not cut names a loose end of the cutting line close to the edge, and the alternatives of the predicates name `SnapTo` first. Found with a cutting line snapped onto an edge on the map: the map snaps in Web Mercator, the playground computes in UTM, where the end lies millimetres beside the edge, so the cut worked only sometimes.
+
 ## [0.7.0-preview.1] - 2026-10-27
 
 ### Added

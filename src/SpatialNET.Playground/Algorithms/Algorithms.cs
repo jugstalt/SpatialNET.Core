@@ -22,6 +22,93 @@ internal static class P
     public static ParameterDescriptor GridSize => new("gridSize", "Grid size (empty = auto)", "number", null, "kbs");
 }
 
+/// <summary>
+/// A result with notes for the result panel (the <c>warnings</c> of the response); <c>{unit}</c> in a note stands for the unit of the
+/// computation CRS.
+/// </summary>
+/// <param name="Value">The result.</param>
+/// <param name="Notes">The notes.</param>
+public sealed record Noted(object? Value, IReadOnlyList<string> Notes)
+{
+    public static object? Wrap(object? value, IReadOnlyList<string> notes) => notes.Count == 0 ? value : new Noted(value, notes);
+}
+
+/// <summary>
+/// "Snap B to A" before an operation with two inputs (ADR 0046): the entries with an exact topological result (<c>cut</c>, <c>relate</c>,
+/// the predicates and the overlays) take a tolerance and a mode, and snap B to A before they compute, so that data with small errors meets.
+/// </summary>
+internal static class Snap
+{
+    public static ParameterDescriptor Tolerance => new("snapTolerance", "Snap B to A, tolerance (empty = off)", "number", null, "kbs");
+
+    public static ParameterDescriptor Mode(string @default) => new("snapMode", "Snap mode", "enum", @default, null, ["Ends", "Vertices"]);
+
+    public static ParameterDescriptor[] Parameters(string mode) => [Tolerance, Mode(mode)];
+
+    /// <summary>B snapped to A if a tolerance is set, with a note how far it moved.</summary>
+    public static (IGeometry2D B, List<string> Notes) B(IReadOnlyDictionary<string, IGeometry2D> i, PlaygroundParameters p, IGeometryFactory f)
+    {
+        var (a, b) = (i["a"], i["b"]);
+        var notes = new List<string>();
+        if (p.OptionalNumber("snapTolerance") is not { } tolerance || tolerance <= 0)
+        {
+            return (b, notes);
+        }
+
+        var snapped = b.SnapTo(a, tolerance, p.Enum<SnapMode>("snapMode"), SnapEnds.Nearest, f);
+        notes.Add(Moved(b, snapped, "B"));
+        return (snapped, notes);
+    }
+
+    /// <summary>"Snap moved n of m vertices of B by up to d": the vertices of the input that are not in the result, and the Hausdorff distance.</summary>
+    public static string Moved(IGeometry2D input, IGeometry2D snapped, string name)
+    {
+        var after = Points(snapped).ToHashSet();
+        var before = Points(input).ToList();
+        int moved = before.Count(c => !after.Contains(c));
+        double shift = snapped.Envelope().IsEmpty || input.Envelope().IsEmpty ? double.NaN : input.HausdorffDistance(snapped);
+        return moved == 0
+            ? $"Snap moved no vertex of {name} (nothing within the tolerance, or it lies on the target already)."
+            : string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"Snap moved {moved} of {before.Count} vertices of {name}, by up to {shift:G4} {{unit}} (Hausdorff distance).");
+    }
+
+    /// <summary>
+    /// The hint for a cut that did not cut: an end of the cutting line lies close to A, but not on it, so it is a loose end (ADR 0007). Close is
+    /// a thousandth of the size of A, which takes in the errors of drawing and projecting (millimetres to centimetres on a kilometre).
+    /// </summary>
+    public static string? LooseEnd(IGeometry2D a, IPolyline2D cutter, IGeometryFactory f)
+    {
+        var envelope = a.Envelope();
+        if (envelope.IsEmpty)
+        {
+            return null;
+        }
+
+        IGeometry2D edges = a is IPolygon2D polygon ? polygon.Boundary(f) : a;
+        double limit = Math.Max(envelope.Width, envelope.Height) * 1e-3;
+        var gaps = Enumerable.Range(0, cutter.PathCount)
+            .Where(k => cutter[k].PointCount > 0)
+            .SelectMany(k => new[] { cutter[k][0], cutter[k][cutter[k].PointCount - 1] })
+            .Select(end => end.Distance(edges))
+            .Where(d => d > 0 && d <= limit)
+            .ToList();
+        return gaps.Count == 0
+            ? null
+            : string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"An end of the cutting line lies {gaps.Min():G4} {{unit}} from A, but not on it: a loose end does not cut (ADR 0007). Set \"Snap B to A\" to a tolerance above that.");
+    }
+
+    private static IEnumerable<(double X, double Y)> Points(IGeometry2D g) => g switch
+    {
+        IPoint2D p => [(p.X, p.Y)],
+        IMultiPoint2D mp => Enumerable.Range(0, mp.PointCount).Select(k => (mp[k].X, mp[k].Y)),
+        IPolyline2D l => Enumerable.Range(0, l.PathCount).SelectMany(k => Enumerable.Range(0, l[k].PointCount).Select(n => (l[k][n].X, l[k][n].Y))),
+        IPolygon2D pg => Enumerable.Range(0, pg.RingCount).SelectMany(k => Enumerable.Range(0, pg[k].PointCount).Select(n => (pg[k][n].X, pg[k][n].Y))),
+        _ => [],
+    };
+}
+
 // ---------- Measures ----------
 
 public sealed class AreaAlgorithm() : PlaygroundAlgorithm("area", "Area", "Measures", [In.A(In.Any)], [], (i, _, _, _) => i["a"].Area());
@@ -34,7 +121,12 @@ public sealed class DistanceAlgorithm() : PlaygroundAlgorithm("distance", "Dista
 
 public sealed class IsValidAlgorithm() : PlaygroundAlgorithm("isValid", "IsValid", "Validation", [In.A(In.Any)], [], (i, _, _, _) => i["a"].IsValid());
 public sealed class ValidateAlgorithm() : PlaygroundAlgorithm("validate", "Validate", "Validation", [In.A(In.Any)], [], (i, _, _, _) => i["a"].Validate());
-public sealed class RelateAlgorithm() : PlaygroundAlgorithm("relate", "Relate (DE-9IM)", "Predicates", [In.A(In.Any, "A"), In.B(In.Any)], [], (i, _, _, _) => i["a"].Relate(i["b"]));
+public sealed class RelateAlgorithm() : PlaygroundAlgorithm("relate", "Relate (DE-9IM)", "Predicates", [In.A(In.Any, "A"), In.B(In.Any)], Snap.Parameters("Vertices"),
+    (i, p, f, _) =>
+    {
+        var (b, notes) = Snap.B(i, p, f);
+        return Noted.Wrap(i["a"].Relate(b), notes);
+    });
 
 /// <summary>
 /// The result of a predicate with the distance of the inputs and the alternative with a tolerance. A predicate computes exactly: a point
@@ -44,56 +136,84 @@ public sealed class RelateAlgorithm() : PlaygroundAlgorithm("relate", "Relate (D
 /// <param name="Value">The result of the predicate.</param>
 /// <param name="Distance">The distance of the two inputs (<c>NaN</c> if one is empty).</param>
 /// <param name="NearlyTouching">Whether the distance is greater than 0 but only of the size of a rounding error.</param>
-/// <param name="Alternative">The call with a tolerance <c>t</c> (text; the library has no global tolerance).</param>
+/// <param name="Alternative">The call with a tolerance <c>t</c> (text; the library has no global tolerance), with <c>SnapTo</c> first where it fits (ADR 0046).</param>
 public sealed record PredicateResult(bool Value, double Distance, bool NearlyTouching, string Alternative);
 
 public abstract class PredicateAlgorithm(string id, string name, Func<IGeometry2D, IGeometry2D, bool> predicate, string alternative)
-    : PlaygroundAlgorithm(id, name, "Predicates", [In.A(In.Any, "A"), In.B(In.Any)], [],
-        (i, _, _, _) =>
+    : PlaygroundAlgorithm(id, name, "Predicates", [In.A(In.Any, "A"), In.B(In.Any)], Snap.Parameters("Vertices"),
+        (i, p, f, _) =>
         {
-            var (a, b) = (i["a"], i["b"]);
+            var a = i["a"];
+            var (b, notes) = Snap.B(i, p, f);
             double distance = a.Distance(b);
             double scale = new[] { a.Envelope(), b.Envelope() }.Where(e => !e.IsEmpty)
                 .SelectMany(e => new[] { e.MinX, e.MinY, e.MaxX, e.MaxY }).Select(Math.Abs).Append(1).Max();
-            return new PredicateResult(predicate(a, b), distance, distance > 0 && distance <= 1e-9 * scale, alternative);
+            return Noted.Wrap(new PredicateResult(predicate(a, b), distance, distance > 0 && distance <= 1e-9 * scale, alternative), notes);
         });
 
-public sealed class IntersectsAlgorithm() : PredicateAlgorithm("intersects", "Intersects", (a, b) => a.Intersects(b), "a.IsWithinDistance(b, t)");
-public sealed class DisjointAlgorithm() : PredicateAlgorithm("disjoint", "Disjoint", (a, b) => a.Disjoint(b), "!a.IsWithinDistance(b, t)");
+public sealed class IntersectsAlgorithm() : PredicateAlgorithm("intersects", "Intersects", (a, b) => a.Intersects(b), "a.Intersects(b.SnapTo(a, t, SnapMode.Vertices))  or  a.IsWithinDistance(b, t)");
+public sealed class DisjointAlgorithm() : PredicateAlgorithm("disjoint", "Disjoint", (a, b) => a.Disjoint(b), "a.Disjoint(b.SnapTo(a, t, SnapMode.Vertices))  or  !a.IsWithinDistance(b, t)");
 public sealed class ContainsAlgorithm() : PredicateAlgorithm("contains", "Contains", (a, b) => a.Contains(b), "a.Buffer(t).Contains(b)");
 public sealed class WithinAlgorithm() : PredicateAlgorithm("within", "Within", (a, b) => a.Within(b), "b.Buffer(t).Contains(a)");
-public sealed class TouchesAlgorithm() : PredicateAlgorithm("touches", "Touches", (a, b) => a.Touches(b), "a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b)  (areas)");
+public sealed class TouchesAlgorithm() : PredicateAlgorithm("touches", "Touches", (a, b) => a.Touches(b), "a.Touches(b.SnapTo(a, t, SnapMode.Vertices))  or  a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b)  (areas)");
 public sealed class CoversAlgorithm() : PredicateAlgorithm("covers", "Covers", (a, b) => a.Covers(b), "a.Buffer(t).Covers(b)");
 public sealed class CoveredByAlgorithm() : PredicateAlgorithm("coveredBy", "CoveredBy", (a, b) => a.CoveredBy(b), "b.Buffer(t).Covers(a)");
-public sealed class CrossesAlgorithm() : PredicateAlgorithm("crosses", "Crosses", (a, b) => a.Crosses(b), "no simple counterpart: IsWithinDistance for \"they meet\", NearestPoints for where");
+public sealed class CrossesAlgorithm() : PredicateAlgorithm("crosses", "Crosses", (a, b) => a.Crosses(b), "a.Crosses(b.SnapTo(a, t, SnapMode.Vertices))");
 public sealed class OverlapsAlgorithm() : PredicateAlgorithm("overlaps", "Overlaps", (a, b) => a.Overlaps(b), "a.Buffer(-t).Intersects(b.Buffer(-t)) && !a.Buffer(t).Covers(b) && !b.Buffer(t).Covers(a)  (areas)");
-public sealed class EqualsTopoAlgorithm() : PredicateAlgorithm("equalsTopo", "EqualsTopo", (a, b) => a.EqualsTopo(b), "a.HausdorffDistance(b) <= t");
+public sealed class EqualsTopoAlgorithm() : PredicateAlgorithm("equalsTopo", "EqualsTopo", (a, b) => a.EqualsTopo(b), "a.EqualsTopo(b.SnapTo(a, t, SnapMode.Vertices))  or  a.HausdorffDistance(b) <= t");
 
 // ---------- Overlay ----------
 
 public sealed class IntersectionAlgorithm() : PlaygroundAlgorithm("intersection", "Intersection", "Overlay",
-    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize],
-    (i, p, f, g) => i["a"].Intersection(i["b"], p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g));
+    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize, .. Snap.Parameters("Vertices")],
+    (i, p, f, g) =>
+    {
+        var (b, notes) = Snap.B(i, p, f);
+        return Noted.Wrap(i["a"].Intersection(b, p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g), notes);
+    });
 
 public sealed class UnionAlgorithm() : PlaygroundAlgorithm("union", "Union", "Overlay",
-    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize],
-    (i, p, f, g) => i["a"].Union(i["b"], p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g));
+    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize, .. Snap.Parameters("Vertices")],
+    (i, p, f, g) =>
+    {
+        var (b, notes) = Snap.B(i, p, f);
+        return Noted.Wrap(i["a"].Union(b, p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g), notes);
+    });
 
 public sealed class DifferenceAlgorithm() : PlaygroundAlgorithm("difference", "Difference", "Overlay",
-    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize],
-    (i, p, f, g) => i["a"].Difference(i["b"], p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g));
+    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize, .. Snap.Parameters("Vertices")],
+    (i, p, f, g) =>
+    {
+        var (b, notes) = Snap.B(i, p, f);
+        return Noted.Wrap(i["a"].Difference(b, p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g), notes);
+    });
 
 public sealed class SymDifferenceAlgorithm() : PlaygroundAlgorithm("symDifference", "SymDifference", "Overlay",
-    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize],
-    (i, p, f, g) => i["a"].SymDifference(i["b"], p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g));
+    [In.A(In.Any, "A"), In.B(In.Any)], [P.FillRule, P.GridSize, .. Snap.Parameters("Vertices")],
+    (i, p, f, g) =>
+    {
+        var (b, notes) = Snap.B(i, p, f);
+        return Noted.Wrap(i["a"].SymDifference(b, p.Enum<FillRule>("fillRule"), f, p.OptionalNumber("gridSize") ?? g), notes);
+    });
 
 public sealed class CutAlgorithm() : PlaygroundAlgorithm("cut", "Cut", "Overlay",
-    [In.A(In.LinesAndAreas, "Polygon/line"), In.B(In.Lines, "Cutting line")], [],
-    (i, _, f, g) => i["a"] switch
+    [In.A(In.LinesAndAreas, "Polygon/line"), In.B(In.Lines, "Cutting line")], Snap.Parameters("Ends"),
+    (i, p, f, g) =>
     {
-        IPolygon2D polygon => polygon.Cut((IPolyline2D)i["b"], f, g).Cast<IGeometry2D>().ToList(),
-        IPolyline2D line => line.Cut((IPolyline2D)i["b"], f, g).Cast<IGeometry2D>().ToList(),
-        _ => throw new NotSupportedException("Cut needs a polygon or a line."),
+        var (b, notes) = Snap.B(i, p, f);
+        var cutter = (IPolyline2D)b;
+        List<IGeometry2D> pieces = i["a"] switch
+        {
+            IPolygon2D polygon => polygon.Cut(cutter, f, g).Cast<IGeometry2D>().ToList(),
+            IPolyline2D line => line.Cut(cutter, f, g).Cast<IGeometry2D>().ToList(),
+            _ => throw new NotSupportedException("Cut needs a polygon or a line."),
+        };
+        if (pieces.Count == 1 && Snap.LooseEnd(i["a"], cutter, f) is { } hint)
+        {
+            notes.Add(hint);
+        }
+
+        return Noted.Wrap(pieces, notes);
     });
 
 // ---------- Construction ----------
@@ -268,6 +388,31 @@ public sealed class RemoveSmallPartsAlgorithm() : PlaygroundAlgorithm("removeSma
 public sealed class SnapToGridAlgorithm() : PlaygroundAlgorithm("snapToGrid", "SnapToGrid", "Construction",
     [In.A(In.Any)], [new("gridSize", "Grid size", "number", 1.0, "kbs")],
     (i, p, f, _) => i["a"].SnapToGrid(p.Number("gridSize"), f));
+
+public sealed class SnapToAlgorithm() : PlaygroundAlgorithm("snapTo", "SnapTo", "Construction",
+    [In.A(In.Any, "Geometry"), In.B(In.Any, "Target")],
+    [new("tolerance", "Tolerance", "number", 1.0, "kbs"),
+     new("mode", "Mode (Auto = ends of a line, vertices of a polygon)", "enum", "Auto", null, ["Auto", "Ends", "Vertices"]),
+     new("ends", "Ends (mode Ends)", "enum", "Nearest", null, ["Nearest", "Extend", "ExtendOrNearest"])],
+    (i, p, f, _) =>
+    {
+        SnapMode? mode = p.Enum<SnapModeChoice>("mode") switch
+        {
+            SnapModeChoice.Ends => SnapMode.Ends,
+            SnapModeChoice.Vertices => SnapMode.Vertices,
+            _ => null,
+        };
+        var snapped = i["a"].SnapTo(i["b"], p.Number("tolerance"), mode, p.Enum<SnapEnds>("ends"), f);
+        return new Noted(snapped, [Snap.Moved(i["a"], snapped, "the geometry")]);
+    });
+
+/// <summary>The modes of the entry <c>snapTo</c>: <c>Auto</c> is the default of the kind (no mode passed).</summary>
+public enum SnapModeChoice
+{
+    Auto,
+    Ends,
+    Vertices,
+}
 
 public sealed class ReducePrecisionAlgorithm() : PlaygroundAlgorithm("reducePrecision", "ReducePrecision", "Construction",
     [In.A(In.Any)], [new("gridSize", "Grid size", "number", 1.0, "kbs")],

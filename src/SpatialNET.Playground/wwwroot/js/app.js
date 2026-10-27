@@ -103,7 +103,7 @@ function showResult(result, error) {
       if (typeof result.distance === 'number') html += `<div class="muted">Distance A–B: ${fmtSmall(result.distance)}${u}</div>`;
       if (result.nearlyTouching) {
         html += '<div class="warn">The geometries lie practically on each other, but not exactly: predicates compute exactly on the coordinates. '
-          + 'A point drawn "on" a line is almost never exactly on it. For "approximately" use IsWithinDistance.</div>';
+          + 'A point drawn "on" a line is almost never exactly on it. Set "Snap B to A" to a small tolerance, or use IsWithinDistance for "approximately".</div>';
       }
 
       if (result.alternative) {
@@ -225,7 +225,7 @@ function renderParams() {
       input = document.createElement('input');
       input.type = 'number';
       input.step = p.type === 'int' ? '1' : 'any';
-      input.placeholder = p.default === null ? 'auto' : '';
+      input.placeholder = p.default === null ? (p.key === 'snapTolerance' ? 'off' : 'auto') : '';
       input.value = state.params[p.key] ?? p.default ?? '';
       input.oninput = () => set(p.key, input.value === '' ? null : Number(input.value));
     }

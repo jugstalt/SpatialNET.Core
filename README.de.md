@@ -2,7 +2,7 @@
 
 *[English version](README.md)*
 
-SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overlays (Schnitt, Vereinigung, Differenz), Buffer und Offset-Kurven, Cut, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße, lineare Referenzierung und Triangulierungen (Delaunay, Voronoi, Geländemodelle mit Höhenlinien, Neigung, Volumen und Glättung).
+SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overlays (Schnitt, Vereinigung, Differenz), Buffer und Offset-Kurven, Cut, Fangen an ein Ziel, Vereinfachung, räumliche Prädikate (DE-9IM), Gültigkeitsprüfung und Maße, lineare Referenzierung und Triangulierungen (Delaunay, Voronoi, Geländemodelle mit Höhenlinien, Neigung, Volumen und Glättung).
 
 - **Eigene Algorithmen, keine fremde Engine.** Alles ist selbst implementiert, es gibt keine Abhängigkeit zu NetTopologySuite, Clipper o. ä. ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.de.md)). NetTopologySuite kommt nur im Testprojekt als Vergleichs-Orakel vor.
 - **Interfaces statt eigener Geometrieklassen.** Die Algorithmen sind Extension-Methoden auf kleinen, lesenden Interfaces (`IPolygon2D`, `IPolyline2D`, …). Bestehende GIS-Software wie gView oder WebGIS kann sie damit über ihre eigenen Geometrieklassen nutzen. Ergebnisse entstehen über eine Geometrie-Factory, die der Host bereitstellt.
@@ -13,7 +13,7 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overla
 | Paket | Inhalt |
 |---|---|
 | `SpatialNET.Core` | Geometrie-Interfaces, Wert-Typen (`Coordinate`, `Envelope2D`), Vertrag der Geometrie-Factory |
-| `SpatialNET.Extensions` | Die Algorithmen als Extension-Methoden: Overlays, Buffer, Offset-Kurve, Cut, Simplify, Prädikate und `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, Maße, lineare Referenzierung und Routenereignisse, Triangulierung, Voronoi und Geländeanalyse |
+| `SpatialNET.Extensions` | Die Algorithmen als Extension-Methoden: Overlays, Buffer, Offset-Kurve, Cut, `SnapTo`, Simplify, Prädikate und `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, Maße, lineare Referenzierung und Routenereignisse, Triangulierung, Voronoi und Geländeanalyse |
 | `SpatialNET.Imp` | Referenz-Implementierung der Geometrie-Interfaces und der Factory, für Tests, Werkzeuge und Hosts ohne eigene Geometrien |
 | `SpatialNET.IO` | WKT, GeoJSON und WKB lesen und schreiben, über die Geometrie-Factory |
 

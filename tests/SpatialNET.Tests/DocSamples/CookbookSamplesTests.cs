@@ -160,6 +160,26 @@ public sealed class CookbookSamplesTests : IDisposable
     }
 
     [Fact]
+    public void SnapTheCuttingLineFirst()
+    {
+        // --- snippet: cookbook-snap-cut
+        var parcel = Wkt.Read<IPolygon2D>("POLYGON((533000 5212000, 533040 5212000, 533040 5212030, 533000 5212030, 533000 5212000))");
+        // Drawn on a web map and projected to UTM: the upper end lies 4 mm inside the edge.
+        var fence = Wkt.Read<IPolyline2D>("LINESTRING(533012 5211990, 533028 5212029.996)");
+
+        Console.WriteLine(parcel.Cut(fence).Count);                       // 1: a loose end does not cut
+
+        // Snap the ends onto the parcel first (tolerance in metres), then cut.
+        var pieces = parcel.Cut(fence.SnapTo(parcel, 0.01));
+        Console.WriteLine(pieces.Count);                                  // 2
+        // --- end
+
+        Assert.Single(parcel.Cut(fence));
+        Assert.Equal(2, pieces.Count);
+        Assert.Equal(1200, pieces.Sum(p => p.Area()), 6);
+    }
+
+    [Fact]
     public void LinesToAreas()
     {
         // --- snippet: cookbook-lines

@@ -32,5 +32,15 @@ Eine Polylinie wird an jedem Kontakt mit der Schnittlinie zerlegt: bei einer Kre
 ## Gut zu wissen
 
 - **Alle Pfade der Schnittlinie schneiden**, mehrere Schnitte in einem Aufruf sind also möglich. Es gibt keine Optionen-Klasse.
-- **Die Schnittlinie wird nicht verlängert.** Eine Fangtoleranz, die die Linie bis zum Rand verlängert, wie Editierwerkzeuge sie umsetzen, ist Sache des Werkzeugs, nicht der Bibliothek.
+- **Die Schnittlinie wird nicht verlängert**, jedenfalls nicht von `Cut`. Um ihre Enden auf den Rand zu bringen, zuerst fangen (nächster Abschnitt).
 - Z und M an Schnittpunkten werden auf dem Originalsegment interpoliert.
+
+## Daten mit kleinen Fehlern: zuerst fangen
+
+`Cut` ist exakt: Ein Ende der Schnittlinie, das 4 mm vor der Kante aufhört, ist ein loses Ende und schneidet nichts. Das passiert leicht bei gezeichneten oder projizierten Daten: Eine Karte, die das Ende auf der Kante fängt, wie sie in Web Mercator gerade ist, lässt es neben der Kante liegen, sobald die Stützpunkte nach UTM projiziert sind (Bruchteile eines Millimeters bei einer Kante von 100 m, Zentimeter bei einigen Kilometern). **`SnapTo` bringt die Enden zuerst auf das Polygon** ([ADR 0046](../../adr/0046-fangen-an-ein-ziel.de.md)):
+
+```csharp
+IReadOnlyList<IPolygon2D> pieces = parcel.Cut(fence.SnapTo(parcel, tolerance: 0.01));
+```
+
+Bei einer Polylinie verschiebt `SnapTo` standardmäßig nur die **losen Enden** (`SnapMode.Ends`): Ein Ende vor dem Ziel geht auf den nächsten Punkt (oder, mit `SnapEnds.Extend`, entlang seines letzten Segments), ein Ende, das weniger als die Toleranz darüber hinausläuft, wird abgeschnitten, und eine Ecke des Ziels in der Toleranz gewinnt, damit daneben kein Splitter bleibt. Die inneren Stützpunkte und der Rest der Linie bleiben. Die Toleranz ist Pflicht und in den Einheiten der Koordinaten angegeben; ein Punkt jenseits davon bleibt, wo er ist. Derselbe Schritt hilft vor den Overlays und den Prädikaten: `SnapMode.Vertices` verschiebt jeden Stützpunkt und fügt die Ecken des Ziels ein, sodass zwei benachbarte Flurstücke danach ihre Grenze teilen.

@@ -1,0 +1,15 @@
+{
+  "name": "A cutting line 4 mm short of the edge: snap first",
+  "description": "The upper end of the cutting line lies 4 mm inside the parcel, as after drawing on a map in another projection. Without snapping it is a loose end and nothing is cut (ADR 0007); \"Snap B to A\" with 1 cm moves it onto the edge (ADR 0046).",
+  "tags": [
+    "near-coincident",
+    "large-coords",
+    "playground"
+  ],
+  "a": "POLYGON ((533000 5212000, 533040 5212000, 533040 5212030, 533000 5212030, 533000 5212000))",
+  "b": "LINESTRING (533012 5211990, 533028 5212029.996)",
+  "params": {
+    "snapTolerance": 0.01,
+    "snapMode": "Ends"
+  }
+}

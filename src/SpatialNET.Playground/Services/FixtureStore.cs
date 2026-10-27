@@ -45,6 +45,7 @@ public sealed class FixtureStore(string root)
         ["slopeZones"] = "terrain",
         ["viewshed"] = "terrain",
         ["smooth"] = "smoothing",
+        ["snapTo"] = "snapping",
         ["contourBands"] = "terrain",
         ["lineOfSight"] = "terrain-sight",
         ["surfaceVolume"] = "terrain-compare",

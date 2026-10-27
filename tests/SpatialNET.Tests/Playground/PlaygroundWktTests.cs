@@ -142,6 +142,12 @@ public class PlaygroundWktTests(WebApplicationFactory<Program> factory) : IClass
         Assert.True(nearly["nearlyTouching"]!.GetValue<bool>());
         Assert.Null(nearly["withinTolerance"]);
 
+        // snapping B to A first (ADR 0046) inserts the point into the line: now it meets
+        var (_, snapped) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (3.3 0.99)", b = Line }, @params = new { snapTolerance = 1e-9 }, local = true });
+        Assert.True(snapped["value"]!.GetValue<bool>());
+        Assert.Equal(0, snapped["distance"]!.GetValue<double>());
+        Assert.Contains(snapped["warnings"]!.AsArray(), w => w!.GetValue<string>().StartsWith("Snap moved", StringComparison.Ordinal));
+
         // exactly on the line, and a vertex: true, distance 0, nothing to note
         var (_, exact) = await Post("/api/run", new { algorithm = "intersects", wkt = new { a = "POINT (5 1.5)", b = Line }, local = true });
         Assert.True(exact["value"]!.GetValue<bool>());
@@ -154,13 +160,15 @@ public class PlaygroundWktTests(WebApplicationFactory<Program> factory) : IClass
     }
 
     [Theory]
-    [InlineData("intersects", "a.IsWithinDistance(b, t)")]
-    [InlineData("disjoint", "!a.IsWithinDistance(b, t)")]
+    [InlineData("intersects", "a.Intersects(b.SnapTo(a, t, SnapMode.Vertices))  or  a.IsWithinDistance(b, t)")]
+    [InlineData("disjoint", "a.Disjoint(b.SnapTo(a, t, SnapMode.Vertices))  or  !a.IsWithinDistance(b, t)")]
     [InlineData("contains", "a.Buffer(t).Contains(b)")]
     [InlineData("within", "b.Buffer(t).Contains(a)")]
     [InlineData("covers", "a.Buffer(t).Covers(b)")]
     [InlineData("coveredBy", "b.Buffer(t).Covers(a)")]
-    [InlineData("equalsTopo", "a.HausdorffDistance(b) <= t")]
+    [InlineData("touches", "a.Touches(b.SnapTo(a, t, SnapMode.Vertices))  or  a.IsWithinDistance(b, t) && !a.Buffer(-t).Intersects(b)  (areas)")]
+    [InlineData("crosses", "a.Crosses(b.SnapTo(a, t, SnapMode.Vertices))")]
+    [InlineData("equalsTopo", "a.EqualsTopo(b.SnapTo(a, t, SnapMode.Vertices))  or  a.HausdorffDistance(b) <= t")]
     public async Task A_predicate_names_the_alternative_with_a_tolerance(string algorithm, string alternative)
     {
         var (_, body) = await Post("/api/run", new { algorithm, wkt = new { a = "POINT (3.3 0.99)", b = Line }, local = true });

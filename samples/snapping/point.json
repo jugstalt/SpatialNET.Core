@@ -1,0 +1,14 @@
+{
+  "name": "An address point onto a building",
+  "description": "A point goes to a corner of the target within the tolerance, otherwise to the nearest point of an edge.",
+  "tags": [
+    "playground"
+  ],
+  "a": "MULTIPOINT ((10.3 0.4), (10.4 5), (5 5))",
+  "b": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+  "params": {
+    "tolerance": 0.6,
+    "mode": "Auto",
+    "ends": "Nearest"
+  }
+}

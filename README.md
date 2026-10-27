@@ -2,7 +2,7 @@
 
 *[Deutsche Fassung](README.de.md)*
 
-SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, simplify, spatial predicates (DE-9IM), validity checks and measures, linear referencing, and triangulations (Delaunay, Voronoi, terrain models with contour lines, slope, volume and smoothing).
+SpatialNET is a .NET library for planar spatial computations: overlays (intersection, union, difference), buffer and offset curves, cut, snapping to a target, simplify, spatial predicates (DE-9IM), validity checks and measures, linear referencing, and triangulations (Delaunay, Voronoi, terrain models with contour lines, slope, volume and smoothing).
 
 - **Own algorithms, no third-party engine.** Everything is implemented in-house; there is no dependency on NetTopologySuite, Clipper or similar ([ADR 0001](docs/adr/0001-eigene-algorithmen-ohne-geometrie-engine.md)). NetTopologySuite appears only in the test project, as a comparison oracle.
 - **Interfaces instead of geometry classes.** The algorithms are extension methods on small read-only interfaces (`IPolygon2D`, `IPolyline2D`, …), so existing GIS software such as gView or WebGIS can use them through its own geometry classes. Results are created through a geometry factory that the host provides.
@@ -13,7 +13,7 @@ SpatialNET is a .NET library for planar spatial computations: overlays (intersec
 | Package | Contents |
 |---|---|
 | `SpatialNET.Core` | Geometry interfaces, value types (`Coordinate`, `Envelope2D`), geometry factory contract |
-| `SpatialNET.Extensions` | The algorithms as extension methods: overlays, buffer, offset curve, cut, simplify, predicates and `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, measures, linear referencing and route events, triangulation, Voronoi and terrain analysis |
+| `SpatialNET.Extensions` | The algorithms as extension methods: overlays, buffer, offset curve, cut, `SnapTo`, simplify, predicates and `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, measures, linear referencing and route events, triangulation, Voronoi and terrain analysis |
 | `SpatialNET.Imp` | Reference implementation of the geometry interfaces and the factory, for tests, tools and hosts without geometries of their own |
 | `SpatialNET.IO` | WKT, GeoJSON and WKB reading and writing through the geometry factory |
 

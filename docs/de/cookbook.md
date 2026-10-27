@@ -133,6 +133,23 @@ Console.WriteLine(string.Join(" and ", pieces.Select(p => p.Area()).Order())); /
 
 ```
 
+## Eine Schnittlinie, die knapp davor aufhört
+
+Gezeichnete oder projizierte Daten verfehlen um Millimeter, und `Cut` ist exakt: Ein Ende, das die Kante nicht erreicht, schneidet nichts. `SnapTo` bringt die Enden der Linie zuerst auf das Flurstück ([Cut](concepts/cut.md#daten-mit-kleinen-fehlern-zuerst-fangen), [ADR 0046](../adr/0046-fangen-an-ein-ziel.de.md)).
+
+```csharp
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((533000 5212000, 533040 5212000, 533040 5212030, 533000 5212030, 533000 5212000))");
+// Drawn on a web map and projected to UTM: the upper end lies 4 mm inside the edge.
+var fence = Wkt.Read<IPolyline2D>("LINESTRING(533012 5211990, 533028 5212029.996)");
+
+Console.WriteLine(parcel.Cut(fence).Count);                       // 1: a loose end does not cut
+
+// Snap the ends onto the parcel first (tolerance in metres), then cut.
+var pieces = parcel.Cut(fence.SnapTo(parcel, 0.01));
+Console.WriteLine(pieces.Count);                                  // 2
+
+```
+
 ## Von Linien zu Flächen
 
 `LineMerge` verbindet Stücke, die Ende an Ende liegen, zu längeren Pfaden; `Polygonize` macht aus Linien die Flächen, die sie umschließen. Linien, die nur herausragen, umschließen nichts und entfallen ([Overlays](concepts/overlay-and-grid.md), [Maße und Konstruktionen](concepts/measures-and-constructions.md)).

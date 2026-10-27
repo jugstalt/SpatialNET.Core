@@ -32,5 +32,15 @@ A polyline is split at every contact with the cutting line: a crossing, a touch 
 ## Good to know
 
 - **All paths of the cutting line cut**, so several cuts in one call are possible. There is no options class.
-- **The cutting line is not extended.** A snap tolerance that extends the line to the boundary, as editing tools do, is the business of the tool, not of the library.
+- **The cutting line is not extended** by `Cut`. To bring its ends onto the boundary, snap it first (next section).
 - Z and M at intersection points are interpolated on the original segment.
+
+## Data with small errors: snap first
+
+`Cut` is exact: an end of the cutting line that stops 4 mm short of the edge is a loose end and cuts nothing. That happens easily with drawn or projected data: a map that snaps the end onto the edge as it is straight in Web Mercator leaves it beside the edge once the vertices are projected to UTM (a fraction of a millimetre on a 100 m edge, centimetres on a few kilometres). **`SnapTo` moves the ends onto the polygon first** ([ADR 0046](../../adr/0046-fangen-an-ein-ziel.md)):
+
+```csharp
+IReadOnlyList<IPolygon2D> pieces = parcel.Cut(fence.SnapTo(parcel, tolerance: 0.01));
+```
+
+For a polyline `SnapTo` moves only the **loose ends** by default (`SnapMode.Ends`): an end short of the target goes to the nearest point (or, with `SnapEnds.Extend`, along its last segment), an end that runs over it by less than the tolerance is cut back, and a corner of the target within the tolerance wins, so that no sliver is left beside it. The inner vertices and the rest of the line stay. The tolerance is required and in the units of the coordinates; a point beyond it stays where it is. The same step helps before the overlays and the predicates: `SnapMode.Vertices` moves every vertex and inserts the corners of the target, so that two neighbouring parcels share their boundary afterwards.

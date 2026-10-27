@@ -30,6 +30,7 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | Gitterweite | grid size |
 | Windungszahl | winding number |
 | Snap-Rounding | snap rounding |
+| Fangen (an ein Ziel) | snap to a target (`SnapTo`); nicht Snap-Rounding und nicht auf das Raster legen (`SnapToGrid`) |
 | Even-Odd-Regel | even-odd rule |
 | Strict-Semantik | strict semantics |
 | räumlicher Index | spatial index |

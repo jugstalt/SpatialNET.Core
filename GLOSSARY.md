@@ -165,7 +165,11 @@ _Avoid_: Labelpunkt, Schwerpunkt (der kann außerhalb liegen)
 
 **Auf das Raster legen**:
 Das Runden jeder Koordinate auf den nächsten Rasterpunkt und sonst nichts; kann ein Polygon ungültig machen (`SnapToGrid`).
-_Avoid_: Quantisieren, Snappen
+_Avoid_: Quantisieren, Snappen (das ist das Fangen an ein Ziel)
+
+**Fangen**:
+Das Verschieben der Stützpunkte einer Geometrie, die näher als eine Toleranz an einer anderen Geometrie (dem Ziel) liegen, auf das Ziel: eine Ecke des Ziels vor einer Kante, bei Linien standardmäßig nur die losen Enden (`SnapTo`, ADR 0046). Der Schritt vor einer exakten Operation, wenn Daten sich knapp verfehlen.
+_Avoid_: Snappen, Einrasten, Snap Rounding (das rundet Schnittpunkte auf das Raster der Overlays), Auf das Raster legen
 
 **Genauigkeit reduzieren**:
 Snap Rounding auf ein Raster mit gültigem Ergebnis (`ReducePrecision`).

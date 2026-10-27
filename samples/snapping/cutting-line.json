@@ -1,0 +1,14 @@
+{
+  "name": "The ends of a cutting line onto a parcel",
+  "description": "Mode Ends: the upper end lies 4 mm inside, the lower one runs 3 mm over the edge. The first is moved onto the edge, the second cut back to where the line meets it; the inner vertex stays.",
+  "tags": [
+    "playground"
+  ],
+  "a": "LINESTRING (533012.5 5211999.997, 533020 5212015, 533028 5212029.996)",
+  "b": "POLYGON ((533000 5212000, 533040 5212000, 533040 5212030, 533000 5212030, 533000 5212000))",
+  "params": {
+    "tolerance": 0.01,
+    "mode": "Auto",
+    "ends": "Nearest"
+  }
+}

@@ -133,6 +133,23 @@ Console.WriteLine(string.Join(" and ", pieces.Select(p => p.Area()).Order())); /
 
 ```
 
+## A cutting line that stops just short
+
+Drawn or projected data misses by millimetres, and `Cut` is exact: an end that does not reach the edge cuts nothing. `SnapTo` brings the ends of the line onto the parcel first ([Cut](concepts/cut.md#data-with-small-errors-snap-first), [ADR 0046](../adr/0046-fangen-an-ein-ziel.md)).
+
+```csharp
+var parcel = Wkt.Read<IPolygon2D>("POLYGON((533000 5212000, 533040 5212000, 533040 5212030, 533000 5212030, 533000 5212000))");
+// Drawn on a web map and projected to UTM: the upper end lies 4 mm inside the edge.
+var fence = Wkt.Read<IPolyline2D>("LINESTRING(533012 5211990, 533028 5212029.996)");
+
+Console.WriteLine(parcel.Cut(fence).Count);                       // 1: a loose end does not cut
+
+// Snap the ends onto the parcel first (tolerance in metres), then cut.
+var pieces = parcel.Cut(fence.SnapTo(parcel, 0.01));
+Console.WriteLine(pieces.Count);                                  // 2
+
+```
+
 ## From lines to areas
 
 `LineMerge` joins pieces that meet end to end into longer paths; `Polygonize` turns lines into the areas they enclose. Lines that only dangle enclose nothing and are dropped ([Overlays](concepts/overlay-and-grid.md), [Measures and constructions](concepts/measures-and-constructions.md)).
