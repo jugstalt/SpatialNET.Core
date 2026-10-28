@@ -8,7 +8,7 @@
     <!-- Tests -->
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
     <PackageVersion Include="CsCheck" Version="4.9.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.14" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
