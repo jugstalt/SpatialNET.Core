@@ -4,6 +4,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.9.0-preview.1] - 2026-10-29
+
 ### Changed
 
 - Faster on the cases of a host benchmark (gView GIS, UTM metres, BenchmarkDotNet short runs, `HostPredicateBenchmarks` and `HostOverlayBenchmarks`, `--quick-host`); every result except that of `UnionAll` of polygons is bit for bit the same as before.
@@ -136,7 +138,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.8.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.9.0-preview.1...HEAD
+[0.9.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.8.0-preview.1...v0.9.0-preview.1
 [0.8.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.7.0-preview.1...v0.8.0-preview.1
 [0.7.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.6.0-preview.1...v0.7.0-preview.1
 [0.6.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.5.0-preview.1...v0.6.0-preview.1
