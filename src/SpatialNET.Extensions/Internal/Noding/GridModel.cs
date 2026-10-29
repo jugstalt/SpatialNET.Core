@@ -106,6 +106,11 @@ internal sealed class GridModel
     /// </summary>
     public GridPoint RoundExactIntersection(Coordinate p0, Coordinate p1, Coordinate q0, Coordinate q1)
     {
+        if (RoundFloatingIntersection(p0, p1, q0, q1) is { } fast)
+        {
+            return fast;
+        }
+
         Span<double> values = [p0.X, p0.Y, p1.X, p1.Y, q0.X, q0.Y, q1.X, q1.Y];
         var parts = new (BigInteger M, int E)[8];
         int minE = int.MaxValue;
@@ -125,6 +130,51 @@ internal sealed class GridModel
         // Punkt = p0 + num/den · r, in Einheiten 2^minE
         BigInteger xNum = v[0] * den + num * rx, yNum = v[1] * den + num * ry;
         return new GridPoint(RoundRational(xNum, den, minE), RoundRational(yNum, den, minE));
+    }
+
+    /// <summary>
+    /// The filter in front of <see cref="RoundExactIntersection"/>: the intersection point in floating point with a bound of its error
+    /// (every operation rounds by at most ε relative); if no rounding boundary (a half grid unit) lies within the bound, the
+    /// rounding of the exact point is the same. Otherwise <c>null</c>, and the exact computation decides.
+    /// </summary>
+    private GridPoint? RoundFloatingIntersection(Coordinate p0, Coordinate p1, Coordinate q0, Coordinate q1)
+    {
+        const double Eps = 1.1102230246251565e-16; // 2^-53
+        double rx = p1.X - p0.X, ry = p1.Y - p0.Y, sx = q1.X - q0.X, sy = q1.Y - q0.Y, wx = q0.X - p0.X, wy = q0.Y - p0.Y;
+        double d1 = rx * sy, d2 = ry * sx, n1 = wx * sy, n2 = wy * sx;
+        double den = d1 - d2, num = n1 - n2;
+        // the differences, the products and the subtraction: 2ε + ε + ε each, with room for second order terms
+        double errDen = 5 * Eps * (Math.Abs(d1) + Math.Abs(d2)), errNum = 5 * Eps * (Math.Abs(n1) + Math.Abs(n2));
+        if (!(Math.Abs(den) > 4 * errDen) || !double.IsFinite(num))
+        {
+            return null;
+        }
+
+        double t = num / den;
+        double errT = (errNum + Math.Abs(t) * errDen) / (Math.Abs(den) - errDen) + 2 * Eps * Math.Abs(t);
+        if (Round(p0.X, rx) is { } x && Round(p0.Y, ry) is { } y)
+        {
+            return new GridPoint(x, y);
+        }
+
+        return null;
+
+        long? Round(double origin, double direction)
+        {
+            double value = origin + t * direction;
+            double units = _inverse > 0 ? value * _inverse : value / Size;
+            double shifted = units + 0.5;
+            // error of the point (t, the difference, product and sum), of the conversion to units and of the shift by ½
+            double err = 2 * ((Math.Abs(direction) * errT + 3 * Eps * Math.Abs(t * direction) + Eps * Math.Abs(value)) * (_inverse > 0 ? _inverse : 1 / Size)
+                + 2 * Eps * Math.Abs(units) + Eps * Math.Abs(shifted));
+            double floor = Math.Floor(shifted);
+            if (!double.IsFinite(shifted) || Math.Abs(units) > MaxUnits || shifted - floor <= err || floor + 1 - shifted <= err)
+            {
+                return null;
+            }
+
+            return (long)floor;
+        }
     }
 
     /// <summary>Rounds (num / den) · 2^exponent to grid units: floor(x + ½), exact.</summary>

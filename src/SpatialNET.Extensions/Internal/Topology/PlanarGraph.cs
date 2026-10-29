@@ -18,25 +18,41 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
 {
     public const int Operands = 2;
 
+    /// <summary>One value per operand, stored in the edge itself.</summary>
+    [System.Runtime.CompilerServices.InlineArray(Operands)]
+    public struct PerOperand
+    {
+        private int _value;
+    }
+
     public sealed class Edge
     {
         public int A, B;
-        public readonly int[] Winding = new int[Operands]; // in Richtung A→B
-        public readonly int[] Line = new int[Operands];
-        public readonly List<int> Sources = [];
+        public PerOperand Winding; // in Richtung A→B
+        public PerOperand Line;
+        private List<int>? _sources;
+
+        public IReadOnlyList<int> Sources => _sources ?? (IReadOnlyList<int>)[];
+
+        public void AddSource(int source) => (_sources ??= new List<int>(1)).Add(source);
     }
 
-    public readonly List<T> Nodes = [];
-    public readonly List<Edge> Edges = [];
-    private readonly Dictionary<T, int> _nodeIndex = [];
-    private readonly Dictionary<(int, int), int> _edgeIndex = [];
+    public readonly List<T> Nodes;
+    public readonly List<Edge> Edges;
+    private readonly Dictionary<T, int> _nodeIndex;
+    private readonly Dictionary<(int, int), int> _edgeIndex;
 
     private List<int>[] _outgoing = [];
     private int[] _next = [];
-    private int[,] _leftWinding = new int[0, 0];
+    private int[] _leftWinding = []; // [2h + operand]
 
     public PlanarGraph(IEnumerable<GraphInput<T>> input)
     {
+        int capacity = input is ICollection<GraphInput<T>> collection ? collection.Count : 0;
+        Nodes = new List<T>(capacity);
+        Edges = new List<Edge>(capacity);
+        _nodeIndex = new Dictionary<T, int>(capacity);
+        _edgeIndex = new Dictionary<(int, int), int>(capacity);
         foreach (var e in input)
         {
             if (e.A.Equals(e.B))
@@ -61,7 +77,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
             edge.Line[e.Operand] += e.Line;
             if (e.Source >= 0)
             {
-                edge.Sources.Add(e.Source);
+                edge.AddSource(e.Source);
             }
         }
 
@@ -98,10 +114,10 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
     public int Winding(int h, int operand) => (h & 1) == 0 ? Edges[h >> 1].Winding[operand] : -Edges[h >> 1].Winding[operand];
 
     /// <summary>Winding number of the operand in the face to the left of h.</summary>
-    public int LeftWinding(int h, int operand) => _leftWinding[h, operand];
+    public int LeftWinding(int h, int operand) => _leftWinding[Operands * h + operand];
 
     /// <summary>Winding number of the operand in the face to the right of h.</summary>
-    public int RightWinding(int h, int operand) => _leftWinding[h ^ 1, operand];
+    public int RightWinding(int h, int operand) => _leftWinding[Operands * (h ^ 1) + operand];
 
     private void Link()
     {
@@ -137,7 +153,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
     /// </summary>
     private void ComputeWinding()
     {
-        _leftWinding = new int[HalfEdgeCount, Operands];
+        _leftWinding = new int[HalfEdgeCount * Operands];
         var assigned = new bool[HalfEdgeCount];
         var component = Components(out int componentCount);
         var start = new int[componentCount];
@@ -172,7 +188,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
             for (int k = 0; k < Operands; k++)
             {
                 // eine einzige Komponente liegt im Unendlichen außen: Windungszahl 0
-                _leftWinding[h, k] = componentCount == 1 ? 0 : RayWinding(Nodes[v], k, component, c);
+                _leftWinding[Operands * h + k] = componentCount == 1 ? 0 : RayWinding(Nodes[v], k, component, c);
             }
 
             assigned[h] = true;
@@ -189,7 +205,7 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
                 if (assigned[to]) return;
                 for (int k = 0; k < Operands; k++)
                 {
-                    _leftWinding[to, k] = viaTwin == 0 ? _leftWinding[from, k] : _leftWinding[from, k] - Winding(from, k);
+                    _leftWinding[Operands * to + k] = viaTwin == 0 ? _leftWinding[Operands * from + k] : _leftWinding[Operands * from + k] - Winding(from, k);
                 }
 
                 assigned[to] = true;
@@ -243,7 +259,24 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
         public YIndex(PlanarGraph<T> graph)
         {
             _graph = graph;
-            var ys = graph.Nodes.ToArray();
+            _ys = typeof(T) == typeof(Noding.GridPoint) ? DistinctGridYs(graph.Nodes) : DistinctYs(graph.Nodes);
+            _size = Math.Max(1, _ys.Length);
+            _tree = new List<int>?[2 * _size];
+
+            for (int e = 0; e < graph.Edges.Count; e++)
+            {
+                var edge = graph.Edges[e];
+                if (edge.Winding[0] == 0 && edge.Winding[1] == 0) continue;
+                int ra = LowerBound(graph.Nodes[edge.A]), rb = LowerBound(graph.Nodes[edge.B]);
+                if (ra == rb) continue; // waagrecht: kreuzt keinen waagrechten Strahl
+                Insert(Math.Min(ra, rb), Math.Max(ra, rb) - 1, e);
+            }
+        }
+
+        /// <summary>The nodes with distinct Y, ascending (only their Y counts).</summary>
+        private static T[] DistinctYs(List<T> nodes)
+        {
+            var ys = nodes.ToArray();
             Array.Sort(ys, (a, b) => T.CompareY(a, b));
             var distinct = new List<T>(ys.Length);
             foreach (var y in ys)
@@ -251,18 +284,29 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
                 if (distinct.Count == 0 || T.CompareY(distinct[^1], y) != 0) distinct.Add(y);
             }
 
-            _ys = distinct.ToArray();
-            _size = Math.Max(1, _ys.Length);
-            _tree = new List<int>?[2 * _size];
+            return distinct.ToArray();
+        }
 
-            for (int e = 0; e < graph.Edges.Count; e++)
+        /// <summary>Like <see cref="DistinctYs"/> for grid points: the Y values sorted as numbers.</summary>
+        private static T[] DistinctGridYs(List<T> nodes)
+        {
+            var ys = new long[nodes.Count];
+            for (int i = 0; i < ys.Length; i++)
             {
-                var edge = graph.Edges[e];
-                if (edge.Winding.All(w => w == 0)) continue;
-                int ra = LowerBound(graph.Nodes[edge.A]), rb = LowerBound(graph.Nodes[edge.B]);
-                if (ra == rb) continue; // waagrecht: kreuzt keinen waagrechten Strahl
-                Insert(Math.Min(ra, rb), Math.Max(ra, rb) - 1, e);
+                var node = nodes[i];
+                ys[i] = System.Runtime.CompilerServices.Unsafe.As<T, Noding.GridPoint>(ref node).Y;
             }
+
+            Array.Sort(ys);
+            var distinct = new List<T>(ys.Length);
+            for (int i = 0; i < ys.Length; i++)
+            {
+                if (i > 0 && ys[i] == ys[i - 1]) continue;
+                var point = new Noding.GridPoint(0, ys[i]);
+                distinct.Add(System.Runtime.CompilerServices.Unsafe.As<Noding.GridPoint, T>(ref point));
+            }
+
+            return distinct.ToArray();
         }
 
         /// <summary>First position with Y ≥ p.Y.</summary>

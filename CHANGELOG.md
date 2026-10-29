@@ -4,6 +4,13 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Changed
+
+- Faster on the cases of a host benchmark (gView GIS, UTM metres, BenchmarkDotNet short runs, `HostPredicateBenchmarks` and `HostOverlayBenchmarks`, `--quick-host`); every result is bit for bit the same as before.
+  - `PreparedGeometry.Contains` of an area has a fast path: the position of the vertices and the contacts of the segments with the boundary through the segment index, and two exact witnesses for "not contained" (a vertex outside, a segment that crosses a single boundary segment). Only a contact with the boundary without a witness still runs the DE-9IM matrix. A filter polygon of 2,000 vertices against 3,000 features takes 19 ms instead of 12.1 s (9.2 GB fewer allocations), one of 50 vertices 5 ms instead of 145 ms.
+  - The overlay core no longer builds a text key of every ring to cancel coincident rings (a hash of the points decides first), rounds crossings in floating point where a strict error bound allows it, sweeps in arrays and assigns holes with an envelope prefilter. `UnionAll` of 100 overlapping blobs takes 21 ms instead of 45 ms, of 1,000 blobs 346 ms instead of 871 ms (316 MB instead of 762 MB); `Clip` of a polygon of 5,000 vertices 32 ms instead of 60 ms, of 2,000 small polygons 2.6 ms instead of 17 ms.
+  - `Buffer` of a single point (in general: a single convex raw ring with vertices well apart on the grid) skips the overlay, whose result is then known exactly: 100 points take 0.64 ms instead of 4.3 ms.
+
 ## [0.8.0-preview.1] - 2026-10-27
 
 ### Added

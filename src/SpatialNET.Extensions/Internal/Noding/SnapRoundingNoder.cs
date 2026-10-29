@@ -34,7 +34,7 @@ internal static class SnapRoundingNoder
 
     public static List<NodedEdge> Node(IReadOnlyList<SegmentString> input, GridModel grid)
     {
-        var segments = new List<Segment>();
+        var segments = new List<Segment>(input.Sum(s => Math.Max(0, s.Points.Length - 1)));
         var hotPixels = new HashSet<GridPoint>();
         foreach (var s in input)
         {
@@ -55,7 +55,7 @@ internal static class SnapRoundingNoder
         var pixels = hotPixels.ToArray();
         Array.Sort(pixels);
 
-        var result = new List<NodedEdge>();
+        var result = new List<NodedEdge>(segments.Count + 2 * crossings.Values.Sum(c => c.Count));
         var hits = new List<(double T, GridPoint Pixel)>();
         foreach (var seg in segments)
         {
@@ -107,17 +107,51 @@ internal static class SnapRoundingNoder
     private static Dictionary<(int String, int Segment), List<GridPoint>> AddIntersectionPixels(List<Segment> segments, HashSet<GridPoint> hotPixels, GridModel grid)
     {
         var crossings = new Dictionary<(int String, int Segment), List<GridPoint>>();
-        var order = segments.OrderBy(s => s.MinX).ToArray();
-        var active = new List<Segment>();
-        foreach (var s in order)
+
+        // Sweep in x (stable by MinX); the active segments keep their order, those left of the sweep line drop out
+        // before the next segment is compared with them. The bounds are kept in arrays for the inner loop.
+        int n = segments.Count;
+        var minX = new double[n];
+        var order = new int[n];
+        for (int i = 0; i < n; i++)
         {
-            active.RemoveAll(a => a.MaxX < s.MinX);
-            foreach (var a in active)
+            minX[i] = segments[i].MinX;
+            order[i] = i;
+        }
+
+        Array.Sort(order, (i, j) => minX[i] != minX[j] ? minX[i].CompareTo(minX[j]) : i.CompareTo(j));
+        var maxX = new double[n];
+        var minY = new double[n];
+        var maxY = new double[n];
+        foreach (int i in order)
+        {
+            maxX[i] = segments[i].MaxX;
+            minY[i] = segments[i].MinY;
+            maxY[i] = segments[i].MaxY;
+        }
+
+        var active = new int[n];
+        int count = 0;
+        foreach (int si in order)
+        {
+            var s = segments[si];
+            double sMinX = minX[si], sMinY = minY[si], sMaxY = maxY[si];
+            int kept = 0;
+            for (int k = 0; k < count; k++)
             {
-                if (a.MaxY < s.MinY || s.MaxY < a.MinY)
+                int ai = active[k];
+                if (maxX[ai] < sMinX)
                 {
                     continue;
                 }
+
+                active[kept++] = ai;
+                if (maxY[ai] < sMinY || sMaxY < minY[ai])
+                {
+                    continue;
+                }
+
+                var a = segments[ai];
 
                 var p0 = a.Source.Points[a.Index];
                 var p1 = a.Source.Points[a.Index + 1];
@@ -138,7 +172,8 @@ internal static class SnapRoundingNoder
                 Record(crossings, s, pixel);
             }
 
-            active.Add(s);
+            count = kept;
+            active[count++] = si;
         }
 
         return crossings;

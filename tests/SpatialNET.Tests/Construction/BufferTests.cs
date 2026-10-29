@@ -1,3 +1,4 @@
+using CsCheck;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Buffer;
 using NetTopologySuite.Operation.Union;
@@ -123,5 +124,41 @@ public class BufferContractTests
         var line = SpatialNET.IO.Wkt.Read("LINESTRING Z (0 0 5, 10 0 10)", F);
 
         Assert.All(Internal.GeometryAccess.AllPoints(line.Buffer(1, factory: F)), q => Assert.IsNotAssignableFrom<IPoint3D>(q));
+    }
+    /// <summary>
+    /// A single convex raw ring (the circle around a point, a short line, a convex polygon) is united without the overlay; the result is
+    /// identical to the one of the overlay, vertex for vertex, also where the vertices are only a few grid units apart.
+    /// </summary>
+    [Fact]
+    public void A_single_convex_ring_gives_the_same_vertices_as_the_overlay()
+    {
+        Gen.Select(Gen.Double[-1, 1], Gen.Double[-1, 1], Gen.Int[0, 7], Gen.Double[1e-11, 50], Gen.Int[1, 32], Gen.Int[0, 3]).Sample((u, v, magnitude, radius, segments, kind) =>
+        {
+            double scale = Math.Pow(10, magnitude);
+            var c = new Coordinate(u * scale, v * scale);
+            var options = new BufferOptions { QuadrantSegments = segments, CapStyle = kind == 1 ? CapStyle.Square : CapStyle.Round };
+            IGeometry2D geometry = kind switch
+            {
+                2 => F.CreatePolyline([new[] { c, new Coordinate(c.X + radius, c.Y + radius / 3) }], null),
+                3 => F.CreatePolygon([new PolygonPart(new[] { c, new Coordinate(c.X + radius, c.Y), new Coordinate(c.X, c.Y + radius), c })], null),
+                _ => F.CreatePoint(c, null),
+            };
+            double gridSize = GridModel.AutoSize(Math.Max(Math.Abs(c.X), Math.Abs(c.Y)) + 2 * radius);
+
+            var raw = new Internal.Buffer.OffsetBuilder(options, radius);
+            var ring = geometry switch
+            {
+                IPoint2D => raw.Point(c),
+                IPolyline2D line => raw.Line(Internal.Rings.Coordinates(line[0])),
+                _ => raw.Ring(Internal.Rings.Closed(((IPolygon2D)geometry)[0])),
+            };
+            var engine = new Internal.Overlay.OverlayEngine([null, null], new GridModel(gridSize), [FillRule.Positive, FillRule.Positive], [(ring!, 0, true)]);
+            var expected = engine.Areas(h => engine.InsideLeft(h, 0)).SelectMany(p => p.Shell.ToArray().Concat(p.Holes.ToArray().SelectMany(h => h.ToArray())))
+                .Select(q => (q.X, q.Y)).ToArray();
+
+            var actual = Internal.GeometryAccess.AllPoints(geometry.Buffer(radius, options, F, gridSize)).Select(q => (q.X, q.Y)).ToArray();
+
+            Assert.Equal(expected, actual);
+        }, iter: 5_000);
     }
 }

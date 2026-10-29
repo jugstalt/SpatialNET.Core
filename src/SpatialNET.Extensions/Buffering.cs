@@ -143,6 +143,11 @@ public static class Buffering
                 break;
         }
 
+        if (raw.Count == 1 && ConvexOnGrid(raw[0], grid) is { } convex)
+        {
+            return [convex];
+        }
+
         var lines = raw.Select(ring => (ring, 0, true)).ToList();
         var engine = new OverlayEngine([null, null], grid, [FillRule.Positive, FillRule.Positive], lines);
         return engine.Areas(h => engine.InsideLeft(h, 0));
@@ -153,6 +158,82 @@ public static class Buffering
         }
     }
 
+    /// <summary>
+    /// The union of a single raw ring without the overlay (the circle around a point), where its result is known: the ring is strictly
+    /// convex and counter-clockwise, every vertex lies more than <see cref="ConvexMargin"/> grid units from the lines of the edges it does not
+    /// touch (so the snap rounding routes no edge through another hot pixel and adds no crossing), and the rounded ring is strictly convex
+    /// too. The overlay then gives exactly the rounded vertices, from the first one on; otherwise <c>null</c>.
+    /// </summary>
+    private static PolygonPart? ConvexOnGrid(Coordinate[] ring, GridModel grid)
+    {
+        int n = ring.Length - 1;
+        if (n < 3 || !Rings.SameXY(ring[0], ring[n]))
+        {
+            return null;
+        }
+
+        var x = new double[n];
+        var y = new double[n];
+        var rounded = new GridPoint[n];
+        for (int i = 0; i < n; i++)
+        {
+            if (!double.IsFinite(ring[i].X) || !double.IsFinite(ring[i].Y)) return null;
+            x[i] = grid.ToUnits(ring[i].X);
+            y[i] = grid.ToUnits(ring[i].Y);
+            rounded[i] = grid.Round(ring[i]);
+        }
+
+        // strictly convex, once around (the turns add up to 360°, not a multiple)
+        double turning = 0, roundedTurning = 0;
+        for (int i = 0; i < n; i++)
+        {
+            int previous = (i + n - 1) % n, next = (i + 1) % n;
+            if (Orientation.Orient2D(ring[previous], ring[i], ring[next]) <= 0
+                || GridPoint.Orient(rounded[previous], rounded[i], rounded[next]) <= 0)
+            {
+                return null;
+            }
+
+            turning += Turn(x[previous], y[previous], x[i], y[i], x[next], y[next]);
+            roundedTurning += Turn(rounded[previous].X, rounded[previous].Y, rounded[i].X, rounded[i].Y, rounded[next].X, rounded[next].Y);
+        }
+
+        if (turning > 3 * Math.PI || roundedTurning > 3 * Math.PI)
+        {
+            return null;
+        }
+
+        // On a convex ring, the distance to the line of an edge grows and falls along the other vertices: the nearest are its neighbours.
+        for (int i = 0; i < n; i++)
+        {
+            int a = i, b = (i + 1) % n;
+            if (Distance(a, b, (i + n - 1) % n) <= ConvexMargin || Distance(a, b, (i + 2) % n) <= ConvexMargin) return null;
+        }
+
+        var shell = new Coordinate[n + 1];
+        for (int i = 0; i < n; i++) shell[i] = grid.ToCoordinate(rounded[i]);
+        shell[n] = shell[0];
+        return new PolygonPart(shell);
+
+        double Distance(int a, int b, int c)
+        {
+            double dx = x[b] - x[a], dy = y[b] - y[a];
+            return Math.Abs(dx * (y[c] - y[a]) - dy * (x[c] - x[a])) / Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        static double Turn(double x0, double y0, double x1, double y1, double x2, double y2)
+        {
+            double ux = x1 - x0, uy = y1 - y0, vx = x2 - x1, vy = y2 - y1;
+            return Math.Atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+        }
+    }
+
+    /// <summary>
+    /// Distance in grid units beyond which a hot pixel (a half-open unit square around a rounded vertex, within √2 of the vertex) cannot
+    /// touch a line; with room for the rounding of the conversion to units.
+    /// </summary>
+    private const double ConvexMargin = 3;
+
     /// <summary>Whether a ring is completely eroded at distance <paramref name="r"/> (envelope narrower than 2r, as in JTS).</summary>
     private static bool ErodedCompletely(Coordinate[] ring, double r)
     {
@@ -161,8 +242,18 @@ public static class Buffering
     }
 
     private static PolygonPart Flat(PolygonPart part) =>
-        new(part.Shell.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray(),
+        IsFlat(part.Shell.Span) && part.Holes.ToArray().All(h => IsFlat(h.Span)) ? part : new(part.Shell.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray(),
             part.Holes.ToArray().Select(h => (ReadOnlyMemory<Coordinate>)h.ToArray().Select(c => new Coordinate(c.X, c.Y)).ToArray()).ToArray());
+
+    private static bool IsFlat(ReadOnlySpan<Coordinate> ring)
+    {
+        foreach (var c in ring)
+        {
+            if (c.HasZ || c.HasM) return false;
+        }
+
+        return true;
+    }
 
     internal static void Validate(double distance, BufferOptions options)
     {

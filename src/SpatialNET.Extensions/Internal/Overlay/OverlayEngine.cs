@@ -113,6 +113,7 @@ internal sealed class OverlayEngine
 
         var noded = SnapRoundingNoder.Node(strings, grid);
         var input = new List<GraphInput<GridPoint>>(noded.Count);
+        _sources.EnsureCapacity(noded.Count);
         foreach (var e in noded)
         {
             bool area = areaString[e.Source.Index];
@@ -219,13 +220,18 @@ internal sealed class OverlayEngine
             else if (area2 < 0) holes.Add(points);
         }
 
-        // Löcher dem kleinsten umgebenden Außenring zuordnen
+        // Löcher dem kleinsten umgebenden Außenring zuordnen. Liegt der erste Vertex eines Lochs außerhalb der Hülle eines
+        // Außenrings, ist er außen, und ContainsRing entscheidet an ihm: nicht enthalten (Vorfilter ohne Einfluss auf das Ergebnis).
         var assigned = shells.Select(_ => new List<GridPoint[]>()).ToList();
+        var bounds = holes.Count == 0 ? [] : shells.Select(s => Bounds(s.Ring)).ToArray();
         foreach (var hole in holes)
         {
             int best = -1;
+            var first = hole[0];
             for (int s = 0; s < shells.Count; s++)
             {
+                var b = bounds[s];
+                if (first.X < b.MinX || first.X > b.MaxX || first.Y < b.MinY || first.Y > b.MaxY) continue;
                 if (ContainsRing(shells[s].Ring, hole) && (best < 0 || shells[s].Area2 < shells[best].Area2)) best = s;
             }
 
@@ -278,6 +284,20 @@ internal sealed class OverlayEngine
         }
 
         if (stack.Count > 0) yield return stack;
+    }
+
+    private static (long MinX, long MinY, long MaxX, long MaxY) Bounds(GridPoint[] ring)
+    {
+        long minX = long.MaxValue, minY = long.MaxValue, maxX = long.MinValue, maxY = long.MinValue;
+        foreach (var p in ring)
+        {
+            minX = Math.Min(minX, p.X);
+            minY = Math.Min(minY, p.Y);
+            maxX = Math.Max(maxX, p.X);
+            maxY = Math.Max(maxY, p.Y);
+        }
+
+        return (minX, minY, maxX, maxY);
     }
 
     private static Int128 SignedArea2(GridPoint[] closed)
@@ -469,14 +489,18 @@ internal sealed class OverlayEngine
         if (_z is null)
         {
             _z = [];
-            foreach (var s in _sources.OrderBy(s => s.Operand))
+            for (int operand = 0; operand < 2; operand++)
             {
-                if (!double.IsNaN(s.ZA)) _z.TryAdd(s.A, s.ZA);
-                if (!double.IsNaN(s.ZB)) _z.TryAdd(s.B, s.ZB);
+                foreach (var s in _sources)
+                {
+                    if (s.Operand != operand) continue;
+                    if (!double.IsNaN(s.ZA)) _z.TryAdd(s.A, s.ZA);
+                    if (!double.IsNaN(s.ZB)) _z.TryAdd(s.B, s.ZB);
+                }
             }
         }
 
-        return _z.TryGetValue(p, out double z) ? z : double.NaN;
+        return _z.Count > 0 && _z.TryGetValue(p, out double z) ? z : double.NaN;
     }
 
     /// <summary>M at a node: from the first operand, otherwise from the second, like Z (ADR 0015); NaN = none.</summary>
@@ -485,13 +509,17 @@ internal sealed class OverlayEngine
         if (_m is null)
         {
             _m = [];
-            foreach (var s in _sources.OrderBy(s => s.Operand))
+            for (int operand = 0; operand < 2; operand++)
             {
-                if (!double.IsNaN(s.MA)) _m.TryAdd(s.A, s.MA);
-                if (!double.IsNaN(s.MB)) _m.TryAdd(s.B, s.MB);
+                foreach (var s in _sources)
+                {
+                    if (s.Operand != operand) continue;
+                    if (!double.IsNaN(s.MA)) _m.TryAdd(s.A, s.MA);
+                    if (!double.IsNaN(s.MB)) _m.TryAdd(s.B, s.MB);
+                }
             }
         }
 
-        return _m.TryGetValue(p, out double m) ? m : double.NaN;
+        return _m.Count > 0 && _m.TryGetValue(p, out double m) ? m : double.NaN;
     }
 }

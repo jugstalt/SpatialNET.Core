@@ -29,7 +29,7 @@ internal sealed class OffsetBuilder(BufferOptions options, double distance)
                 return [new(p.X + _radius, p.Y - _radius), new(p.X + _radius, p.Y + _radius), new(p.X - _radius, p.Y + _radius),
                         new(p.X - _radius, p.Y - _radius), new(p.X + _radius, p.Y - _radius)];
             default:
-                var ring = new List<Coordinate> { new(p.X + _radius, p.Y) };
+                var ring = new List<Coordinate>((int)(2 * Math.PI / Quantum) + 3) { new(p.X + _radius, p.Y) };
                 Fillet(ring, p, 0, 2 * Math.PI, 1, skipFirst: true);
                 ring.Add(ring[0]);
                 return ring.ToArray();

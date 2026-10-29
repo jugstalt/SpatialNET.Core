@@ -173,6 +173,49 @@ if (args.Contains("--quick-triangulation"))
     return;
 }
 
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-host → the cases of a host benchmark (gView), with allocations and a fingerprint of the results
+if (args.Contains("--quick-host"))
+{
+    GeometryFactory.Default = ImpGeometryFactory.Instance;
+    foreach (int vertices in new[] { 50, 2_000 })
+    {
+        var inputs = HostInputs.Create(vertices);
+        var filter = inputs.Filter.Prepare();
+        Report($"Contains   filter {vertices,5}", () => HostInputs.Contains(filter, inputs.Features));
+        Report($"Intersects filter {vertices,5}", () => HostInputs.Intersects(filter, inputs.Features));
+        if (vertices == 50)
+        {
+            Report("UnionAll 100 blobs", () => inputs.Union100.UnionAll(), Fingerprint);
+            Report("UnionAll 1000 blobs", () => inputs.Union1000.UnionAll(), Fingerprint);
+            Report("Clip 5000 vertices", () => inputs.Large.Clip(inputs.LargeEnvelope), Fingerprint);
+            Report("Clip 2000 small", () => inputs.Small.Select(p => p.Clip(inputs.MapEnvelope)).ToArray(), all => all.Aggregate(17L, (h, g) => h * 31 + Fingerprint(g)));
+            var cut = inputs.Small.Where(p => { var e = p.Envelope(); return e.Intersects(inputs.MapEnvelope) && !inputs.MapEnvelope.Contains(e); }).ToArray();
+            Report($"Clip {cut.Length} small (cut)", () => cut.Select(p => p.Clip(inputs.MapEnvelope)).ToArray(), all => all.Aggregate(17L, (h, g) => h * 31 + Fingerprint(g)));
+            Report("Buffer 100 points", () => inputs.Points.Select(p => p.Buffer(25, HostInputs.BufferSettings)).ToArray(), all => all.Aggregate(17L, (h, g) => h * 31 + Fingerprint(g)));
+        }
+    }
+
+    return;
+
+    static void Report<T>(string name, Func<T> action, Func<T, long>? fingerprint = null)
+    {
+        var result = action();
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        action();
+        double allocated = (GC.GetAllocatedBytesForCurrentThread() - before) / 1e6;
+        double ms = Measure(() => action());
+        string check = fingerprint is null ? $"{result}" : $"{fingerprint(result):X16}";
+        Console.WriteLine($"{name,-26} {ms,10:F3} ms  {allocated,10:F2} MB  result {check}");
+    }
+
+    static long Fingerprint(IGeometry2D g)
+    {
+        long h = 17;
+        foreach (var p in SpatialNET.Internal.GeometryAccess.AllPoints(g)) h = h * 31 + BitConverter.DoubleToInt64Bits(p.X) * 7 + BitConverter.DoubleToInt64Bits(p.Y);
+        return h;
+    }
+}
+
 if (args.Contains("--quick-unionall"))
 {
     GeometryFactory.Default = ImpGeometryFactory.Instance;

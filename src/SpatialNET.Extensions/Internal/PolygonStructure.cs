@@ -90,14 +90,34 @@ internal static class PolygonStructure
     /// </summary>
     public static List<Coordinate[]> CancelDuplicates(List<Coordinate[]> rings)
     {
-        var keys = rings.Select(Key).ToList();
-        var counts = keys.GroupBy(k => k).ToDictionary(g => g.Key, g => g.Count());
+        // Coincident rings have the same points: only rings whose point count and point hash collide need the exact key.
+        var hashes = new (int Count, long Hash)[rings.Count];
+        var collisions = new Dictionary<(int Count, long Hash), int>();
+        for (int i = 0; i < rings.Count; i++)
+        {
+            hashes[i] = PointHash(rings[i]);
+            collisions[hashes[i]] = collisions.GetValueOrDefault(hashes[i]) + 1;
+        }
+
+        if (collisions.Count == rings.Count)
+        {
+            return rings;
+        }
+
+        var keys = rings.Select((r, i) => collisions[hashes[i]] > 1 ? Key(r) : null).ToList();
+        var counts = keys.Where(k => k is not null).GroupBy(k => k!).ToDictionary(g => g.Key, g => g.Count());
         var seen = new Dictionary<string, int>();
         var result = new List<Coordinate[]>(rings.Count);
         for (int i = 0; i < rings.Count; i++)
         {
-            int count = counts[keys[i]];
-            int index = seen[keys[i]] = seen.GetValueOrDefault(keys[i]) + 1;
+            if (keys[i] is not { } key)
+            {
+                result.Add(rings[i]);
+                continue;
+            }
+
+            int count = counts[key];
+            int index = seen[key] = seen.GetValueOrDefault(key) + 1;
             if (count % 2 == 1 && index == count)
             {
                 result.Add(rings[i]); // bei ungerader Anzahl bleibt einer
@@ -105,6 +125,29 @@ internal static class PolygonStructure
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// The number of points of the open ring and a hash of their set, independent of start and direction: rings with the
+    /// same <see cref="Key"/> have the same value (a coordinate compares as in its round-trip text, every NaN alike).
+    /// </summary>
+    private static (int Count, long Hash) PointHash(Coordinate[] closed)
+    {
+        int count = Math.Max(0, closed.Length - 1);
+        long hash = 0;
+        for (int i = 0; i < count; i++)
+        {
+            long x = double.IsNaN(closed[i].X) ? 1 : BitConverter.DoubleToInt64Bits(closed[i].X);
+            long y = double.IsNaN(closed[i].Y) ? 1 : BitConverter.DoubleToInt64Bits(closed[i].Y);
+            unchecked
+            {
+                ulong mixed = (ulong)(x * -7046029254386353131L) ^ (ulong)(y * -4658895280553007687L);
+                mixed ^= mixed >> 29;
+                hash += (long)(mixed * 0xBF58476D1CE4E5B9UL);
+            }
+        }
+
+        return (count, hash);
     }
 
     private static string Key(Coordinate[] closed)
