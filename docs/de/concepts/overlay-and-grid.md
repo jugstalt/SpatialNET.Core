@@ -87,7 +87,7 @@ IPolygon2D all = parcels.UnionAll();   // zwei Teilflächen: die verschmolzene R
 var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Select(g => g.UnionAll());
 ```
 
-`UnionAll` gibt es für Polygone (mit `FillRule`), Polylinien und Multipunkte sowie allgemein für Geometrien gleicher Dimension. Jede Eingabe wird wie bei `Union` unter der Füllregel gelesen, leere Eingaben werden übersprungen, gemischte Dimensionen werfen `NotSupportedException`. Die Eingaben werden nach ihren Envelopes geordnet und in kleinen Gruppen Ebene für Ebene vereinigt, damit sich Nachbarn früh treffen. **Alle Schritte nutzen ein Gitter**, das einmal über alle Eingaben aufgelöst wird; die Gruppierung kann das Ergebnis deshalb nur um etwa eine Gitterzelle verändern. Dieselbe Folge liefert immer das identische Ergebnis; eine andere Reihenfolge liefert dieselbe Fläche bis auf diese Toleranz.
+`UnionAll` gibt es für Polygone (mit `FillRule`), Polylinien und Multipunkte sowie allgemein für Geometrien gleicher Dimension. Jede Eingabe wird wie bei `Union` unter der Füllregel gelesen, leere Eingaben werden übersprungen, gemischte Dimensionen werfen `NotSupportedException`. Polygone werden in einem Overlay aller Eingaben vereinigt ([ADR 0047](../../adr/0047-unionall-von-flaechen-in-einem-durchlauf.de.md)); Polylinien und Multipunkte werden nach ihren Envelopes geordnet und in kleinen Gruppen Ebene für Ebene vereinigt, damit sich Nachbarn früh treffen. **Es gilt ein Gitter**, das einmal über alle Eingaben aufgelöst wird. Dieselbe Folge liefert immer das identische Ergebnis; eine andere Reihenfolge liefert dieselbe Fläche, in den Vertices bis auf etwa eine Gitterzelle.
 
 ## Von Linien zu Flächen: Polygonize
 

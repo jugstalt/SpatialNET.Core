@@ -4,6 +4,8 @@ SpatialNET gets **`UnionAll`**, the union of many geometries (the "dissolve" of 
 
 *German version: [0018-unionall-kaskadiert-gemeinsames-gitter.de.md](0018-unionall-kaskadiert-gemeinsames-gitter.de.md)*
 
+> Polygons are united in one pass since [ADR 0047](0047-unionall-von-flaechen-in-einem-durchlauf.md); the cascade below applies to polylines and multipoints.
+
 ## Consequences
 
 - **Placement:** `UnionAll` in the static class `Overlays`, `SpatialNET.Extensions`, namespace `SpatialNET`. No new package. For the package validation this is an addition only.

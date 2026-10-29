@@ -87,7 +87,7 @@ IPolygon2D all = parcels.UnionAll();   // two parts: the merged row and the sepa
 var byOwner = parcels.GroupBy(p => p.Envelope().MinX < 20 ? "west" : "east").Select(g => g.UnionAll());
 ```
 
-`UnionAll` exists for polygons (with a `FillRule`), polylines and multipoints, and for geometries of equal dimension in general. Each input is read under the fill rule as in `Union`, empty inputs are skipped, and mixed dimensions throw `NotSupportedException`. It orders the inputs by their envelopes and unites them in small groups, level by level, so that neighbours meet early. **All steps use one grid**, resolved once over all inputs, so the grouping can change the result only by about one grid cell. The same sequence always gives the identical result; a different order gives the same area up to that tolerance.
+`UnionAll` exists for polygons (with a `FillRule`), polylines and multipoints, and for geometries of equal dimension in general. Each input is read under the fill rule as in `Union`, empty inputs are skipped, and mixed dimensions throw `NotSupportedException`. Polygons are united in one overlay of all inputs ([ADR 0047](../../adr/0047-unionall-von-flaechen-in-einem-durchlauf.md)); polylines and multipoints are ordered by their envelopes and united in small groups, level by level, so that neighbours meet early. **One grid is used**, resolved once over all inputs. The same sequence always gives the identical result; a different order gives the same area, up to about one grid cell in the vertices.
 
 ## From lines to areas: Polygonize
 

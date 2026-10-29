@@ -4,6 +4,8 @@ SpatialNET bekommt **`UnionAll`**, die Vereinigung vieler Geometrien (das „Dis
 
 *English version: [0018-unionall-kaskadiert-gemeinsames-gitter.md](0018-unionall-kaskadiert-gemeinsames-gitter.md)*
 
+> Polygone werden seit [ADR 0047](0047-unionall-von-flaechen-in-einem-durchlauf.de.md) in einem Durchlauf vereinigt; die Kaskade unten gilt für Polylinien und Multipunkte.
+
 ## Consequences
 
 - **Ort:** `UnionAll` in der statischen Klasse `Overlays`, `SpatialNET.Extensions`, Namespace `SpatialNET`. Kein neues Paket. Für die Package Validation ist das nur eine Ergänzung.
