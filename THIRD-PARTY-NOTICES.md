@@ -68,6 +68,17 @@ these projects.
   (Delaunator: Copyright (c) 2017, Mapbox; polylabel: Copyright (c) 2016, Mapbox)
 - Projects: <https://github.com/mapbox/delaunator>, <https://github.com/mapbox/polylabel>
 
+### Mapbox Vector Tile Specification
+
+The vector tile encoder and decoder (`Mvt`, `MvtGeometry`, `MvtTileBuilder` in `SpatialNET.IO`) implement the
+Mapbox Vector Tile Specification 2.1 from its text: the message and field numbers of its protobuf schema, the
+geometry commands and the winding rules. The `.proto` file was not copied; the protobuf codec is written by hand.
+The tests use the geometry examples of the specification and reproduce the expectations of the mvt-fixtures
+with their own protobuf builder; no fixture files are copied into the repository.
+
+- License of the specification: Creative Commons Attribution 3.0 United States (CC BY 3.0 US), Copyright (c) Mapbox
+- Projects: <https://github.com/mapbox/vector-tile-spec>, <https://github.com/mapbox/mvt-fixtures>
+
 ### Scientific methods (no license obligation, cited for attribution)
 
 - J. R. Shewchuk: *Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates*,

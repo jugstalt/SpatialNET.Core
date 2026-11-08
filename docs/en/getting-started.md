@@ -90,6 +90,8 @@ IGeometry2D fromWkb = Wkb.Read(wkb);                    // ISO and EWKB
 
 Reading always goes through the factory (parameter `factory`, otherwise `GeometryFactory.Default`). Geometries that are syntactically correct but geometrically invalid are accepted unchanged.
 
+For vector tiles (Mapbox Vector Tiles) of any tile grid see [Vector tiles (MVT)](concepts/vector-tiles.md).
+
 ## What is available
 
 | Area | Methods (extension methods in the namespace `SpatialNET`; the event tables and the triangulation are static methods and classes of that namespace) |

@@ -41,3 +41,5 @@
   href: event-tables.md
 - name: Triangulierung, Voronoi und Gelände
   href: triangulation-and-voronoi.md
+- name: Vektorkacheln (MVT)
+  href: vector-tiles.md

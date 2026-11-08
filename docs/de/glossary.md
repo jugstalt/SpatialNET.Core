@@ -54,6 +54,9 @@ Die verbindlichen Definitionen der Begriffe stehen im [GLOSSARY.md](https://gith
 | Bruchkante | break line (constraint) |
 | Höhenlinie | contour line (`Triangulation.Contour`) |
 | seitlicher Versatz | offset to the side (`Interpolate(distance, offset)`) |
+| Vektorkachel | vector tile (`MvtTile`, `MvtTileBuilder`) |
+| Kachelgitter | tile grid (`TileGrid`) |
+| Kachelkoordinaten | tile coordinates |
 
 ## Playground und Tests
 

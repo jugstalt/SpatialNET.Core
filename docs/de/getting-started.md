@@ -90,6 +90,8 @@ IGeometry2D fromWkb = Wkb.Read(wkb);                    // ISO und EWKB
 
 Gelesen wird immer über die Factory (Parameter `factory`, sonst `GeometryFactory.Default`). Syntaktisch korrekte, aber geometrisch ungültige Geometrien werden unverändert akzeptiert.
 
+Vektorkacheln (Mapbox Vector Tiles) für jedes Kachelgitter beschreibt [Vektorkacheln (MVT)](concepts/vector-tiles.md).
+
 ## Was es gibt
 
 | Bereich | Methoden (Extension-Methoden im Namespace `SpatialNET`; die Ereignistabellen und die Triangulierung sind statische Methoden und Klassen dieses Namespace) |

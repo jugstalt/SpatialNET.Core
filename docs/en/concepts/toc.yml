@@ -41,3 +41,5 @@
   href: event-tables.md
 - name: Triangulation, Voronoi and terrain
   href: triangulation-and-voronoi.md
+- name: Vector tiles (MVT)
+  href: vector-tiles.md

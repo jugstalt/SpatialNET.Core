@@ -92,3 +92,5 @@
   href: ../../adr/0046-fangen-an-ein-ziel.md
 - name: "0047 UnionAll of polygons in one pass"
   href: ../../adr/0047-unionall-von-flaechen-in-einem-durchlauf.md
+- name: "0048 Vector tiles (MVT) in SpatialNET.IO"
+  href: ../../adr/0048-vektorkacheln-mvt.md

@@ -199,6 +199,18 @@ _Avoid_: Fixen, Bereinigen
 Der Abstand des Rasters in Karteneinheiten, auf das ein Overlay alle Koordinaten seines Ergebnisses rundet.
 _Avoid_: Toleranz, Präzision, Epsilon, Scale
 
+**Vektorkachel**:
+Eine Kachel im Format Mapbox Vector Tile (MVT): je Kartenlayer ein MVT-Layer mit Features, deren Geometrie in ganzzahligen Kachelkoordinaten steht (`MvtTile`, `MvtTileBuilder`).
+_Avoid_: Vector Tile (im deutschen Text), PBF-Kachel
+
+**Kachelgitter**:
+Die Aufteilung der Ebene in Kacheln je Stufe: Ursprung, Ursprungsecke, Kachelgröße in Pixeln und eine Auflösung je Stufe, in einem beliebigen KBS (`TileGrid`).
+_Avoid_: Tiling-Schema, Matrix-Set
+
+**Kachelkoordinaten**:
+Die ganzzahligen Koordinaten innerhalb einer Vektorkachel, von 0 bis zum Extent (Vorgabe 4096), mit Y nach unten; Geometrie darf bis in den Puffer darüber hinausreichen.
+_Avoid_: Pixelkoordinaten, Bildschirmkoordinaten
+
 ### Playground
 
 **Playground**:

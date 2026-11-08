@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- Mapbox Vector Tiles (MVT 2.1) in `SpatialNET.IO`, without new dependencies (ADR 0048): `Mvt.Encode`/`Mvt.Decode` (hand-written protobuf, deduplicated keys and values, optional feature id, gzip helpers), `MvtGeometry` (MoveTo/LineTo/ClosePath commands), `TileGrid` for any CRS (origin upper left or lower left, resolutions or scales + dpi, the standard WebMercator grid and the detection of standard zooms) and `MvtTileBuilder`, which clips world geometries to the tile plus buffer, simplifies, rounds to the extent, drops collapsed parts and enforces the MVT winding. New concept page "Vector tiles (MVT)".
+
 ## [0.9.0-preview.1] - 2026-10-29
 
 ### Changed
