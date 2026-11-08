@@ -4,6 +4,12 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.10.0-preview.2] - 2026-11-08
+
+### Fixed
+
+- A stack overflow (process crash) when clipping or overlaying polygons with very large rings, for example `MvtTileBuilder` on a polygon of a few hundred thousand vertices: the union-find of the planar graph (and of `Validate`) was recursive, and its chains grow with the number of vertices. It is now iterative (path halving, the graph also unites by size). The Douglas-Peucker step of the topology-preserving `Simplify` (`preserveTopology: true`, `MvtTileOptions.PreserveTopology`) no longer recurses either. Regression tests run clip, union, validation, simplification and a vector tile on rings of 200,000 vertices on a thread with a 256 KB stack.
+
 ## [0.10.0-preview.1] - 2026-11-08
 
 ### Added
@@ -144,7 +150,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.10.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.10.0-preview.2...HEAD
+[0.10.0-preview.2]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.10.0-preview.1...v0.10.0-preview.2
 [0.10.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.9.0-preview.1...v0.10.0-preview.1
 [0.9.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.8.0-preview.1...v0.9.0-preview.1
 [0.8.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.7.0-preview.1...v0.8.0-preview.1

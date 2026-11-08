@@ -182,7 +182,18 @@ public static class Validation
                 return id;
             }
 
-            int Find(int x) => union[x] == x ? x : union[x] = Find(union[x]);
+            int Find(int x)
+            {
+                // iterativ mit Pfadhalbierung: Rekursion liefe bei langen Ketten über den Stack
+                while (union[x] != x)
+                {
+                    union[x] = union[union[x]];
+                    x = union[x];
+                }
+
+                return x;
+            }
+
             var linked = new HashSet<(int Ring, (double, double) Point)>();
             foreach (var ((r1, r2), points) in touches.OrderBy(t => t.Key))
             {

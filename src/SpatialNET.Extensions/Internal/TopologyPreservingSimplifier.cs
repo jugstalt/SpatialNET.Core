@@ -49,13 +49,32 @@ internal sealed class TopologyPreservingSimplifier(double tolerance)
         return result;
     }
 
-    private void SimplifySection(Line line, int i, int j, int depth)
+    /// <summary>
+    /// Douglas-Peucker over one section, iterative with an explicit stack (the left half before the right, as the recursion of JTS):
+    /// the depth can reach the number of vertices, which would overflow the call stack on large rings.
+    /// </summary>
+    private void SimplifySection(Line line, int first, int last, int startDepth)
     {
-        depth++;
+        var stack = new Stack<(int I, int J, int Depth)>();
+        stack.Push((first, last, startDepth));
+        while (stack.Count > 0)
+        {
+            var (i, j, depth) = stack.Pop();
+            if (SimplifyStep(line, i, j, depth + 1) is { } furthest)
+            {
+                stack.Push((furthest, j, depth + 1));
+                stack.Push((i, furthest, depth + 1));
+            }
+        }
+    }
+
+    /// <summary>One step of <see cref="SimplifySection"/>; returns the vertex to split at, or <c>null</c> if the section is done.</summary>
+    private int? SimplifyStep(Line line, int i, int j, int depth)
+    {
         if (i + 1 == j)
         {
             AddToResult(line, i, j);
-            return;
+            return null;
         }
 
         bool valid = true;
@@ -84,11 +103,10 @@ internal sealed class TopologyPreservingSimplifier(double tolerance)
         {
             for (int k = i; k < j; k++) _input.Remove((line, k));
             AddSegment(line, line.Points[i], line.Points[j]);
-            return;
+            return null;
         }
 
-        SimplifySection(line, i, furthest, depth);
-        SimplifySection(line, furthest, j, depth);
+        return furthest;
     }
 
     private void AddToResult(Line line, int i, int j)

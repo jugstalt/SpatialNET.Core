@@ -352,9 +352,29 @@ internal sealed class PlanarGraph<T> where T : struct, IExactPoint<T>
 
     private int[] Components(out int count)
     {
+        // Union-find iterativ (Pfadhalbierung, Vereinigung nach Größe): Rekursion liefe bei großen Ringen über den Stack.
         var parent = Enumerable.Range(0, Nodes.Count).ToArray();
-        int Find(int x) => parent[x] == x ? x : parent[x] = Find(parent[x]);
-        foreach (var e in Edges) parent[Find(e.A)] = Find(e.B);
+        var size = new int[Nodes.Count];
+        Array.Fill(size, 1);
+        int Find(int x)
+        {
+            while (parent[x] != x)
+            {
+                parent[x] = parent[parent[x]];
+                x = parent[x];
+            }
+
+            return x;
+        }
+
+        foreach (var e in Edges)
+        {
+            int a = Find(e.A), b = Find(e.B);
+            if (a == b) continue;
+            if (size[a] < size[b]) (a, b) = (b, a);
+            parent[b] = a;
+            size[a] += size[b];
+        }
 
         var ids = new Dictionary<int, int>();
         var component = new int[Edges.Count];
