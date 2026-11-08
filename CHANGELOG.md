@@ -4,6 +4,8 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.10.0-preview.1] - 2026-11-08
+
 ### Added
 
 - Mapbox Vector Tiles (MVT 2.1) in `SpatialNET.IO`, without new dependencies (ADR 0048): `Mvt.Encode`/`Mvt.Decode` (hand-written protobuf, deduplicated keys and values, optional feature id, gzip helpers), `MvtGeometry` (MoveTo/LineTo/ClosePath commands), `TileGrid` for any CRS (origin upper left or lower left, resolutions or scales + dpi, the standard WebMercator grid and the detection of standard zooms) and `MvtTileBuilder`, which clips world geometries to the tile plus buffer, simplifies, rounds to the extent, drops collapsed parts and enforces the MVT winding. New concept page "Vector tiles (MVT)".
@@ -142,7 +144,8 @@ First pre-release.
 - Bilingual documentation (English leading, German): README, getting started, host integration, concepts, glossary, architecture decision records; API reference generated with DocFX.
 - Continuous integration, documentation publishing and a tag-triggered release pipeline (GitHub Actions).
 
-[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.9.0-preview.1...HEAD
+[Unreleased]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.10.0-preview.1...HEAD
+[0.10.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.9.0-preview.1...v0.10.0-preview.1
 [0.9.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.8.0-preview.1...v0.9.0-preview.1
 [0.8.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.7.0-preview.1...v0.8.0-preview.1
 [0.7.0-preview.1]: https://github.com/jugstalt/SpatialNET.Core/compare/v0.6.0-preview.1...v0.7.0-preview.1

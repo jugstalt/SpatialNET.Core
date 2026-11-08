@@ -8,6 +8,94 @@ SpatialNET.IO.GeoJsonOptions.ZMode.init -> void
 SpatialNET.IO.MMode
 SpatialNET.IO.MMode.Auto = 0 -> SpatialNET.IO.MMode
 SpatialNET.IO.MMode.Never = 1 -> SpatialNET.IO.MMode
+SpatialNET.IO.Mvt
+SpatialNET.IO.MvtFeature
+SpatialNET.IO.MvtFeature.Attributes.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, SpatialNET.IO.MvtValue>>!
+SpatialNET.IO.MvtFeature.Attributes.init -> void
+SpatialNET.IO.MvtFeature.Geometry.get -> System.Collections.Generic.IReadOnlyList<uint>!
+SpatialNET.IO.MvtFeature.Geometry.init -> void
+SpatialNET.IO.MvtFeature.GeometryType.get -> SpatialNET.IO.MvtGeometryType
+SpatialNET.IO.MvtFeature.GeometryType.init -> void
+SpatialNET.IO.MvtFeature.Id.get -> ulong?
+SpatialNET.IO.MvtFeature.Id.init -> void
+SpatialNET.IO.MvtFeature.MvtFeature() -> void
+SpatialNET.IO.MvtFeature.ToGeometry(SpatialNET.IGeometryFactory? factory = null, SpatialNET.IO.MvtTileTransform? transform = null) -> SpatialNET.IGeometry2D!
+SpatialNET.IO.MvtGeometry
+SpatialNET.IO.MvtGeometryType
+SpatialNET.IO.MvtGeometryType.LineString = 2 -> SpatialNET.IO.MvtGeometryType
+SpatialNET.IO.MvtGeometryType.Point = 1 -> SpatialNET.IO.MvtGeometryType
+SpatialNET.IO.MvtGeometryType.Polygon = 3 -> SpatialNET.IO.MvtGeometryType
+SpatialNET.IO.MvtGeometryType.Unknown = 0 -> SpatialNET.IO.MvtGeometryType
+SpatialNET.IO.MvtLayer
+SpatialNET.IO.MvtLayer.Extent.get -> uint
+SpatialNET.IO.MvtLayer.Extent.init -> void
+SpatialNET.IO.MvtLayer.Features.get -> System.Collections.Generic.IList<SpatialNET.IO.MvtFeature!>!
+SpatialNET.IO.MvtLayer.MvtLayer(string! name) -> void
+SpatialNET.IO.MvtLayer.Name.get -> string!
+SpatialNET.IO.MvtLayer.Version.get -> uint
+SpatialNET.IO.MvtLayer.Version.init -> void
+SpatialNET.IO.MvtTile
+SpatialNET.IO.MvtTile.Layers.get -> System.Collections.Generic.IList<SpatialNET.IO.MvtLayer!>!
+SpatialNET.IO.MvtTile.MvtTile() -> void
+SpatialNET.IO.MvtTile.this[string! name].get -> SpatialNET.IO.MvtLayer?
+SpatialNET.IO.MvtTileBuilder
+SpatialNET.IO.MvtTileBuilder.AddFeature(string! layerName, SpatialNET.IGeometry2D! geometry, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? attributes = null, ulong? id = null) -> bool
+SpatialNET.IO.MvtTileBuilder.Build() -> SpatialNET.IO.MvtTile!
+SpatialNET.IO.MvtTileBuilder.ClipEnvelope.get -> SpatialNET.Envelope2D
+SpatialNET.IO.MvtTileBuilder.IsEmpty.get -> bool
+SpatialNET.IO.MvtTileBuilder.MvtTileBuilder(SpatialNET.IO.TileGrid! grid, int level, long row, long column, SpatialNET.IO.MvtTileOptions? options = null) -> void
+SpatialNET.IO.MvtTileBuilder.ToBytes(bool gzip = false) -> byte[]!
+SpatialNET.IO.MvtTileBuilder.ToTileGeometry(SpatialNET.IGeometry2D! geometry, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D?
+SpatialNET.IO.MvtTileBuilder.Transform.get -> SpatialNET.IO.MvtTileTransform!
+SpatialNET.IO.MvtTileOptions
+SpatialNET.IO.MvtTileOptions.Buffer.get -> double
+SpatialNET.IO.MvtTileOptions.Buffer.init -> void
+SpatialNET.IO.MvtTileOptions.Extent.get -> uint
+SpatialNET.IO.MvtTileOptions.Extent.init -> void
+SpatialNET.IO.MvtTileOptions.PreserveTopology.get -> bool
+SpatialNET.IO.MvtTileOptions.PreserveTopology.init -> void
+SpatialNET.IO.MvtTileOptions.SimplifyTolerance.get -> double
+SpatialNET.IO.MvtTileOptions.SimplifyTolerance.init -> void
+SpatialNET.IO.MvtTileTransform
+SpatialNET.IO.MvtTileTransform.BufferedEnvelope(double buffer) -> SpatialNET.Envelope2D
+SpatialNET.IO.MvtTileTransform.Extent.get -> uint
+SpatialNET.IO.MvtTileTransform.MvtTileTransform(SpatialNET.Envelope2D tileEnvelope, uint extent = 4096) -> void
+SpatialNET.IO.MvtTileTransform.MvtTileTransform(SpatialNET.IO.TileGrid! grid, int level, long row, long column, uint extent = 4096) -> void
+SpatialNET.IO.MvtTileTransform.TileEnvelope.get -> SpatialNET.Envelope2D
+SpatialNET.IO.MvtTileTransform.ToTile(SpatialNET.Coordinate world) -> SpatialNET.Coordinate
+SpatialNET.IO.MvtTileTransform.ToWorld(double x, double y) -> SpatialNET.Coordinate
+SpatialNET.IO.MvtTileTransform.UnitHeight.get -> double
+SpatialNET.IO.MvtTileTransform.UnitWidth.get -> double
+SpatialNET.IO.MvtValue
+SpatialNET.IO.MvtValue.Kind.get -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValue.MvtValue() -> void
+SpatialNET.IO.MvtValue.Value.get -> object!
+SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.Bool = 7 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.Double = 3 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.Float = 2 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.Int = 4 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.SInt = 6 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.String = 1 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.MvtValueKind.UInt = 5 -> SpatialNET.IO.MvtValueKind
+SpatialNET.IO.TileGrid
+SpatialNET.IO.TileGrid.LevelCount.get -> int
+SpatialNET.IO.TileGrid.Origin.get -> SpatialNET.IO.TileOrigin
+SpatialNET.IO.TileGrid.OriginX.get -> double
+SpatialNET.IO.TileGrid.OriginY.get -> double
+SpatialNET.IO.TileGrid.Resolution(int level) -> double
+SpatialNET.IO.TileGrid.Resolutions.get -> System.Collections.Generic.IReadOnlyList<double>!
+SpatialNET.IO.TileGrid.Scale(int level, double dpi = 96) -> double
+SpatialNET.IO.TileGrid.TileAt(int level, double x, double y) -> (long Row, long Column)
+SpatialNET.IO.TileGrid.TileEnvelope(int level, long row, long column) -> SpatialNET.Envelope2D
+SpatialNET.IO.TileGrid.TileGrid(double originX, double originY, System.Collections.Generic.IEnumerable<double>! resolutions, int tileWidth = 256, int tileHeight = 256, SpatialNET.IO.TileOrigin origin = SpatialNET.IO.TileOrigin.UpperLeft) -> void
+SpatialNET.IO.TileGrid.TileHeight.get -> int
+SpatialNET.IO.TileGrid.TileRange(int level, SpatialNET.Envelope2D envelope) -> (long MinRow, long MinColumn, long MaxRow, long MaxColumn)
+SpatialNET.IO.TileGrid.TileWidth.get -> int
+SpatialNET.IO.TileGrid.TryGetWebMercatorZoom(int level, out int zoom, double relativeTolerance = 1E-06) -> bool
+SpatialNET.IO.TileOrigin
+SpatialNET.IO.TileOrigin.LowerLeft = 1 -> SpatialNET.IO.TileOrigin
+SpatialNET.IO.TileOrigin.UpperLeft = 0 -> SpatialNET.IO.TileOrigin
 SpatialNET.IO.Wkb
 SpatialNET.IO.WkbOptions
 SpatialNET.IO.WkbOptions.MMode.get -> SpatialNET.IO.MMode
@@ -24,6 +112,13 @@ SpatialNET.IO.ZMode
 SpatialNET.IO.ZMode.Always = 1 -> SpatialNET.IO.ZMode
 SpatialNET.IO.ZMode.Auto = 0 -> SpatialNET.IO.ZMode
 SpatialNET.IO.ZMode.Never = 2 -> SpatialNET.IO.ZMode
+const SpatialNET.IO.MvtGeometry.ClosePath = 7 -> int
+const SpatialNET.IO.MvtGeometry.LineTo = 2 -> int
+const SpatialNET.IO.MvtGeometry.MoveTo = 1 -> int
+const SpatialNET.IO.MvtLayer.DefaultExtent = 4096 -> uint
+const SpatialNET.IO.TileGrid.MetersPerInch = 0.0254 -> double
+const SpatialNET.IO.TileGrid.WebMercatorHalfExtent = 20037508.342789244 -> double
+override SpatialNET.IO.MvtValue.ToString() -> string!
 static SpatialNET.IO.GeoJson.Read(System.IO.Stream! stream, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.IO.GeoJson.Read(System.ReadOnlySpan<byte> utf8, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.IO.GeoJson.Read(string! json, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
@@ -35,6 +130,33 @@ static SpatialNET.IO.GeoJson.ToFeatureCollection(System.Collections.Generic.IEnu
 static SpatialNET.IO.GeoJson.ToGeoJson(this SpatialNET.IGeometry2D! geometry, SpatialNET.IO.GeoJsonOptions? options = null) -> string!
 static SpatialNET.IO.GeoJson.WriteTo(this SpatialNET.IGeometry2D! geometry, System.Text.Json.Utf8JsonWriter! writer, SpatialNET.IO.GeoJsonOptions? options = null) -> void
 static SpatialNET.IO.GeoJsonOptions.Default.get -> SpatialNET.IO.GeoJsonOptions!
+static SpatialNET.IO.Mvt.Decode(System.ReadOnlySpan<byte> data) -> SpatialNET.IO.MvtTile!
+static SpatialNET.IO.Mvt.Encode(SpatialNET.IO.MvtTile! tile) -> byte[]!
+static SpatialNET.IO.Mvt.Gunzip(System.ReadOnlySpan<byte> data) -> byte[]!
+static SpatialNET.IO.Mvt.Gzip(System.ReadOnlySpan<byte> data, System.IO.Compression.CompressionLevel level = System.IO.Compression.CompressionLevel.Optimal) -> byte[]!
+static SpatialNET.IO.Mvt.IsGzip(System.ReadOnlySpan<byte> data) -> bool
+static SpatialNET.IO.MvtFeature.Create(SpatialNET.IGeometry2D! tileGeometry, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? attributes = null, ulong? id = null) -> SpatialNET.IO.MvtFeature?
+static SpatialNET.IO.MvtGeometry.Command(int id, int count) -> uint
+static SpatialNET.IO.MvtGeometry.Decode(SpatialNET.IO.MvtGeometryType type, System.Collections.Generic.IReadOnlyList<uint>! commands, SpatialNET.IGeometryFactory? factory = null, SpatialNET.IO.MvtTileTransform? transform = null) -> SpatialNET.IGeometry2D!
+static SpatialNET.IO.MvtGeometry.Encode(SpatialNET.IGeometry2D! tileGeometry) -> (SpatialNET.IO.MvtGeometryType Type, uint[]! Commands)
+static SpatialNET.IO.MvtGeometry.UnZigZag(uint value) -> int
+static SpatialNET.IO.MvtGeometry.ZigZag(int value) -> uint
+static SpatialNET.IO.MvtTileOptions.Default.get -> SpatialNET.IO.MvtTileOptions!
+static SpatialNET.IO.MvtValue.Bool(bool value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.Double(double value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.Float(float value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.From(object! value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.Int(long value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.SInt(long value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.String(string! value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.MvtValue.UInt(ulong value) -> SpatialNET.IO.MvtValue
+static SpatialNET.IO.TileGrid.FromScales(double originX, double originY, System.Collections.Generic.IEnumerable<double>! scales, double dpi = 96, int tileWidth = 256, int tileHeight = 256, SpatialNET.IO.TileOrigin origin = SpatialNET.IO.TileOrigin.UpperLeft) -> SpatialNET.IO.TileGrid!
+static SpatialNET.IO.TileGrid.ResolutionToScale(double resolution, double dpi = 96) -> double
+static SpatialNET.IO.TileGrid.ScaleToResolution(double scale, double dpi = 96) -> double
+static SpatialNET.IO.TileGrid.TryGetWebMercatorZoom(double scale, out int zoom, double dpi = 96, double relativeTolerance = 1E-06) -> bool
+static SpatialNET.IO.TileGrid.TryGetWebMercatorZoomForResolution(double resolution, out int zoom, double relativeTolerance = 1E-06) -> bool
+static SpatialNET.IO.TileGrid.WebMercator(int maxZoom = 24) -> SpatialNET.IO.TileGrid!
+static SpatialNET.IO.TileGrid.WebMercatorResolution(int zoom) -> double
 static SpatialNET.IO.Wkb.Read(System.ReadOnlySpan<byte> wkb, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IGeometry2D!
 static SpatialNET.IO.Wkb.Read<T>(System.ReadOnlySpan<byte> wkb, SpatialNET.IGeometryFactory? factory = null) -> T
 static SpatialNET.IO.Wkb.ReadAll(System.ReadOnlySpan<byte> wkb, SpatialNET.IGeometryFactory? factory = null) -> System.Collections.Generic.IReadOnlyList<SpatialNET.IGeometry2D!>!
