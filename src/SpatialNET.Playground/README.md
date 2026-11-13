@@ -22,3 +22,11 @@ Then open `http://localhost:5003`.
 - **WKT and M:** every input has a WKT field (paste WKT, also with Z and M, or copy what you drew), and every result shows its WKT
   with a copy button. GeoJSON cannot carry M, so the M algorithms (`InterpolateByM`, `ProjectToM`, `SubstringByM`) get their
   data through WKT. Editing a geometry on the map drops its M.
+
+## Network view
+
+`http://localhost:5003/network.html` (link "Network view" in the main page; [ADR 0050](../../docs/adr/0050-netzwerk-bauen-verknoten-teilen-shards.md)) is a page of its own, not a descriptor, because its input is a set of lines and points.
+
+- **Input:** draw points (type Trafo 25, Kasten 15, Schalter 17, Kunde 16) and lines (Kabel 11, Freileitung 12, Kastenverbinder 13), paste WKT (one geometry per line), or load a GeoJSON file. The type of every element can be changed in the list. "Example" loads the cable of the concept page (a transformer, a cable with a switch in the middle, a connector ending on it as a T junction, a customer) in local planar mode.
+- **Build:** the options are the tolerance (in metres of the auto-UTM zone, in units in local mode) and `SplitAtNodes`, `SplitAtLineEnds`, `NodeAtCrossings`. `POST /api/network/build` projects like the other algorithms, runs `NetworkBuilder` into an `InMemoryGraph` and returns the nodes, the edges (each with its piece of the source line) and `BuildResult.Diagnostics`. Real nodes are filled circles in the colour of their type, helper nodes are small hollow circles, edges are coloured by type. Diagnostics and, when the build throws a `NetworkBuildException`, the conflicts are listed; a click zooms to their place. Any change of the input drops the result.
+- **Shortest path:** click two nodes; `POST /api/network/path` rebuilds the network (the server keeps no state), runs `ShortestPath` and draws the way with `NetworkPathGeometry.ToPolyline` and its total length. Shift-click or right-click blocks a node for the search (`NetworkState.Block`: it is reached, but not passed).

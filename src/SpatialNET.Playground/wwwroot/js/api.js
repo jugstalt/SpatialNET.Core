@@ -22,3 +22,15 @@ export const convert = request =>
 /** Reads a GeoJSON file on the server (GeoJson.ReadAll) → list of geometries. */
 export const importGeoJson = file =>
   fetch('api/import', { method: 'POST', headers: { 'Content-Type': 'application/geo+json' }, body: file }).then(json);
+
+/** The fixed node and edge types of the network view (ADR 0050) → {nodes:[{id,name}], edges:[{id,name}]}. */
+export const networkTypes = () => fetch('api/network/types').then(json);
+
+const post = (url, request) =>
+  fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request) }).then(json);
+
+/** Builds a network from points and lines → {ok, nodes, edges, diagnostics} or {ok: false, error, conflicts}. */
+export const networkBuild = request => post('api/network/build', request);
+
+/** Shortest path between two node ids (the request of the build plus from, to and blocked) → {found, cost, geometry, edges}. */
+export const networkPath = request => post('api/network/path', request);

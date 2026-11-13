@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpatialNET Playground – Network</title>
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <link rel="stylesheet" href="lib/leaflet-geoman/leaflet-geoman.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/network.css">
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="lib/leaflet-geoman/leaflet-geoman.min.js"></script>
+  <script type="module" src="js/network.js"></script>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Input: draw or load points and lines, options, build (ADR 0050) -->
+  <section class="palette net-panel" aria-label="Network">
+    <div class="net-head"><b>Network</b> <a href="index.html" class="muted">← Algorithms</a></div>
+    <div class="panel">
+      <div class="field"><label>Mode <select id="mode"><option value="geo">Map (WGS84)</option><option value="local">Local planar</option></select></label></div>
+
+      <h3>Draw</h3>
+      <div class="input-row"><button id="draw-point">Point</button> <select id="point-type"></select></div>
+      <div class="input-row"><button id="draw-line">Line</button> <select id="line-type"></select></div>
+
+      <h3>Load</h3>
+      <textarea id="wkt" rows="3" placeholder="WKT, one geometry per line (POINT, LINESTRING …)"></textarea>
+      <div class="input-row">
+        <button id="load-wkt">Add WKT</button>
+        <label class="file">GeoJSON … <input type="file" id="load-file" accept=".json,.geojson,application/geo+json,application/json" hidden></label>
+        <button id="example">Example</button>
+        <button id="clear">Clear</button>
+      </div>
+
+      <h3>Options</h3>
+      <div class="field"><label for="tolerance">Tolerance <span class="muted" id="tol-unit">(m)</span></label> <input id="tolerance" type="number" min="0" step="any" value="0.05"></div>
+      <label class="opt"><input type="checkbox" id="split-nodes" checked> SplitAtNodes</label>
+      <label class="opt"><input type="checkbox" id="split-ends" checked> SplitAtLineEnds</label>
+      <label class="opt"><input type="checkbox" id="crossings"> NodeAtCrossings</label>
+      <div class="input-row"><button id="build" class="primary">Build</button> <span class="muted" id="build-state"></span></div>
+
+      <h3>Elements <span id="count" class="muted"></span></h3>
+      <div id="elements" class="elements"></div>
+    </div>
+  </section>
+
+  <!-- Result: counts, diagnostics and conflicts, path -->
+  <aside class="chips">
+    <div class="chip" id="kbs-label"></div>
+    <div class="chip legend" id="legend"></div>
+    <div class="chip result" id="result"></div>
+    <div class="chip result" id="path"></div>
+    <div class="chip error" id="error" hidden></div>
+  </aside>
+</body>
+</html>

@@ -130,7 +130,7 @@ public sealed class RunService
     }
 
     /// <summary>The centre of the common envelope of all inputs in WGS84; it decides the auto-UTM zone (ADR 0010).</summary>
-    private static Coordinate Center(IEnumerable<IGeometry2D> inputs)
+    internal static Coordinate Center(IEnumerable<IGeometry2D> inputs)
     {
         var envelopes = inputs.Select(g => g.Envelope()).Where(e => !e.IsEmpty).ToList();
         if (envelopes.Count == 0)

@@ -22,3 +22,11 @@ Dann `http://localhost:5003` öffnen.
 - **WKT und M:** Jede Eingabe hat ein WKT-Feld (WKT einfügen, auch mit Z und M, oder das Gezeichnete kopieren), und jedes
   Ergebnis zeigt sein WKT mit einer Kopieren-Schaltfläche. GeoJSON kann kein M tragen, deshalb bekommen die M-Algorithmen
   (`InterpolateByM`, `ProjectToM`, `SubstringByM`) ihre Daten über WKT. Eine Geometrie auf der Karte zu bearbeiten verwirft ihr M.
+
+## Netzwerk-Ansicht
+
+`http://localhost:5003/network.html` (Link „Network view“ auf der Hauptseite; [ADR 0050](../../docs/adr/0050-netzwerk-bauen-verknoten-teilen-shards.md)) ist eine eigene Seite, kein Deskriptor, weil ihre Eingabe eine Menge von Linien und Punkten ist.
+
+- **Eingabe:** Punkte (Typ Trafo 25, Kasten 15, Schalter 17, Kunde 16) und Linien (Kabel 11, Freileitung 12, Kastenverbinder 13) zeichnen, WKT einfügen (eine Geometrie pro Zeile) oder eine GeoJSON-Datei laden. Den Typ jedes Elements ändert man in der Liste. „Example“ lädt das Beispiel der Konzeptseite (ein Trafo, ein Kabel mit einem Schalter in der Mitte, ein Verbinder, der als T-Kreuzung darauf endet, ein Kunde) im lokal planaren Modus.
+- **Bauen:** Optionen sind die Toleranz (in Metern der Auto-UTM-Zone, im lokalen Modus in Einheiten) sowie `SplitAtNodes`, `SplitAtLineEnds`, `NodeAtCrossings`. `POST /api/network/build` projiziert wie die anderen Algorithmen, lässt `NetworkBuilder` in einen `InMemoryGraph` laufen und liefert die Knoten, die Kanten (jede mit ihrem Stück der Quelllinie) und `BuildResult.Diagnostics`. Echte Knoten sind gefüllte Kreise in der Farbe ihres Typs, Hilfsknoten kleine hohle Kreise, Kanten sind nach Typ gefärbt. Diagnosen und, wenn der Bau eine `NetworkBuildException` wirft, die Konflikte werden aufgelistet; ein Klick zoomt an ihre Stelle. Jede Änderung der Eingabe verwirft das Ergebnis.
+- **Kürzester Weg:** zwei Knoten anklicken; `POST /api/network/path` baut das Netz neu (der Server hält keinen Zustand), führt `ShortestPath` aus und zeichnet den Weg mit `NetworkPathGeometry.ToPolyline` samt Gesamtlänge. Shift-Klick oder Rechtsklick sperrt einen Knoten für die Suche (`NetworkState.Block`: er wird erreicht, aber nicht durchquert).

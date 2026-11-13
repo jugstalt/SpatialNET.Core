@@ -3,12 +3,14 @@ using System.Text.Json.Nodes;
 using SpatialNET;
 using SpatialNET.Imp;
 using SpatialNET.IO;
+using SpatialNET.Network;
 using SpatialNET.Playground.Algorithms;
 using SpatialNET.Playground.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton(new FixtureStore(FixtureStore.DefaultRoot));
 builder.Services.AddSingleton<RunService>();
+builder.Services.AddSingleton<NetworkService>();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 
 var app = builder.Build();
@@ -74,6 +76,25 @@ app.MapPost("/api/convert", (ConvertRequest request) =>
         return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
     }
 });
+
+// The network view (ADR 0050): not a descriptor, because its input is a set of lines and points.
+app.MapGet("/api/network/types", () => Results.Json(NetworkService.Types()));
+
+app.MapPost("/api/network/build", (NetworkRequest request, NetworkService service) => NetworkResult(() => service.Build(request)));
+
+app.MapPost("/api/network/path", (NetworkRequest request, NetworkService service) => NetworkResult(() => service.Path(request)));
+
+static IResult NetworkResult(Func<JsonObject> action)
+{
+    try
+    {
+        return Results.Json(action());
+    }
+    catch (Exception e) when (e is ArgumentException or InvalidGraphException or InvalidOperationException)
+    {
+        return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status400BadRequest);
+    }
+}
 
 app.Run();
 
