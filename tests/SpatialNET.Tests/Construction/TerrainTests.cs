@@ -204,6 +204,50 @@ public class TerrainTests
     }
 
     [Fact]
+    [Covers("Gradient")]
+    [Covers("InterpolateZ")]
+    public void A_sliver_with_a_very_short_side_has_a_plane()
+    {
+        // found by the property test above (CsCheck seed 90BfNPv0ihng): from the corner (1 20), opposite the side of length 7e-23, the
+        // two long differences are parallel in double precision and the determinant cancelled to 0, so the triangle had no plane
+        var t = Triangulation.FromPoints(G("MULTIPOINT Z ((1 20 -17), (0 0 3), (6.767000000000001E-23 5.649999999999999E-65 3))"));
+
+        Assert.Equal(1, t.TriangleCount);
+        var (dx, dy) = t.Gradient(0);
+        Assert.Equal(0, dx, 1e-9);                                     // z = 3 - y, up to the tilt of the short side (1e-42)
+        Assert.Equal(-1, dy, 1e-9);
+        Assert.Equal(-7, t.InterpolateZ(new Coordinate(0.5, 10)), 1e-9);
+        Assert.Equal(3, t.InterpolateZ(new Coordinate(1e-23, 1e-60)), 1e-9);   // inside, just above the short side
+    }
+
+    [Fact]
+    [Covers("Drape")]
+    public void A_line_that_ends_in_a_sliver_at_a_corner_keeps_its_end()
+    {
+        // the case of CsCheck seed 90BfNPv0ihng: coordinates near the smallest doubles put a sliver at the corner (0 0), in which the line
+        // ends; its plane came out NaN, so the last stretch of the line was taken to be without height and left out
+        Coordinate[] scattered =
+        [
+            new(3, 2.0200000000000002E-54), new(45.03858582239968, 99), new(16, 2.3550000000000002E-50), new(52.733333333333334, 6.647E-64),
+            new(52, 42.02429130030674), new(97, 5.517E-71), new(51, 0.0003898), new(96, 91), new(8, 92.53663133049375),
+            new(41.96, 4.3694274439775285), new(1, 20), new(13, 75.55607072299858), new(9.726E-25, 91), new(44.64168190843094, 5.560999999999999E-46),
+            new(54.31165997324149, 0), new(84.38095238095238, 81), new(94.27412004959382, 8.113E-29), new(17.960467862733708, 25.05000266260194),
+            new(7.48396764290176, 38), new(4.169E-16, 32), new(44.62545458771899, 35.8), new(4.899, 91.72927739551446),
+            new(91.73913043478261, 20.361868693158854), new(5.002E-91, 47.840660160595945), new(33.47222222222222, 40.906480121251604),
+            new(6.767000000000001E-23, 5.649999999999999E-65),
+        ];
+        var t = Plane(scattered, 2, -1, 3);
+        Coordinate p = new(55.08553334566233, 5.85E-57), q = new(2.5099999999999997E-21, 1.55E-93), r = new(9.125E-56, 3.1199999999999995E-73);
+
+        var draped = t.Drape(F.CreatePolyline([new[] { p, q, r }], null), F);
+
+        Assert.Equal(1, draped.PathCount);
+        Assert.Equal((p.X, p.Y), (draped[0][0].X, draped[0][0].Y));
+        Assert.Equal((r.X, r.Y), (draped[0][draped[0].PointCount - 1].X, draped[0][draped[0].PointCount - 1].Y));
+        Assert.All(Enumerable.Range(0, t.TriangleCount), i => Assert.False(double.IsNaN(t.Gradient(i).Dx)));
+    }
+
+    [Fact]
     [Covers("Drape")]
     public void A_line_gets_a_vertex_at_every_edge_it_crosses_and_the_height_between_is_linear()
     {

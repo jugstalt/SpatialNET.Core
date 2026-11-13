@@ -23,17 +23,18 @@ public sealed partial class Triangulation
 
     private (double Dx, double Dy) GradientOf(int t)
     {
-        var a = _vertices[_triangles[3 * t]];
-        var b = _vertices[_triangles[3 * t + 1]];
-        var c = _vertices[_triangles[3 * t + 2]];
+        // the differences are taken to a, the corner opposite the longest side, and scaled to about 1 against underflow (see CornersFromApex)
+        var (a, b, c) = CornersFromApex(t);
         if (!a.HasZ || !b.HasZ || !c.HasZ)
         {
             return (double.NaN, double.NaN);
         }
 
-        double det = (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
-        return (((b.Z - a.Z) * (c.Y - a.Y) - (c.Z - a.Z) * (b.Y - a.Y)) / det,
-                ((c.Z - a.Z) * (b.X - a.X) - (b.Z - a.Z) * (c.X - a.X)) / det);
+        double s = Math.Max(Math.Max(Math.Abs(b.X - a.X), Math.Abs(b.Y - a.Y)), Math.Max(Math.Abs(c.X - a.X), Math.Abs(c.Y - a.Y)));
+        double bx = (b.X - a.X) / s, by = (b.Y - a.Y) / s, cx = (c.X - a.X) / s, cy = (c.Y - a.Y) / s;
+        double det = bx * cy - cx * by;
+        return (((b.Z - a.Z) * cy - (c.Z - a.Z) * by) / det / s,
+                ((c.Z - a.Z) * bx - (b.Z - a.Z) * cx) / det / s);
     }
 
     /// <summary>

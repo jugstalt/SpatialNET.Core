@@ -275,6 +275,21 @@ public sealed partial class Triangulation
         return (_triangles[3 * triangle], _triangles[3 * triangle + 1], _triangles[3 * triangle + 2]);
     }
 
+    /// <summary>
+    /// The corners of a triangle, counter-clockwise, starting at the corner opposite its longest side. The plane of the triangle is computed from
+    /// the differences to that corner: it lies on the two shorter sides, so their cross product keeps its precision. Taken from the corner opposite
+    /// a very short side, the two long differences are almost parallel and their cross product cancels, for a sliver down to zero.
+    /// </summary>
+    private (Coordinate A, Coordinate B, Coordinate C) CornersFromApex(int t)
+    {
+        var p = _vertices[_triangles[3 * t]];
+        var q = _vertices[_triangles[3 * t + 1]];
+        var r = _vertices[_triangles[3 * t + 2]];
+        static double Side(Coordinate u, Coordinate v) => Math.Max(Math.Abs(u.X - v.X), Math.Abs(u.Y - v.Y));
+        double qr = Side(q, r), rp = Side(r, p), pq = Side(p, q);
+        return qr >= rp && qr >= pq ? (p, q, r) : rp >= pq ? (q, r, p) : (r, p, q);
+    }
+
     /// <summary>The triangle on the other side of the edge from vertex <paramref name="side"/> to vertex <paramref name="side"/> + 1 of a triangle.</summary>
     /// <param name="triangle">The triangle.</param>
     /// <param name="side">0, 1 or 2.</param>
@@ -375,17 +390,19 @@ public sealed partial class Triangulation
             return double.NaN;
         }
 
-        var a = _vertices[_triangles[3 * t]];
-        var b = _vertices[_triangles[3 * t + 1]];
-        var c = _vertices[_triangles[3 * t + 2]];
+        // the differences are taken to c, the corner opposite the longest side, and scaled to about 1 against underflow (see CornersFromApex)
+        var (c, a, b) = CornersFromApex(t);
         if (!a.HasZ || !b.HasZ || !c.HasZ)
         {
             return double.NaN;
         }
 
-        double det = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
-        double wa = ((b.Y - c.Y) * (point.X - c.X) + (c.X - b.X) * (point.Y - c.Y)) / det;
-        double wb = ((c.Y - a.Y) * (point.X - c.X) + (a.X - c.X) * (point.Y - c.Y)) / det;
+        double s = Math.Max(Math.Max(Math.Abs(a.X - c.X), Math.Abs(a.Y - c.Y)), Math.Max(Math.Abs(b.X - c.X), Math.Abs(b.Y - c.Y)));
+        double ax = (a.X - c.X) / s, ay = (a.Y - c.Y) / s, bx = (b.X - c.X) / s, by = (b.Y - c.Y) / s;
+        double px = (point.X - c.X) / s, py = (point.Y - c.Y) / s;
+        double det = ax * by - ay * bx;
+        double wa = (by * px - bx * py) / det;
+        double wb = (ax * py - ay * px) / det;
         double wc = 1 - wa - wb;
         return wa * a.Z + wb * b.Z + wc * c.Z;
     }
