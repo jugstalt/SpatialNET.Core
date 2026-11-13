@@ -22,7 +22,8 @@ public sealed record NetworkElement(JsonElement? Geometry, int Type);
 /// <param name="Local">Local coordinates: no projection.</param>
 /// <param name="From">Path only: the id of the start node.</param>
 /// <param name="To">Path only: the id of the end node.</param>
-/// <param name="Blocked">Path only: ids of nodes that are blocked for this search (<see cref="NetworkState{TNodeId, TEdgeId}.Block"/>).</param>
+/// <param name="Blocked">Path and supply: ids of nodes that are blocked for this search (<see cref="NetworkState{TNodeId, TEdgeId}.Block"/>).</param>
+/// <param name="Sources">Supply only: the ids of the nodes that are sources (ADR 0051); the sinks are the nodes of the customer type.</param>
 public sealed record NetworkRequest(
     List<NetworkElement>? Points,
     List<NetworkElement>? Lines,
@@ -34,11 +35,15 @@ public sealed record NetworkRequest(
     bool Local = false,
     string? From = null,
     string? To = null,
-    List<string>? Blocked = null);
+    List<string>? Blocked = null,
+    List<string>? Sources = null);
 
 /// <summary>The fixed node and edge types of the network view (a small table of a utility network).</summary>
 public static class NetworkTypes
 {
+    /// <summary>The node type of the sinks of a supply trace (ADR 0051).</summary>
+    public const int Customer = 16;
+
     /// <summary>The node types a point can get.</summary>
     public static IReadOnlyList<(int Id, string Name)> Nodes { get; } =
         [(25, "Trafo"), (15, "Kasten"), (17, "Schalter"), (16, "Kunde")];
@@ -152,6 +157,60 @@ public sealed class NetworkService
         response["edges"] = new JsonArray(path.Steps.Select(s => (JsonNode)s.Edge).ToArray());
         response["geometry"] = line.PathCount == 0 ? null : net.Geo(line);
         return response;
+    }
+
+    /// <summary>
+    /// The supply areas of the marked sources and the supply of every customer (ADR 0051): <see cref="NetworkAnalysis.TraceEdges{TNodeId, TEdgeId}"/>
+    /// gives the edges of each area, <see cref="NetworkAnalysis.Supply{TNodeId, TEdgeId}"/> the sources of each customer.
+    /// </summary>
+    /// <exception cref="ArgumentException">The request is invalid, no source is marked, or a source id is not in the network.</exception>
+    public JsonObject Supply(NetworkRequest request)
+    {
+        var sources = (request.Sources ?? []).Distinct(StringComparer.Ordinal).ToList();
+        if (sources.Count == 0)
+        {
+            throw new ArgumentException("Mark at least one node as a source.");
+        }
+
+        var net = Prepare(request, out var failure);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        var state = new NetworkState<string, string>();
+        foreach (string id in request.Blocked ?? [])
+        {
+            state = state.Block(id);
+        }
+
+        var options = new TraversalOptions<string, string> { State = state };
+        var areas = sources.ToDictionary(s => s, _ => new List<string>(), StringComparer.Ordinal);
+        foreach (var traced in net!.Graph.TraceEdges(sources, options))
+        {
+            areas[traced.Source].Add(traced.Edge.Id);
+        }
+
+        var nodes = net.Graph.Nodes.ToDictionary(n => n.Id, StringComparer.Ordinal);
+        var sinks = net.Graph.Nodes.Where(n => n.TypeId == NetworkTypes.Customer).Select(n => n.Id).ToList();
+        var supplies = net.Graph.Supply(sources, sinks, options).ToList();
+        return new JsonObject
+        {
+            ["ok"] = true,
+            ["unit"] = net.Projection?.Unit,
+            ["sources"] = new JsonArray(sources.Select(s => (JsonNode)new JsonObject
+            {
+                ["id"] = s,
+                ["blocked"] = state.IsBlocked(nodes[s]),
+                ["edges"] = new JsonArray(areas[s].Select(e => (JsonNode)e).ToArray()),
+            }).ToArray()),
+            ["sinks"] = new JsonArray(supplies.Select(x => (JsonNode)new JsonObject
+            {
+                ["id"] = x.Sink,
+                ["geometry"] = net.Geo(Factory.CreatePoint(nodes[x.Sink].Location, null)),
+                ["sources"] = new JsonArray(x.Sources.Select(s => (JsonNode)s).ToArray()),
+            }).ToArray()),
+        };
     }
 
     /// <summary>Reads and projects the input, builds the graph; a <see cref="NetworkBuildException"/> becomes a <paramref name="failure"/> response.</summary>

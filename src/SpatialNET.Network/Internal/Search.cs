@@ -129,7 +129,7 @@ internal sealed class Search<TNodeId, TEdgeId>(IGraph<TNodeId, TEdgeId> graph, S
     /// <summary>How many nodes one call of <c>GetEdges</c> asks for at most; the benchmark decides the value (ADR 0049).</summary>
     internal const int BatchSize = 1024;
 
-    private const byte Loaded = 1, Pending = 2, Reached = 4, Done = 8, Start = 16, Reversed = 32, IsBlocked = 64;
+    private const byte Loaded = 1, Pending = 2, Reached = 4, Done = 8, Start = 16, Reversed = 32, IsBlocked = 64, Stop = 128;
 
     private readonly Dictionary<TNodeId, int> _index = [];
     private readonly List<Adjacent> _adjacent = [];
@@ -144,6 +144,21 @@ internal sealed class Search<TNodeId, TEdgeId>(IGraph<TNodeId, TEdgeId> graph, S
     private readonly List<TNodeId> _missing = [];
     private readonly Dictionary<TNodeId, TEdgeId> _firstEdge = [];
 
+    /// <summary>
+    /// Nodes (other than the start nodes) that are settled but not expanded, like blocked nodes: the other sources of a trace
+    /// (ADR 0051).
+    /// </summary>
+    public HashSet<TNodeId>? Stops { get; init; }
+
+    /// <summary>
+    /// Whether <see cref="Run"/> records every edge it passes or enters in <see cref="TraversedEdges"/> (ADR 0051): from each
+    /// expanded node the edges that may be walked from it, to a node that passes the node types, within <c>MaxCost</c>.
+    /// </summary>
+    public bool CollectEdges { get; init; }
+
+    /// <summary>The edges recorded since the caller last cleared the list; an edge may appear from both of its ends.</summary>
+    public List<GraphEdge<TNodeId, TEdgeId>> TraversedEdges { get; } = [];
+
     public TNodeId IdOf(int node) => _nodes[node].Node.Id;
 
     public ref readonly GraphNode<TNodeId> NodeOf(int node) => ref _nodes[node].Node;
@@ -155,6 +170,9 @@ internal sealed class Search<TNodeId, TEdgeId>(IGraph<TNodeId, TEdgeId> graph, S
     public bool IsStart(int node) => (_nodes[node].Flags & Start) != 0;
 
     public bool Blocked(int node) => (_nodes[node].Flags & IsBlocked) != 0;
+
+    /// <summary>Whether the node is one of <see cref="Stops"/> (and not the start node).</summary>
+    public bool IsStop(int node) => (_nodes[node].Flags & Stop) != 0;
 
     /// <summary>The step by which a reached node was reached: the edge, the node before it, the edge's cost and its direction.</summary>
     public (TEdgeId Edge, int From, double Cost, bool Reversed)? ViaOf(int node)
@@ -224,8 +242,9 @@ internal sealed class Search<TNodeId, TEdgeId>(IGraph<TNodeId, TEdgeId> graph, S
                 _nodes[u].Flags |= IsBlocked;
             }
 
+            bool stop = IsStopNode(u);
             yield return u;
-            if (blocked)
+            if (blocked || stop)
             {
                 continue;
             }
@@ -241,29 +260,39 @@ internal sealed class Search<TNodeId, TEdgeId>(IGraph<TNodeId, TEdgeId> graph, S
             for (int i = first; i < end; i++)
             {
                 var adjacent = _adjacent[i];
-                if ((options.EdgeTypes is { } edgeTypes && !edgeTypes.Contains(adjacent.Edge.TypeId)) || options.State.IsDisabled(adjacent.Edge))
-                {
-                    continue;
-                }
-
-                var direction = options.State.GetDirection(adjacent.Edge);
-                if (adjacent.Forward ? direction == EdgeDirection.Backward : direction == EdgeDirection.Forward)
+                if (!Passable(adjacent))
                 {
                     continue;
                 }
 
                 ref var v = ref _nodes[adjacent.Other];
-                if ((v.Flags & Done) != 0)
-                {
-                    continue;
-                }
-
                 if (options.NodeTypes is { } nodeTypes && (v.Flags & Start) == 0 && v.Node.TypeId != 0 && !nodeTypes.Contains(v.Node.TypeId))
                 {
                     continue;
                 }
 
-                double edgeCost = EdgeCosts.Of(adjacent.Edge, options.Weight);
+                double edgeCost = 0;
+                if (CollectEdges)
+                {
+                    edgeCost = EdgeCosts.Of(adjacent.Edge, options.Weight);
+                    if (uCost + edgeCost > options.MaxCost)
+                    {
+                        continue;
+                    }
+
+                    TraversedEdges.Add(adjacent.Edge);
+                }
+
+                if ((v.Flags & Done) != 0)
+                {
+                    continue;
+                }
+
+                if (!CollectEdges)
+                {
+                    edgeCost = EdgeCosts.Of(adjacent.Edge, options.Weight);
+                }
+
                 double cost = uCost + edgeCost;
                 bool known = (v.Flags & Reached) != 0;
                 if (cost > options.MaxCost || (known && cost >= v.Cost))
@@ -287,6 +316,83 @@ internal sealed class Search<TNodeId, TEdgeId>(IGraph<TNodeId, TEdgeId> graph, S
                 heap.Enqueue(adjacent.Other, (cost, sequence++));
             }
         }
+    }
+
+    /// <summary>
+    /// Settles the nodes in order of the number of edges, without costs, and yields their indices (ADR 0051): the cheapest way
+    /// is not wanted, only who is reached. Blocked nodes and <see cref="Stops"/> are settled, but not expanded.
+    /// </summary>
+    public IEnumerable<int> RunBreadthFirst(int start)
+    {
+        var queue = new Queue<int>();
+        _nodes[start].Flags |= Reached | Start;
+        queue.Enqueue(start);
+        MarkPending(start);
+        while (queue.TryDequeue(out int u))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _nodes[u].Flags |= Done;
+            bool blocked = options.State.IsBlocked(_nodes[u].Node);
+            if (blocked)
+            {
+                _nodes[u].Flags |= IsBlocked;
+            }
+
+            bool stop = IsStopNode(u);
+            yield return u;
+            if (blocked || stop)
+            {
+                continue;
+            }
+
+            if ((_nodes[u].Flags & Loaded) == 0)
+            {
+                Load(u);
+            }
+
+            int first = _nodes[u].EdgeStart, end = first + _nodes[u].EdgeCount;
+            for (int i = first; i < end; i++)
+            {
+                var adjacent = _adjacent[i];
+                ref var v = ref _nodes[adjacent.Other];
+                if ((v.Flags & Reached) != 0 || !Passable(adjacent))
+                {
+                    continue;
+                }
+
+                if (options.NodeTypes is { } nodeTypes && v.Node.TypeId != 0 && !nodeTypes.Contains(v.Node.TypeId))
+                {
+                    continue;
+                }
+
+                v.Flags |= Reached;
+                MarkPending(adjacent.Other);
+                queue.Enqueue(adjacent.Other);
+            }
+        }
+    }
+
+    /// <summary>Whether an edge of a loaded node may be walked from it: its type, its state and its direction.</summary>
+    private bool Passable(in Adjacent adjacent)
+    {
+        if ((options.EdgeTypes is { } edgeTypes && !edgeTypes.Contains(adjacent.Edge.TypeId)) || options.State.IsDisabled(adjacent.Edge))
+        {
+            return false;
+        }
+
+        var direction = options.State.GetDirection(adjacent.Edge);
+        return adjacent.Forward ? direction != EdgeDirection.Backward : direction != EdgeDirection.Forward;
+    }
+
+    private bool IsStopNode(int node)
+    {
+        if (Stops is null || (_nodes[node].Flags & Start) != 0 || !Stops.Contains(_nodes[node].Node.Id))
+        {
+            return false;
+        }
+
+        _nodes[node].Flags |= Stop;
+        return true;
     }
 
     private int Add(in GraphNode<TNodeId> node)

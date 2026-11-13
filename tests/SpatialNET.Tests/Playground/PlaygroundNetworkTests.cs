@@ -178,6 +178,54 @@ public class PlaygroundNetworkTests(WebApplicationFactory<Program> factory) : IC
         Assert.False(string.IsNullOrWhiteSpace(body["error"]!.GetValue<string>()));
     }
 
+    /// <summary>Two transformers feed one cable with customers between them and a switch in the middle (ADR 0051).</summary>
+    private static Dictionary<string, object?> Street(object extra) => Request(
+        points: [Point(0, 0, Trafo), Point(10, 0, Customer), Point(15, 0, Switch), Point(20, 0, Customer), Point(30, 0, Trafo), Point(40, 5, Customer)],
+        lines: [Line(Cable, [0, 0], [30, 0])],
+        extra: extra);
+
+    private static Dictionary<string, List<string>> SupplyOf(JsonObject body) =>
+        body["sinks"]!.AsArray().ToDictionary(
+            s => s!["id"]!.GetValue<string>(),
+            s => s!["sources"]!.AsArray().Select(x => x!.GetValue<string>()).ToList());
+
+    [Fact]
+    public async Task Supply_with_an_open_switch_gives_each_transformer_its_side_and_leaves_the_stray_customer_unsupplied()
+    {
+        var (status, body) = await Post("/api/network/supply", Street(new { sources = new[] { "P1", "P5" }, blocked = new[] { "P3" } }));
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        var supply = SupplyOf(body);
+        Assert.Equal(["P1"], supply["P2"]);
+        Assert.Equal(["P5"], supply["P4"]);
+        Assert.Empty(supply["P6"]);   // not connected to any line
+        Assert.Equal(["P1", "P5"], body["sources"]!.AsArray().Select(s => s!["id"]!.GetValue<string>()));
+        Assert.All(body["sinks"]!.AsArray(), s => Assert.Equal("Point", s!["geometry"]!["type"]!.GetValue<string>()));
+        var firstArea = body["sources"]![0]!["edges"]!.AsArray().Select(e => e!.GetValue<string>()).ToList();
+        Assert.Equal(["L1#0", "L1#1"], firstArea);   // the edge up to the switch is entered, the one behind it is not
+    }
+
+    [Fact]
+    public async Task Supply_with_a_closed_switch_supplies_the_customers_between_the_transformers_twice()
+    {
+        var (_, body) = await Post("/api/network/supply", Street(new { sources = new[] { "P1", "P5" } }));
+
+        var supply = SupplyOf(body);
+        Assert.Equal(["P1", "P5"], supply["P2"]);
+        Assert.Equal(["P1", "P5"], supply["P4"]);
+    }
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("unknown")]
+    public async Task Supply_needs_known_sources(string problem)
+    {
+        var (status, body) = await Post("/api/network/supply", Street(problem == "none" ? new { sources = Array.Empty<string>() } : new { sources = new[] { "P99" } }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, status);
+        Assert.False(string.IsNullOrWhiteSpace(body["error"]!.GetValue<string>()));
+    }
+
     [Theory]
     [InlineData("empty")]
     [InlineData("tolerance")]

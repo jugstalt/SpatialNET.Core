@@ -115,6 +115,49 @@ Die Optionen (`TraversalOptions`) sind für jede Suche dieselben:
 
 Gleiche Kosten entscheidet die Reihenfolge der Startknoten und der Kanten vom Host. Schleifen werden nie begangen; von parallelen Kanten gewinnt die günstigere.
 
+## Tracing
+
+Die Frage, die ein Leitungsnetz am häufigsten stellt, ist **wer von wem versorgt wird**: welche Kunden an einem Trafo hängen, welche kein Trafo erreicht, welche zwei zugleich erreichen. `Trace` beantwortet sie. Der Host nennt die **Quellen** (z. B. die Trafos eines Gebiets); der Trace läuft **von jeder Quelle für sich**, in der Reihenfolge der Quellen, und hält an gesperrten Knoten und an den anderen Quellen des Aufrufs an. Ein Knoten, den zwei Quellen erreichen, wird deshalb einmal je Quelle gemeldet, eine Mehrfachversorgung zeigt sich also, statt sich zu verstecken. Innerhalb eines Laufs kommen die Treffer in der Reihenfolge der Kosten (standardmäßig die Kabellänge ab dem Trafo), und der Speicher eines Laufs wird frei, wenn sein Gebiet fertig ist.
+
+```csharp
+// Two transformers feed one street: 1 - 2 - 3 - 4 - 5 - 6, customers 2 to 5, a separation point at 3.
+var graph = new InMemoryGraph<int, int, string>();
+for (int id = 1; id <= 6; id++)
+    graph.Add(new GraphNode<int>(id, id is 1 or 6 ? 25 : 16, new Coordinate(id * 30, 0)));
+for (int id = 1; id < 6; id++)
+    graph.Add(new GraphEdge<int, int>(100 + id, id, id + 1, 11, 30));
+
+int[] transformers = [1, 6];
+int[] customers = [2, 3, 4, 5];
+
+// Who supplies whom? With the separation point closed, every customer hangs on both transformers: a mistake to find.
+foreach (var supply in graph.Supply(transformers, customers))
+    Console.WriteLine($"{supply.Sink}: {string.Join(", ", supply.Sources)}");       // 2: 1, 6 and so on
+
+// Open the separation point: the node is reached by both runs, but nobody passes it.
+var open = new NetworkState<int, int>().Block(3);
+foreach (var supply in graph.Supply(transformers, customers, new() { State = open }))
+    Console.WriteLine($"{supply.Sink}: {string.Join(", ", supply.Sources)}");       // 2: 1   3:   4: 6   5: 6
+Console.WriteLine(string.Join(", ", graph.FindUnsupplied(transformers, customers, new() { State = open }))); // 3
+
+// The area of transformer 1 with the cable length from it, and as edges to draw.
+foreach (var hit in graph.Trace([1], new() { State = open }))
+    Console.WriteLine($"{hit.Node} {hit.Kind} after {hit.Cost} m");                 // 1 Source after 0 m, 2 Reached after 30 m, 3 Blocked after 60 m
+Console.WriteLine(string.Join(", ", graph.TraceEdges([1], new() { State = open }).Select(t => t.Edge.Id))); // 101, 102
+```
+
+| Aufruf | Liefert |
+|---|---|
+| `Trace(sources, options)` | `TraceHit` je Knoten und Quelle: `Node`, `TypeId`, `Source`, `Cost`, `Via` und `Kind` (`Source`, `Reached`, `Blocked`, `OtherSource`) |
+| `TraceEdges(sources, options)` | `TracedEdge` je Kante und Quelle: jede Kante, die ein Lauf passiert oder betritt, auch die Schlusskanten einer Masche, damit sich ein Versorgungsgebiet als Linien zeichnen lässt |
+| `Supply(sources, sinks, options, progress)` | `SinkSupply` für jede Senke in der Reihenfolge der Senken, nach allen Läufen: die Liste ihrer Quellen, leer wenn niemand sie versorgt, länger als eins bei Mehrfachversorgung |
+| `FindUnsupplied(sources, sinks, options, progress)` | die Senken mit leerer Liste |
+
+- Eine **gesperrte Quelle** versorgt nichts: sie liefert nur ihren eigenen Treffer mit `Kind = Blocked`. Eine gesperrte Senke oder eine Senke, die selbst eine andere Quelle ist, wird von diesem Lauf nicht versorgt.
+- `Supply` und `FindUnsupplied` brauchen keine Kosten und laufen als Breitensuche: `MaxCost` wird ignoriert, eine andere Gewichtung als die Länge ist eine `ArgumentException`. Sie schweigen bis zum letzten Lauf, deshalb nehmen sie einen `IProgress<SupplyProgress>` (fertige Läufe von allen, höchstens alle 250 ms und am Ende). `Trace` und `TraceEdges` liefern verzögert, ihre Ergebnisse sind der Fortschritt.
+- Eine Quelle ist, was der Host in diesem Aufruf übergibt, keine Rolle des Knotens: derselbe Trafo ist Quelle für den Niederspannungs-Trace und Senke für einen Mittelspannungs-Trace.
+- Die Quellen **nach Shard sortiert** übergeben: aufeinanderfolgende Läufe nutzen dann dieselben Shards, und ein Trace über alle Trafos eines Netzes lädt jeden Shard etwa einmal.
+
 ## Typen und Muster
 
 Ein Typ ist ein Vektor aus **Facetten**, z. B. Spannungsebene, Objektart und Bauart. Knoten und Kanten speichern nur die Nummer ihres Typs; die kleine Typentabelle des Hosts sagt, was sie bedeutet. Muster beschreiben Mengen von Typen und werden einmal in eine `TypeSet` aufgelöst, eine Suche vergleicht also nur Zahlen.

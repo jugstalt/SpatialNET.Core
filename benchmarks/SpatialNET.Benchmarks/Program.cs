@@ -279,6 +279,31 @@ if (args.Contains("--quick-network"))
 
         Console.WriteLine($"   whole network through 64 cached shards, one search per local network: {reached:N0} nodes in {sw.ElapsedMilliseconds} ms, " +
                           $"{perLocal.ShardLoads:N0} shard loads, {perLocal.Queries:N0} queries, {(GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0:F0} MB allocated");
+
+        // Supply (ADR 0051): up to 10,000 transformers as sources, up to 500,000 customers as sinks
+        var sinks = network.Customers(500_000);
+        foreach (bool shuffled in new[] { false, true })
+        {
+            var sources = network.SourcesFor(10_000, shuffled);
+            var supplyStore = new SimulatedStoreGraph(store, maxCachedShards: 64, latencyMilliseconds: 0);
+            GC.Collect();
+            long heapBefore = GC.GetTotalMemory(true);
+            before = GC.GetAllocatedBytesForCurrentThread();
+            sw.Restart();
+            var supply = supplyStore.Supply(sources, sinks).ToList();
+            long elapsed = sw.ElapsedMilliseconds;
+            double allocated = (GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0;
+            double retained = (GC.GetTotalMemory(true) - heapBefore) / 1_048_576.0;
+            Console.WriteLine($"   Supply, {sources.Length:N0} sources {(shuffled ? "shuffled" : "sorted by shard")}, {sinks.Length:N0} sinks, 64 cached shards: " +
+                              $"{elapsed} ms, {supplyStore.ShardLoads:N0} shard loads, {supplyStore.Queries:N0} queries, {allocated:F0} MB allocated, " +
+                              $"{retained:F0} MB kept for the result, supplied once {supply.Count(s => s.Sources.Count == 1):N0}, not {supply.Count(s => s.Sources.Count == 0):N0}, multiple {supply.Count(s => s.Sources.Count > 1):N0}");
+            GC.KeepAlive(supply);
+        }
+
+        sw.Restart();
+        before = GC.GetAllocatedBytesForCurrentThread();
+        int supplied = memory.Supply(network.SourcesFor(10_000, false), sinks).Count(s => s.Sources.Count == 1);
+        Console.WriteLine($"   Supply in memory: {supplied:N0} sinks supplied once in {sw.ElapsedMilliseconds} ms, {(GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0:F0} MB allocated");
     }
 
     return;

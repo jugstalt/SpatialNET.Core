@@ -1,5 +1,6 @@
 // The network view of the playground (ADR 0050): draw or load points and lines, build a network on the server,
-// show real nodes, helper nodes and edges, and the shortest path between two clicked nodes.
+// show real nodes, helper nodes and edges, the shortest path between two clicked nodes, and the supply of the customers
+// by the nodes marked as sources (ADR 0051).
 // Not a descriptor (ADR 0011), because its input is a set of lines and points.
 
 /* global L */
@@ -10,6 +11,8 @@ import { escape } from './strip.js';
 const EDGE_COLORS = { 11: '#2563eb', 12: '#ea580c', 13: '#7c3aed' };
 const NODE_COLORS = { 25: '#dc2626', 15: '#ca8a04', 17: '#0f172a', 16: '#16a34a' };
 const NEUTRAL = '#64748b';
+// One colour per supply area; a customer that two areas reach is orange with a black ring, one nobody reaches is red.
+const AREA_COLORS = ['#2563eb', '#16a34a', '#db2777', '#0891b2', '#ca8a04', '#7c3aed', '#ea580c', '#475569'];
 
 const state = {
   local: false,
@@ -20,10 +23,11 @@ const state = {
   from: null,       // node ids of the path
   to: null,
   blocked: new Set(),
+  sources: new Set(), // node ids that are sources of the supply trace
 };
 
 const $ = id => document.getElementById(id);
-let map, inputLayer, resultLayer, pathLayer, flashLayer, sequence = 0;
+let map, inputLayer, resultLayer, supplyLayer, pathLayer, flashLayer, sequence = 0, supplySequence = 0;
 
 // ---------- Map ----------
 
@@ -59,6 +63,7 @@ function setMode(local) {
   map.on('pm:drawend', () => document.querySelectorAll('[id^=draw-]').forEach(b => b.classList.remove('on')));
   inputLayer = L.featureGroup().addTo(map);
   resultLayer = L.featureGroup().addTo(map);
+  supplyLayer = L.featureGroup().addTo(map);
   pathLayer = L.featureGroup().addTo(map);
   flashLayer = L.featureGroup().addTo(map);
   $('tol-unit').textContent = local ? '(units)' : '(m)';
@@ -88,9 +93,11 @@ function flash(point) {
 
 function inputChanged() {
   sequence++;
+  supplySequence++;
   state.network = null;
   state.from = state.to = null;
   state.blocked.clear();
+  state.sources.clear();
   renderInput();
   renderResult();
   renderElements();
@@ -98,6 +105,7 @@ function inputChanged() {
   showError(null);
   $('result').innerHTML = '';
   $('path').innerHTML = '';
+  $('supply').innerHTML = '';
 }
 
 function renderInput() {
@@ -224,7 +232,9 @@ async function build() {
     $('build-state').textContent = '';
     state.from = state.to = null;
     state.blocked.clear();
+    state.sources.clear();
     $('path').innerHTML = '';
+    $('supply').innerHTML = '';
     $('kbs-label').textContent = result.kbs === 'local' ? 'Local planar' : `CRS ${result.kbs}`;
     if (!result.ok) {
       state.network = null;
@@ -250,6 +260,7 @@ async function build() {
 
 function renderResult() {
   resultLayer.clearLayers();
+  supplyLayer.clearLayers();
   pathLayer.clearLayers();
   $('legend').innerHTML = '';
   const net = state.network;
@@ -268,7 +279,11 @@ function renderResult() {
       ? L.circleMarker(at, { radius: 5, color: NEUTRAL, weight: 2, fillColor: '#fff', fillOpacity: 1, pmIgnore: true })
       : L.circleMarker(at, { radius: 9, color: '#fff', weight: 2, fillColor: NODE_COLORS[n.type] ?? NEUTRAL, fillOpacity: 1, pmIgnore: true });
     marker.bindTooltip(`${n.id} · ${n.typeName}${n.helper ? '' : ' ' + n.type}`);
-    marker.on('click', ev => (ev.originalEvent.shiftKey ? toggleBlocked(n.id) : pick(n.id)));
+    marker.on('click', ev => {
+      if ($('source-mode').checked && !n.helper) toggleSource(n.id);
+      else if (ev.originalEvent.shiftKey) toggleBlocked(n.id);
+      else pick(n.id);
+    });
     marker.on('contextmenu', () => toggleBlocked(n.id));
     marker.nodeId = n.id;
     marker.addTo(resultLayer);
@@ -290,6 +305,7 @@ function decorateNodes() {
     if (l.nodeId === state.from) l.setStyle({ color: '#16a34a', weight: 4 });
     else if (l.nodeId === state.to) l.setStyle({ color: '#f59e0b', weight: 4 });
     else if (state.blocked.has(l.nodeId)) l.setStyle({ color: '#b91c1c', weight: 4 });
+    else if (state.sources.has(l.nodeId)) l.setStyle({ color: '#facc15', weight: 5 });
     else l.setStyle({ color: l.options.fillColor === '#fff' ? NEUTRAL : '#fff', weight: 2 });
   });
 }
@@ -304,7 +320,7 @@ function showBuild(r) {
     ${r.warnings.map(w => `<div class="warn">${escape(w)}</div>`).join('')}
     ${items.length ? `<h3>Diagnostics (${items.length})</h3>` : '<div class="muted">No diagnostics.</div>'}
     <ul>${items.map((d, i) => `<li data-i="${i}">${escape(d.text)}</li>`).join('')}</ul>
-    <div class="muted">Click two nodes for the shortest path; Shift-click or right-click blocks a node.</div>`;
+    <div class="muted">Click two nodes for the shortest path; Shift-click or right-click blocks a node. Under Supply, mark sources to see who supplies the customers.</div>`;
   $('result').querySelectorAll('li').forEach(li => (li.onclick = () => flash(items[li.dataset.i].at)));
   $('path').innerHTML = '';
 }
@@ -344,6 +360,7 @@ function toggleBlocked(id) {
   else state.blocked.add(id);
   decorateNodes();
   findPath();
+  if (state.sources.size) showSupply();
 }
 
 async function findPath() {
@@ -383,6 +400,70 @@ async function findPath() {
 }
 
 const fmt = v => (Number.isFinite(v) ? Number(v.toFixed(3)).toString() : String(v));
+
+// ---------- Supply (ADR 0051) ----------
+
+function toggleSource(id) {
+  if (state.sources.has(id)) state.sources.delete(id);
+  else state.sources.add(id);
+  decorateNodes();
+  showSupply();
+}
+
+/** Runs the trace from the marked sources: colours each supply area and marks the customers nobody or several sources supply. */
+async function showSupply() {
+  supplyLayer.clearLayers();
+  const box = $('supply');
+  if (!state.network || state.sources.size === 0) {
+    box.innerHTML = '';
+    return;
+  }
+
+  const mine = ++supplySequence;
+  try {
+    const r = await api.networkSupply({ ...request(), sources: [...state.sources], blocked: [...state.blocked] });
+    if (mine !== supplySequence) return;
+    if (!r.ok) return showError(r.error);
+    showError(null);
+
+    const colorOf = new Map(r.sources.map((s, i) => [s.id, AREA_COLORS[i % AREA_COLORS.length]]));
+    const edges = new Map(state.network.edges.map(e => [e.id, e]));
+    for (const s of r.sources) {
+      for (const id of s.edges) {
+        const geometry = edges.get(id)?.geometry;
+        if (geometry) L.geoJSON(geometry, { pmIgnore: true, interactive: false, style: { color: colorOf.get(s.id), weight: 11, opacity: 0.45, lineCap: 'round' } }).addTo(supplyLayer);
+      }
+    }
+
+    const none = [], many = [];
+    for (const c of r.sinks) {
+      const at = latlng(c.geometry);
+      const tooltip = c.sources.length ? `${c.id} · supplied by ${c.sources.join(', ')}` : `${c.id} · not supplied`;
+      let style;
+      if (c.sources.length === 0) {
+        none.push(c);
+        style = { radius: 8, color: '#dc2626', weight: 3, fillColor: '#fee2e2', fillOpacity: 1 };
+      } else if (c.sources.length > 1) {
+        many.push(c);
+        style = { radius: 8, color: '#0f172a', weight: 3, fillColor: '#f97316', fillOpacity: 1 };
+      } else {
+        style = { radius: 6, color: '#fff', weight: 2, fillColor: colorOf.get(c.sources[0]), fillOpacity: 1 };
+      }
+
+      L.circleMarker(at, { pmIgnore: true, className: 'supply-sink', ...style }).bindTooltip(tooltip).addTo(supplyLayer);
+    }
+
+    const row = (c, why) => `<li data-id="${escape(c.id)}">${escape(c.id)} ${why}</li>`;
+    const sinks = new Map(r.sinks.map(c => [c.id, c]));
+    box.innerHTML = `<div class="big">${r.sources.length} source${r.sources.length === 1 ? '' : 's'}, ${r.sinks.length} customers</div>
+      <div>${r.sources.map(s => `<span><span class="swatch" style="background:${colorOf.get(s.id)}"></span>${escape(s.id)}${s.blocked ? ' (blocked)' : ''}</span>`).join(' ')}</div>
+      <div class="muted">${r.sinks.length - none.length - many.length} supplied once, ${none.length} not supplied, ${many.length} multiply supplied</div>
+      ${none.length || many.length ? `<ul>${none.map(c => row(c, '· not supplied')).join('')}${many.map(c => row(c, `· ${escape(c.sources.join(' + '))}`)).join('')}</ul>` : ''}`;
+    box.querySelectorAll('li').forEach(li => (li.onclick = () => flash(sinks.get(li.dataset.id).geometry)));
+  } catch (e) {
+    if (mine === supplySequence) showError(e.message);
+  }
+}
 
 // ---------- Start ----------
 
@@ -425,6 +506,12 @@ async function start() {
     $('kbs-label').textContent = '';
   };
   $('build').onclick = build;
+  $('supply-run').onclick = showSupply;
+  $('sources-clear').onclick = () => {
+    state.sources.clear();
+    decorateNodes();
+    showSupply();
+  };
 }
 
 start().catch(e => showError(e.message));

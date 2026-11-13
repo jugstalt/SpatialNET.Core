@@ -34,3 +34,6 @@ export const networkBuild = request => post('api/network/build', request);
 
 /** Shortest path between two node ids (the request of the build plus from, to and blocked) → {found, cost, geometry, edges}. */
 export const networkPath = request => post('api/network/path', request);
+
+/** The supply areas of the marked sources and the sources of every customer (ADR 0051) → {ok, sources:[{id, blocked, edges}], sinks:[{id, geometry, sources}]}. */
+export const networkSupply = request => post('api/network/supply', request);

@@ -151,6 +151,47 @@ SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.TypeId.get -> int
 SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.TypeId.init -> void
 SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Via.get -> TEdgeId?
 SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Via.init -> void
+SpatialNET.Network.SinkSupply<TNodeId>
+SpatialNET.Network.SinkSupply<TNodeId>.Sink.get -> TNodeId
+SpatialNET.Network.SinkSupply<TNodeId>.Sink.init -> void
+SpatialNET.Network.SinkSupply<TNodeId>.SinkSupply() -> void
+SpatialNET.Network.SinkSupply<TNodeId>.SinkSupply(TNodeId Sink, System.Collections.Generic.IReadOnlyList<TNodeId>! Sources) -> void
+SpatialNET.Network.SinkSupply<TNodeId>.Sources.get -> System.Collections.Generic.IReadOnlyList<TNodeId>!
+SpatialNET.Network.SinkSupply<TNodeId>.Sources.init -> void
+SpatialNET.Network.SupplyProgress
+SpatialNET.Network.SupplyProgress.SourcesDone.get -> long
+SpatialNET.Network.SupplyProgress.SourcesDone.init -> void
+SpatialNET.Network.SupplyProgress.SourcesTotal.get -> long
+SpatialNET.Network.SupplyProgress.SourcesTotal.init -> void
+SpatialNET.Network.SupplyProgress.SupplyProgress() -> void
+SpatialNET.Network.SupplyProgress.SupplyProgress(long SourcesDone, long SourcesTotal) -> void
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>.Edge.get -> SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>.Edge.init -> void
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>.Source.get -> TNodeId
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>.Source.init -> void
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>.TracedEdge() -> void
+SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>.TracedEdge(SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> Edge, TNodeId Source) -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Cost.get -> double
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Cost.init -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Kind.get -> SpatialNET.Network.TraceHitKind
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Kind.init -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Node.get -> TNodeId
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Node.init -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Source.get -> TNodeId
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Source.init -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.TraceHit() -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.TraceHit(TNodeId Node, int TypeId, TNodeId Source, double Cost, TEdgeId? Via, SpatialNET.Network.TraceHitKind Kind) -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.TypeId.get -> int
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.TypeId.init -> void
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Via.get -> TEdgeId?
+SpatialNET.Network.TraceHit<TNodeId, TEdgeId>.Via.init -> void
+SpatialNET.Network.TraceHitKind
+SpatialNET.Network.TraceHitKind.Blocked = 2 -> SpatialNET.Network.TraceHitKind
+SpatialNET.Network.TraceHitKind.OtherSource = 3 -> SpatialNET.Network.TraceHitKind
+SpatialNET.Network.TraceHitKind.Reached = 1 -> SpatialNET.Network.TraceHitKind
+SpatialNET.Network.TraceHitKind.Source = 0 -> SpatialNET.Network.TraceHitKind
 SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>
 SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.EdgeTypes.get -> SpatialNET.Network.TypeSet?
 SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.EdgeTypes.init -> void
@@ -193,8 +234,12 @@ SpatialNET.Network.WeightKind.Absolute = 1 -> SpatialNET.Network.WeightKind
 SpatialNET.Network.WeightKind.Length = 0 -> SpatialNET.Network.WeightKind
 SpatialNET.Network.WeightKind.LengthOverValue = 3 -> SpatialNET.Network.WeightKind
 SpatialNET.Network.WeightKind.PerLength = 2 -> SpatialNET.Network.WeightKind
+static SpatialNET.Network.NetworkAnalysis.FindUnsupplied<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, System.Collections.Generic.IEnumerable<TNodeId>! sinks, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.IProgress<SpatialNET.Network.SupplyProgress>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<TNodeId>!
 static SpatialNET.Network.NetworkAnalysis.Reach<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! starts, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>>!
 static SpatialNET.Network.NetworkAnalysis.ShortestPath<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, TNodeId from, TNodeId to, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>?
+static SpatialNET.Network.NetworkAnalysis.Supply<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, System.Collections.Generic.IEnumerable<TNodeId>! sinks, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.IProgress<SpatialNET.Network.SupplyProgress>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.SinkSupply<TNodeId>>!
+static SpatialNET.Network.NetworkAnalysis.Trace<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.TraceHit<TNodeId, TEdgeId>>!
+static SpatialNET.Network.NetworkAnalysis.TraceEdges<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>>!
 static SpatialNET.Network.TypeSet.Empty.get -> SpatialNET.Network.TypeSet!
 static SpatialNET.Network.TypeSet.Of(params System.Collections.Generic.IEnumerable<int>! typeIds) -> SpatialNET.Network.TypeSet!
 static SpatialNET.Network.TypeSet.Untyped.get -> SpatialNET.Network.TypeSet!

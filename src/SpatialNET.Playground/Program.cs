@@ -84,6 +84,8 @@ app.MapPost("/api/network/build", (NetworkRequest request, NetworkService servic
 
 app.MapPost("/api/network/path", (NetworkRequest request, NetworkService service) => NetworkResult(() => service.Path(request)));
 
+app.MapPost("/api/network/supply", (NetworkRequest request, NetworkService service) => NetworkResult(() => service.Supply(request)));
+
 static IResult NetworkResult(Func<JsonObject> action)
 {
     try

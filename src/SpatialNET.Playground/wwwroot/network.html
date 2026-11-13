@@ -41,6 +41,10 @@
       <label class="opt"><input type="checkbox" id="crossings"> NodeAtCrossings</label>
       <div class="input-row"><button id="build" class="primary">Build</button> <span class="muted" id="build-state"></span></div>
 
+      <h3>Supply</h3>
+      <label class="opt"><input type="checkbox" id="source-mode"> Click nodes to mark sources</label>
+      <div class="input-row"><button id="supply-run">Show supply</button> <button id="sources-clear">No sources</button></div>
+
       <h3>Elements <span id="count" class="muted"></span></h3>
       <div id="elements" class="elements"></div>
     </div>
@@ -52,6 +56,7 @@
     <div class="chip legend" id="legend"></div>
     <div class="chip result" id="result"></div>
     <div class="chip result" id="path"></div>
+    <div class="chip result" id="supply"></div>
     <div class="chip error" id="error" hidden></div>
   </aside>
 </body>

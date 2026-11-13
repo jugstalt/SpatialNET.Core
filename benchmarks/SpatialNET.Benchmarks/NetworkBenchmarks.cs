@@ -70,6 +70,26 @@ public sealed class SyntheticNetwork
         return new SyntheticNetwork([.. nodes], [.. edges], [.. shard], transformers);
     }
 
+    /// <summary>The sinks of a supply benchmark (ADR 0051): up to <paramref name="count"/> customers, spread evenly over the network.</summary>
+    public long[] Customers(int count)
+    {
+        var customers = Nodes.Where(n => n.TypeId == CustomerType).Select(n => n.Id).ToArray();
+        int step = Math.Max(1, customers.Length / Math.Max(1, count));
+        return customers.Where((_, i) => i % step == 0).Take(count).ToArray();
+    }
+
+    /// <summary>The transformers (sources of a supply benchmark): in the order of the shards, or in a fixed random order.</summary>
+    public long[] SourcesFor(int count, bool shuffled)
+    {
+        var sources = Transformers.Take(count).ToArray();
+        if (shuffled)
+        {
+            new Random(7).Shuffle(sources);
+        }
+
+        return sources;
+    }
+
     public InMemoryGraph<long, long, int> ToMemory()
     {
         var graph = new InMemoryGraph<long, long, int>();
@@ -164,6 +184,8 @@ public class NetworkBenchmarks
     private SyntheticNetwork _network = null!;
     private InMemoryGraph<long, long, int> _memory = null!;
     private SimulatedStoreGraph _store = null!;
+    private ShardStore _storeData = null!;
+    private long[] _supplySources = null!, _supplyShuffled = null!, _supplySinks = null!;
     private int _next;
 
     [Params(100_000, 1_000_000)]
@@ -173,6 +195,10 @@ public class NetworkBenchmarks
     public void Setup()
     {
         _network = SyntheticNetwork.Create(N);
+        _storeData = new ShardStore(_network);
+        _supplySources = _network.SourcesFor(10_000, shuffled: false);
+        _supplyShuffled = _network.SourcesFor(10_000, shuffled: true);
+        _supplySinks = _network.Customers(500_000);
         _memory = _network.ToMemory();
         _store = new SimulatedStoreGraph(new ShardStore(_network), maxCachedShards: 64, latencyMilliseconds: 0);
     }
@@ -197,6 +223,18 @@ public class NetworkBenchmarks
 
     [Benchmark]
     public int ReachWholeNetworkInMemory() => _memory.Reach(_network.Transformers).Count();
+
+    [Benchmark]
+    public int SupplyInMemory() => _memory.Supply(_supplySources, _supplySinks).Count(s => s.Sources.Count == 1);
+
+    [Benchmark]
+    public int SupplyThroughShardsSortedByShard() => SupplyThroughShards(_supplySources);
+
+    [Benchmark]
+    public int SupplyThroughShardsShuffled() => SupplyThroughShards(_supplyShuffled);
+
+    private int SupplyThroughShards(long[] sources) =>
+        new SimulatedStoreGraph(_storeData, maxCachedShards: 64, latencyMilliseconds: 0).Supply(sources, _supplySinks).Count(s => s.Sources.Count == 1);
 
     [Benchmark]
     public int ReachEveryLocalNetworkThroughShards()

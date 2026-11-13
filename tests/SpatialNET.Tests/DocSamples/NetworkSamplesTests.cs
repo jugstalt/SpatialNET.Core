@@ -41,6 +41,46 @@ public sealed class NetworkSamplesTests
     }
 
     [Fact]
+    public void Tracing()
+    {
+        // --- snippet: network-tracing
+        // Two transformers feed one street: 1 - 2 - 3 - 4 - 5 - 6, customers 2 to 5, a separation point at 3.
+        var graph = new InMemoryGraph<int, int, string>();
+        for (int id = 1; id <= 6; id++)
+            graph.Add(new GraphNode<int>(id, id is 1 or 6 ? 25 : 16, new Coordinate(id * 30, 0)));
+        for (int id = 1; id < 6; id++)
+            graph.Add(new GraphEdge<int, int>(100 + id, id, id + 1, 11, 30));
+
+        int[] transformers = [1, 6];
+        int[] customers = [2, 3, 4, 5];
+
+        // Who supplies whom? With the separation point closed, every customer hangs on both transformers: a mistake to find.
+        foreach (var supply in graph.Supply(transformers, customers))
+            Console.WriteLine($"{supply.Sink}: {string.Join(", ", supply.Sources)}");       // 2: 1, 6 and so on
+
+        // Open the separation point: the node is reached by both runs, but nobody passes it.
+        var open = new NetworkState<int, int>().Block(3);
+        foreach (var supply in graph.Supply(transformers, customers, new() { State = open }))
+            Console.WriteLine($"{supply.Sink}: {string.Join(", ", supply.Sources)}");       // 2: 1   3:   4: 6   5: 6
+        Console.WriteLine(string.Join(", ", graph.FindUnsupplied(transformers, customers, new() { State = open }))); // 3
+
+        // The area of transformer 1 with the cable length from it, and as edges to draw.
+        foreach (var hit in graph.Trace([1], new() { State = open }))
+            Console.WriteLine($"{hit.Node} {hit.Kind} after {hit.Cost} m");                 // 1 Source after 0 m, 2 Reached after 30 m, 3 Blocked after 60 m
+        Console.WriteLine(string.Join(", ", graph.TraceEdges([1], new() { State = open }).Select(t => t.Edge.Id))); // 101, 102
+        // --- end
+
+        Assert.Equal(["2: 1, 6", "3: 1, 6", "4: 1, 6", "5: 1, 6"],
+            graph.Supply(transformers, customers).Select(s => $"{s.Sink}: {string.Join(", ", s.Sources)}"));
+        Assert.Equal(["2: 1", "3: ", "4: 6", "5: 6"],
+            graph.Supply(transformers, customers, new() { State = open }).Select(s => $"{s.Sink}: {string.Join(", ", s.Sources)}"));
+        Assert.Equal([3], graph.FindUnsupplied(transformers, customers, new() { State = open }));
+        Assert.Equal(["1 Source after 0 m", "2 Reached after 30 m", "3 Blocked after 60 m"],
+            graph.Trace([1], new() { State = open }).Select(h => $"{h.Node} {h.Kind} after {h.Cost} m"));
+        Assert.Equal([101, 102], graph.TraceEdges([1], new() { State = open }).Select(t => t.Edge.Id));
+    }
+
+    [Fact]
     public void TypesAndPatterns()
     {
         // --- snippet: network-types

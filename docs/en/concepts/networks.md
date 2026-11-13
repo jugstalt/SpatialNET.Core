@@ -115,6 +115,49 @@ The options (`TraversalOptions`) are the same for every search:
 
 Equal costs are decided by the order of the start nodes and of the edges from the host. Loops are never walked; of parallel edges the cheaper one wins.
 
+## Tracing
+
+The question a utility network is asked most is **who is supplied by whom**: which customers hang on a transformer, which no transformer reaches, which two reach at once. `Trace` answers it. The host names the **sources** (for example the transformers of an area); the trace runs **from each source on its own**, in the order of the sources, and stops at blocked nodes and at the other sources of the call. A node that two sources reach is therefore reported once per source, so a multiple supply shows instead of hiding. Within one run the hits come in order of cost (the cable length from the transformer, by default), and the memory of a run is freed when its area is done.
+
+```csharp
+// Two transformers feed one street: 1 - 2 - 3 - 4 - 5 - 6, customers 2 to 5, a separation point at 3.
+var graph = new InMemoryGraph<int, int, string>();
+for (int id = 1; id <= 6; id++)
+    graph.Add(new GraphNode<int>(id, id is 1 or 6 ? 25 : 16, new Coordinate(id * 30, 0)));
+for (int id = 1; id < 6; id++)
+    graph.Add(new GraphEdge<int, int>(100 + id, id, id + 1, 11, 30));
+
+int[] transformers = [1, 6];
+int[] customers = [2, 3, 4, 5];
+
+// Who supplies whom? With the separation point closed, every customer hangs on both transformers: a mistake to find.
+foreach (var supply in graph.Supply(transformers, customers))
+    Console.WriteLine($"{supply.Sink}: {string.Join(", ", supply.Sources)}");       // 2: 1, 6 and so on
+
+// Open the separation point: the node is reached by both runs, but nobody passes it.
+var open = new NetworkState<int, int>().Block(3);
+foreach (var supply in graph.Supply(transformers, customers, new() { State = open }))
+    Console.WriteLine($"{supply.Sink}: {string.Join(", ", supply.Sources)}");       // 2: 1   3:   4: 6   5: 6
+Console.WriteLine(string.Join(", ", graph.FindUnsupplied(transformers, customers, new() { State = open }))); // 3
+
+// The area of transformer 1 with the cable length from it, and as edges to draw.
+foreach (var hit in graph.Trace([1], new() { State = open }))
+    Console.WriteLine($"{hit.Node} {hit.Kind} after {hit.Cost} m");                 // 1 Source after 0 m, 2 Reached after 30 m, 3 Blocked after 60 m
+Console.WriteLine(string.Join(", ", graph.TraceEdges([1], new() { State = open }).Select(t => t.Edge.Id))); // 101, 102
+```
+
+| Call | Returns |
+|---|---|
+| `Trace(sources, options)` | `TraceHit` per node and source: `Node`, `TypeId`, `Source`, `Cost`, `Via` and `Kind` (`Source`, `Reached`, `Blocked`, `OtherSource`) |
+| `TraceEdges(sources, options)` | `TracedEdge` per edge and source: every edge a run passes or enters, including the closing edges of a mesh, so a supply area can be drawn as lines |
+| `Supply(sources, sinks, options, progress)` | `SinkSupply` for every sink in the order of the sinks, after all runs: the list of its sources, empty if nobody supplies it, longer than one for a multiple supply |
+| `FindUnsupplied(sources, sinks, options, progress)` | the sinks with an empty list |
+
+- A **blocked source** supplies nothing: it gives only its own hit with `Kind = Blocked`. A blocked sink, or a sink that is another source, is not supplied by that run.
+- `Supply` and `FindUnsupplied` need no costs and run as breadth-first searches: `MaxCost` is ignored, and a weight other than length is an `ArgumentException`. They are silent until the last run, so they take an `IProgress<SupplyProgress>` (runs done of the total, at most every 250 ms and at the end). `Trace` and `TraceEdges` stream, so their results are the progress.
+- A source is whatever the host passes in this call, not a role of the node: the same transformer is a source for the low-voltage trace and a sink for a medium-voltage one.
+- Pass the sources **sorted by shard**: consecutive runs then use the same shards, and a trace over every transformer of a network loads each shard about once.
+
 ## Types and patterns
 
 A type is a vector of **facets**, for example voltage level, kind of object and construction. Nodes and edges store only the number of their type; the small type table of the host says what it means. Patterns describe sets of types and are resolved once into a `TypeSet`, so a search compares integers only.

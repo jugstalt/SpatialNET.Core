@@ -12,6 +12,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 - `SpatialNET.Network`: `INetworkWriter`, `BuiltNode` and `BuiltEdge`; `InMemoryGraph` implements the writer, so a network can be built straight into memory.
 - Benchmarks: `NetworkBenchmarks`, `NetworkBuildBenchmarks`, `--quick-network` and `--quick-build` on a synthetic network of radial local networks with up to 3 million nodes.
 - Playground: a network view of its own (`network.html`, ADR 0050): draw or load points and lines with a type each, build with tolerance and the split options, show real nodes, helper nodes and edges, the diagnostics and conflicts, and the shortest path between two clicked nodes (`/api/network/build`, `/api/network/path`).
+- Tracing (ADR 0051): `SpatialNET.Network` gets `Trace` (one run per source, stopping at blocked nodes and at the other sources, reporting a node once per source with the cost from it), `TraceEdges` (every edge a run passes or enters, for drawing a supply area), `Supply` (the sources of every sink: empty for not supplied, more than one for multiple supply; a breadth-first search without costs, with an optional `IProgress<SupplyProgress>`) and `FindUnsupplied`. The memory of a run is bounded by its supply area. Playground: sources can be marked in the network view, supply areas are coloured, and sinks that are not or multiply supplied are marked.
 
 ## [0.10.0-preview.2] - 2026-11-08
 

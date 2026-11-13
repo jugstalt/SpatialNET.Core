@@ -19,4 +19,6 @@
 .chip.result li:hover { background: #eef2ff; }
 .chip.result .bad { color: var(--err); font-weight: 600; }
 .chip.result .big { font-size: 15px; font-weight: 600; }
+.supply-sink { cursor: pointer; }
+.chip.result .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: baseline; }
 .node-label { background: #fff; border: 1px solid var(--ink); border-radius: 9px; padding: 0 5px; font-size: 11px; }
