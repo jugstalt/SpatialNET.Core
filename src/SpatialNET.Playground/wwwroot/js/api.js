@@ -37,3 +37,6 @@ export const networkPath = request => post('api/network/path', request);
 
 /** The supply areas of the marked sources and the sources of every customer (ADR 0051) → {ok, sources:[{id, blocked, edges}], sinks:[{id, geometry, sources}]}. */
 export const networkSupply = request => post('api/network/supply', request);
+
+/** The violations of the rules of the table over the whole network (ADR 0052) → {ok, rules:[{id, text}], violations:[{rule, severity, kind, node, edge, count, min, max, geometry}]}. */
+export const networkValidate = request => post('api/network/validate', request);

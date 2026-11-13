@@ -226,6 +226,63 @@ public class PlaygroundNetworkTests(WebApplicationFactory<Program> factory) : IC
         Assert.False(string.IsNullOrWhiteSpace(body["error"]!.GetValue<string>()));
     }
 
+    private static object RuleRow(string id, string subject, string subjectTypes, string countTypes, int min, int? max,
+        string severity = "Error", string endFilter = "All", string? endTypes = null) =>
+        new { id, severity, subject, subjectTypes, endFilter, endTypes, countTypes, min, max };
+
+    [Fact]
+    public async Task Validate_reports_each_violation_with_the_place_of_its_node()
+    {
+        // The concept network: the cable ends at a helper node (100, 0) with nothing behind it, and the switch has two cables, not one.
+        var rules = new[]
+        {
+            RuleRow("LEITUNG-OFFEN", "Edge", "Kabel", "*", 1, null, severity: "Warning", endFilter: "NodeIs", endTypes: "untyped"),
+            RuleRow("SCHALTER", "Node", "Schalter", "Kabel", 1, 1),
+            RuleRow("KUNDE", "Node", "Kunde", "Kastenverbinder | Kabel", 1, 1),
+        };
+
+        var (status, body) = await Post("/api/network/validate", Concept(new { rules }));
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.True(body["ok"]!.GetValue<bool>());
+        Assert.Equal(["LEITUNG-OFFEN", "SCHALTER", "KUNDE"], body["rules"]!.AsArray().Select(r => r!["id"]!.GetValue<string>()));
+        Assert.Equal("LEITUNG-OFFEN: edges Kabel, ends untyped, other edges * >= 1 (warning)", body["rules"]![0]!["text"]!.GetValue<string>());
+
+        var violations = body["violations"]!.AsArray().Select(v => v!.AsObject()).ToList();
+        Assert.Equal(2, violations.Count);
+        var open = violations.Single(v => v["rule"]!.GetValue<string>() == "LEITUNG-OFFEN");
+        Assert.Equal(("Warning", "Edge", "L1#2", 0), (open["severity"]!.GetValue<string>(), open["kind"]!.GetValue<string>(), open["edge"]!.GetValue<string>(), open["count"]!.GetValue<int>()));
+        Assert.Equal([100.0, 0.0], open["geometry"]!["coordinates"]!.AsArray().Select(c => Math.Round(c!.GetValue<double>(), 3)));
+        var cables = violations.Single(v => v["rule"]!.GetValue<string>() == "SCHALTER");
+        Assert.Equal(("Node", "P2", 2, 1, 1), (cables["kind"]!.GetValue<string>(), cables["node"]!.GetValue<string>(), cables["count"]!.GetValue<int>(), cables["min"]!.GetValue<int>(), cables["max"]!.GetValue<int>()));
+        Assert.Null(cables["edge"]);
+    }
+
+    [Theory]
+    [InlineData("noRules")]
+    [InlineData("badPattern")]
+    [InlineData("endsOnNode")]
+    [InlineData("range")]
+    [InlineData("severity")]
+    public async Task Validate_needs_valid_rules(string problem)
+    {
+        var (id, rules) = problem switch
+        {
+            "noRules" => ("", Array.Empty<object>()),
+            "badPattern" => ("PATTERN", [RuleRow("PATTERN", "Node", "Gibtsnicht", "Kabel", 1, null)]),
+            "endsOnNode" => ("ENDS", [RuleRow("ENDS", "Node", "Kasten", "Kabel", 1, null, endFilter: "NodeIs", endTypes: "Kasten")]),
+            "range" => ("RANGE", [RuleRow("RANGE", "Node", "Kasten", "Kabel", 3, 2)]),
+            _ => ("SEVERITY", [RuleRow("SEVERITY", "Node", "Kasten", "Kabel", 1, null, severity: "Fatal")]),
+        };
+
+        var (status, body) = await Post("/api/network/validate", Concept(new { rules }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, status);
+        string message = body["error"]!.GetValue<string>();
+        Assert.False(string.IsNullOrWhiteSpace(message));
+        Assert.Contains(id, message);   // a row that cannot be a rule names its id
+    }
+
     [Theory]
     [InlineData("empty")]
     [InlineData("tolerance")]

@@ -36,7 +36,23 @@ public sealed record NetworkRequest(
     string? From = null,
     string? To = null,
     List<string>? Blocked = null,
-    List<string>? Sources = null);
+    List<string>? Sources = null,
+    List<NetworkRuleRow>? Rules = null);
+
+/// <summary>
+/// One row of the rule table of the network view (ADR 0052): the plain values of a <see cref="NetworkRuleDefinition"/>,
+/// with the enums as text. Patterns use the names of <see cref="NetworkTypes"/>, for example <c>Kasten</c> or <c>Kabel | Freileitung</c>.
+/// </summary>
+public sealed record NetworkRuleRow(
+    string Id,
+    string? Severity,
+    string Subject,
+    string SubjectTypes,
+    string? EndFilter,
+    string? EndTypes,
+    string CountTypes,
+    int Min,
+    int? Max);
 
 /// <summary>The fixed node and edge types of the network view (a small table of a utility network).</summary>
 public static class NetworkTypes
@@ -51,6 +67,31 @@ public static class NetworkTypes
     /// <summary>The edge types a line can get.</summary>
     public static IReadOnlyList<(int Id, string Name)> Edges { get; } =
         [(11, "Kabel"), (12, "Freileitung"), (13, "Kastenverbinder")];
+
+    /// <summary>
+    /// The types as a registry with one facet, so that rules can use patterns by name (<c>Kasten | Trafo</c>, <c>*</c>,
+    /// <c>untyped</c>). The facet values only number the names; the type ids are those of the lists above.
+    /// </summary>
+    public static TypeRegistry Registry { get; } = CreateRegistry();
+
+    private static TypeRegistry CreateRegistry()
+    {
+        var names = new Dictionary<int, string>();
+        var types = new List<NetworkType>();
+        foreach (var (id, name) in Nodes)
+        {
+            names[names.Count + 1] = name;
+            types.Add(new NetworkType(id, ElementKind.Node, [names.Count], name));
+        }
+
+        foreach (var (id, name) in Edges)
+        {
+            names[names.Count + 1] = name;
+            types.Add(new NetworkType(id, ElementKind.Edge, [names.Count], name));
+        }
+
+        return new TypeRegistry([new Facet("Type", names)], types);
+    }
 
     /// <summary>The name of a node type, or the number for a type that is not in the table.</summary>
     public static string NodeName(int id) => id == 0 ? "Helper node" : Nodes.FirstOrDefault(t => t.Id == id).Name ?? id.ToString(CultureInfo.InvariantCulture);
@@ -211,6 +252,71 @@ public sealed class NetworkService
                 ["sources"] = new JsonArray(x.Sources.Select(s => (JsonNode)s).ToArray()),
             }).ToArray()),
         };
+    }
+
+    /// <summary>
+    /// The violations of the rules of the table over every node and edge of the network (ADR 0052), each with the place of
+    /// its node for marking it on the map. The rows are resolved with <see cref="NetworkRule.FromDefinition"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">The request is invalid, there is no rule, or a row cannot be a rule (the message names the rule id).</exception>
+    public JsonObject Validate(NetworkRequest request)
+    {
+        var rows = request.Rules ?? [];
+        if (rows.Count == 0)
+        {
+            throw new ArgumentException("Add at least one rule.");
+        }
+
+        var rules = rows.Select(ToRule).ToList();
+        var net = Prepare(request, out var failure);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        var nodes = net!.Graph.Nodes.ToDictionary(n => n.Id, StringComparer.Ordinal);
+        var violations = net.Graph.Validate(net.Graph.Nodes.Select(n => n.Id), rules).ToList();
+        return new JsonObject
+        {
+            ["ok"] = true,
+            ["unit"] = net.Projection?.Unit,
+            ["rules"] = new JsonArray(rules.Select(r => (JsonNode)new JsonObject { ["id"] = r.Id, ["text"] = r.ToString() }).ToArray()),
+            ["violations"] = new JsonArray(violations.Select(v => (JsonNode)new JsonObject
+            {
+                ["rule"] = v.RuleId,
+                ["severity"] = v.Severity.ToString(),
+                ["kind"] = v.Kind.ToString(),
+                ["node"] = v.Node,
+                ["edge"] = v.Kind == ElementKind.Edge ? v.Edge : null,
+                ["typeName"] = v.Kind == ElementKind.Edge ? NetworkTypes.EdgeName(v.TypeId) : NetworkTypes.NodeName(v.TypeId),
+                ["count"] = v.Count,
+                ["min"] = v.Min,
+                ["max"] = v.Max,
+                ["geometry"] = net.Geo(Factory.CreatePoint(nodes[v.Node].Location, null)),
+            }).ToArray()),
+        };
+    }
+
+    private static NetworkRule ToRule(NetworkRuleRow row)
+    {
+        T Parse<T>(string? text, T fallback, string what)
+            where T : struct, Enum =>
+            string.IsNullOrWhiteSpace(text) ? fallback
+                : Enum.TryParse<T>(text.Trim(), ignoreCase: true, out var value) && Enum.IsDefined(value) ? value
+                : throw new ArgumentException($"Rule '{row.Id}': \"{text}\" is not a {what}.");
+
+        return NetworkRule.FromDefinition(
+            new NetworkRuleDefinition(
+                row.Id,
+                Parse(row.Severity, RuleSeverity.Error, "severity (Error or Warning)"),
+                Parse(row.Subject, RuleSubject.Node, "subject (Node or Edge)"),
+                row.SubjectTypes,
+                Parse(row.EndFilter, RuleEndFilter.All, "end filter (All, NodeIs or NodeIsNot)"),
+                row.EndTypes,
+                row.CountTypes,
+                row.Min,
+                row.Max),
+            NetworkTypes.Registry);
     }
 
     /// <summary>Reads and projects the input, builds the graph; a <see cref="NetworkBuildException"/> becomes a <paramref name="failure"/> response.</summary>

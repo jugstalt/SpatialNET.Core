@@ -2,7 +2,7 @@
 
 A network is a graph of **nodes** and **edges** made from the lines and points of a utility network (cables, connectors, boxes, transformers, customers) or of a street network. SpatialNET searches it; the **host stores it**. The package `SpatialNET.Network` holds the model, the interface `IGraph` and the searches; `SpatialNET.Imp` adds a graph in memory and a cache for hosts that keep their network in a database ([ADR 0049](../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.md)).
 
-This page covers what is there today: the model, types, weights, the switching state, `Reach` and `ShortestPath`, and building a network from lines and points with `SpatialNET.Network.Building`. Tracing the supply of customers and rule checks follow ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md)).
+This page covers the model, types, weights, the switching state, `Reach` and `ShortestPath`, building a network from lines and points with `SpatialNET.Network.Building`, tracing the supply of customers and checking rules ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md)).
 
 ## The host holds the graph
 
@@ -217,9 +217,67 @@ The normal state is part of the records: `Blocked` nodes, `Disabled` edges and t
 
 The names are neutral on purpose: for an electrician a "closed" switch conducts, for a gate it does not.
 
+## Rules
+
+A network is only as good as its data, and a utility network has many rules that the GIS cannot enforce while drawing: every box has a connector, at the free end of a connector there is exactly one cable, a line does not end in the open. A **rule counts the direct neighbours** of an element (the edges at a node, or the other edges at an end of an edge) that match a type pattern, and compares the count with an allowed range. There are no paths, variables or expressions. A rule is **a row of plain values**, so the host can keep its rules in a table that the GIS team edits; there is no rule language to parse.
+
+```csharp
+var types = new TypeRegistry(
+    [
+        new Facet("Level", new Dictionary<int, string> { [1] = "Low", [2] = "Medium" }),
+        new Facet("Object", new Dictionary<int, string> { [1] = "Line", [2] = "BoxConnector", [4] = "Box" }),
+    ],
+    [
+        new NetworkType(11, ElementKind.Edge, [1, 1]),   // Low.Line
+        new NetworkType(13, ElementKind.Edge, [1, 2]),   // Low.BoxConnector
+        new NetworkType(15, ElementKind.Node, [1, 4]),   // Low.Box
+    ]);
+
+// Two boxes (1, 2) and helper nodes (3, 4, 5): box 1 has two connectors, box 2 none, and the line at node 4 ends in the open.
+var graph = new InMemoryGraph<int, int, string>();
+foreach (var (id, type) in new[] { (1, 15), (2, 15), (3, 0), (4, 0), (5, 0) })
+    graph.Add(new GraphNode<int>(id, type, new Coordinate(id * 10, 0)));
+graph.Add(new GraphEdge<int, int>(101, 1, 3, 13, 10));   // connector to node 3, where a line continues
+graph.Add(new GraphEdge<int, int>(102, 3, 4, 11, 10));   // line from node 3 to node 4
+graph.Add(new GraphEdge<int, int>(103, 1, 5, 13, 10));   // connector to node 5, where nothing continues
+
+// Rules as rows, as the GIS team keeps them in a table: patterns as text, several separated by "|".
+var rows = new NetworkRuleDefinition[]
+{
+    new("BOX-CONNECTOR", RuleSeverity.Error, RuleSubject.Node, "[*, Box]", RuleEndFilter.All, null, "[*, BoxConnector]", 1, null),
+    new("CONNECTOR-FREE-END", RuleSeverity.Error, RuleSubject.Edge, "[*, BoxConnector]", RuleEndFilter.NodeIsNot, "[*, Box]", "[*, Line]", 1, 1),
+};
+var rules = rows.Select(row => NetworkRule.FromDefinition(row, types)).ToList();
+
+// ... or in code, here as a warning: a line does not end in the open at a helper node.
+rules.Add(NetworkRule.ForEdges("LINE-OPEN-END", types.Edges("[*, Line]"))
+    .AtEndsWhereNode(TypeSet.Untyped)
+    .CountOtherEdges(types.Edges("*")).AtLeast(1)
+    .AsWarning());
+
+Console.WriteLine(rules[1]);   // CONNECTOR-FREE-END: edges [*, BoxConnector], ends not [*, Box], other edges [*, Line] = 1
+
+// The nodes of one area and all edges at them; over the whole network use ValidateNodes and ValidateEdges.
+foreach (var violation in graph.Validate(graph.Nodes.Select(node => node.Id), rules))
+    Console.WriteLine($"{violation.RuleId} ({violation.Severity}) at node {violation.Node}" +
+                      (violation.Kind == ElementKind.Edge ? $", edge {violation.Edge}" : "") + $": {violation.Count} found");
+// CONNECTOR-FREE-END (Error) at node 5, edge 103: 0 found
+// BOX-CONNECTOR (Error) at node 2: 0 found
+// LINE-OPEN-END (Warning) at node 4, edge 102: 0 found
+```
+
+- **The shape of a rule:** the subject (nodes or edges of a `TypeSet`; `TypeSet.Untyped` addresses helper nodes), for an edge the ends to look at (`All`, `NodeIs` or `NodeIsNot` a `TypeSet`), what is counted (for a node its edges of the given types, for an edge the **other** edges at the end), and the range `Min` to `Max` (no `Max` means no upper limit). In code: `ForNodes` or `ForEdges`, `AtEndsWhereNode` or `AtEndsWhereNodeIsNot`, `CountEdges` or `CountOtherEdges`, then `Between`, `AtLeast`, `Exactly` or `None`; `AsWarning()` lowers the severity. A finished `NetworkRule` is immutable and can be used for any number of checks and threads.
+- **An edge rule is checked at each chosen end on its own:** a connector with nothing at its free end gives one violation at that end, not a sum over both ends. A violation says the rule, the node (the end where was counted), the edge, the count that was found, the allowed range and the location of the node.
+- **Counting:** the edge itself never counts, parallel edges count one by one, a loop counts once, several patterns (`"a | b"`) add up. The switching state does not matter: rules check what is built, not how it is switched, so a disabled edge counts like any other. Supply under a switching state is a trace.
+- **Rows:** `NetworkRuleDefinition(Id, Severity, Subject, SubjectTypes, EndFilter, EndTypes, CountTypes, Min, Max)` holds the same as plain values; `NetworkRule.FromDefinition(row, types)` resolves it and `rule.ToDefinition()` gives it back (for rules whose types came from a `TypeRegistry`; a `TypeSet.Of(...)` has no text). A row that cannot be a rule throws when it is resolved, with the rule id in the message. `rule.ToString()` gives a readable form for reports.
+- **Three ways to check:** `ValidateNodes` (node rules, for each given node id) and `ValidateEdges` (edge rules, for each given edge record) keep no set of checked elements and are meant for streams over the whole network; `Validate` (node rules for the given nodes plus edge rules for every edge at them, each once) remembers what it checked and is meant for a bounded area, for example one local network on save: build a temporary network of all objects that touch the area, pass only the nodes inside, and the edges that leave the area are counted at the border but not reported as open ends. Each method applies only the rules of its kind, so one list serves all three; rule ids must be unique.
+- **Streaming:** the input is read in blocks of about a thousand and `IGraph` is asked in one batch per block. Pass nodes and edges **sorted by shard**, so that the neighbours of a block come from the shards in the cache. Violations come in the order of the input.
+- **Not rules:** whether a customer is supplied is a trace; attributes the network does not carry (cross-section against fuse) are the host's to check; two real nodes at one place are reported by the builder.
+
 ## Large networks
 
 - A search keeps one entry per visited node. Inside one local network that is a few hundred entries.
 - **Search one area at a time.** One search from all transformers of a city runs as one wave through every local network at once: through a shard cache it loads each shard again and again, in memory it keeps an entry for every node. Search from one transformer (or one area) at a time instead, in the order of the shards, so that each shard is loaded about once.
 - Measured on a synthetic network of radial local networks with 300 nodes each (`--quick-network` in the benchmarks): a search in one local network takes under 1 ms in memory; through `ShardedGraphBase` about 1.5 ms with an empty cache and 0.7 ms with a warm one (about 5 ms with an empty cache when every query to the store takes 0.5 ms). Searching every local network of a network with 3 million nodes one by one takes about 10 s and loads every shard once; a single search from all 3,333 transformers of a network with 1 million nodes through a cache of 64 shards loaded shards over 500,000 times.
+- Rules over a whole network (`ValidateEdges` with two rules, through a cache of 64 shards, `--quick-network`): all 3 million edges of the synthetic network, sorted by shard, take about 5 s and load every shard once; 1 million edges take about 2 s. The same edges in random order load shards for nearly every block: a sample of 100,000 edges took 21 s at 1 million edges and 30 s at 3 million, which is about 15 minutes for all of them. Sort by shard.
 - Errors of the data (an edge to a node the host does not return, a missing weight, a negative or infinite cost) are an `InvalidGraphException` with the ids involved; errors of the host pass through unchanged. Every search takes a `CancellationToken`.

@@ -27,14 +27,23 @@ public sealed class TypeSet
     private readonly FrozenSet<int> _set;
     private readonly int[] _sorted;
 
-    private TypeSet(IEnumerable<int> typeIds)
+    private TypeSet(IEnumerable<int> typeIds, string? patternText = null)
     {
         _sorted = typeIds.Distinct().Order().ToArray();
         _set = _sorted.ToFrozenSet();
+        PatternText = patternText;
     }
 
+    /// <summary>
+    /// The pattern text the set was resolved from by a <see cref="TypeRegistry"/>, or <c>null</c> for sets made from ids.
+    /// Rules keep it so that <see cref="NetworkRule.ToDefinition"/> can give the text of a rule back (ADR 0052).
+    /// </summary>
+    internal string? PatternText { get; }
+
     /// <summary>The set with only the untyped helper nodes (type 0).</summary>
-    public static TypeSet Untyped { get; } = new([0]);
+    public static TypeSet Untyped { get; } = new([0], "untyped");
+
+    internal static TypeSet FromPattern(IEnumerable<int> typeIds, string patternText) => new(typeIds, patternText);
 
     /// <summary>The empty set.</summary>
     public static TypeSet Empty { get; } = new([]);
@@ -68,7 +77,7 @@ public sealed class TypeSet
     public TypeSet Union(TypeSet other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        return new TypeSet(_sorted.Concat(other._sorted));
+        return new TypeSet(_sorted.Concat(other._sorted), PatternText is { } a && other.PatternText is { } b ? a + " | " + b : null);
     }
 
     /// <inheritdoc/>
@@ -207,8 +216,8 @@ public sealed class TypeRegistry
             return vector;
         }).ToArray();
 
-        AllNodes = TypeSet.Of(_ordered.Where(t => t.Kind == ElementKind.Node).Select(t => t.Id));
-        AllEdges = TypeSet.Of(_ordered.Where(t => t.Kind == ElementKind.Edge).Select(t => t.Id));
+        AllNodes = TypeSet.FromPattern(_ordered.Where(t => t.Kind == ElementKind.Node).Select(t => t.Id), "*");
+        AllEdges = TypeSet.FromPattern(_ordered.Where(t => t.Kind == ElementKind.Edge).Select(t => t.Id), "*");
     }
 
     /// <summary>The facets, in order.</summary>
@@ -291,7 +300,7 @@ public sealed class TypeRegistry
             }
         }
 
-        return TypeSet.Of(ids);
+        return TypeSet.FromPattern(ids, string.Join(" | ", patterns));
     }
 
     private IEnumerable<int> ResolveOne(ElementKind kind, string pattern, string text)

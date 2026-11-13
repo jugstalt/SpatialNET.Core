@@ -90,6 +90,25 @@ public sealed class SyntheticNetwork
         return sources;
     }
 
+    /// <summary>Two edge rules of ADR 0052 for the synthetic network: no line ends in the open at a helper node, and every box is passed on.</summary>
+    public static NetworkRule[] Rules { get; } =
+    [
+        NetworkRule.ForEdges("OPEN-END", TypeSet.Of(CableType)).AtEndsWhereNode(TypeSet.Untyped).CountOtherEdges(TypeSet.Of(CableType)).AtLeast(1),
+        NetworkRule.ForEdges("BOX-PASSED-ON", TypeSet.Of(CableType)).AtEndsWhereNode(TypeSet.Of(BoxType)).CountOtherEdges(TypeSet.Of(CableType)).AtLeast(1).AsWarning(),
+    ];
+
+    /// <summary>The edges to check (ADR 0052): in the order of the shards as they are created, or in a fixed random order.</summary>
+    public GraphEdge<long, long>[] EdgesFor(bool shuffled)
+    {
+        var edges = Edges.ToArray();
+        if (shuffled)
+        {
+            new Random(7).Shuffle(edges);
+        }
+
+        return edges;
+    }
+
     public InMemoryGraph<long, long, int> ToMemory()
     {
         var graph = new InMemoryGraph<long, long, int>();
@@ -186,6 +205,7 @@ public class NetworkBenchmarks
     private SimulatedStoreGraph _store = null!;
     private ShardStore _storeData = null!;
     private long[] _supplySources = null!, _supplyShuffled = null!, _supplySinks = null!;
+    private GraphEdge<long, long>[] _edgesSorted = null!, _edgesShuffled = null!;
     private int _next;
 
     [Params(100_000, 1_000_000)]
@@ -199,6 +219,8 @@ public class NetworkBenchmarks
         _supplySources = _network.SourcesFor(10_000, shuffled: false);
         _supplyShuffled = _network.SourcesFor(10_000, shuffled: true);
         _supplySinks = _network.Customers(500_000);
+        _edgesSorted = _network.EdgesFor(shuffled: false);
+        _edgesShuffled = _network.EdgesFor(shuffled: true);
         _memory = _network.ToMemory();
         _store = new SimulatedStoreGraph(new ShardStore(_network), maxCachedShards: 64, latencyMilliseconds: 0);
     }
@@ -235,6 +257,18 @@ public class NetworkBenchmarks
 
     private int SupplyThroughShards(long[] sources) =>
         new SimulatedStoreGraph(_storeData, maxCachedShards: 64, latencyMilliseconds: 0).Supply(sources, _supplySinks).Count(s => s.Sources.Count == 1);
+
+    [Benchmark]
+    public int ValidateEdgesThroughShardsSortedByShard() => ValidateEdgesThroughShards(sorted: true);
+
+    [Benchmark]
+    public int ValidateEdgesThroughShardsShuffled() => ValidateEdgesThroughShards(sorted: false);
+
+    private int ValidateEdgesThroughShards(bool sorted)
+    {
+        var edges = sorted ? _edgesSorted : _edgesShuffled;
+        return new SimulatedStoreGraph(_storeData, maxCachedShards: 64, latencyMilliseconds: 0).ValidateEdges(edges, SyntheticNetwork.Rules).Count();
+    }
 
     [Benchmark]
     public int ReachEveryLocalNetworkThroughShards()

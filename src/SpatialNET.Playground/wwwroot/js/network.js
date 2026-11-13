@@ -1,6 +1,6 @@
 // The network view of the playground (ADR 0050): draw or load points and lines, build a network on the server,
 // show real nodes, helper nodes and edges, the shortest path between two clicked nodes, and the supply of the customers
-// by the nodes marked as sources (ADR 0051).
+// by the nodes marked as sources (ADR 0051), and check a small table of rules over the network (ADR 0052).
 // Not a descriptor (ADR 0011), because its input is a set of lines and points.
 
 /* global L */
@@ -24,10 +24,18 @@ const state = {
   to: null,
   blocked: new Set(),
   sources: new Set(), // node ids that are sources of the supply trace
+  rules: [],        // rows of the rule table: the plain values of a NetworkRuleDefinition (ADR 0052)
 };
 
+// The rules of the concept that fit the types of the view; patterns use the names of the types.
+const DEFAULT_RULES = () => [
+  { id: 'KASTEN-ABGANG', severity: 'Error', subject: 'Node', subjectTypes: 'Kasten', endFilter: 'All', endTypes: '', countTypes: 'Kastenverbinder', min: 1, max: '' },
+  { id: 'KV-FREIES-ENDE', severity: 'Error', subject: 'Edge', subjectTypes: 'Kastenverbinder', endFilter: 'NodeIsNot', endTypes: 'Kasten', countTypes: 'Kabel | Freileitung', min: 1, max: 1 },
+  { id: 'LEITUNG-OFFEN', severity: 'Warning', subject: 'Edge', subjectTypes: 'Kabel | Freileitung', endFilter: 'NodeIs', endTypes: 'untyped', countTypes: '*', min: 1, max: '' },
+];
+
 const $ = id => document.getElementById(id);
-let map, inputLayer, resultLayer, supplyLayer, pathLayer, flashLayer, sequence = 0, supplySequence = 0;
+let map, inputLayer, resultLayer, supplyLayer, pathLayer, ruleLayer, flashLayer, sequence = 0, supplySequence = 0, ruleSequence = 0;
 
 // ---------- Map ----------
 
@@ -65,6 +73,7 @@ function setMode(local) {
   resultLayer = L.featureGroup().addTo(map);
   supplyLayer = L.featureGroup().addTo(map);
   pathLayer = L.featureGroup().addTo(map);
+  ruleLayer = L.featureGroup().addTo(map);
   flashLayer = L.featureGroup().addTo(map);
   $('tol-unit').textContent = local ? '(units)' : '(m)';
   renderInput();
@@ -94,6 +103,7 @@ function flash(point) {
 function inputChanged() {
   sequence++;
   supplySequence++;
+  ruleSequence++;
   state.network = null;
   state.from = state.to = null;
   state.blocked.clear();
@@ -106,6 +116,7 @@ function inputChanged() {
   $('result').innerHTML = '';
   $('path').innerHTML = '';
   $('supply').innerHTML = '';
+  $('rules-result').innerHTML = '';
 }
 
 function renderInput() {
@@ -235,6 +246,7 @@ async function build() {
     state.sources.clear();
     $('path').innerHTML = '';
     $('supply').innerHTML = '';
+    $('rules-result').innerHTML = '';
     $('kbs-label').textContent = result.kbs === 'local' ? 'Local planar' : `CRS ${result.kbs}`;
     if (!result.ok) {
       state.network = null;
@@ -262,6 +274,7 @@ function renderResult() {
   resultLayer.clearLayers();
   supplyLayer.clearLayers();
   pathLayer.clearLayers();
+  ruleLayer.clearLayers();
   $('legend').innerHTML = '';
   const net = state.network;
   if (!net) return;
@@ -465,6 +478,92 @@ async function showSupply() {
   }
 }
 
+// ---------- Rules (ADR 0052) ----------
+
+/** The rule table: one block per rule with the plain values of a NetworkRuleDefinition; every edit is kept in state.rules. */
+function renderRules() {
+  const box = $('rules');
+  box.innerHTML = '';
+  state.rules.forEach((rule, i) => {
+    const div = document.createElement('div');
+    div.className = 'rule';
+    const select = (field, values) => `<select data-f="${field}">${values.map(v => `<option${v === rule[field] ? ' selected' : ''}>${v}</option>`).join('')}</select>`;
+    div.innerHTML = `
+      <div class="rule-head"><input data-f="id" value="${escape(rule.id)}" title="Rule id" aria-label="Rule id"> ${select('severity', ['Error', 'Warning'])} <button title="Remove rule">×</button></div>
+      <label>Check ${select('subject', ['Node', 'Edge'])} <input data-f="subjectTypes" value="${escape(rule.subjectTypes)}" placeholder="pattern, e.g. Kasten | Trafo"></label>
+      <label class="ends">Ends ${select('endFilter', ['All', 'NodeIs', 'NodeIsNot'])} <input data-f="endTypes" value="${escape(rule.endTypes)}" placeholder="node pattern, e.g. Kasten or untyped"></label>
+      <label><span class="count-label">Count edges</span> <input data-f="countTypes" value="${escape(rule.countTypes)}" placeholder="edge pattern, e.g. Kabel | Freileitung"></label>
+      <label class="range">Min <input data-f="min" type="number" min="0" step="1" value="${rule.min}"> Max <input data-f="max" type="number" min="0" step="1" value="${rule.max}" placeholder="none"></label>`;
+    const refresh = () => {
+      const edge = rule.subject === 'Edge';
+      div.querySelector('.ends').hidden = !edge;
+      div.querySelector('[data-f=endTypes]').disabled = rule.endFilter === 'All';
+      div.querySelector('.count-label').textContent = edge ? 'Count other edges' : 'Count edges';
+    };
+    div.querySelectorAll('[data-f]').forEach(input => {
+      input.oninput = () => {
+        rule[input.dataset.f] = input.type === 'number' ? (input.value === '' ? '' : Number(input.value)) : input.value;
+        if (input.dataset.f === 'subject' && rule.subject === 'Node') rule.endFilter = 'All';
+        if (input.dataset.f === 'endFilter' && rule.endFilter === 'All') rule.endTypes = '';
+        refresh();
+      };
+    });
+    div.querySelector('button').onclick = () => {
+      state.rules.splice(i, 1);
+      renderRules();
+    };
+    refresh();
+    box.append(div);
+  });
+}
+
+/** The rows as the server wants them: an empty Max is no upper limit, end types only with an end filter. */
+function ruleRows() {
+  return state.rules.map(r => ({
+    id: r.id, severity: r.severity, subject: r.subject, subjectTypes: r.subjectTypes,
+    endFilter: r.subject === 'Edge' ? r.endFilter : 'All', endTypes: r.subject === 'Edge' && r.endFilter !== 'All' ? r.endTypes : null,
+    countTypes: r.countTypes, min: r.min === '' ? 0 : r.min, max: r.max === '' ? null : r.max,
+  }));
+}
+
+/** Checks the rules over the whole network and marks every violation on the map. */
+async function checkRules() {
+  ruleLayer.clearLayers();
+  const box = $('rules-result');
+  box.innerHTML = '';
+  const mine = ++ruleSequence;
+  showError(null);
+  try {
+    const r = await api.networkValidate({ ...request(), rules: ruleRows() });
+    if (mine !== ruleSequence) return;
+    if (!r.ok) {
+      showConflicts(r);
+      return;
+    }
+
+    const rangeOf = v => (v.max === null ? `at least ${v.min}` : v.min === v.max ? `exactly ${v.min}` : `${v.min} to ${v.max}`);
+    const items = r.violations.map(v => ({
+      v,
+      text: `${v.rule} (${v.severity}): ${v.kind === 'Edge' ? 'edge ' + v.edge + ' at node ' : 'node '}${v.node} · ${v.typeName} · ${v.count} found, ${rangeOf(v)} allowed`,
+    }));
+    for (const { v, text } of items) {
+      const color = v.severity === 'Warning' ? '#f59e0b' : '#dc2626';
+      L.circleMarker(latlng(v.geometry), { radius: 14, color, weight: 3, fill: false, pmIgnore: true })
+        .bindTooltip(text).addTo(ruleLayer);
+    }
+
+    const errors = items.filter(i => i.v.severity === 'Error').length;
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+    box.innerHTML = `<div class="big">${plural(items.length, 'violation')}</div>
+      <div class="muted">${plural(errors, 'error')}, ${plural(items.length - errors, 'warning')} · ${plural(r.rules.length, 'rule')}</div>
+      <ul>${items.map((i, n) => `<li data-i="${n}" class="${i.v.severity === 'Warning' ? 'warning' : 'error'}">${escape(i.text)}</li>`).join('')}</ul>
+      <details><summary class="muted">The rules</summary><ul class="plain">${r.rules.map(x => `<li>${escape(x.text)}</li>`).join('')}</ul></details>`;
+    box.querySelectorAll('li[data-i]').forEach(li => (li.onclick = () => flash(items[li.dataset.i].v.geometry)));
+  } catch (e) {
+    if (mine === ruleSequence) showError(e.message);
+  }
+}
+
 // ---------- Start ----------
 
 function drawButton(id, type) {
@@ -506,6 +605,17 @@ async function start() {
     $('kbs-label').textContent = '';
   };
   $('build').onclick = build;
+  state.rules = DEFAULT_RULES();
+  renderRules();
+  $('rule-add').onclick = () => {
+    state.rules.push({ id: `RULE-${state.rules.length + 1}`, severity: 'Error', subject: 'Node', subjectTypes: '*', endFilter: 'All', endTypes: '', countTypes: '*', min: 0, max: '' });
+    renderRules();
+  };
+  $('rules-default').onclick = () => {
+    state.rules = DEFAULT_RULES();
+    renderRules();
+  };
+  $('rules-run').onclick = checkRules;
   $('supply-run').onclick = showSupply;
   $('sources-clear').onclick = () => {
     state.sources.clear();

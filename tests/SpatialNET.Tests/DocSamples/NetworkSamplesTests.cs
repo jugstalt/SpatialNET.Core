@@ -81,6 +81,66 @@ public sealed class NetworkSamplesTests
     }
 
     [Fact]
+    public void Rules()
+    {
+        // --- snippet: network-rules
+        var types = new TypeRegistry(
+            [
+                new Facet("Level", new Dictionary<int, string> { [1] = "Low", [2] = "Medium" }),
+                new Facet("Object", new Dictionary<int, string> { [1] = "Line", [2] = "BoxConnector", [4] = "Box" }),
+            ],
+            [
+                new NetworkType(11, ElementKind.Edge, [1, 1]),   // Low.Line
+                new NetworkType(13, ElementKind.Edge, [1, 2]),   // Low.BoxConnector
+                new NetworkType(15, ElementKind.Node, [1, 4]),   // Low.Box
+            ]);
+
+        // Two boxes (1, 2) and helper nodes (3, 4, 5): box 1 has two connectors, box 2 none, and the line at node 4 ends in the open.
+        var graph = new InMemoryGraph<int, int, string>();
+        foreach (var (id, type) in new[] { (1, 15), (2, 15), (3, 0), (4, 0), (5, 0) })
+            graph.Add(new GraphNode<int>(id, type, new Coordinate(id * 10, 0)));
+        graph.Add(new GraphEdge<int, int>(101, 1, 3, 13, 10));   // connector to node 3, where a line continues
+        graph.Add(new GraphEdge<int, int>(102, 3, 4, 11, 10));   // line from node 3 to node 4
+        graph.Add(new GraphEdge<int, int>(103, 1, 5, 13, 10));   // connector to node 5, where nothing continues
+
+        // Rules as rows, as the GIS team keeps them in a table: patterns as text, several separated by "|".
+        var rows = new NetworkRuleDefinition[]
+        {
+            new("BOX-CONNECTOR", RuleSeverity.Error, RuleSubject.Node, "[*, Box]", RuleEndFilter.All, null, "[*, BoxConnector]", 1, null),
+            new("CONNECTOR-FREE-END", RuleSeverity.Error, RuleSubject.Edge, "[*, BoxConnector]", RuleEndFilter.NodeIsNot, "[*, Box]", "[*, Line]", 1, 1),
+        };
+        var rules = rows.Select(row => NetworkRule.FromDefinition(row, types)).ToList();
+
+        // ... or in code, here as a warning: a line does not end in the open at a helper node.
+        rules.Add(NetworkRule.ForEdges("LINE-OPEN-END", types.Edges("[*, Line]"))
+            .AtEndsWhereNode(TypeSet.Untyped)
+            .CountOtherEdges(types.Edges("*")).AtLeast(1)
+            .AsWarning());
+
+        Console.WriteLine(rules[1]);   // CONNECTOR-FREE-END: edges [*, BoxConnector], ends not [*, Box], other edges [*, Line] = 1
+
+        // The nodes of one area and all edges at them; over the whole network use ValidateNodes and ValidateEdges.
+        foreach (var violation in graph.Validate(graph.Nodes.Select(node => node.Id), rules))
+            Console.WriteLine($"{violation.RuleId} ({violation.Severity}) at node {violation.Node}" +
+                              (violation.Kind == ElementKind.Edge ? $", edge {violation.Edge}" : "") + $": {violation.Count} found");
+        // CONNECTOR-FREE-END (Error) at node 5, edge 103: 0 found
+        // BOX-CONNECTOR (Error) at node 2: 0 found
+        // LINE-OPEN-END (Warning) at node 4, edge 102: 0 found
+        // --- end
+
+        Assert.Equal("CONNECTOR-FREE-END: edges [*, BoxConnector], ends not [*, Box], other edges [*, Line] = 1", rules[1].ToString());
+        Assert.Equal(
+            [
+                "CONNECTOR-FREE-END (Error) at node 5, edge 103: 0 found",
+                "BOX-CONNECTOR (Error) at node 2: 0 found",
+                "LINE-OPEN-END (Warning) at node 4, edge 102: 0 found",
+            ],
+            graph.Validate(graph.Nodes.Select(node => node.Id), rules).Select(violation =>
+                $"{violation.RuleId} ({violation.Severity}) at node {violation.Node}" +
+                (violation.Kind == ElementKind.Edge ? $", edge {violation.Edge}" : "") + $": {violation.Count} found"));
+    }
+
+    [Fact]
     public void TypesAndPatterns()
     {
         // --- snippet: network-types

@@ -300,6 +300,36 @@ if (args.Contains("--quick-network"))
             GC.KeepAlive(supply);
         }
 
+        // Rules (ADR 0052): ValidateEdges over every edge, through 64 cached shards
+        foreach (bool shuffled in new[] { false, true })
+        {
+            // A shuffled input loads nearly every shard again for every block, so the whole network would take far too long:
+            // time a sample of 100,000 edges and extrapolate.
+            var edges = network.EdgesFor(shuffled);
+            int total = edges.Length;
+            if (shuffled && edges.Length > 100_000)
+            {
+                edges = edges[..100_000];
+            }
+
+            var validateStore = new SimulatedStoreGraph(store, maxCachedShards: 64, latencyMilliseconds: 0);
+            GC.Collect();
+            before = GC.GetAllocatedBytesForCurrentThread();
+            sw.Restart();
+            int violations = 0, errors = 0;
+            foreach (var violation in validateStore.ValidateEdges(edges, SyntheticNetwork.Rules))
+            {
+                violations++;
+                errors += violation.Severity == RuleSeverity.Error ? 1 : 0;
+            }
+
+            long elapsed = sw.ElapsedMilliseconds;
+            Console.WriteLine($"   ValidateEdges, {edges.Length:N0} of {total:N0} edges {(shuffled ? "shuffled (sample)" : "sorted by shard")}, 2 rules, 64 cached shards: " +
+                              $"{elapsed} ms, {validateStore.ShardLoads:N0} shard loads, {validateStore.Queries:N0} queries, " +
+                              $"{(GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0:F0} MB allocated, {violations:N0} violations ({errors:N0} errors)" +
+                              (edges.Length < total ? $", about {elapsed * (double)total / edges.Length / 1000:F0} s for all edges" : ""));
+        }
+
         sw.Restart();
         before = GC.GetAllocatedBytesForCurrentThread();
         int supplied = memory.Supply(network.SourcesFor(10_000, false), sinks).Count(s => s.Sources.Count == 1);

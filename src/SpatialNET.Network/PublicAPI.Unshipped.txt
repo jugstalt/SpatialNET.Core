@@ -1,4 +1,5 @@
 #nullable enable
+override SpatialNET.Network.NetworkRule.ToString() -> string!
 override SpatialNET.Network.TypeSet.ToString() -> string!
 SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>
 SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.BuiltEdge() -> void
@@ -30,6 +31,10 @@ SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Backward = 2 -> SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Both = 0 -> SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Forward = 1 -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.EdgeRuleBuilder
+SpatialNET.Network.EdgeRuleBuilder.AtEndsWhereNode(SpatialNET.Network.TypeSet! types) -> SpatialNET.Network.EdgeRuleBuilder!
+SpatialNET.Network.EdgeRuleBuilder.AtEndsWhereNodeIsNot(SpatialNET.Network.TypeSet! types) -> SpatialNET.Network.EdgeRuleBuilder!
+SpatialNET.Network.EdgeRuleBuilder.CountOtherEdges(SpatialNET.Network.TypeSet! types) -> SpatialNET.Network.RuleCountBuilder!
 SpatialNET.Network.EdgeWeight
 SpatialNET.Network.EdgeWeight.EdgeWeight() -> void
 SpatialNET.Network.EdgeWeight.EdgeWeight(int WeightId, double Value) -> void
@@ -101,6 +106,38 @@ SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.Steps.get -> System.Collections
 SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.Steps.init -> void
 SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.To.get -> TNodeId
 SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.To.init -> void
+SpatialNET.Network.NetworkRule
+SpatialNET.Network.NetworkRule.AsWarning() -> SpatialNET.Network.NetworkRule!
+SpatialNET.Network.NetworkRule.CountTypes.get -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.NetworkRule.EndFilter.get -> SpatialNET.Network.RuleEndFilter
+SpatialNET.Network.NetworkRule.EndTypes.get -> SpatialNET.Network.TypeSet?
+SpatialNET.Network.NetworkRule.Id.get -> string!
+SpatialNET.Network.NetworkRule.Max.get -> int?
+SpatialNET.Network.NetworkRule.Min.get -> int
+SpatialNET.Network.NetworkRule.Severity.get -> SpatialNET.Network.RuleSeverity
+SpatialNET.Network.NetworkRule.Subject.get -> SpatialNET.Network.RuleSubject
+SpatialNET.Network.NetworkRule.SubjectTypes.get -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.NetworkRule.ToDefinition() -> SpatialNET.Network.NetworkRuleDefinition!
+SpatialNET.Network.NetworkRuleDefinition
+SpatialNET.Network.NetworkRuleDefinition.CountTypes.get -> string!
+SpatialNET.Network.NetworkRuleDefinition.CountTypes.init -> void
+SpatialNET.Network.NetworkRuleDefinition.EndFilter.get -> SpatialNET.Network.RuleEndFilter
+SpatialNET.Network.NetworkRuleDefinition.EndFilter.init -> void
+SpatialNET.Network.NetworkRuleDefinition.EndTypes.get -> string?
+SpatialNET.Network.NetworkRuleDefinition.EndTypes.init -> void
+SpatialNET.Network.NetworkRuleDefinition.Id.get -> string!
+SpatialNET.Network.NetworkRuleDefinition.Id.init -> void
+SpatialNET.Network.NetworkRuleDefinition.Max.get -> int?
+SpatialNET.Network.NetworkRuleDefinition.Max.init -> void
+SpatialNET.Network.NetworkRuleDefinition.Min.get -> int
+SpatialNET.Network.NetworkRuleDefinition.Min.init -> void
+SpatialNET.Network.NetworkRuleDefinition.NetworkRuleDefinition(string! Id, SpatialNET.Network.RuleSeverity Severity, SpatialNET.Network.RuleSubject Subject, string! SubjectTypes, SpatialNET.Network.RuleEndFilter EndFilter, string? EndTypes, string! CountTypes, int Min, int? Max) -> void
+SpatialNET.Network.NetworkRuleDefinition.Severity.get -> SpatialNET.Network.RuleSeverity
+SpatialNET.Network.NetworkRuleDefinition.Severity.init -> void
+SpatialNET.Network.NetworkRuleDefinition.Subject.get -> SpatialNET.Network.RuleSubject
+SpatialNET.Network.NetworkRuleDefinition.Subject.init -> void
+SpatialNET.Network.NetworkRuleDefinition.SubjectTypes.get -> string!
+SpatialNET.Network.NetworkRuleDefinition.SubjectTypes.init -> void
 SpatialNET.Network.NetworkState<TNodeId, TEdgeId>
 SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Block(TNodeId node) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
 SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Disable(TEdgeId edge) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
@@ -121,6 +158,9 @@ SpatialNET.Network.NetworkType.Kind.init -> void
 SpatialNET.Network.NetworkType.Name.get -> string?
 SpatialNET.Network.NetworkType.Name.init -> void
 SpatialNET.Network.NetworkType.NetworkType(int Id, SpatialNET.Network.ElementKind Kind, System.Collections.Generic.IReadOnlyList<int>! Facets, string? Name = null) -> void
+SpatialNET.Network.NetworkValidation
+SpatialNET.Network.NodeRuleBuilder
+SpatialNET.Network.NodeRuleBuilder.CountEdges(SpatialNET.Network.TypeSet! types) -> SpatialNET.Network.RuleCountBuilder!
 SpatialNET.Network.PathStep<TNodeId, TEdgeId>
 SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Cost.get -> double
 SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Cost.init -> void
@@ -151,6 +191,44 @@ SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.TypeId.get -> int
 SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.TypeId.init -> void
 SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Via.get -> TEdgeId?
 SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Via.init -> void
+SpatialNET.Network.RuleCountBuilder
+SpatialNET.Network.RuleCountBuilder.AtLeast(int min) -> SpatialNET.Network.NetworkRule!
+SpatialNET.Network.RuleCountBuilder.Between(int min, int? max) -> SpatialNET.Network.NetworkRule!
+SpatialNET.Network.RuleCountBuilder.Exactly(int count) -> SpatialNET.Network.NetworkRule!
+SpatialNET.Network.RuleCountBuilder.None() -> SpatialNET.Network.NetworkRule!
+SpatialNET.Network.RuleEndFilter
+SpatialNET.Network.RuleEndFilter.All = 0 -> SpatialNET.Network.RuleEndFilter
+SpatialNET.Network.RuleEndFilter.NodeIs = 1 -> SpatialNET.Network.RuleEndFilter
+SpatialNET.Network.RuleEndFilter.NodeIsNot = 2 -> SpatialNET.Network.RuleEndFilter
+SpatialNET.Network.RuleSeverity
+SpatialNET.Network.RuleSeverity.Error = 0 -> SpatialNET.Network.RuleSeverity
+SpatialNET.Network.RuleSeverity.Warning = 1 -> SpatialNET.Network.RuleSeverity
+SpatialNET.Network.RuleSubject
+SpatialNET.Network.RuleSubject.Edge = 1 -> SpatialNET.Network.RuleSubject
+SpatialNET.Network.RuleSubject.Node = 0 -> SpatialNET.Network.RuleSubject
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Count.get -> int
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Count.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Edge.get -> TEdgeId?
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Edge.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Kind.get -> SpatialNET.Network.ElementKind
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Kind.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Location.get -> SpatialNET.Coordinate
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Location.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Max.get -> int?
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Max.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Min.get -> int
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Min.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Node.get -> TNodeId
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Node.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.RuleId.get -> string!
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.RuleId.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.RuleViolation() -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.RuleViolation(string! RuleId, SpatialNET.Network.RuleSeverity Severity, SpatialNET.Network.ElementKind Kind, TNodeId Node, TEdgeId? Edge, int TypeId, int Count, int Min, int? Max, SpatialNET.Coordinate Location) -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Severity.get -> SpatialNET.Network.RuleSeverity
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.Severity.init -> void
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.TypeId.get -> int
+SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>.TypeId.init -> void
 SpatialNET.Network.SinkSupply<TNodeId>
 SpatialNET.Network.SinkSupply<TNodeId>.Sink.get -> TNodeId
 SpatialNET.Network.SinkSupply<TNodeId>.Sink.init -> void
@@ -240,6 +318,12 @@ static SpatialNET.Network.NetworkAnalysis.ShortestPath<TNodeId, TEdgeId>(this Sp
 static SpatialNET.Network.NetworkAnalysis.Supply<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, System.Collections.Generic.IEnumerable<TNodeId>! sinks, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.IProgress<SpatialNET.Network.SupplyProgress>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.SinkSupply<TNodeId>>!
 static SpatialNET.Network.NetworkAnalysis.Trace<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.TraceHit<TNodeId, TEdgeId>>!
 static SpatialNET.Network.NetworkAnalysis.TraceEdges<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! sources, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.TracedEdge<TNodeId, TEdgeId>>!
+static SpatialNET.Network.NetworkRule.ForEdges(string! id, SpatialNET.Network.TypeSet! subjectTypes) -> SpatialNET.Network.EdgeRuleBuilder!
+static SpatialNET.Network.NetworkRule.ForNodes(string! id, SpatialNET.Network.TypeSet! subjectTypes) -> SpatialNET.Network.NodeRuleBuilder!
+static SpatialNET.Network.NetworkRule.FromDefinition(SpatialNET.Network.NetworkRuleDefinition! definition, SpatialNET.Network.TypeRegistry! types) -> SpatialNET.Network.NetworkRule!
+static SpatialNET.Network.NetworkValidation.Validate<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! nodes, System.Collections.Generic.IEnumerable<SpatialNET.Network.NetworkRule!>! rules, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>>!
+static SpatialNET.Network.NetworkValidation.ValidateEdges<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>! edges, System.Collections.Generic.IEnumerable<SpatialNET.Network.NetworkRule!>! rules, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>>!
+static SpatialNET.Network.NetworkValidation.ValidateNodes<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! nodes, System.Collections.Generic.IEnumerable<SpatialNET.Network.NetworkRule!>! rules, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.RuleViolation<TNodeId, TEdgeId>>!
 static SpatialNET.Network.TypeSet.Empty.get -> SpatialNET.Network.TypeSet!
 static SpatialNET.Network.TypeSet.Of(params System.Collections.Generic.IEnumerable<int>! typeIds) -> SpatialNET.Network.TypeSet!
 static SpatialNET.Network.TypeSet.Untyped.get -> SpatialNET.Network.TypeSet!

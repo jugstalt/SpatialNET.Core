@@ -2,7 +2,7 @@
 
 Ein Netzwerk ist ein Graph aus **Knoten** und **Kanten**, gebildet aus den Linien und Punkten eines Leitungsnetzes (Kabel, Verbinder, Kästen, Trafos, Kunden) oder eines Straßennetzes. SpatialNET durchsucht es; **gespeichert wird es beim Host**. Das Paket `SpatialNET.Network` enthält das Modell, das Interface `IGraph` und die Suchen; `SpatialNET.Imp` ergänzt einen Graphen im Speicher und einen Cache für Hosts, die ihr Netzwerk in einer Datenbank halten ([ADR 0049](../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.de.md)).
 
-Diese Seite beschreibt, was es heute gibt: das Modell, Typen, Gewichte, den Schaltzustand, `Reach` und `ShortestPath` und das Bauen eines Netzwerks aus Linien und Punkten mit `SpatialNET.Network.Building`. Das Tracing der Versorgung von Kunden und Regelprüfungen folgen ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.de.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md)).
+Diese Seite beschreibt das Modell, Typen, Gewichte, den Schaltzustand, `Reach` und `ShortestPath`, das Bauen eines Netzwerks aus Linien und Punkten mit `SpatialNET.Network.Building`, das Tracing der Versorgung von Kunden und die Prüfung von Regeln ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.de.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md)).
 
 ## Der Host hält den Graphen
 
@@ -217,9 +217,67 @@ Der Normalschaltzustand ist Teil der Datensätze: gesperrte Knoten (`Blocked`), 
 
 Die Namen sind absichtlich neutral: Für einen Elektriker leitet ein „geschlossener“ Schalter, bei einem Tor ist es umgekehrt.
 
+## Regeln
+
+Ein Netzwerk ist nur so gut wie seine Daten, und ein Leitungsnetz hat viele Regeln, die das GIS beim Zeichnen nicht erzwingen kann: Jeder Kasten hat einen Verbinder, am freien Ende eines Verbinders liegt genau ein Kabel, eine Leitung endet nicht im Freien. Eine **Regel zählt die direkten Nachbarn** eines Elements (die Kanten an einem Knoten oder die anderen Kanten an einem Ende einer Kante), die zu einem Typmuster passen, und vergleicht die Zahl mit einem erlaubten Bereich. Es gibt keine Pfade, Variablen oder Ausdrücke. Eine Regel ist **eine Zeile aus einfachen Werten**, sodass der Host seine Regeln in einer Tabelle halten kann, die das GIS-Team pflegt; eine Regelsprache zum Parsen gibt es nicht.
+
+```csharp
+var types = new TypeRegistry(
+    [
+        new Facet("Level", new Dictionary<int, string> { [1] = "Low", [2] = "Medium" }),
+        new Facet("Object", new Dictionary<int, string> { [1] = "Line", [2] = "BoxConnector", [4] = "Box" }),
+    ],
+    [
+        new NetworkType(11, ElementKind.Edge, [1, 1]),   // Low.Line
+        new NetworkType(13, ElementKind.Edge, [1, 2]),   // Low.BoxConnector
+        new NetworkType(15, ElementKind.Node, [1, 4]),   // Low.Box
+    ]);
+
+// Two boxes (1, 2) and helper nodes (3, 4, 5): box 1 has two connectors, box 2 none, and the line at node 4 ends in the open.
+var graph = new InMemoryGraph<int, int, string>();
+foreach (var (id, type) in new[] { (1, 15), (2, 15), (3, 0), (4, 0), (5, 0) })
+    graph.Add(new GraphNode<int>(id, type, new Coordinate(id * 10, 0)));
+graph.Add(new GraphEdge<int, int>(101, 1, 3, 13, 10));   // connector to node 3, where a line continues
+graph.Add(new GraphEdge<int, int>(102, 3, 4, 11, 10));   // line from node 3 to node 4
+graph.Add(new GraphEdge<int, int>(103, 1, 5, 13, 10));   // connector to node 5, where nothing continues
+
+// Rules as rows, as the GIS team keeps them in a table: patterns as text, several separated by "|".
+var rows = new NetworkRuleDefinition[]
+{
+    new("BOX-CONNECTOR", RuleSeverity.Error, RuleSubject.Node, "[*, Box]", RuleEndFilter.All, null, "[*, BoxConnector]", 1, null),
+    new("CONNECTOR-FREE-END", RuleSeverity.Error, RuleSubject.Edge, "[*, BoxConnector]", RuleEndFilter.NodeIsNot, "[*, Box]", "[*, Line]", 1, 1),
+};
+var rules = rows.Select(row => NetworkRule.FromDefinition(row, types)).ToList();
+
+// ... or in code, here as a warning: a line does not end in the open at a helper node.
+rules.Add(NetworkRule.ForEdges("LINE-OPEN-END", types.Edges("[*, Line]"))
+    .AtEndsWhereNode(TypeSet.Untyped)
+    .CountOtherEdges(types.Edges("*")).AtLeast(1)
+    .AsWarning());
+
+Console.WriteLine(rules[1]);   // CONNECTOR-FREE-END: edges [*, BoxConnector], ends not [*, Box], other edges [*, Line] = 1
+
+// The nodes of one area and all edges at them; over the whole network use ValidateNodes and ValidateEdges.
+foreach (var violation in graph.Validate(graph.Nodes.Select(node => node.Id), rules))
+    Console.WriteLine($"{violation.RuleId} ({violation.Severity}) at node {violation.Node}" +
+                      (violation.Kind == ElementKind.Edge ? $", edge {violation.Edge}" : "") + $": {violation.Count} found");
+// CONNECTOR-FREE-END (Error) at node 5, edge 103: 0 found
+// BOX-CONNECTOR (Error) at node 2: 0 found
+// LINE-OPEN-END (Warning) at node 4, edge 102: 0 found
+```
+
+- **Die Form einer Regel:** der Gegenstand (Knoten oder Kanten aus einem `TypeSet`; `TypeSet.Untyped` spricht Hilfsknoten an), bei einer Kante die Enden, die angesehen werden (`All`, `NodeIs` oder `NodeIsNot` ein `TypeSet`), was gezählt wird (bei einem Knoten seine Kanten der gegebenen Typen, bei einer Kante die **anderen** Kanten am Ende) und der Bereich `Min` bis `Max` (ohne `Max` gibt es keine Obergrenze). Im Code: `ForNodes` oder `ForEdges`, `AtEndsWhereNode` oder `AtEndsWhereNodeIsNot`, `CountEdges` oder `CountOtherEdges`, dann `Between`, `AtLeast`, `Exactly` oder `None`; `AsWarning()` senkt den Schweregrad. Eine fertige `NetworkRule` ist unveränderlich und für beliebig viele Prüfungen und Threads nutzbar.
+- **Eine Kantenregel wird an jedem gewählten Ende für sich geprüft:** Ein Verbinder mit nichts an seinem freien Ende ergibt eine Verletzung an diesem Ende, keine Summe über beide Enden. Eine Verletzung nennt die Regel, den Knoten (das Ende, an dem gezählt wurde), die Kante, die gefundene Zahl, den erlaubten Bereich und die Lage des Knotens.
+- **Zählen:** Die Kante selbst zählt nie, parallele Kanten zählen einzeln, eine Schleife zählt einmal, mehrere Muster (`"a | b"`) addieren sich. Der Schaltzustand spielt keine Rolle: Regeln prüfen, was gebaut ist, nicht wie geschaltet ist; eine deaktivierte Kante zählt wie jede andere. Die Versorgung unter einem Schaltzustand ist ein Trace.
+- **Zeilen:** `NetworkRuleDefinition(Id, Severity, Subject, SubjectTypes, EndFilter, EndTypes, CountTypes, Min, Max)` hält dasselbe als einfache Werte; `NetworkRule.FromDefinition(row, types)` löst sie auf, `rule.ToDefinition()` gibt sie zurück (für Regeln, deren Typen aus einer `TypeRegistry` kamen; ein `TypeSet.Of(...)` hat keinen Text). Eine Zeile, die keine Regel sein kann, wirft beim Auflösen, mit der Regel-ID in der Meldung. `rule.ToString()` gibt eine lesbare Form für Berichte.
+- **Drei Arten zu prüfen:** `ValidateNodes` (Knotenregeln, für jede übergebene Knoten-ID) und `ValidateEdges` (Kantenregeln, für jeden übergebenen Kantendatensatz) merken sich keine geprüften Elemente und sind für Ströme über das ganze Netz gedacht; `Validate` (Knotenregeln für die übergebenen Knoten plus Kantenregeln für jede Kante daran, je einmal) merkt sich, was es geprüft hat, und ist für ein begrenztes Gebiet gedacht, etwa ein Ortsnetz beim Speichern: ein temporäres Netz aus allen Objekten bauen, die das Gebiet berühren, nur die Knoten innerhalb übergeben; Kanten, die das Gebiet verlassen, werden am Rand mitgezählt, aber nicht als offene Enden gemeldet. Jede Methode wendet nur die Regeln ihrer Art an, eine Liste dient also allen dreien; Regel-IDs müssen eindeutig sein.
+- **Verzögert:** Die Eingabe wird in Blöcken von etwa tausend gelesen, und `IGraph` wird je Block in einem Stapel gefragt. Knoten und Kanten **nach Shard sortiert** übergeben, damit die Nachbarn eines Blocks aus den Shards im Cache kommen. Die Verletzungen kommen in der Reihenfolge der Eingabe.
+- **Keine Regeln:** ob ein Kunde versorgt ist, ist ein Trace; Attribute, die das Netz nicht trägt (Querschnitt gegen Sicherung), prüft der Host; zwei echte Knoten an einem Ort meldet der Builder.
+
 ## Große Netzwerke
 
 - Eine Suche merkt sich einen Eintrag pro besuchtem Knoten. In einem Ortsnetz sind das einige hundert Einträge.
 - **Ein Gebiet nach dem anderen durchsuchen.** Eine Suche von allen Trafos einer Stadt läuft als eine Welle durch alle Ortsnetze zugleich: Über einen Shard-Cache lädt sie jeden Shard wieder und wieder, im Speicher merkt sie sich jeden Knoten. Stattdessen von einem Trafo (oder einem Gebiet) nach dem anderen suchen, in der Reihenfolge der Shards, dann wird jeder Shard etwa einmal geladen.
 - Gemessen an einem synthetischen Netzwerk aus radialen Ortsnetzen mit je 300 Knoten (`--quick-network` in den Benchmarks): Eine Suche in einem Ortsnetz braucht im Speicher unter 1 ms; über `ShardedGraphBase` etwa 1,5 ms mit leerem und 0,7 ms mit warmem Cache (etwa 5 ms mit leerem Cache, wenn jede Abfrage an den Speicher 0,5 ms dauert). Jedes Ortsnetz eines Netzwerks mit 3 Mio. Knoten nacheinander zu durchsuchen dauert etwa 10 s und lädt jeden Shard einmal; eine einzige Suche von allen 3.333 Trafos eines Netzwerks mit 1 Mio. Knoten über einen Cache von 64 Shards lud Shards über 500.000-mal.
+- Regeln über ein ganzes Netz (`ValidateEdges` mit zwei Regeln, über einen Cache aus 64 Shards, `--quick-network`): alle 3 Millionen Kanten des synthetischen Netzes brauchen nach Shard sortiert etwa 5 s und laden jeden Shard einmal; 1 Million Kanten etwa 2 s. Dieselben Kanten in zufälliger Reihenfolge laden für fast jeden Block Shards: Eine Stichprobe von 100.000 Kanten brauchte bei 1 Million Kanten 21 s und bei 3 Millionen 30 s, für alle sind das etwa 15 Minuten. Nach Shard sortieren.
 - Fehler in den Daten (eine Kante zu einem Knoten, den der Host nicht liefert, ein fehlendes Gewicht, negative oder unendliche Kosten) sind eine `InvalidGraphException` mit den beteiligten IDs; Fehler des Hosts laufen unverändert durch. Jede Suche nimmt ein `CancellationToken`.

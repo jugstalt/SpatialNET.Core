@@ -45,6 +45,10 @@
       <label class="opt"><input type="checkbox" id="source-mode"> Click nodes to mark sources</label>
       <div class="input-row"><button id="supply-run">Show supply</button> <button id="sources-clear">No sources</button></div>
 
+      <h3>Rules</h3>
+      <div id="rules" class="rules"></div>
+      <div class="input-row"><button id="rule-add">Add rule</button> <button id="rules-default">Defaults</button> <button id="rules-run" class="primary">Check rules</button></div>
+
       <h3>Elements <span id="count" class="muted"></span></h3>
       <div id="elements" class="elements"></div>
     </div>
@@ -57,6 +61,7 @@
     <div class="chip result" id="result"></div>
     <div class="chip result" id="path"></div>
     <div class="chip result" id="supply"></div>
+    <div class="chip result" id="rules-result"></div>
     <div class="chip error" id="error" hidden></div>
   </aside>
 </body>
