@@ -72,7 +72,7 @@ foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
 // Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m
 ```
 
-`Build` nimmt optional ein `IProgress<BuildProgress>` (die Phase, erledigte und gesamte Einträge), gemeldet höchstens alle 250 ms, und ein `CancellationToken`. Das `BuildResult` listet Hinweise, die den Bau nicht angehalten haben: Knoten außerhalb jeder Region, überlappende Regionen, Ketten von Enden breiter als die Toleranz, Punkte ohne Linie, weggelassene winzige Teile. Das Verknoten nutzt ein Hash-Raster, das Teilen einen räumlichen Index über die Linien; an einem synthetischen Netzwerk aus radialen Ortsnetzen braucht der Builder für 3 Mio. Linien etwa 25 Sekunden (`--quick-build` in den Benchmarks).
+`Build` nimmt optional ein `IProgress<BuildProgress>` (die Phase, erledigte und gesamte Einträge), gemeldet höchstens alle 250 ms, und ein `CancellationToken`. Das `BuildResult` listet Hinweise, die den Bau nicht angehalten haben: Knoten außerhalb jeder Region, überlappende Regionen, Ketten von Enden breiter als die Toleranz, Punkte ohne Linie, weggelassene winzige Teile. Das Verknoten nutzt ein Hash-Raster, das Teilen einen räumlichen Index über die Linien; an einem synthetischen Netzwerk aus radialen Ortsnetzen braucht der Builder für 3 Mio. Linien etwa 13 Sekunden (`--quick-build` in den Benchmarks).
 
 Um einen Weg zu zeichnen, schneidet `path.ToPolyline(edge => new EdgeShape(line, from, to))` den Bereich jeder Kante aus ihrer Quelllinie, dreht Stücke um, die der Weg gegen ihre Richtung durchläuft, und fügt sie zusammen.
 

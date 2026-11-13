@@ -72,7 +72,7 @@ foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
 // Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m
 ```
 
-`Build` takes an optional `IProgress<BuildProgress>` (the phase, items done and total), reported at most every 250 ms, and a `CancellationToken`. The `BuildResult` lists notes that did not stop the build: nodes outside every region, overlapping regions, chains of ends wider than the tolerance, points without a line, tiny parts left out. The join uses a hash grid, the splitting a spatial index over the lines; on a synthetic network of radial local networks the builder needs about 25 seconds for 3 million lines (`--quick-build` in the benchmarks).
+`Build` takes an optional `IProgress<BuildProgress>` (the phase, items done and total), reported at most every 250 ms, and a `CancellationToken`. The `BuildResult` lists notes that did not stop the build: nodes outside every region, overlapping regions, chains of ends wider than the tolerance, points without a line, tiny parts left out. The join uses a hash grid, the splitting a spatial index over the lines; on a synthetic network of radial local networks the builder needs about 13 seconds for 3 million lines (`--quick-build` in the benchmarks).
 
 To draw a way, `path.ToPolyline(edge => new EdgeShape(line, from, to))` cuts the range of every edge from its source line, turns pieces round where the way runs against them and joins them.
 

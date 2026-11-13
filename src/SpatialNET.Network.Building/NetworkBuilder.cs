@@ -247,13 +247,13 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         private readonly List<NodeConflict> _conflicts = [];
 
         // parts: one per path of every line
-        private readonly List<Part> _parts = [];
+        private readonly List<Part> _parts = new(builder._lines.Count);
 
         // nodes: the real nodes first (index = position in builder._realNodes), then the helper nodes
         private readonly List<Coordinate> _location = [];
         private readonly List<bool> _hasLineEnd = [];
         private int[] _partStart = [], _partEnd = [];
-        private List<Split>[] _splits = [];
+        private readonly List<PartSplit> _splits = [];
         private readonly List<EdgePlan> _edges = [];
 
         public BuildResult Execute(INetworkWriter<TNodeId, TEdgeId, TSource> writer)
@@ -320,7 +320,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             }
 
             var sets = new UnionFind(count);
-            var grid = new PointGrid(_tolerance);
+            var grid = new PointGrid(_tolerance, count);
             double tolerance2 = _tolerance * _tolerance;
             for (int i = 0; i < count; i++)
             {
@@ -340,21 +340,42 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             reporter.Report(BuildPhase.JoiningEnds, count, count);
 
             // the groups, in the order of their first point
-            var groupOf = new Dictionary<int, List<int>>();
-            var order = new List<List<int>>();
+            // (a counting sort of the points by group, so no list per group; the points stay ascending inside a group)
+            var groupOfRoot = new int[count];
+            Array.Fill(groupOfRoot, -1);
+            var groupOfPoint = new int[count];
+            var sizes = new List<int>();
             for (int i = 0; i < count; i++)
             {
                 int root = sets.Find(i);
-                if (!groupOf.TryGetValue(root, out var members))
+                int g = groupOfRoot[root];
+                if (g < 0)
                 {
-                    members = [];
-                    groupOf[root] = members;
-                    order.Add(members);
+                    g = groupOfRoot[root] = sizes.Count;
+                    sizes.Add(0);
                 }
 
-                members.Add(i);
+                groupOfPoint[i] = g;
+                sizes[g]++;
             }
 
+            int groups = sizes.Count;
+            var firstOf = new int[groups + 1];
+            for (int g = 0; g < groups; g++)
+            {
+                firstOf[g + 1] = firstOf[g] + sizes[g];
+            }
+
+            var sortedPoints = new int[count];
+            var filled = new int[groups];
+            for (int i = 0; i < count; i++)
+            {
+                int g = groupOfPoint[i];
+                sortedPoints[firstOf[g] + filled[g]++] = i;
+            }
+
+            _location.Capacity = realCount + groups;
+            _hasLineEnd.Capacity = realCount + groups;
             for (int i = 0; i < realCount; i++)
             {
                 _location.Add(builder._realNodes[i].Location);
@@ -362,32 +383,61 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             }
 
             var nodeOfPoint = new int[count];
-            foreach (var members in order)
+            int[] buffer = [];
+            var byCoordinates = Comparer<int>.Create((a, b) => x[a] != x[b] ? x[a].CompareTo(x[b]) : y[a].CompareTo(y[b]));
+            for (int g = 0; g < groups; g++)
             {
-                var reals = members.Where(m => m < realCount).ToList();
-                int node;
-                if (reals.Count > 0)
+                var members = new ReadOnlySpan<int>(sortedPoints, firstOf[g], sizes[g]);
+
+                // the real nodes come first: the points are ascending and the real nodes have the lowest indices
+                int reals = 0;
+                while (reals < members.Length && members[reals] < realCount)
                 {
-                    node = reals[0];
-                    if (reals.Count > 1)
+                    reals++;
+                }
+
+                int node;
+                if (reals > 0)
+                {
+                    node = members[0];
+                    if (reals > 1)
                     {
-                        _conflicts.Add(new NodeConflict(_location[node], NodeConflictKind.RealNodesTooClose,
-                            reals.Select(r => (object?)builder._realNodes[r].Source).ToList()));
+                        var sources = new List<object?>(reals);
+                        for (int r = 0; r < reals; r++)
+                        {
+                            sources.Add(builder._realNodes[members[r]].Source);
+                        }
+
+                        _conflicts.Add(new NodeConflict(_location[node], NodeConflictKind.RealNodesTooClose, sources));
                     }
                 }
                 else
                 {
                     // the mean of the ends, summed in an order of the coordinates, so that it does not depend on the input order
-                    var sorted = members.OrderBy(m => x[m]).ThenBy(m => y[m]).ToList();
                     double sx = 0, sy = 0;
-                    foreach (int m in sorted)
+                    if (members.Length == 1)
                     {
-                        sx += x[m];
-                        sy += y[m];
+                        sx = x[members[0]];
+                        sy = y[members[0]];
+                    }
+                    else
+                    {
+                        if (buffer.Length < members.Length)
+                        {
+                            buffer = new int[Math.Max(members.Length, 2 * buffer.Length)];
+                        }
+
+                        members.CopyTo(buffer);
+                        Array.Sort(buffer, 0, members.Length, byCoordinates);
+                        for (int k = 0; k < members.Length; k++)
+                        {
+                            sx += x[buffer[k]];
+                            sy += y[buffer[k]];
+                        }
                     }
 
                     node = _location.Count;
-                    _location.Add(new Coordinate(sx / sorted.Count, sy / sorted.Count));
+                    _location.Add(new Coordinate(sx / members.Length, sy / members.Length));
                     _hasLineEnd.Add(false);
                 }
 
@@ -403,7 +453,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 if (Wide(members, x, y, tolerance2))
                 {
                     _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.ClusterWiderThanTolerance, _location[node],
-                        $"{members.Count} line ends and points were joined into one node over more than the tolerance {_tolerance.ToString(CultureInfo.InvariantCulture)}."));
+                        $"{members.Length} line ends and points were joined into one node over more than the tolerance {_tolerance.ToString(CultureInfo.InvariantCulture)}."));
                 }
             }
 
@@ -417,15 +467,24 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         }
 
         /// <summary>Whether two members of a group lie further apart than the tolerance (a chain); by the envelope for large groups.</summary>
-        private static bool Wide(List<int> members, double[] x, double[] y, double tolerance2)
+        private static bool Wide(ReadOnlySpan<int> members, double[] x, double[] y, double tolerance2)
         {
-            if (members.Count > 64)
+            if (members.Length > 64)
             {
-                double w = members.Max(m => x[m]) - members.Min(m => x[m]), h = members.Max(m => y[m]) - members.Min(m => y[m]);
+                double minX = double.PositiveInfinity, maxX = double.NegativeInfinity, minY = double.PositiveInfinity, maxY = double.NegativeInfinity;
+                foreach (int m in members)
+                {
+                    minX = Math.Min(minX, x[m]);
+                    maxX = Math.Max(maxX, x[m]);
+                    minY = Math.Min(minY, y[m]);
+                    maxY = Math.Max(maxY, y[m]);
+                }
+
+                double w = maxX - minX, h = maxY - minY;
                 return w * w + h * h > tolerance2;
             }
 
-            for (int i = 0; i < members.Count; i++)
+            for (int i = 0; i < members.Length; i++)
             {
                 for (int j = 0; j < i; j++)
                 {
@@ -443,7 +502,6 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
         private void SplitLines()
         {
-            _splits = new List<Split>[_parts.Count];
             if (_parts.Count == 0)
             {
                 reporter.Report(BuildPhase.Splitting, 0, 0);
@@ -495,7 +553,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             reporter.Report(BuildPhase.Splitting, total, total);
         }
 
-        private void AddSplit(int part, double measure, int node) => (_splits[part] ??= []).Add(new Split(measure, node));
+        private void AddSplit(int part, double measure, int node) => _splits.Add(new PartSplit(part, measure, node));
 
         private void SplitAtCrossings(SpatialIndex<int> index, ref long done, long total)
         {
@@ -518,7 +576,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             }
 
             // a crossing near an existing node uses it; crossings near each other become one helper node
-            var nodes = new PointGrid(_tolerance);
+            var nodes = new PointGrid(_tolerance, _location.Count);
             for (int n = 0; n < _location.Count; n++)
             {
                 nodes.Add(n, _location[n].X, _location[n].Y);
@@ -526,7 +584,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
             double tolerance2 = _tolerance * _tolerance;
             var sets = new UnionFind(crossings.Count);
-            var grid = new PointGrid(_tolerance);
+            var grid = new PointGrid(_tolerance, crossings.Count);
             var existing = new int[crossings.Count];
             for (int c = 0; c < crossings.Count; c++)
             {
@@ -589,7 +647,24 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
         private void PlanEdges()
         {
-            int lineOf = -1, firstOfLine = 0;
+            // the splits of all parts by part, measure and node: the order they were found in does not matter
+            var splits = _splits.ToArray();
+            Array.Sort(splits, static (l, r) =>
+            {
+                int c = l.Part.CompareTo(r.Part);
+                if (c == 0)
+                {
+                    c = l.Measure.CompareTo(r.Measure);
+                }
+
+                return c != 0 ? c : l.Node.CompareTo(r.Node);
+            });
+            _splits.Clear();
+            _splits.TrimExcess();
+            _edges.Capacity = _parts.Count + splits.Length;
+
+            int lineOf = -1, firstOfLine = 0, next = 0;
+            var stops = new List<Split>();
             for (int p = 0; p < _parts.Count; p++)
             {
                 var part = _parts[p];
@@ -599,17 +674,27 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                     firstOfLine = _edges.Count;
                 }
 
-                var stops = new List<Split> { new(0, _partStart[p]) };
-                if (_splits[p] is { } splits)
+                stops.Clear();
+                stops.Add(new Split(0, _partStart[p]));
+
+                // one stop per node and place: splits of the same node within the tolerance (several crossings joined
+                // into one node) keep the smallest measure, so the result does not depend on the order they were found in
+                for (; next < splits.Length && splits[next].Part == p; next++)
                 {
-                    // one stop per node and place: splits of the same node within the tolerance (several crossings joined
-                    // into one node) keep the smallest measure, so the result does not depend on the order they were found in
-                    foreach (var split in splits.OrderBy(s => s.Measure).ThenBy(s => s.Node))
+                    var split = new Split(splits[next].Measure, splits[next].Node);
+                    bool seen = false;
+                    foreach (var t in stops)
                     {
-                        if (!stops.Any(t => t.Node == split.Node && split.Measure - t.Measure <= _tolerance))
+                        if (t.Node == split.Node && split.Measure - t.Measure <= _tolerance)
                         {
-                            stops.Add(split);
+                            seen = true;
+                            break;
                         }
+                    }
+
+                    if (!seen)
+                    {
+                        stops.Add(split);
                     }
                 }
 
@@ -994,6 +1079,8 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
     private readonly record struct Split(double Measure, int Node);
 
+    private readonly record struct PartSplit(int Part, double Measure, int Node);
+
     private readonly record struct EdgePlan(int Line, int From, int To, double FromMeasure, double ToMeasure, double Length, int Part, int PartCount = 0)
     {
         public TEdgeId? Id { get; init; }
@@ -1046,10 +1133,10 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
     }
 
     /// <summary>A hash grid of points with cells of the tolerance; a point looks only at the 3 × 3 cells around it.</summary>
-    private sealed class PointGrid(double cell)
+    private sealed class PointGrid(double cell, int capacity = 0)
     {
-        private readonly Dictionary<(long, long), int> _head = [];
-        private readonly List<(int Item, int Next)> _entries = [];
+        private readonly Dictionary<(long, long), int> _head = new(capacity);
+        private readonly List<(int Item, int Next)> _entries = new(capacity);
 
         public void Add(int item, double x, double y)
         {
@@ -1058,19 +1145,57 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             _head[key] = _entries.Count - 1;
         }
 
-        public IEnumerable<int> Near(double x, double y)
+        /// <summary>The items in the 3 × 3 cells around a point; a struct enumerator, so a query allocates nothing.</summary>
+        public NearItems Near(double x, double y)
         {
             var (cx, cy) = Key(x, y);
-            for (long i = cx - 1; i <= cx + 1; i++)
+            return new NearItems(this, cx, cy);
+        }
+
+        public struct NearItems
+        {
+            private readonly PointGrid _grid;
+            private readonly long _cx, _cy;
+            private long _i, _j;
+            private int _entry;
+
+            internal NearItems(PointGrid grid, long cx, long cy)
             {
-                for (long j = cy - 1; j <= cy + 1; j++)
+                (_grid, _cx, _cy) = (grid, cx, cy);
+                _i = cx - 1;
+                _j = cy - 2; // the first step moves to cy - 1
+                _entry = -1;
+                Current = 0;
+            }
+
+            public int Current { get; private set; }
+
+            public readonly NearItems GetEnumerator() => this;
+
+            public bool MoveNext()
+            {
+                while (true)
                 {
-                    if (_head.TryGetValue((i, j), out int entry))
+                    if (_entry >= 0)
                     {
-                        for (; entry >= 0; entry = _entries[entry].Next)
+                        Current = _grid._entries[_entry].Item;
+                        _entry = _grid._entries[_entry].Next;
+                        return true;
+                    }
+
+                    if (++_j > _cy + 1)
+                    {
+                        _j = _cy - 1;
+                        if (++_i > _cx + 1)
                         {
-                            yield return _entries[entry].Item;
+                            _i = _cx + 2; // stays finished
+                            return false;
                         }
+                    }
+
+                    if (!_grid._head.TryGetValue((_i, _j), out _entry))
+                    {
+                        _entry = -1;
                     }
                 }
             }

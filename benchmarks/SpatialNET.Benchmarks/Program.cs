@@ -232,6 +232,7 @@ if (args.Contains("--quick-build"))
         Console.WriteLine($"N={n,9:N0}  {input.Points.Count:N0} points, {input.Lines.Count:N0} lines -> {writer.Nodes:N0} nodes, {writer.Edges:N0} edges " +
                           $"in {clock.ElapsedMilliseconds:N0} ms, {(GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0:N0} MB allocated, {result.Diagnostics.Count} diagnostics");
         Console.WriteLine("   phases ended at (ms): " + string.Join(", ", phases.Select(p => $"{p.Key} {p.Value:N0}")));
+        Console.WriteLine("   allocated so far (MB, process total): " + string.Join(", ", PhaseClock.Allocated.Select(p => $"{p.Key} {p.Value:N0}")));
     }
 
     return;
@@ -389,11 +390,14 @@ static double Measure(Action action)
 
 sealed class PhaseClock(Dictionary<SpatialNET.Network.Building.BuildPhase, long> ends, Stopwatch clock) : IProgress<SpatialNET.Network.Building.BuildProgress>
 {
+    public static readonly Dictionary<SpatialNET.Network.Building.BuildPhase, long> Allocated = [];
+
     public void Report(SpatialNET.Network.Building.BuildProgress value)
     {
         if (value.Done == value.Total)
         {
             ends[value.Phase] = clock.ElapsedMilliseconds;
+            Allocated[value.Phase] = GC.GetAllocatedBytesForCurrentThread() / 1_048_576;
         }
     }
 }
