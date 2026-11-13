@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SpatialNET.Core\SpatialNET.Core.csproj" />
+    <ProjectReference Include="..\SpatialNET.Network\SpatialNET.Network.csproj" />
   </ItemGroup>
 
   <ItemGroup>

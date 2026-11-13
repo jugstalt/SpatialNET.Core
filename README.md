@@ -16,6 +16,7 @@ SpatialNET is a .NET library for planar spatial computations: overlays (intersec
 | `SpatialNET.Extensions` | The algorithms as extension methods: overlays, buffer, offset curve, cut, `SnapTo`, simplify, predicates and `Relate`, `IsValid`/`Validate`, `Prepare`, `SpatialIndex<T>`, measures, linear referencing and route events, triangulation, Voronoi and terrain analysis |
 | `SpatialNET.Imp` | Reference implementation of the geometry interfaces and the factory, for tests, tools and hosts without geometries of their own |
 | `SpatialNET.IO` | WKT, GeoJSON and WKB reading and writing through the geometry factory; Mapbox Vector Tiles (MVT) for any tile grid |
+| `SpatialNET.Network` | Networks: a graph of nodes and edges that the host stores behind `IGraph`, typed elements, weights, switching state, `Reach` and `ShortestPath` |
 
 ## Quick start
 

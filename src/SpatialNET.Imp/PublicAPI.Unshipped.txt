@@ -1,1 +1,27 @@
 #nullable enable
+abstract SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.FindShards(System.Collections.Generic.IReadOnlyCollection<TNodeId>! nodeIds) -> System.Collections.Generic.IReadOnlyDictionary<TNodeId, long>!
+abstract SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.LoadShard(long shardId) -> SpatialNET.Imp.ShardData<TNodeId, TEdgeId>!
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.Add(SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> void
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.Add(SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge, TSource source, double fromMeasure, double toMeasure) -> void
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.Add(SpatialNET.Network.GraphNode<TNodeId> node) -> void
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.EdgeCount.get -> int
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.Edges.get -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>!
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.GetEdges(System.Collections.Generic.IReadOnlyCollection<TNodeId>! nodeIds) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>!
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.GetNodes(System.Collections.Generic.IReadOnlyCollection<TNodeId>! ids) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphNode<TNodeId>>!
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.InMemoryGraph() -> void
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.NodeCount.get -> int
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.Nodes.get -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphNode<TNodeId>>!
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.TryGetSource(TEdgeId edge, out TSource source, out double fromMeasure, out double toMeasure) -> bool
+SpatialNET.Imp.ShardData<TNodeId, TEdgeId>
+SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.Edges.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>!
+SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.Edges.init -> void
+SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.Nodes.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.GraphNode<TNodeId>>!
+SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.Nodes.init -> void
+SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.ShardData(System.Collections.Generic.IReadOnlyList<SpatialNET.Network.GraphNode<TNodeId>>! Nodes, System.Collections.Generic.IReadOnlyList<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>! Edges) -> void
+SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>
+SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.CachedShardCount.get -> int
+SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.GetEdges(System.Collections.Generic.IReadOnlyCollection<TNodeId>! nodeIds) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>!
+SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.GetNodes(System.Collections.Generic.IReadOnlyCollection<TNodeId>! ids) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphNode<TNodeId>>!
+SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.MaxCachedShards.get -> int
+SpatialNET.Imp.ShardedGraphBase<TNodeId, TEdgeId>.ShardedGraphBase(int maxCachedShards = 32) -> void

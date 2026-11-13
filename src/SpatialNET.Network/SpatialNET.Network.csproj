@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <!-- Neues Paket: Es gibt noch keine veröffentlichte Version zum Vergleich (ADR 0049). Nach dem ersten Release entfernen. -->
+    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+    <Description>Networks for SpatialNET: a graph of nodes and edges that the host stores behind IGraph, typed elements, weights, switching state, searches (reach, shortest path) as extension methods.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpatialNET.Core\SpatialNET.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SpatialNET.Tests" />
+    <InternalsVisibleTo Include="SpatialNET.Benchmarks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

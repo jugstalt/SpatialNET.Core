@@ -94,3 +94,11 @@
   href: ../../adr/0047-unionall-von-flaechen-in-einem-durchlauf.md
 - name: "0048 Vector tiles (MVT) in SpatialNET.IO"
   href: ../../adr/0048-vektorkacheln-mvt.md
+- name: "0049 Networks: a graph held by the host behind IGraph"
+  href: ../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.md
+- name: "0050 Building a network: joining line ends, splitting lines, shards"
+  href: ../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.md
+- name: "0051 Tracing: one run per source, supply areas and the supply of sinks"
+  href: ../../adr/0051-tracing-pro-quelle-versorgung.md
+- name: "0052 Network rules: counting the neighbours of an element"
+  href: ../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md

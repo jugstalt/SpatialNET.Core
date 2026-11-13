@@ -3,6 +3,7 @@ using BenchmarkDotNet.Running;
 using SpatialNET;
 using SpatialNET.Benchmarks;
 using SpatialNET.Imp;
+using SpatialNET.Network;
 
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks            → BenchmarkDotNet
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick → grobe Stoppuhr-Messung
@@ -214,6 +215,45 @@ if (args.Contains("--quick-host"))
         foreach (var p in SpatialNET.Internal.GeometryAccess.AllPoints(g)) h = h * 31 + BitConverter.DoubleToInt64Bits(p.X) * 7 + BitConverter.DoubleToInt64Bits(p.Y);
         return h;
     }
+}
+
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-network → Reach and ShortestPath on a synthetic network (ADR 0049)
+if (args.Contains("--quick-network"))
+{
+    foreach (int n in new[] { 100_000, 1_000_000, 3_000_000 })
+    {
+        var sw = Stopwatch.StartNew();
+        var network = SyntheticNetwork.Create(n);
+        var memory = network.ToMemory();
+        Console.WriteLine($"N={n,9:N0}  {network.Transformers.Length,6:N0} local networks, {network.Edges.Length:N0} edges, built in {sw.ElapsedMilliseconds} ms");
+
+        var transformers = network.Transformers;
+        int k = 0;
+        double local = Measure(() => memory.Reach([transformers[k++ % transformers.Length]]).Count());
+        double path = Measure(() => { long t = transformers[k++ % transformers.Length]; memory.ShortestPath(t, t + 250); });
+        Console.WriteLine($"   in memory:  Reach one local network {local,8:F3} ms   ShortestPath in it {path,8:F3} ms");
+
+        foreach (double latency in new[] { 0.0, 0.5 })
+        {
+            var store = new SimulatedStoreGraph(network, maxCachedShards: 64, latencyMilliseconds: latency);
+            double cold = Measure(() => new SimulatedStoreGraph(network, 64, latency).Reach([transformers[k++ % transformers.Length]]).Count());
+            double warm = Measure(() => store.Reach([transformers[k++ % transformers.Length]]).Count());
+            Console.WriteLine($"   shards, {latency} ms per query:  Reach one local network, cold cache {cold,8:F3} ms, warm cache {warm,8:F3} ms");
+        }
+
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        sw.Restart();
+        int reached = memory.Reach(transformers).Count();
+        Console.WriteLine($"   whole network in memory: Reach from all {transformers.Length:N0} transformers, {reached:N0} nodes in {sw.ElapsedMilliseconds} ms, " +
+                          $"{(GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0:F0} MB allocated");
+
+        var whole = new SimulatedStoreGraph(network, maxCachedShards: 64, latencyMilliseconds: 0);
+        sw.Restart();
+        reached = whole.Reach(transformers).Count();
+        Console.WriteLine($"   whole network through 64 cached shards: {reached:N0} nodes in {sw.ElapsedMilliseconds} ms, {whole.ShardLoads:N0} shard loads, {whole.Queries:N0} queries");
+    }
+
+    return;
 }
 
 if (args.Contains("--quick-unionall"))

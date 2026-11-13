@@ -1,8 +1,14 @@
 ﻿# Changelog
 
-All notable changes to SpatialNET are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). All four packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`) share one version.
+All notable changes to SpatialNET are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). All five packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`, `SpatialNET.Network`) share one version.
 
 ## [Unreleased]
+
+### Added
+
+- Networks (ADR 0049): a new package `SpatialNET.Network` for graphs of nodes and edges made from utility or street networks. The host stores the graph and hands out nodes and edges by id, many at once, through `IGraph<TNodeId, TEdgeId>`; the searches read only the part they visit. Types are vectors of facets in a `TypeRegistry`, resolved from patterns such as `[*, BoxConnector, *]`, `Low.*` or `untyped` into a `TypeSet`. Weights of four kinds (`Length`, `Absolute`, `PerLength`, `LengthOverValue`) with a fallback, the normal switching state on the records and deviations per search (`NetworkState`: blocked nodes are reached but not passed, disabled edges, directions). `Reach` (every reachable node in order of cost, lazily, from one or more start nodes) and `ShortestPath` (Dijkstra; equal costs decided by the order of the host), with type filters and a maximum cost. `InvalidGraphException` for data that cannot be a network. New concept page "Networks".
+- `SpatialNET.Imp`: `InMemoryGraph` (a network in memory, also keeping the source of each edge) and `ShardedGraphBase` (a cache of whole shards for hosts that store their network in a database; the host implements `FindShards` and `LoadShard`). `SpatialNET.Imp` now references `SpatialNET.Network`.
+- Benchmarks: `NetworkBenchmarks` and `--quick-network` on a synthetic network of radial local networks with up to 3 million nodes.
 
 ## [0.10.0-preview.2] - 2026-11-08
 

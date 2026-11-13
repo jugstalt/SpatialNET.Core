@@ -1,0 +1,172 @@
+#nullable enable
+override SpatialNET.Network.TypeSet.ToString() -> string!
+SpatialNET.Network.EdgeDirection
+SpatialNET.Network.EdgeDirection.Backward = 2 -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.EdgeDirection.Both = 0 -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.EdgeDirection.Forward = 1 -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.EdgeWeight
+SpatialNET.Network.EdgeWeight.EdgeWeight() -> void
+SpatialNET.Network.EdgeWeight.EdgeWeight(int WeightId, double Value) -> void
+SpatialNET.Network.EdgeWeight.Value.get -> double
+SpatialNET.Network.EdgeWeight.Value.init -> void
+SpatialNET.Network.EdgeWeight.WeightId.get -> int
+SpatialNET.Network.EdgeWeight.WeightId.init -> void
+SpatialNET.Network.ElementKind
+SpatialNET.Network.ElementKind.Edge = 1 -> SpatialNET.Network.ElementKind
+SpatialNET.Network.ElementKind.Node = 0 -> SpatialNET.Network.ElementKind
+SpatialNET.Network.Facet
+SpatialNET.Network.Facet.Facet(string! Name, System.Collections.Generic.IReadOnlyDictionary<int, string!>! Values) -> void
+SpatialNET.Network.Facet.Name.get -> string!
+SpatialNET.Network.Facet.Name.init -> void
+SpatialNET.Network.Facet.Values.get -> System.Collections.Generic.IReadOnlyDictionary<int, string!>!
+SpatialNET.Network.Facet.Values.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Direction.get -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Direction.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Disabled.get -> bool
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Disabled.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.From.get -> TNodeId
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.From.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.GraphEdge() -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.GraphEdge(TEdgeId Id, TNodeId From, TNodeId To, int TypeId, double Length, SpatialNET.Network.EdgeDirection Direction = SpatialNET.Network.EdgeDirection.Both, bool Disabled = false, System.ReadOnlyMemory<SpatialNET.Network.EdgeWeight> Weights = default(System.ReadOnlyMemory<SpatialNET.Network.EdgeWeight>)) -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Id.get -> TEdgeId
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Id.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Length.get -> double
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Length.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.To.get -> TNodeId
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.To.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.TypeId.get -> int
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.TypeId.init -> void
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Weights.get -> System.ReadOnlyMemory<SpatialNET.Network.EdgeWeight>
+SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>.Weights.init -> void
+SpatialNET.Network.GraphNode<TNodeId>
+SpatialNET.Network.GraphNode<TNodeId>.Blocked.get -> bool
+SpatialNET.Network.GraphNode<TNodeId>.Blocked.init -> void
+SpatialNET.Network.GraphNode<TNodeId>.GraphNode() -> void
+SpatialNET.Network.GraphNode<TNodeId>.GraphNode(TNodeId Id, int TypeId, SpatialNET.Coordinate Location, bool Blocked = false) -> void
+SpatialNET.Network.GraphNode<TNodeId>.Id.get -> TNodeId
+SpatialNET.Network.GraphNode<TNodeId>.Id.init -> void
+SpatialNET.Network.GraphNode<TNodeId>.Location.get -> SpatialNET.Coordinate
+SpatialNET.Network.GraphNode<TNodeId>.Location.init -> void
+SpatialNET.Network.GraphNode<TNodeId>.TypeId.get -> int
+SpatialNET.Network.GraphNode<TNodeId>.TypeId.init -> void
+SpatialNET.Network.IGraph<TNodeId, TEdgeId>
+SpatialNET.Network.IGraph<TNodeId, TEdgeId>.GetEdges(System.Collections.Generic.IReadOnlyCollection<TNodeId>! nodeIds) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>!
+SpatialNET.Network.IGraph<TNodeId, TEdgeId>.GetNodes(System.Collections.Generic.IReadOnlyCollection<TNodeId>! ids) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphNode<TNodeId>>!
+SpatialNET.Network.INetworkState<TNodeId, TEdgeId>
+SpatialNET.Network.INetworkState<TNodeId, TEdgeId>.GetDirection(in SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.INetworkState<TNodeId, TEdgeId>.IsBlocked(in SpatialNET.Network.GraphNode<TNodeId> node) -> bool
+SpatialNET.Network.INetworkState<TNodeId, TEdgeId>.IsDisabled(in SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> bool
+SpatialNET.Network.InvalidGraphException
+SpatialNET.Network.InvalidGraphException.InvalidGraphException() -> void
+SpatialNET.Network.InvalidGraphException.InvalidGraphException(string! message) -> void
+SpatialNET.Network.InvalidGraphException.InvalidGraphException(string! message, System.Exception! innerException) -> void
+SpatialNET.Network.NetworkAnalysis
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.Cost.get -> double
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.Cost.init -> void
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.From.get -> TNodeId
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.From.init -> void
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.NetworkPath(TNodeId From, TNodeId To, double Cost, System.Collections.Generic.IReadOnlyList<SpatialNET.Network.PathStep<TNodeId, TEdgeId>>! Steps) -> void
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.Steps.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.PathStep<TNodeId, TEdgeId>>!
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.Steps.init -> void
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.To.get -> TNodeId
+SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>.To.init -> void
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Block(TNodeId node) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Disable(TEdgeId edge) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Enable(TEdgeId edge) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.GetDirection(in SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.IsBlocked(in SpatialNET.Network.GraphNode<TNodeId> node) -> bool
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.IsDisabled(in SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> bool
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.NetworkState() -> void
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.SetDirection(TEdgeId edge, SpatialNET.Network.EdgeDirection direction) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
+SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Unblock(TNodeId node) -> SpatialNET.Network.NetworkState<TNodeId, TEdgeId>!
+SpatialNET.Network.NetworkType
+SpatialNET.Network.NetworkType.Facets.get -> System.Collections.Generic.IReadOnlyList<int>!
+SpatialNET.Network.NetworkType.Facets.init -> void
+SpatialNET.Network.NetworkType.Id.get -> int
+SpatialNET.Network.NetworkType.Id.init -> void
+SpatialNET.Network.NetworkType.Kind.get -> SpatialNET.Network.ElementKind
+SpatialNET.Network.NetworkType.Kind.init -> void
+SpatialNET.Network.NetworkType.Name.get -> string?
+SpatialNET.Network.NetworkType.Name.init -> void
+SpatialNET.Network.NetworkType.NetworkType(int Id, SpatialNET.Network.ElementKind Kind, System.Collections.Generic.IReadOnlyList<int>! Facets, string? Name = null) -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Cost.get -> double
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Cost.init -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Edge.get -> TEdgeId
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Edge.init -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.From.get -> TNodeId
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.From.init -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.PathStep() -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.PathStep(TEdgeId Edge, TNodeId From, TNodeId To, bool Reversed, double Cost) -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Reversed.get -> bool
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.Reversed.init -> void
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.To.get -> TNodeId
+SpatialNET.Network.PathStep<TNodeId, TEdgeId>.To.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Blocked.get -> bool
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Blocked.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Cost.get -> double
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Cost.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.IsStart.get -> bool
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.IsStart.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Node.get -> TNodeId
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Node.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.ReachedNode() -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.ReachedNode(TNodeId Node, int TypeId, TNodeId Start, double Cost, TEdgeId? Via, bool IsStart, bool Blocked) -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Start.get -> TNodeId
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Start.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.TypeId.get -> int
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.TypeId.init -> void
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Via.get -> TEdgeId?
+SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>.Via.init -> void
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.EdgeTypes.get -> SpatialNET.Network.TypeSet?
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.EdgeTypes.init -> void
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.MaxCost.get -> double
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.MaxCost.init -> void
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.NodeTypes.get -> SpatialNET.Network.TypeSet?
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.NodeTypes.init -> void
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.State.get -> SpatialNET.Network.INetworkState<TNodeId, TEdgeId>?
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.State.init -> void
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.Weight.get -> SpatialNET.Network.WeightDefinition!
+SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>.Weight.init -> void
+SpatialNET.Network.TypeRegistry
+SpatialNET.Network.TypeRegistry.AllEdges.get -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.TypeRegistry.AllNodes.get -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.TypeRegistry.Display(int typeId) -> string!
+SpatialNET.Network.TypeRegistry.Edges(params string![]! patterns) -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.TypeRegistry.Facets.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Facet!>!
+SpatialNET.Network.TypeRegistry.Nodes(params string![]! patterns) -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.TypeRegistry.this[int typeId].get -> SpatialNET.Network.NetworkType!
+SpatialNET.Network.TypeRegistry.TryGetType(int typeId, out SpatialNET.Network.NetworkType! type) -> bool
+SpatialNET.Network.TypeRegistry.TypeRegistry(System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Facet!>! facets, System.Collections.Generic.IEnumerable<SpatialNET.Network.NetworkType!>! types) -> void
+SpatialNET.Network.TypeRegistry.Types.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.NetworkType!>!
+SpatialNET.Network.TypeSet
+SpatialNET.Network.TypeSet.Contains(int typeId) -> bool
+SpatialNET.Network.TypeSet.Count.get -> int
+SpatialNET.Network.TypeSet.TypeIds.get -> System.Collections.Generic.IReadOnlyList<int>!
+SpatialNET.Network.TypeSet.Union(SpatialNET.Network.TypeSet! other) -> SpatialNET.Network.TypeSet!
+SpatialNET.Network.WeightDefinition
+SpatialNET.Network.WeightDefinition.Fallback.get -> double?
+SpatialNET.Network.WeightDefinition.Fallback.init -> void
+SpatialNET.Network.WeightDefinition.Id.get -> int
+SpatialNET.Network.WeightDefinition.Id.init -> void
+SpatialNET.Network.WeightDefinition.Kind.get -> SpatialNET.Network.WeightKind
+SpatialNET.Network.WeightDefinition.Kind.init -> void
+SpatialNET.Network.WeightDefinition.Name.get -> string!
+SpatialNET.Network.WeightDefinition.Name.init -> void
+SpatialNET.Network.WeightDefinition.WeightDefinition(int Id, string! Name, SpatialNET.Network.WeightKind Kind, double? Fallback = null) -> void
+SpatialNET.Network.WeightKind
+SpatialNET.Network.WeightKind.Absolute = 1 -> SpatialNET.Network.WeightKind
+SpatialNET.Network.WeightKind.Length = 0 -> SpatialNET.Network.WeightKind
+SpatialNET.Network.WeightKind.LengthOverValue = 3 -> SpatialNET.Network.WeightKind
+SpatialNET.Network.WeightKind.PerLength = 2 -> SpatialNET.Network.WeightKind
+static SpatialNET.Network.NetworkAnalysis.Reach<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, System.Collections.Generic.IEnumerable<TNodeId>! starts, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IEnumerable<SpatialNET.Network.ReachedNode<TNodeId, TEdgeId>>!
+static SpatialNET.Network.NetworkAnalysis.ShortestPath<TNodeId, TEdgeId>(this SpatialNET.Network.IGraph<TNodeId, TEdgeId>! graph, TNodeId from, TNodeId to, SpatialNET.Network.TraversalOptions<TNodeId, TEdgeId>? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>?
+static SpatialNET.Network.TypeSet.Empty.get -> SpatialNET.Network.TypeSet!
+static SpatialNET.Network.TypeSet.Of(params System.Collections.Generic.IEnumerable<int>! typeIds) -> SpatialNET.Network.TypeSet!
+static SpatialNET.Network.TypeSet.Untyped.get -> SpatialNET.Network.TypeSet!
+static SpatialNET.Network.WeightDefinition.Length.get -> SpatialNET.Network.WeightDefinition!

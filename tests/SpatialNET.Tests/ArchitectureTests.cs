@@ -12,8 +12,9 @@ public class ArchitectureTests
     {
         ["SpatialNET.Core"] = [],
         ["SpatialNET.Extensions"] = ["SpatialNET.Core"],
-        ["SpatialNET.Imp"] = ["SpatialNET.Core"],
+        ["SpatialNET.Imp"] = ["SpatialNET.Core", "SpatialNET.Network"],
         ["SpatialNET.IO"] = ["SpatialNET.Core", "SpatialNET.Extensions"],
+        ["SpatialNET.Network"] = ["SpatialNET.Core"],
     };
 
     public static TheoryData<string> Libraries => new(AllowedSpatialNetReferences.Keys);

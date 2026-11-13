@@ -211,6 +211,132 @@ _Avoid_: Tiling-Schema, Matrix-Set
 Die ganzzahligen Koordinaten innerhalb einer Vektorkachel, von 0 bis zum Extent (Vorgabe 4096), mit Y nach unten; Geometrie darf bis in den Puffer darüber hinausreichen.
 _Avoid_: Pixelkoordinaten, Bildschirmkoordinaten
 
+### Netzwerk
+
+**Netzwerk**:
+Ein Graph aus Knoten und Kanten, gebildet aus Linien und Punkten eines Leitungs- oder Straßennetzes, den der Host speichert und die Bibliothek durchsucht und prüft.
+_Avoid_: Netz (das ist die veränderliche Triangulierung), Graph (im deutschen Text), Topologie
+
+**Knoten**:
+Ein Punkt des Netzwerks, an dem Kanten enden: ein echter Knoten oder ein Hilfsknoten.
+_Avoid_: Vertex, Stützpunkt
+
+**Echter Knoten**:
+Ein Knoten, der aus einem Punkt des Hosts entsteht, z.B. Kasten, Trafo, Schalter, Kunde; er trägt die ID und den Typ des Hosts.
+_Avoid_: Punktobjekt, Netzknoten
+
+**Hilfsknoten**:
+Ein untypisierter Knoten, der entsteht, wo Linienenden zusammentreffen, ohne dass dort ein Punkt des Hosts liegt.
+_Avoid_: Dummy-Knoten, Verbindungspunkt
+
+**Kante**:
+Die Verbindung zwischen genau zwei Knoten des Netzwerks, eine ganze Linie des Hosts oder ein Teil davon.
+_Avoid_: Strang, Link, Segment (das ist ein Stück eines Pfads)
+
+**Teilkante**:
+Eine Kante, die nur einen Bereich einer Linie des Hosts abdeckt, weil die Linie an einem Knoten geteilt wurde.
+_Avoid_: Teilstück, Abschnitt
+
+**Verknoten**:
+Das Zusammenfassen von Linienenden und Punkten, die innerhalb einer Toleranz voneinander liegen, zu einem Knoten des Netzwerks; kein Stützpunkt wird dabei verschoben.
+_Avoid_: Fangen (das verschiebt Stützpunkte), Snappen, Topologie bilden
+
+**T-Anschluss**:
+Ein Linienende, das im Inneren einer anderen Linie liegt; die getroffene Linie wird dort geteilt.
+_Avoid_: T-Kreuzung, Stich, Abzweig
+
+**Shard-Region**:
+Ein Polygon des Hosts mit einer Shard-ID, das allen Knoten in seiner Fläche diesen Shard gibt, meist ein Ortsnetz.
+_Avoid_: Shard-Polygon, Partitionsfläche
+
+**Grenzkante**:
+Eine Kante, deren Enden in verschiedenen Shards liegen; sie gehört zu beiden.
+_Avoid_: Übergangskante, Randkante
+
+**Weg**:
+Eine Folge von Kanten zwischen zwei Knoten mit ihren Kosten.
+_Avoid_: Pfad (das ist ein Linienzug einer Polylinie), Route (die trägt M-Werte)
+
+**Elementtyp**:
+Die Art eines Knotens oder einer Kante als eine Zahl, die eine Kombination von Facettenwerten bezeichnet, z.B. Niederspannung, Leitung, Kabel.
+_Avoid_: Objektklasse, Kategorie, Klasse
+
+**Facette**:
+Eine Eigenschaft mit eigenem Wertevorrat, aus der sich ein Elementtyp zusammensetzt, z.B. Ebene, Objektart, Bauart; ihre Werte bedeuten unter jeder anderen Facette dasselbe.
+_Avoid_: Untertyp, Hierarchiestufe
+
+**Typmuster**:
+Eine Menge von Elementtypen, beschrieben durch einen Wert oder einen Platzhalter je Facette, z.B. `[*, Kastenverbinder, *]`.
+_Avoid_: Wildcard, Typfilter
+
+**Gewicht**:
+Ein benannter Wert an einer Kante mit einer Gewichtsart, aus der die Kosten der Kante folgen, z.B. Widerstand pro km oder Höchstgeschwindigkeit.
+_Avoid_: Attribut, Kosten (die werden daraus berechnet)
+
+**Kosten**:
+Was das Durchlaufen einer Kante oder eines Wegs nach dem gewählten Gewicht ausmacht; die Kosten eines Wegs sind die Summe seiner Kanten.
+_Avoid_: Distanz, Aufwand
+
+**Trace**:
+Die Verfolgung eines Netzwerks ab Quellen, Quelle für Quelle, bis zu gesperrten Knoten und anderen Quellen.
+_Avoid_: Netzverfolgung, Flutung, Ausbreitung
+
+**Quelle**:
+Ein Knoten, von dem ein Trace ausgeht, weil der Host ihn als Quelle übergibt, z.B. ein Trafo.
+_Avoid_: Einspeisung, Wurzel, Root
+
+**Senke**:
+Ein Knoten, dessen Versorgung der Host abfragt, z.B. ein Kunde.
+_Avoid_: Verbraucher, Endpunkt, Ziel
+
+**Versorgungsgebiet**:
+Die Knoten und Kanten, die der Trace von einer Quelle aus erreicht.
+_Avoid_: Einzugsgebiet, Teilnetz
+
+**Mehrfachversorgt**:
+Eine Senke, die von mehr als einer Quelle erreicht wird.
+_Avoid_: doppelt gespeist, vermascht (das beschreibt das Netz, nicht die Senke)
+
+**Nicht versorgt**:
+Eine Senke, die keine Quelle erreicht.
+_Avoid_: unversorgt, spannungslos, isoliert
+
+**Netzwerkregel**:
+Eine Prüfung, die für jedes Element eines Typmusters seine direkten Nachbarn eines anderen Typmusters zählt und die Anzahl mit einer erlaubten Spanne vergleicht.
+_Avoid_: Topologieregel, Constraint, Validierungsregel
+
+**Verletzung**:
+Ein Element, an dem eine Netzwerkregel nicht erfüllt ist, mit der gefundenen Anzahl.
+_Avoid_: Fehler (ohne Bezug auf eine Regel), Issue, Befund
+
+**Kontext**:
+Elemente, die in einem Netzwerk für eine Prüfung mitgeladen, aber selbst nicht geprüft werden, z.B. die Leitungen jenseits des Rands eines Ortsnetzes.
+_Avoid_: Puffer, Randzone
+
+**Normalschaltzustand**:
+Welche Knoten gesperrt, welche Kanten deaktiviert sind und welche Richtungen gelten, so wie es im Netzwerk gespeichert ist.
+_Avoid_: Grundzustand, Standardzustand
+
+**Abweichung**:
+Eine Änderung des Schaltzustands, die nur für eine Berechnung gilt.
+_Avoid_: Override, Schaltauftrag
+
+**Gesperrt**:
+Ein Knoten, den eine Berechnung erreicht, aber nicht durchläuft.
+_Avoid_: geschlossen, offen (beides ist je nach Fachgebiet umgekehrt gemeint)
+
+**Deaktiviert**:
+Eine Kante, die es für eine Berechnung nicht gibt.
+_Avoid_: abgeschaltet, gelöscht
+
+**Startmenge**:
+Die Elemente, bei denen eine Berechnung oder Prüfung beginnt; der Host bestimmt sie immer selbst.
+_Avoid_: Seed, Einstiegspunkte
+
+**Shard**:
+Ein Paket aus Knoten und allen an ihnen hängenden Kanten, das der Host am Stück lädt, meist ein Ortsnetz.
+_Avoid_: Partition, Kachel, Segment
+
 ### Playground
 
 **Playground**:
