@@ -15,6 +15,7 @@
     <ProjectReference Include="..\..\src\SpatialNET.Extensions\SpatialNET.Extensions.csproj" />
     <ProjectReference Include="..\..\src\SpatialNET.Imp\SpatialNET.Imp.csproj" />
     <ProjectReference Include="..\..\src\SpatialNET.Network\SpatialNET.Network.csproj" />
+    <ProjectReference Include="..\..\src\SpatialNET.Network.Building\SpatialNET.Network.Building.csproj" />
   </ItemGroup>
 
 </Project>

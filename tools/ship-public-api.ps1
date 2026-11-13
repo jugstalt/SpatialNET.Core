@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Moves the entries of PublicAPI.Unshipped.txt into PublicAPI.Shipped.txt in the five library projects (ADR 0028, ADR 0049).
+  Moves the entries of PublicAPI.Unshipped.txt into PublicAPI.Shipped.txt in the six library projects (ADR 0028, ADR 0049, ADR 0050).
 .DESCRIPTION
   Run it when a release is prepared (RELEASING.md). Entries marked *REMOVED* are taken out of the shipped file;
   all other entries are added to it. The shipped files stay sorted; the unshipped files are reset.
@@ -12,7 +12,7 @@ param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = 'Stop'
 $header = '#nullable enable'
 
-foreach ($project in 'Core', 'Extensions', 'Imp', 'IO', 'Network') {
+foreach ($project in 'Core', 'Extensions', 'Imp', 'IO', 'Network', 'Network.Building') {
     $folder = Join-Path $Root "src/SpatialNET.$project"
     $shippedPath = Join-Path $folder 'PublicAPI.Shipped.txt'
     $unshippedPath = Join-Path $folder 'PublicAPI.Unshipped.txt'

@@ -4,7 +4,7 @@ Releases are cut by pushing a tag; the workflow [`.github/workflows/release.yml`
 
 ## Versioning
 
-- All five packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`, `SpatialNET.Network`) share one version, following [Semantic Versioning](https://semver.org/).
+- All six packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`, `SpatialNET.Network`, `SpatialNET.Network.Building`) share one version, following [Semantic Versioning](https://semver.org/).
 - The tag has the form `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-suffix`, for example `v0.1.0` or `v0.1.0-preview.2`. The workflow rejects any other tag. A tag with a suffix is published as a pre-release (on nuget.org and on GitHub).
 - `VersionPrefix` in [`Directory.Build.props`](Directory.Build.props) is only the version of local builds; the workflow overrides it with `-p:Version`.
 
@@ -48,7 +48,7 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
    ```
 
 8. **Approve and watch the workflow.** Open the *Release* run in the Actions tab. If you required a reviewer for the environment `nuget`, approve the run there. The workflow builds, runs the tests, packs the libraries (with symbol packages), pushes them to nuget.org and creates a GitHub release with the packages attached and generated release notes.
-9. **Verify.** On nuget.org, each of the five packages shows the new version, the README and the license (the package also contains `THIRD-PARTY-NOTICES.md` and `licenses/JTS-EDL-1.0.txt`). On GitHub, the release is marked as a pre-release if the version has a suffix. New versions can take a few minutes to appear in the nuget.org search.
+9. **Verify.** On nuget.org, each of the six packages shows the new version, the README and the license (the package also contains `THIRD-PARTY-NOTICES.md` and `licenses/JTS-EDL-1.0.txt`). On GitHub, the release is marked as a pre-release if the version has a suffix. New versions can take a few minutes to appear in the nuget.org search.
 10. **Polish the GitHub release notes** if needed (Releases → edit), for example by pasting the matching section of the changelog.
 
 ## If something goes wrong
@@ -68,7 +68,7 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
 
 ## One-time setup
 
-- **nuget.org:** reserve the package IDs `SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO` and `SpatialNET.Network`, and create an API key that is allowed to push them. API keys expire; renew it before it does.
+- **nuget.org:** reserve the package IDs `SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`, `SpatialNET.Network` and `SpatialNET.Network.Building`, and create an API key that is allowed to push them. API keys expire; renew it before it does.
 - **GitHub:** add the API key as the secret `NUGET_API_KEY` of the environment `nuget` (Settings → Environments). Requiring a reviewer for that environment makes every release a deliberate approval.
 - **GitHub Pages:** in Settings → Pages, set the source to "GitHub Actions" so that [`.github/workflows/docs.yml`](.github/workflows/docs.yml) can publish the documentation.
 
@@ -76,7 +76,7 @@ Example: from `v0.1.0-preview.1` to `v0.1.0-preview.2`.
 
 Besides the package validation described here, the public API is tracked in `PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt` of each library project and checked on every build by `Microsoft.CodeAnalysis.PublicApiAnalyzers`; the conditions for version 1.0 are in [ADR 0028](docs/adr/0028-oeffentliche-api-und-kriterien-fuer-1-0.md).
 
-Package validation is enabled in the five library projects (`EnablePackageValidation`). `SpatialNET.Network` has no baseline until its first release (an empty `PackageValidationBaselineVersion` in its project file; remove it after that release). When the packages are packed – in CI, in the release workflow and locally with `dotnet pack` – the public API is compared with the published package named by `PackageValidationBaselineVersion` in [`Directory.Build.props`](Directory.Build.props). A breaking change fails the pack; the baseline package is downloaded from nuget.org, so packing needs network access.
+Package validation is enabled in the six library projects (`EnablePackageValidation`). `SpatialNET.Network` and `SpatialNET.Network.Building` have no baseline until their first release (an empty `PackageValidationBaselineVersion` in their project files; remove it after that release). When the packages are packed – in CI, in the release workflow and locally with `dotnet pack` – the public API is compared with the published package named by `PackageValidationBaselineVersion` in [`Directory.Build.props`](Directory.Build.props). A breaking change fails the pack; the baseline package is downloaded from nuget.org, so packing needs network access.
 
 - **After each release,** set the baseline to the version you just released (step 5 above), so that the following pack compares against it.
 - **If a breaking change is intended** (allowed before 1.0 in a minor version, otherwise only in a new major version), generate a suppression file once and commit it:

@@ -1,6 +1,6 @@
 ﻿# Changelog
 
-All notable changes to SpatialNET are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). All five packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`, `SpatialNET.Network`) share one version.
+All notable changes to SpatialNET are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). All six packages (`SpatialNET.Core`, `SpatialNET.Extensions`, `SpatialNET.Imp`, `SpatialNET.IO`, `SpatialNET.Network`, `SpatialNET.Network.Building`) share one version.
 
 ## [Unreleased]
 
@@ -8,7 +8,9 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 - Networks (ADR 0049): a new package `SpatialNET.Network` for graphs of nodes and edges made from utility or street networks. The host stores the graph and hands out nodes and edges by id, many at once, through `IGraph<TNodeId, TEdgeId>`; the searches read only the part they visit. Types are vectors of facets in a `TypeRegistry`, resolved from patterns such as `[*, BoxConnector, *]`, `Low.*` or `untyped` into a `TypeSet`. Weights of four kinds (`Length`, `Absolute`, `PerLength`, `LengthOverValue`) with a fallback, the normal switching state on the records and deviations per search (`NetworkState`: blocked nodes are reached but not passed, disabled edges, directions). `Reach` (every reachable node in order of cost, lazily, from one or more start nodes) and `ShortestPath` (Dijkstra; equal costs decided by the order of the host), with type filters and a maximum cost. `InvalidGraphException` for data that cannot be a network. New concept page "Networks".
 - `SpatialNET.Imp`: `InMemoryGraph` (a network in memory, also keeping the source of each edge) and `ShardedGraphBase` (a cache of whole shards for hosts that store their network in a database; the host implements `FindShards` and `LoadShard`). `SpatialNET.Imp` now references `SpatialNET.Network`.
-- Benchmarks: `NetworkBenchmarks` and `--quick-network` on a synthetic network of radial local networks with up to 3 million nodes.
+- Building networks (ADR 0050): a new package `SpatialNET.Network.Building` with `NetworkBuilder`. It joins the host's line ends and points within a tolerance into nodes (a hash grid and union-find, independent of the input order; points of the host become real nodes, the rest helper nodes at the mean of their ends), splits lines at real nodes and T junctions (and at crossings with `NodeAtCrossings`, for street networks), gives every edge its range on the source line, a share of a surveyed length and the weights of the line (values of kind `Absolute` split by length), takes ids from the host's `INetworkIdFactory`, assigns shards from polygons (`ShardRegion`, optionally by type), checks everything that can fail before the first write (`NetworkBuildException` with all conflicts) and writes all nodes, then all edges, to an `INetworkWriter`. Optional `IProgress<BuildProgress>` per phase and a `CancellationToken`; notes such as nodes outside every region in the `BuildResult`. `NetworkPathGeometry.ToPolyline` draws a way from the source lines. No vertex moves. About 25 s for 3 million lines.
+- `SpatialNET.Network`: `INetworkWriter`, `BuiltNode` and `BuiltEdge`; `InMemoryGraph` implements the writer, so a network can be built straight into memory.
+- Benchmarks: `NetworkBenchmarks`, `NetworkBuildBenchmarks`, `--quick-network` and `--quick-build` on a synthetic network of radial local networks with up to 3 million nodes.
 
 ## [0.10.0-preview.2] - 2026-11-08
 

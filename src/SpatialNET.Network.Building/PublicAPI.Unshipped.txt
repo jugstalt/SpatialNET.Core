@@ -1,0 +1,111 @@
+#nullable enable
+SpatialNET.Network.Building.BuildDiagnostic
+SpatialNET.Network.Building.BuildDiagnostic.BuildDiagnostic() -> void
+SpatialNET.Network.Building.BuildDiagnostic.BuildDiagnostic(SpatialNET.Network.Building.BuildDiagnosticKind Kind, SpatialNET.Coordinate Location, string! Message) -> void
+SpatialNET.Network.Building.BuildDiagnostic.Kind.get -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnostic.Kind.init -> void
+SpatialNET.Network.Building.BuildDiagnostic.Location.get -> SpatialNET.Coordinate
+SpatialNET.Network.Building.BuildDiagnostic.Location.init -> void
+SpatialNET.Network.Building.BuildDiagnostic.Message.get -> string!
+SpatialNET.Network.Building.BuildDiagnostic.Message.init -> void
+SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.ClusterWiderThanTolerance = 2 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.IsolatedNode = 3 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.OutsideShardRegions = 0 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.OverlappingShardRegions = 1 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.ShortPartDropped = 4 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildPhase.AssigningShards = 2 -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildPhase.Checking = 3 -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildPhase.JoiningEnds = 0 -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildPhase.Splitting = 1 -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildPhase.WritingEdges = 5 -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildPhase.WritingNodes = 4 -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildProgress
+SpatialNET.Network.Building.BuildProgress.BuildProgress() -> void
+SpatialNET.Network.Building.BuildProgress.BuildProgress(SpatialNET.Network.Building.BuildPhase Phase, long Done, long Total) -> void
+SpatialNET.Network.Building.BuildProgress.Done.get -> long
+SpatialNET.Network.Building.BuildProgress.Done.init -> void
+SpatialNET.Network.Building.BuildProgress.Phase.get -> SpatialNET.Network.Building.BuildPhase
+SpatialNET.Network.Building.BuildProgress.Phase.init -> void
+SpatialNET.Network.Building.BuildProgress.Total.get -> long
+SpatialNET.Network.Building.BuildProgress.Total.init -> void
+SpatialNET.Network.Building.BuildResult
+SpatialNET.Network.Building.BuildResult.BuildResult(int NodeCount, int EdgeCount, System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.BuildDiagnostic>! Diagnostics) -> void
+SpatialNET.Network.Building.BuildResult.Diagnostics.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.BuildDiagnostic>!
+SpatialNET.Network.Building.BuildResult.Diagnostics.init -> void
+SpatialNET.Network.Building.BuildResult.EdgeCount.get -> int
+SpatialNET.Network.Building.BuildResult.EdgeCount.init -> void
+SpatialNET.Network.Building.BuildResult.NodeCount.get -> int
+SpatialNET.Network.Building.BuildResult.NodeCount.init -> void
+SpatialNET.Network.Building.EdgeShape
+SpatialNET.Network.Building.EdgeShape.EdgeShape() -> void
+SpatialNET.Network.Building.EdgeShape.EdgeShape(SpatialNET.IPolyline2D! Line, double FromMeasure, double ToMeasure) -> void
+SpatialNET.Network.Building.EdgeShape.FromMeasure.get -> double
+SpatialNET.Network.Building.EdgeShape.FromMeasure.init -> void
+SpatialNET.Network.Building.EdgeShape.Line.get -> SpatialNET.IPolyline2D!
+SpatialNET.Network.Building.EdgeShape.Line.init -> void
+SpatialNET.Network.Building.EdgeShape.ToMeasure.get -> double
+SpatialNET.Network.Building.EdgeShape.ToMeasure.init -> void
+SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>
+SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>.NewEdge(TSource source, int part, int partCount) -> TEdgeId
+SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>.NewHelperNode(SpatialNET.Coordinate location) -> TNodeId
+SpatialNET.Network.Building.LineAttributes
+SpatialNET.Network.Building.LineAttributes.Direction.get -> SpatialNET.Network.EdgeDirection
+SpatialNET.Network.Building.LineAttributes.Direction.init -> void
+SpatialNET.Network.Building.LineAttributes.Disabled.get -> bool
+SpatialNET.Network.Building.LineAttributes.Disabled.init -> void
+SpatialNET.Network.Building.LineAttributes.Length.get -> double?
+SpatialNET.Network.Building.LineAttributes.Length.init -> void
+SpatialNET.Network.Building.LineAttributes.LineAttributes(SpatialNET.Network.EdgeDirection Direction = SpatialNET.Network.EdgeDirection.Both, bool Disabled = false, double? Length = null, System.Collections.Generic.IReadOnlyList<SpatialNET.Network.EdgeWeight>? Weights = null) -> void
+SpatialNET.Network.Building.LineAttributes.Weights.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.EdgeWeight>?
+SpatialNET.Network.Building.LineAttributes.Weights.init -> void
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.AddLine(TSource source, SpatialNET.IPolyline2D! line, int typeId, SpatialNET.Network.Building.LineAttributes? attributes = null) -> void
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.AddNode(TSource source, TNodeId id, SpatialNET.Coordinate location, int typeId, bool blocked = false) -> void
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.AddNode(TSource source, TNodeId id, SpatialNET.IPoint2D! point, int typeId, bool blocked = false) -> void
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.Build(SpatialNET.Network.INetworkWriter<TNodeId, TEdgeId, TSource>! writer, System.IProgress<SpatialNET.Network.Building.BuildProgress>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> SpatialNET.Network.Building.BuildResult!
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.NetworkBuilder(SpatialNET.Network.Building.NetworkBuildOptions! options, SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>! ids) -> void
+SpatialNET.Network.Building.NetworkBuildException
+SpatialNET.Network.Building.NetworkBuildException.Conflicts.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.NodeConflict>!
+SpatialNET.Network.Building.NetworkBuildException.NetworkBuildException(System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.NodeConflict>! conflicts) -> void
+SpatialNET.Network.Building.NetworkBuildOptions
+SpatialNET.Network.Building.NetworkBuildOptions.DefaultShard.get -> long?
+SpatialNET.Network.Building.NetworkBuildOptions.DefaultShard.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.FallbackShardCellSize.get -> double
+SpatialNET.Network.Building.NetworkBuildOptions.FallbackShardCellSize.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.NodeAtCrossings.get -> bool
+SpatialNET.Network.Building.NetworkBuildOptions.NodeAtCrossings.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.ShardRegions.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.ShardRegion!>!
+SpatialNET.Network.Building.NetworkBuildOptions.ShardRegions.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.SplitAtLineEnds.get -> bool
+SpatialNET.Network.Building.NetworkBuildOptions.SplitAtLineEnds.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.SplitAtNodes.get -> bool
+SpatialNET.Network.Building.NetworkBuildOptions.SplitAtNodes.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.Tolerance.get -> double
+SpatialNET.Network.Building.NetworkBuildOptions.Tolerance.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.Weights.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.WeightDefinition!>!
+SpatialNET.Network.Building.NetworkBuildOptions.Weights.init -> void
+SpatialNET.Network.Building.NetworkPathGeometry
+SpatialNET.Network.Building.NodeConflict
+SpatialNET.Network.Building.NodeConflict.Kind.get -> SpatialNET.Network.Building.NodeConflictKind
+SpatialNET.Network.Building.NodeConflict.Kind.init -> void
+SpatialNET.Network.Building.NodeConflict.Location.get -> SpatialNET.Coordinate
+SpatialNET.Network.Building.NodeConflict.Location.init -> void
+SpatialNET.Network.Building.NodeConflict.NodeConflict() -> void
+SpatialNET.Network.Building.NodeConflict.NodeConflict(SpatialNET.Coordinate Location, SpatialNET.Network.Building.NodeConflictKind Kind, System.Collections.Generic.IReadOnlyList<object?>! Sources) -> void
+SpatialNET.Network.Building.NodeConflict.Sources.get -> System.Collections.Generic.IReadOnlyList<object?>!
+SpatialNET.Network.Building.NodeConflict.Sources.init -> void
+SpatialNET.Network.Building.NodeConflictKind
+SpatialNET.Network.Building.NodeConflictKind.DuplicateEdgeId = 1 -> SpatialNET.Network.Building.NodeConflictKind
+SpatialNET.Network.Building.NodeConflictKind.HelperIdTaken = 2 -> SpatialNET.Network.Building.NodeConflictKind
+SpatialNET.Network.Building.NodeConflictKind.RealNodesTooClose = 0 -> SpatialNET.Network.Building.NodeConflictKind
+SpatialNET.Network.Building.ShardRegion
+SpatialNET.Network.Building.ShardRegion.AppliesTo.get -> SpatialNET.Network.TypeSet?
+SpatialNET.Network.Building.ShardRegion.AppliesTo.init -> void
+SpatialNET.Network.Building.ShardRegion.Area.get -> SpatialNET.IPolygon2D!
+SpatialNET.Network.Building.ShardRegion.Area.init -> void
+SpatialNET.Network.Building.ShardRegion.ShardId.get -> long
+SpatialNET.Network.Building.ShardRegion.ShardId.init -> void
+SpatialNET.Network.Building.ShardRegion.ShardRegion(SpatialNET.IPolygon2D! Area, long ShardId, SpatialNET.Network.TypeSet? AppliesTo = null) -> void
+static SpatialNET.Network.Building.NetworkPathGeometry.ToPolyline<TNodeId, TEdgeId>(this SpatialNET.Network.NetworkPath<TNodeId, TEdgeId>! path, System.Func<TEdgeId, SpatialNET.Network.Building.EdgeShape>! shapeOf, SpatialNET.IGeometryFactory? factory = null) -> SpatialNET.IPolyline2D!

@@ -55,7 +55,7 @@ public sealed class SyntheticNetwork
                 long id = nodes.Count;
                 int type = random.Next(10) switch { < 5 => 0, < 9 => CustomerType, _ => BoxType };
                 var at = nodes[(int)parent].Location;
-                nodes.Add(new GraphNode<long>(id, type, new Coordinate(at.X + random.Next(5, 50), at.Y + random.Next(-20, 20))));
+                nodes.Add(new GraphNode<long>(id, type, new Coordinate(at.X + 5 + 45 * random.NextDouble(), at.Y - 20 + 40 * random.NextDouble())));
                 shard.Add(k);
                 edges.Add(new GraphEdge<long, long>(edgeId++, parent, id, CableType, random.Next(5, 50)));
             }
@@ -208,5 +208,95 @@ public class NetworkBenchmarks
         }
 
         return reached;
+    }
+}
+
+/// <summary>The input of a build: the points and lines of a <see cref="SyntheticNetwork"/>, as a host would read them (ADR 0050).</summary>
+public sealed class SyntheticBuildInput
+{
+    private SyntheticBuildInput(List<(long Id, Coordinate At, int Type)> points, List<(long Source, IPolyline2D Line)> lines)
+    {
+        Points = points;
+        Lines = lines;
+    }
+
+    /// <summary>The real nodes: transformers, boxes and customers. The other nodes of the network are only line ends.</summary>
+    public List<(long Id, Coordinate At, int Type)> Points { get; }
+
+    /// <summary>One line per edge, with a vertex in the middle.</summary>
+    public List<(long Source, IPolyline2D Line)> Lines { get; }
+
+    public static SyntheticBuildInput Create(SyntheticNetwork network)
+    {
+        var points = network.Nodes.Where(n => n.TypeId != 0).Select(n => (n.Id, n.Location, n.TypeId)).ToList();
+        var lines = new List<(long, IPolyline2D)>(network.Edges.Length);
+        foreach (var edge in network.Edges)
+        {
+            var a = network.Nodes[edge.From].Location;
+            var b = network.Nodes[edge.To].Location;
+            var middle = new Coordinate((a.X + b.X) / 2 + 0.5, (a.Y + b.Y) / 2);
+            lines.Add((edge.Id, SpatialNET.Imp.ImpGeometryFactory.Instance.CreatePolyline([new[] { a, middle, b }], null)));
+        }
+
+        return new SyntheticBuildInput(points, lines);
+    }
+
+    public SpatialNET.Network.Building.BuildResult Build(INetworkWriter<long, long, long> writer, IProgress<SpatialNET.Network.Building.BuildProgress>? progress = null)
+    {
+        var builder = new SpatialNET.Network.Building.NetworkBuilder<long, long, long>(
+            new SpatialNET.Network.Building.NetworkBuildOptions { Tolerance = 0.01, DefaultShard = 0 }, new SequentialIds());
+        foreach (var (id, at, type) in Points)
+        {
+            builder.AddNode(id, id, at, type);
+        }
+
+        foreach (var (source, line) in Lines)
+        {
+            builder.AddLine(source, line, SyntheticNetwork.CableType);
+        }
+
+        return builder.Build(writer, progress);
+    }
+
+    private sealed class SequentialIds : SpatialNET.Network.Building.INetworkIdFactory<long, long, long>
+    {
+        private long _next = 1L << 40;
+
+        public long NewHelperNode(Coordinate location) => _next++;
+
+        public long NewEdge(long source, int part, int partCount) => source * 16 + part;
+    }
+}
+
+/// <summary>A writer that only counts, so that a benchmark measures the builder alone.</summary>
+public sealed class CountingWriter : INetworkWriter<long, long, long>
+{
+    public long Nodes { get; private set; }
+
+    public long Edges { get; private set; }
+
+    public void WriteNode(in BuiltNode<long, long> node) => Nodes++;
+
+    public void WriteEdge(in BuiltEdge<long, long, long> edge) => Edges++;
+}
+
+/// <summary>The builder of ADR 0050 on the points and lines of a synthetic network.</summary>
+[MemoryDiagnoser]
+public class NetworkBuildBenchmarks
+{
+    private SyntheticBuildInput _input = null!;
+
+    [Params(100_000, 1_000_000)]
+    public int N { get; set; }
+
+    [GlobalSetup]
+    public void Setup() => _input = SyntheticBuildInput.Create(SyntheticNetwork.Create(N));
+
+    [Benchmark]
+    public long Build()
+    {
+        var writer = new CountingWriter();
+        _input.Build(writer);
+        return writer.Edges;
     }
 }

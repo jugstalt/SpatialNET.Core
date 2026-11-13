@@ -2,7 +2,7 @@
 
 Ein Netzwerk ist ein Graph aus **Knoten** und **Kanten**, gebildet aus den Linien und Punkten eines Leitungsnetzes (Kabel, Verbinder, Kästen, Trafos, Kunden) oder eines Straßennetzes. SpatialNET durchsucht es; **gespeichert wird es beim Host**. Das Paket `SpatialNET.Network` enthält das Modell, das Interface `IGraph` und die Suchen; `SpatialNET.Imp` ergänzt einen Graphen im Speicher und einen Cache für Hosts, die ihr Netzwerk in einer Datenbank halten ([ADR 0049](../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.de.md)).
 
-Diese Seite beschreibt, was es heute gibt: das Modell, Typen, Gewichte, den Schaltzustand, `Reach` und `ShortestPath`. Das Bauen eines Netzwerks aus Linien und Punkten, das Tracing der Versorgung von Kunden und Regelprüfungen folgen ([ADR 0050](../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.de.md), [ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.de.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md)).
+Diese Seite beschreibt, was es heute gibt: das Modell, Typen, Gewichte, den Schaltzustand, `Reach` und `ShortestPath` und das Bauen eines Netzwerks aus Linien und Punkten mit `SpatialNET.Network.Building`. Das Tracing der Versorgung von Kunden und Regelprüfungen folgen ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.de.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md)).
 
 ## Der Host hält den Graphen
 
@@ -27,6 +27,54 @@ public interface IGraph<TNodeId, TEdgeId>
 
 - **`InMemoryGraph<TNodeId, TEdgeId, TSource>`** für Tests, kleine Netzwerke und das temporäre Netzwerk eines Gebiets; mit `Add` gefüllt, kann er auch die Quelle jeder Kante behalten.
 - **`ShardedGraphBase<TNodeId, TEdgeId>`** für einen Host, der sein Netzwerk in **Shards** speichert, meist einer pro Ortsnetz. Sie hält eine Anzahl ganzer Shards im Speicher; der Host schreibt zwei Methoden, `FindShards` (welcher Shard enthält diese Knoten, in einer Abfrage) und `LoadShard` (die Knoten eines Shards und jede Kante, die sie berührt, auch die Kanten zu anderen Shards).
+
+## Ein Netzwerk bauen
+
+`NetworkBuilder` im Paket `SpatialNET.Network.Building` macht aus den Punkten und Linien des Hosts die Knoten und Kanten ([ADR 0050](../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.de.md)):
+
+- **Verknoten.** Linienenden und Punkte, die näher als die `Tolerance` beieinanderliegen, werden ein Knoten. Eine Gruppe mit einem Punkt des Hosts wird dieser **echte Knoten** mit seiner ID und seinem Typ; eine Gruppe nur aus Linienenden wird ein **Hilfsknoten** (Typ 0) im Mittel der Enden. Kein Stützpunkt bewegt sich: Das Netzwerk sagt, welche Enden zusammengehören, die Geometrie bleibt die des Hosts. Zwei Punkte des Hosts innerhalb der Toleranz sind ein Fehler in den Daten.
+- **Teilen.** Ein echter Knoten im Inneren einer Linie teilt sie (ein Schalter in einem Kabel), ebenso ein Linienende im Inneren einer anderen Linie (ein T-Anschluss). Linien, die sich ohne gemeinsamen Punkt kreuzen, bleiben getrennt, außer `NodeAtCrossings` ist an (für Straßennetze).
+- **Kanten.** Jeder Teil wird eine Kante mit seinem Bereich auf der Quelllinie (`FromMeasure`, `ToMeasure`, für `Substring`), der geometrischen Länge oder einem Anteil einer Aufmaßlänge und den Gewichten der Linie; Werte der Art `Absolute` werden anteilig nach Länge geteilt.
+- **IDs** kommen aus der `INetworkIdFactory` des Hosts: Aus Lage, Linie und Teil abgeleitet, bleiben sie von einem nächtlichen Bau zum nächsten gleich. **Shards** kommen aus den `ShardRegions`, Polygonen wie den Ortsnetzen; die erste Region, die einen Knoten überdeckt, gewinnt.
+- **Schreiben.** Der Builder prüft zuerst alles, was scheitern kann, und wirft eine `NetworkBuildException` mit allen Konflikten, bevor etwas geschrieben ist. Dann schreibt er alle Knoten und danach alle Kanten an einen `INetworkWriter`: die Datenbank des Hosts oder einen `InMemoryGraph`.
+
+```csharp
+// The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
+sealed class GisIds : INetworkIdFactory<string, string, string>
+{
+    public string NewHelperNode(Coordinate at) => FormattableString.Invariant($"H({at.X},{at.Y})");
+
+    public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
+}
+```
+
+```csharp
+IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);
+
+var builder = new NetworkBuilder<string, string, string>(new NetworkBuildOptions { Tolerance = 0.01 }, new GisIds());
+builder.AddNode("Trafo.1", "T", new Coordinate(0, 0), typeId: 25);     // the points of the GIS are the real nodes
+builder.AddNode("Switch.1", "S", new Coordinate(30, 0), typeId: 17);
+builder.AddLine("Cable.210", Line("LINESTRING(0 0, 100 0)"), typeId: 11);         // one cable ...
+builder.AddLine("Connector.1", Line("LINESTRING(50 30, 50 0.004)"), typeId: 13);  // ... and a connector 4 mm beside it
+
+var graph = new InMemoryGraph<string, string, string>();   // or the host's writer into its database
+BuildResult result = builder.Build(graph);
+Console.WriteLine($"{result.NodeCount} nodes, {result.EdgeCount} edges");        // 5 nodes, 4 edges
+
+// The cable was split at the switch and at the T junction: three edges with their range on the cable.
+foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
+{
+    graph.TryGetSource(edge.Id, out _, out double from, out double to);
+    Console.WriteLine($"{edge.Id}: {edge.From} -> {edge.To}, {from} to {to} m");
+}
+// Cable.210#0: T -> S, 0 to 30 m
+// Cable.210#1: S -> H(50,0.004), 30 to 50 m
+// Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m
+```
+
+`Build` nimmt optional ein `IProgress<BuildProgress>` (die Phase, erledigte und gesamte Einträge), gemeldet höchstens alle 250 ms, und ein `CancellationToken`. Das `BuildResult` listet Hinweise, die den Bau nicht angehalten haben: Knoten außerhalb jeder Region, überlappende Regionen, Ketten von Enden breiter als die Toleranz, Punkte ohne Linie, weggelassene winzige Teile. Das Verknoten nutzt ein Hash-Raster, das Teilen einen räumlichen Index über die Linien; an einem synthetischen Netzwerk aus radialen Ortsnetzen braucht der Builder für 3 Mio. Linien etwa 25 Sekunden (`--quick-build` in den Benchmarks).
+
+Um einen Weg zu zeichnen, schneidet `path.ToPolyline(edge => new EdgeShape(line, from, to))` den Bereich jeder Kante aus ihrer Quelllinie, dreht Stücke um, die der Weg gegen ihre Richtung durchläuft, und fügt sie zusammen.
 
 ## Suchen
 

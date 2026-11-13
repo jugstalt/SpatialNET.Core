@@ -1,5 +1,31 @@
 #nullable enable
 override SpatialNET.Network.TypeSet.ToString() -> string!
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.BuiltEdge() -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.BuiltEdge(SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> Edge, TSource Source, double FromMeasure, double ToMeasure, long FromShard, long ToShard) -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.Edge.get -> SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.Edge.init -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.FromMeasure.get -> double
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.FromMeasure.init -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.FromShard.get -> long
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.FromShard.init -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.Source.get -> TSource
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.Source.init -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.ToMeasure.get -> double
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.ToMeasure.init -> void
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.ToShard.get -> long
+SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource>.ToShard.init -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.BuiltNode() -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.BuiltNode(SpatialNET.Network.GraphNode<TNodeId> Node, long Shard, bool IsHelper, TSource? Source) -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.IsHelper.get -> bool
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.IsHelper.init -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Node.get -> SpatialNET.Network.GraphNode<TNodeId>
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Node.init -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Shard.get -> long
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Shard.init -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Source.get -> TSource?
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Source.init -> void
 SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Backward = 2 -> SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Both = 0 -> SpatialNET.Network.EdgeDirection
@@ -57,6 +83,9 @@ SpatialNET.Network.INetworkState<TNodeId, TEdgeId>
 SpatialNET.Network.INetworkState<TNodeId, TEdgeId>.GetDirection(in SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> SpatialNET.Network.EdgeDirection
 SpatialNET.Network.INetworkState<TNodeId, TEdgeId>.IsBlocked(in SpatialNET.Network.GraphNode<TNodeId> node) -> bool
 SpatialNET.Network.INetworkState<TNodeId, TEdgeId>.IsDisabled(in SpatialNET.Network.GraphEdge<TNodeId, TEdgeId> edge) -> bool
+SpatialNET.Network.INetworkWriter<TNodeId, TEdgeId, TSource>
+SpatialNET.Network.INetworkWriter<TNodeId, TEdgeId, TSource>.WriteEdge(in SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource> edge) -> void
+SpatialNET.Network.INetworkWriter<TNodeId, TEdgeId, TSource>.WriteNode(in SpatialNET.Network.BuiltNode<TNodeId, TSource> node) -> void
 SpatialNET.Network.InvalidGraphException
 SpatialNET.Network.InvalidGraphException.InvalidGraphException() -> void
 SpatialNET.Network.InvalidGraphException.InvalidGraphException(string! message) -> void

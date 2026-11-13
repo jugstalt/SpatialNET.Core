@@ -217,6 +217,26 @@ if (args.Contains("--quick-host"))
     }
 }
 
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-build → NetworkBuilder on a synthetic network (ADR 0050)
+if (args.Contains("--quick-build"))
+{
+    foreach (int n in new[] { 100_000, 1_000_000, 3_000_000 })
+    {
+        var input = SyntheticBuildInput.Create(SyntheticNetwork.Create(n));
+        GC.Collect();
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        var phases = new Dictionary<SpatialNET.Network.Building.BuildPhase, long>();
+        var clock = Stopwatch.StartNew();
+        var writer = new CountingWriter();
+        var result = input.Build(writer, new PhaseClock(phases, clock));
+        Console.WriteLine($"N={n,9:N0}  {input.Points.Count:N0} points, {input.Lines.Count:N0} lines -> {writer.Nodes:N0} nodes, {writer.Edges:N0} edges " +
+                          $"in {clock.ElapsedMilliseconds:N0} ms, {(GC.GetAllocatedBytesForCurrentThread() - before) / 1_048_576.0:N0} MB allocated, {result.Diagnostics.Count} diagnostics");
+        Console.WriteLine("   phases ended at (ms): " + string.Join(", ", phases.Select(p => $"{p.Key} {p.Value:N0}")));
+    }
+
+    return;
+}
+
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-network → Reach and ShortestPath on a synthetic network (ADR 0049)
 if (args.Contains("--quick-network"))
 {
@@ -310,4 +330,15 @@ static double Measure(Action action)
     }
 
     return sw.Elapsed.TotalMilliseconds / runs;
+}
+
+sealed class PhaseClock(Dictionary<SpatialNET.Network.Building.BuildPhase, long> ends, Stopwatch clock) : IProgress<SpatialNET.Network.Building.BuildProgress>
+{
+    public void Report(SpatialNET.Network.Building.BuildProgress value)
+    {
+        if (value.Done == value.Total)
+        {
+            ends[value.Phase] = clock.ElapsedMilliseconds;
+        }
+    }
 }

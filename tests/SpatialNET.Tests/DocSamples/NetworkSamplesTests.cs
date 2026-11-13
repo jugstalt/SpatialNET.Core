@@ -1,5 +1,7 @@
 using SpatialNET.Imp;
+using SpatialNET.IO;
 using SpatialNET.Network;
+using SpatialNET.Network.Building;
 
 namespace SpatialNET.Tests.DocSamples;
 
@@ -72,5 +74,51 @@ public sealed class NetworkSamplesTests
         Assert.Equal([11, 21], cables.TypeIds);
         Assert.Equal([15, 25], stations.TypeIds);
         Assert.Same(low, options.EdgeTypes);
+    }
+
+    // --- snippet: network-ids
+    // The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
+    private sealed class GisIds : INetworkIdFactory<string, string, string>
+    {
+        public string NewHelperNode(Coordinate at) => FormattableString.Invariant($"H({at.X},{at.Y})");
+
+        public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
+    }
+    // --- end
+
+    [Fact]
+    public void Building()
+    {
+        // --- snippet: network-build
+        IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);
+
+        var builder = new NetworkBuilder<string, string, string>(new NetworkBuildOptions { Tolerance = 0.01 }, new GisIds());
+        builder.AddNode("Trafo.1", "T", new Coordinate(0, 0), typeId: 25);     // the points of the GIS are the real nodes
+        builder.AddNode("Switch.1", "S", new Coordinate(30, 0), typeId: 17);
+        builder.AddLine("Cable.210", Line("LINESTRING(0 0, 100 0)"), typeId: 11);         // one cable ...
+        builder.AddLine("Connector.1", Line("LINESTRING(50 30, 50 0.004)"), typeId: 13);  // ... and a connector 4 mm beside it
+
+        var graph = new InMemoryGraph<string, string, string>();   // or the host's writer into its database
+        BuildResult result = builder.Build(graph);
+        Console.WriteLine($"{result.NodeCount} nodes, {result.EdgeCount} edges");        // 5 nodes, 4 edges
+
+        // The cable was split at the switch and at the T junction: three edges with their range on the cable.
+        foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
+        {
+            graph.TryGetSource(edge.Id, out _, out double from, out double to);
+            Console.WriteLine($"{edge.Id}: {edge.From} -> {edge.To}, {from} to {to} m");
+        }
+        // Cable.210#0: T -> S, 0 to 30 m
+        // Cable.210#1: S -> H(50,0.004), 30 to 50 m
+        // Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m
+        // --- end
+
+        Assert.Equal((5, 4), (result.NodeCount, result.EdgeCount));
+        var cable = graph.Edges.Where(e => e.Id.StartsWith("Cable.210")).Select(e =>
+        {
+            graph.TryGetSource(e.Id, out _, out double from, out double to);
+            return $"{e.Id}: {e.From} -> {e.To}, {from} to {to} m";
+        });
+        Assert.Equal(["Cable.210#0: T -> S, 0 to 30 m", "Cable.210#1: S -> H(50,0.004), 30 to 50 m", "Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m"], cable);
     }
 }

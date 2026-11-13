@@ -4,8 +4,9 @@ namespace SpatialNET.Imp;
 
 /// <summary>
 /// A network held in memory (ADR 0049): for tests, small networks and the temporary network of one area that is checked
-/// on save. Filled by hand with <see cref="Add(GraphNode{TNodeId})"/> and <see cref="Add(GraphEdge{TNodeId, TEdgeId})"/>.
-/// It keeps the source of each edge, if one is given, and may enumerate its nodes and edges.
+/// on save. Filled by hand with <see cref="Add(GraphNode{TNodeId})"/> and <see cref="Add(GraphEdge{TNodeId, TEdgeId})"/>,
+/// or by the network builder as its <see cref="INetworkWriter{TNodeId, TEdgeId, TSource}"/> (ADR 0050). It keeps the source
+/// of each edge, if one is given, and may enumerate its nodes and edges.
 /// </summary>
 /// <typeparam name="TNodeId">The node id.</typeparam>
 /// <typeparam name="TEdgeId">The edge id.</typeparam>
@@ -14,7 +15,7 @@ namespace SpatialNET.Imp;
 /// <para>Edges may be added before the nodes at their ends; a search reports a missing node as an <see cref="InvalidGraphException"/>.</para>
 /// <para>Not thread-safe while it is filled; once filled, any number of searches may read it at the same time.</para>
 /// </remarks>
-public sealed class InMemoryGraph<TNodeId, TEdgeId, TSource> : IGraph<TNodeId, TEdgeId>
+public sealed class InMemoryGraph<TNodeId, TEdgeId, TSource> : IGraph<TNodeId, TEdgeId>, INetworkWriter<TNodeId, TEdgeId, TSource>
     where TNodeId : notnull, IEquatable<TNodeId>
     where TEdgeId : notnull, IEquatable<TEdgeId>
 {
@@ -79,6 +80,14 @@ public sealed class InMemoryGraph<TNodeId, TEdgeId, TSource> : IGraph<TNodeId, T
         fromMeasure = toMeasure = 0;
         return false;
     }
+
+    /// <summary>Adds a node written by the network builder. The shard and the source are not kept.</summary>
+    /// <exception cref="ArgumentException">A node with this id was added before.</exception>
+    public void WriteNode(in BuiltNode<TNodeId, TSource> node) => Add(node.Node);
+
+    /// <summary>Adds an edge written by the network builder, with its source and its range on the source line.</summary>
+    /// <exception cref="ArgumentException">An edge with this id was added before.</exception>
+    public void WriteEdge(in BuiltEdge<TNodeId, TEdgeId, TSource> edge) => Add(edge.Edge, edge.Source, edge.FromMeasure, edge.ToMeasure);
 
     /// <inheritdoc/>
     public IEnumerable<GraphNode<TNodeId>> GetNodes(IReadOnlyCollection<TNodeId> ids)

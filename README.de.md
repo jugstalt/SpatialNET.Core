@@ -17,6 +17,7 @@ SpatialNET ist eine .NET-Bibliothek für planare räumliche Berechnungen: Overla
 | `SpatialNET.Imp` | Referenz-Implementierung der Geometrie-Interfaces und der Factory, für Tests, Werkzeuge und Hosts ohne eigene Geometrien |
 | `SpatialNET.IO` | WKT, GeoJSON und WKB lesen und schreiben, über die Geometrie-Factory; Mapbox Vector Tiles (MVT) für jedes Kachelgitter |
 | `SpatialNET.Network` | Netzwerke: ein Graph aus Knoten und Kanten, den der Host hinter `IGraph` speichert, typisierte Elemente, Gewichte, Schaltzustand, `Reach` und `ShortestPath` |
+| `SpatialNET.Network.Building` | Baut ein Netzwerk aus den Punkten und Linien des Hosts: verknotet Enden innerhalb einer Toleranz, teilt Linien, ordnet Shards zu, streamt Knoten und Kanten an einen Writer |
 
 ## Schnellstart
 

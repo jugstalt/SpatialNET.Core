@@ -2,7 +2,7 @@
 
 A network is a graph of **nodes** and **edges** made from the lines and points of a utility network (cables, connectors, boxes, transformers, customers) or of a street network. SpatialNET searches it; the **host stores it**. The package `SpatialNET.Network` holds the model, the interface `IGraph` and the searches; `SpatialNET.Imp` adds a graph in memory and a cache for hosts that keep their network in a database ([ADR 0049](../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.md)).
 
-This page covers what is there today: the model, types, weights, the switching state, `Reach` and `ShortestPath`. Building a network from lines and points, tracing the supply of customers and rule checks follow ([ADR 0050](../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.md), [ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md)).
+This page covers what is there today: the model, types, weights, the switching state, `Reach` and `ShortestPath`, and building a network from lines and points with `SpatialNET.Network.Building`. Tracing the supply of customers and rule checks follow ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md)).
 
 ## The host holds the graph
 
@@ -27,6 +27,54 @@ Two implementations come with `SpatialNET.Imp`:
 
 - **`InMemoryGraph<TNodeId, TEdgeId, TSource>`** for tests, small networks and the temporary network of one area; filled with `Add`, it can also keep the source of each edge.
 - **`ShardedGraphBase<TNodeId, TEdgeId>`** for a host that stores its network in **shards**, usually one per local network. It keeps a number of whole shards in memory; the host writes two methods, `FindShards` (which shard holds these nodes, in one query) and `LoadShard` (the nodes of a shard and every edge that touches them, also the edges to other shards).
+
+## Building a network
+
+`NetworkBuilder` in the package `SpatialNET.Network.Building` makes the nodes and edges from the host's points and lines ([ADR 0050](../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.md)):
+
+- **Joining.** Line ends and points closer than the `Tolerance` become one node. A group with a point of the host becomes that **real node** with its id and type; a group of line ends only becomes a **helper node** (type 0) at the mean of the ends. No vertex moves: the network says which ends belong together, the geometry stays the host's. Two points of the host within the tolerance are an error in the data.
+- **Splitting.** A real node on the inside of a line splits it (a switch in a cable), and so does a line end on the inside of another line (a T junction). Lines that cross without a common point stay apart, unless `NodeAtCrossings` is on (for street networks).
+- **Edges.** Every part becomes an edge with its range on the source line (`FromMeasure`, `ToMeasure`, for `Substring`), the geometric length or a share of a surveyed length, and the weights of the line; values of kind `Absolute` are split in proportion to length.
+- **Ids** come from the host's `INetworkIdFactory`: deriving them from location, line and part keeps them the same from one nightly build to the next. **Shards** come from `ShardRegions`, polygons such as the local networks; the first region that covers a node wins.
+- **Writing.** The builder checks everything that can fail first and throws a `NetworkBuildException` with all conflicts before anything is written. Then it writes all nodes and then all edges to an `INetworkWriter`: the host's database, or an `InMemoryGraph`.
+
+```csharp
+// The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
+sealed class GisIds : INetworkIdFactory<string, string, string>
+{
+    public string NewHelperNode(Coordinate at) => FormattableString.Invariant($"H({at.X},{at.Y})");
+
+    public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
+}
+```
+
+```csharp
+IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);
+
+var builder = new NetworkBuilder<string, string, string>(new NetworkBuildOptions { Tolerance = 0.01 }, new GisIds());
+builder.AddNode("Trafo.1", "T", new Coordinate(0, 0), typeId: 25);     // the points of the GIS are the real nodes
+builder.AddNode("Switch.1", "S", new Coordinate(30, 0), typeId: 17);
+builder.AddLine("Cable.210", Line("LINESTRING(0 0, 100 0)"), typeId: 11);         // one cable ...
+builder.AddLine("Connector.1", Line("LINESTRING(50 30, 50 0.004)"), typeId: 13);  // ... and a connector 4 mm beside it
+
+var graph = new InMemoryGraph<string, string, string>();   // or the host's writer into its database
+BuildResult result = builder.Build(graph);
+Console.WriteLine($"{result.NodeCount} nodes, {result.EdgeCount} edges");        // 5 nodes, 4 edges
+
+// The cable was split at the switch and at the T junction: three edges with their range on the cable.
+foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
+{
+    graph.TryGetSource(edge.Id, out _, out double from, out double to);
+    Console.WriteLine($"{edge.Id}: {edge.From} -> {edge.To}, {from} to {to} m");
+}
+// Cable.210#0: T -> S, 0 to 30 m
+// Cable.210#1: S -> H(50,0.004), 30 to 50 m
+// Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m
+```
+
+`Build` takes an optional `IProgress<BuildProgress>` (the phase, items done and total), reported at most every 250 ms, and a `CancellationToken`. The `BuildResult` lists notes that did not stop the build: nodes outside every region, overlapping regions, chains of ends wider than the tolerance, points without a line, tiny parts left out. The join uses a hash grid, the splitting a spatial index over the lines; on a synthetic network of radial local networks the builder needs about 25 seconds for 3 million lines (`--quick-build` in the benchmarks).
+
+To draw a way, `path.ToPolyline(edge => new EdgeShape(line, from, to))` cuts the range of every edge from its source line, turns pieces round where the way runs against them and joins them.
 
 ## Searches
 

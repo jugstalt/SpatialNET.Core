@@ -10,7 +10,8 @@
             "SpatialNET.Extensions/*.csproj",
             "SpatialNET.Imp/*.csproj",
             "SpatialNET.IO/*.csproj",
-            "SpatialNET.Network/*.csproj"
+            "SpatialNET.Network/*.csproj",
+            "SpatialNET.Network.Building/*.csproj"
           ]
         }
       ],

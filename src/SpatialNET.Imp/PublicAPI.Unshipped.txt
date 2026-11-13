@@ -13,6 +13,8 @@ SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.InMemoryGraph() -> void
 SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.NodeCount.get -> int
 SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.Nodes.get -> System.Collections.Generic.IEnumerable<SpatialNET.Network.GraphNode<TNodeId>>!
 SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.TryGetSource(TEdgeId edge, out TSource source, out double fromMeasure, out double toMeasure) -> bool
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.WriteEdge(in SpatialNET.Network.BuiltEdge<TNodeId, TEdgeId, TSource> edge) -> void
+SpatialNET.Imp.InMemoryGraph<TNodeId, TEdgeId, TSource>.WriteNode(in SpatialNET.Network.BuiltNode<TNodeId, TSource> node) -> void
 SpatialNET.Imp.ShardData<TNodeId, TEdgeId>
 SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.Edges.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.GraphEdge<TNodeId, TEdgeId>>!
 SpatialNET.Imp.ShardData<TNodeId, TEdgeId>.Edges.init -> void
