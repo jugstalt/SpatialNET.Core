@@ -87,18 +87,12 @@ public sealed class SyntheticNetwork
     }
 }
 
-/// <summary>A host's store of shards in memory, with a simulated latency per query, behind <see cref="ShardedGraphBase{TNodeId, TEdgeId}"/>.</summary>
-public sealed class SimulatedStoreGraph : ShardedGraphBase<long, long>
+/// <summary>The shards of a <see cref="SyntheticNetwork"/>, grouped once, as a host's database would hold them.</summary>
+public sealed class ShardStore
 {
-    private readonly SyntheticNetwork _network;
-    private readonly ShardData<long, long>[] _shards;
-    private readonly double _latencyMilliseconds;
-
-    public SimulatedStoreGraph(SyntheticNetwork network, int maxCachedShards, double latencyMilliseconds)
-        : base(maxCachedShards)
+    public ShardStore(SyntheticNetwork network)
     {
-        _network = network;
-        _latencyMilliseconds = latencyMilliseconds;
+        Network = network;
         int count = network.Transformers.Length;
         var nodes = Enumerable.Range(0, count).Select(_ => new List<GraphNode<long>>()).ToArray();
         var edges = Enumerable.Range(0, count).Select(_ => new List<GraphEdge<long, long>>()).ToArray();
@@ -117,9 +111,17 @@ public sealed class SimulatedStoreGraph : ShardedGraphBase<long, long>
             }
         }
 
-        _shards = Enumerable.Range(0, count).Select(i => new ShardData<long, long>(nodes[i], edges[i])).ToArray();
+        Shards = Enumerable.Range(0, count).Select(i => new ShardData<long, long>(nodes[i], edges[i])).ToArray();
     }
 
+    public SyntheticNetwork Network { get; }
+
+    public ShardData<long, long>[] Shards { get; }
+}
+
+/// <summary>A host's store of shards behind <see cref="ShardedGraphBase{TNodeId, TEdgeId}"/>, with a simulated latency per query.</summary>
+public sealed class SimulatedStoreGraph(ShardStore store, int maxCachedShards, double latencyMilliseconds) : ShardedGraphBase<long, long>(maxCachedShards)
+{
     public int Queries { get; private set; }
 
     public int ShardLoads { get; private set; }
@@ -127,23 +129,24 @@ public sealed class SimulatedStoreGraph : ShardedGraphBase<long, long>
     protected override IReadOnlyDictionary<long, long> FindShards(IReadOnlyCollection<long> nodeIds)
     {
         Wait();
-        return nodeIds.Where(id => id >= 0 && id < _network.ShardOfNode.Length).ToDictionary(id => id, id => _network.ShardOfNode[id]);
+        var shardOf = store.Network.ShardOfNode;
+        return nodeIds.Where(id => id >= 0 && id < shardOf.Length).ToDictionary(id => id, id => shardOf[id]);
     }
 
     protected override ShardData<long, long> LoadShard(long shardId)
     {
         Wait();
         ShardLoads++;
-        return _shards[shardId];
+        return store.Shards[shardId];
     }
 
     private void Wait()
     {
         Queries++;
-        if (_latencyMilliseconds > 0)
+        if (latencyMilliseconds > 0)
         {
             var sw = Stopwatch.StartNew();
-            while (sw.Elapsed.TotalMilliseconds < _latencyMilliseconds)
+            while (sw.Elapsed.TotalMilliseconds < latencyMilliseconds)
             {
                 Thread.SpinWait(50);
             }
@@ -171,16 +174,19 @@ public class NetworkBenchmarks
     {
         _network = SyntheticNetwork.Create(N);
         _memory = _network.ToMemory();
-        _store = new SimulatedStoreGraph(_network, maxCachedShards: 64, latencyMilliseconds: 0);
+        _store = new SimulatedStoreGraph(new ShardStore(_network), maxCachedShards: 64, latencyMilliseconds: 0);
     }
 
     private long NextTransformer() => _network.Transformers[_next++ % _network.Transformers.Length];
+
+    // 32 local networks fit into the cache of 64 shards with their neighbours
+    private long NextCachedTransformer() => _network.Transformers[_next++ % 32];
 
     [Benchmark]
     public int ReachLocalNetworkInMemory() => _memory.Reach([NextTransformer()]).Count();
 
     [Benchmark]
-    public int ReachLocalNetworkThroughShards() => _store.Reach([NextTransformer()]).Count();
+    public int ReachLocalNetworkThroughWarmShards() => _store.Reach([NextCachedTransformer()]).Count();
 
     [Benchmark]
     public double ShortestPathInLocalNetwork()
@@ -191,4 +197,16 @@ public class NetworkBenchmarks
 
     [Benchmark]
     public int ReachWholeNetworkInMemory() => _memory.Reach(_network.Transformers).Count();
+
+    [Benchmark]
+    public int ReachEveryLocalNetworkThroughShards()
+    {
+        int reached = 0;
+        foreach (long transformer in _network.Transformers)
+        {
+            reached += _store.Reach([transformer]).Count();
+        }
+
+        return reached;
+    }
 }

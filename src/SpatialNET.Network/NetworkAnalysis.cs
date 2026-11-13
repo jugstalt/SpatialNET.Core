@@ -53,6 +53,12 @@ public static class NetworkAnalysis
     /// <param name="starts">The start nodes; duplicates are used once.</param>
     /// <param name="options">Weight, switching state, type filters and maximum cost; <c>null</c> for the defaults.</param>
     /// <param name="cancellationToken">Stops the search between two nodes.</param>
+    /// <remarks>
+    /// One search from many start nodes far apart (for example every transformer of a city) runs as one wave through all
+    /// of their areas at once. Through a shard cache such as <c>ShardedGraphBase</c> it touches every shard again and
+    /// again, and the cache cannot keep up; in memory it keeps one entry per node of the whole network. For work over a
+    /// whole network, search from one start node (or one area) at a time, in the order of the shards.
+    /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="graph"/> or <paramref name="starts"/> is <c>null</c>, or the weight of the options.</exception>
     /// <exception cref="ArgumentOutOfRangeException">The options are invalid (fallback or <c>MaxCost</c> negative or NaN).</exception>
     /// <exception cref="ArgumentException">While enumerating: a start node is not in the graph.</exception>
@@ -98,17 +104,18 @@ public static class NetworkAnalysis
         var resolved = SearchOptions<TNodeId, TEdgeId>.Resolve(options);
 
         var search = new Search<TNodeId, TEdgeId>(graph, resolved, cancellationToken);
-        search.View.LoadGivenNodes(from.Equals(to) ? [from] : [from, to], from.Equals(to) ? nameof(from) : "from, to");
         if (from.Equals(to))
         {
+            search.LoadGivenNodes([from], nameof(from));
             return new NetworkPath<TNodeId, TEdgeId>(from, to, 0, []);
         }
 
-        foreach (var settled in search.Run([from]))
+        var given = search.LoadGivenNodes([from, to], "from, to");
+        foreach (int settled in search.Run([given[0]]))
         {
-            if (settled.Id.Equals(to))
+            if (settled == given[1])
             {
-                return PathTo(search.Labels, from, to);
+                return PathTo(search, given[0], given[1]);
             }
         }
 
@@ -125,31 +132,35 @@ public static class NetworkAnalysis
     {
         var startList = Distinct(starts, nameof(starts));
         var search = new Search<TNodeId, TEdgeId>(graph, options, cancellationToken);
-        search.View.LoadGivenNodes(startList, nameof(starts));
-        foreach (var settled in search.Run(startList))
+        var startIndices = search.LoadGivenNodes(startList, nameof(starts));
+        foreach (int settled in search.Run(startIndices))
         {
-            var label = settled.Label;
+            var via = search.ViaOf(settled);
             yield return new ReachedNode<TNodeId, TEdgeId>(
-                settled.Id, settled.Node.TypeId, label.Start, label.Cost, label.Via, label.IsStart, settled.Blocked);
+                search.IdOf(settled),
+                search.NodeOf(settled).TypeId,
+                search.IdOf(search.StartOf(settled)),
+                search.CostOf(settled),
+                via is { } step ? step.Edge : default,
+                search.IsStart(settled),
+                search.Blocked(settled));
         }
     }
 
-    private static NetworkPath<TNodeId, TEdgeId> PathTo<TNodeId, TEdgeId>(
-        Dictionary<TNodeId, Label<TNodeId, TEdgeId>> labels, TNodeId from, TNodeId to)
+    private static NetworkPath<TNodeId, TEdgeId> PathTo<TNodeId, TEdgeId>(Search<TNodeId, TEdgeId> search, int from, int to)
         where TNodeId : notnull, IEquatable<TNodeId>
         where TEdgeId : notnull, IEquatable<TEdgeId>
     {
         var steps = new List<PathStep<TNodeId, TEdgeId>>();
-        var node = to;
-        while (!node.Equals(from))
+        for (int node = to; node != from;)
         {
-            var label = labels[node];
-            steps.Add(new PathStep<TNodeId, TEdgeId>(label.Via!, label.ViaFrom!, node, label.Reversed, label.ViaCost));
-            node = label.ViaFrom!;
+            var (edge, previous, cost, reversed) = search.ViaOf(node)!.Value;
+            steps.Add(new PathStep<TNodeId, TEdgeId>(edge, search.IdOf(previous), search.IdOf(node), reversed, cost));
+            node = previous;
         }
 
         steps.Reverse();
-        return new NetworkPath<TNodeId, TEdgeId>(from, to, labels[to].Cost, steps);
+        return new NetworkPath<TNodeId, TEdgeId>(search.IdOf(from), search.IdOf(to), search.CostOf(to), steps);
     }
 
     private static List<TNodeId> Distinct<TNodeId>(IEnumerable<TNodeId> ids, string paramName)

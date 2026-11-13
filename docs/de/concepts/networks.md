@@ -128,6 +128,7 @@ Die Namen sind absichtlich neutral: Für einen Elektriker leitet ein „geschlos
 
 ## Große Netzwerke
 
-- Eine Suche merkt sich einen Eintrag pro besuchtem Knoten. In einem Ortsnetz sind das einige hundert Einträge; eine Suche von allen Trafos einer Stadt besucht Millionen Knoten und braucht einige hundert Megabyte. Solche Arbeit läuft besser pro Ortsnetz.
-- Mit `ShardedGraphBase` lädt eine Suche in einem Ortsnetz ein oder zwei Shards; spätere Suchen im selben Gebiet kommen aus dem Cache.
+- Eine Suche merkt sich einen Eintrag pro besuchtem Knoten. In einem Ortsnetz sind das einige hundert Einträge.
+- **Ein Gebiet nach dem anderen durchsuchen.** Eine Suche von allen Trafos einer Stadt läuft als eine Welle durch alle Ortsnetze zugleich: Über einen Shard-Cache lädt sie jeden Shard wieder und wieder, im Speicher merkt sie sich jeden Knoten. Stattdessen von einem Trafo (oder einem Gebiet) nach dem anderen suchen, in der Reihenfolge der Shards, dann wird jeder Shard etwa einmal geladen.
+- Gemessen an einem synthetischen Netzwerk aus radialen Ortsnetzen mit je 300 Knoten (`--quick-network` in den Benchmarks): Eine Suche in einem Ortsnetz braucht im Speicher unter 1 ms; über `ShardedGraphBase` etwa 1,5 ms mit leerem und 0,7 ms mit warmem Cache (etwa 5 ms mit leerem Cache, wenn jede Abfrage an den Speicher 0,5 ms dauert). Jedes Ortsnetz eines Netzwerks mit 3 Mio. Knoten nacheinander zu durchsuchen dauert etwa 10 s und lädt jeden Shard einmal; eine einzige Suche von allen 3.333 Trafos eines Netzwerks mit 1 Mio. Knoten über einen Cache von 64 Shards lud Shards über 500.000-mal.
 - Fehler in den Daten (eine Kante zu einem Knoten, den der Host nicht liefert, ein fehlendes Gewicht, negative oder unendliche Kosten) sind eine `InvalidGraphException` mit den beteiligten IDs; Fehler des Hosts laufen unverändert durch. Jede Suche nimmt ein `CancellationToken`.

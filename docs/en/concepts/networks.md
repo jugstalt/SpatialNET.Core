@@ -128,6 +128,7 @@ The names are neutral on purpose: for an electrician a "closed" switch conducts,
 
 ## Large networks
 
-- A search keeps one entry per visited node. Inside one local network that is a few hundred entries; a search from all transformers of a city visits millions of nodes and needs some hundred megabytes. Run such work per local network.
-- With `ShardedGraphBase`, a search inside one local network loads one or two shards; later searches in the same area come from the cache.
+- A search keeps one entry per visited node. Inside one local network that is a few hundred entries.
+- **Search one area at a time.** One search from all transformers of a city runs as one wave through every local network at once: through a shard cache it loads each shard again and again, in memory it keeps an entry for every node. Search from one transformer (or one area) at a time instead, in the order of the shards, so that each shard is loaded about once.
+- Measured on a synthetic network of radial local networks with 300 nodes each (`--quick-network` in the benchmarks): a search in one local network takes under 1 ms in memory; through `ShardedGraphBase` about 1.5 ms with an empty cache and 0.7 ms with a warm one (about 5 ms with an empty cache when every query to the store takes 0.5 ms). Searching every local network of a network with 3 million nodes one by one takes about 10 s and loads every shard once; a single search from all 3,333 transformers of a network with 1 million nodes through a cache of 64 shards loaded shards over 500,000 times.
 - Errors of the data (an edge to a node the host does not return, a missing weight, a negative or infinite cost) are an `InvalidGraphException` with the ids involved; errors of the host pass through unchanged. Every search takes a `CancellationToken`.
