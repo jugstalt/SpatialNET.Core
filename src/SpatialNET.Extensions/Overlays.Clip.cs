@@ -84,8 +84,14 @@ public static partial class Overlays
             return f.CreatePolygon(parts, polygon);
         }
 
-        return (IPolygon2D)OverlayRunner.Run(OverlayOp.Intersection, polygon, envelope.ToPolygon(f), FillRule.EvenOdd, f, gridSize);
+        // fast path: the rings cut directly at the rectangle (same result as the overlay; null where snap rounding could matter)
+        return RectangleClipper.TryClip(polygon, envelope, own, f, gridSize)
+            ?? (IPolygon2D)OverlayRunner.Run(OverlayOp.Intersection, polygon, envelope.ToPolygon(f), FillRule.EvenOdd, f, gridSize);
     }
+
+    /// <summary>The clip through the overlay, without the fast path (for tests comparing both).</summary>
+    internal static IPolygon2D ClipByOverlay(IPolygon2D polygon, Envelope2D envelope, IGeometryFactory f, double? gridSize = null) =>
+        (IPolygon2D)OverlayRunner.Run(OverlayOp.Intersection, polygon, envelope.ToPolygon(f), FillRule.EvenOdd, f, gridSize);
 
     /// <summary>
     /// Clips a polyline to a rectangle (ADR 0022): the parts inside or on the border of the closed rectangle. A polyline that lies

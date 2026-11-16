@@ -117,6 +117,7 @@ IMultiPoint2D hits = points.Clip(tile);   // gefiltert, nie gerundet
 
 - Eine Geometrie, die **vollständig im Rechteck** liegt, kommt als Kopie **ohne Runden** zurück (ein Polygon als normalisierte Kopie), und eine, die es **nicht trifft**, ergibt eine leere Geometrie. Nur wo der Rand schneidet, läuft der Overlay, und **nur diese Ergebnisse liegen auf dem Gitter**.
 - **Die Kosten wachsen mit den Stützpunkten, nicht mit ihrem Quadrat.** Ringteile außerhalb des Rechtecks werden vor dem Overlay auf ihren Weg am Rand reduziert ([ADR 0053](../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.de.md)): Ein verrauschtes Polygon mit 100.000 Stützpunkten, in der Hälfte geschnitten, braucht etwa 0,1 s und 66 MB.
+- **Polygone werden direkt am Rechteck geschnitten**, ohne den Overlay, wo das Snap-Rounding nichts ändern kann (kein Stützpunkt, Schnittpunkt oder Eckpunkt näher als zwei Gittereinheiten an einem anderen Segment oder am Rand, keine sich kreuzenden Segmente im Rechteck): Das Ergebnis ist genau das des Overlays, zu einem Bruchteil der Kosten. Ein Polygon mit 8 Stützpunkten, vom Kartenausschnitt geschnitten, braucht etwa 2 µs und 4,5 KB statt 10 µs und 27 KB. Sonst entscheidet der Overlay.
 - Z und M werden wie bei `Intersection` mitgeführt; die Ecken des Rechtecks, die zu Stützpunkten werden, haben keines.
 - Ein Rechteck ohne Fläche (Breite oder Höhe null) ergibt ein leeres Polygon bzw. eine leere Polylinie; eine ungültige Envelope (nicht endlich oder `Min > Max`) wirft.
 

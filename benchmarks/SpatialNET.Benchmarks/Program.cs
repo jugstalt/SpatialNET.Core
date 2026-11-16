@@ -46,14 +46,20 @@ if (args.Contains("--quick-clip"))
     GeometryFactory.Default = ImpGeometryFactory.Instance;
     foreach (int n in new[] { 1_000, 12_000, 100_000 })
     {
-        var (single, holes, box) = ClipBenchmarks.Create(n);
-        foreach (var (name, poly) in new[] { ("single", single), ("holes", holes) })
+        var (single, holes, centreBox) = ClipBenchmarks.Create(n);
+        // the window through the centre meets vertices on its border (overlay); shifted by 0.37 m the rectangle fast path runs
+        var shiftedBox = new Envelope2D(centreBox.MinX + 0.37, centreBox.MinY, centreBox.MaxX, centreBox.MaxY);
+        foreach (var (name, poly, box) in new[] { ("single", single, centreBox), ("holes", holes, centreBox), ("single~", single, shiftedBox), ("holes~", holes, shiftedBox) })
         {
             poly.Clip(box);
             long before = GC.GetAllocatedBytesForCurrentThread();
             poly.Clip(box);
             long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            Console.WriteLine($"Clip {name,-6} N={n,7}  {Measure(() => poly.Clip(box)),9:F2} ms  {bytes / 1024.0 / 1024.0,8:F2} MB");
+            Console.WriteLine($"Clip {name,-7} N={n,7}  {Measure(() => poly.Clip(box)),9:F2} ms  {bytes / 1024.0 / 1024.0,8:F2} MB");
+            before = GC.GetAllocatedBytesForCurrentThread();
+            Overlays.ClipByOverlay(poly, box, ImpGeometryFactory.Instance);
+            bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+            Console.WriteLine($"  overlay          {Measure(() => Overlays.ClipByOverlay(poly, box, ImpGeometryFactory.Instance)),9:F2} ms  {bytes / 1024.0 / 1024.0,8:F2} MB");
         }
     }
 

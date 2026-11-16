@@ -4,6 +4,12 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.10.0-preview.4] - 2026-11-16
+
+### Changed
+
+- `Clip` of a polygon cuts the rings directly at the rectangle (chains inside, linked along the border on the grid) instead of running the overlay, with exactly the result of the overlay (vertices, Z and M, orientation, start points and order of the rings). Where a vertex, crossing or corner comes within two grid units of another segment or of the border, or segments cross in the rectangle, the overlay still decides. A polygon of 8 vertices cut by the map extent: about 1.6–2 µs and 4.5 KB instead of 10–11 µs and 27 KB; 50 vertices 3–4x, 200 vertices 2–3x faster; 12,000 to 100,000 vertices 2.5–4x faster with half the memory. Benchmarks: `SmallClipBenchmarks` (8, 50, 200 vertices; border, half, visible), `--quick-clip` also measures the overlay and a window off the vertices.
+
 ## [0.10.0-preview.3] - 2026-11-16
 
 ### Added
