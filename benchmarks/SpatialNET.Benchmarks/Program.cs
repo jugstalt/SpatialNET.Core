@@ -11,7 +11,55 @@ using SpatialNET.Network;
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-prepared → PreparedGeometry (ADR 0024)
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-triangulation → Delaunay und ConcaveHull gegen NTS (ADR 0029)
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-join → Join und SelfJoin gegen die Schleife aus Abfragen (ADR 0021)
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-clip → Clip of large, noisy polygons
+// dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-label → FastPolygonLabel and the lazy alternatives
 // dotnet run -c Release --project benchmarks/SpatialNET.Benchmarks -- --quick-voronoi → Voronoi, Netz, Höhe, Höhenlinien, Polygon-Triangulierung (ADR 0036 bis 0038)
+if (args.Contains("--quick-label"))
+{
+    GeometryFactory.Default = ImpGeometryFactory.Instance;
+    foreach (int n in new[] { 1_000, 12_000, 100_000 })
+    {
+        var (blob, holed) = LabelBenchmarks.Create(n);
+        var seed = blob.FastPolygonLabel()!.Value;
+        var options = new AlternativeLabelOptions { Separation = 50 };
+        foreach (var (name, action) in new (string, Action)[]
+        {
+            ("FastLabel", () => blob.FastPolygonLabel()),
+            ("FastLabel(hole)", () => holed.FastPolygonLabel()),
+            ("Alt first", () => blob.FastAlternativePolygonLabelsLazy(seed, options).First()),
+            ("Alt first 4", () => blob.FastAlternativePolygonLabelsLazy(seed, options).Take(4).Count()),
+        })
+        {
+            action();
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            action();
+            long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+            Console.WriteLine($"{name,-16} N={n,7}  {Measure(action) * 1000,9:F1} µs  {bytes,8} B");
+        }
+    }
+
+    return;
+}
+
+if (args.Contains("--quick-clip"))
+{
+    GeometryFactory.Default = ImpGeometryFactory.Instance;
+    foreach (int n in new[] { 1_000, 12_000, 100_000 })
+    {
+        var (single, holes, box) = ClipBenchmarks.Create(n);
+        foreach (var (name, poly) in new[] { ("single", single), ("holes", holes) })
+        {
+            poly.Clip(box);
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            poly.Clip(box);
+            long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+            Console.WriteLine($"Clip {name,-6} N={n,7}  {Measure(() => poly.Clip(box)),9:F2} ms  {bytes / 1024.0 / 1024.0,8:F2} MB");
+        }
+    }
+
+    return;
+}
+
 if (args.Contains("--quick-voronoi"))
 {
     GeometryFactory.Default = ImpGeometryFactory.Instance;

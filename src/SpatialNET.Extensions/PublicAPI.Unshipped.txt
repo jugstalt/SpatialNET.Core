@@ -1,1 +1,14 @@
 #nullable enable
+SpatialNET.AlternativeLabelOptions
+SpatialNET.AlternativeLabelOptions.CancellationToken.get -> System.Threading.CancellationToken
+SpatialNET.AlternativeLabelOptions.CancellationToken.init -> void
+SpatialNET.AlternativeLabelOptions.MaxCount.get -> int
+SpatialNET.AlternativeLabelOptions.MaxCount.init -> void
+SpatialNET.AlternativeLabelOptions.MaxScanlines.get -> int
+SpatialNET.AlternativeLabelOptions.MaxScanlines.init -> void
+SpatialNET.AlternativeLabelOptions.MinClearance.get -> double
+SpatialNET.AlternativeLabelOptions.MinClearance.init -> void
+SpatialNET.AlternativeLabelOptions.Separation.get -> double
+SpatialNET.AlternativeLabelOptions.Separation.init -> void
+static SpatialNET.Shapes.FastAlternativePolygonLabelsLazy(this SpatialNET.IPolygon2D! polygon, SpatialNET.Coordinate seed, SpatialNET.AlternativeLabelOptions? options = null) -> System.Collections.Generic.IEnumerable<SpatialNET.Coordinate>!
+static SpatialNET.Shapes.FastPolygonLabel(this SpatialNET.IPolygon2D! polygon) -> SpatialNET.Coordinate?

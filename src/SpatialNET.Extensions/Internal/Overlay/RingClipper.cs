@@ -37,38 +37,107 @@ internal static class RingClipper
             return ring;
         }
 
-        var result = new List<Coordinate>(ring.Length);
+        var result = new List<Coordinate>();
         if (!any)
         {
-            // ganzer Ring außerhalb: nur seine Projektion auf den Rand (umschließt er R, bleibt er ein Rechteck)
-            for (int i = 0; i < segments; i++) Retract(ring[i], ring[i + 1], r, result, 0);
-            Add(result, Clamp(ring[0], r));
+            // whole ring outside: its projection onto the border, reduced to its net turns (a rectangle if it encloses R)
+            Retract(ring, 0, segments, r, result);
             return result.ToArray();
         }
 
-        // Start an einem behaltenen Segment, damit jeder Außenlauf zusammenhängend bleibt
-        int start = Array.IndexOf(keep, true), run = 0;
-        for (int k = 0; k < segments; k++)
+        // start at a kept segment so that every outer run stays contiguous
+        int start = Array.IndexOf(keep, true);
+        for (int k = 0; k < segments;)
         {
             int i = (start + k) % segments;
             if (keep[i])
             {
                 Add(result, ring[i]);
+                k++;
                 continue;
             }
 
-            // Außenlauf: Anfangspunkt original, dann seine Projektion entlang des Randes
-            if (k == 0 || keep[(i - 1 + segments) % segments])
-            {
-                Add(result, ring[i]);
-                run = result.Count;
-            }
-
-            Retract(ring[i], ring[i + 1], r, result, run);
+            // outer run: original start point, then its projection along the border (net turns only)
+            int length = 0;
+            while (k + length < segments && !keep[(start + k + length) % segments]) length++;
+            Add(result, ring[i]);
+            Retract(ring, i, length, r, result);
+            k += length;
         }
 
         Add(result, ring[start]);
         return result.ToArray();
+    }
+
+    /// <summary>
+    /// The projection r(run) of <paramref name="count"/> segments completely outside, starting at <paramref name="first"/>
+    /// (cyclic). Every such segment lies beyond one rectangle edge, so r(a)→r(b) runs along one side and the run projects to a
+    /// path on the border loop. That path is replaced by the monotone one between the same unwrapped perimeter positions: the
+    /// start point, the corners passed and the end point. Both are homotopic on the border, so the winding number of every
+    /// interior point is kept. Keeping every projected point instead left a long, noisy outer run as thousands of overlapping
+    /// segments on one border line, which made the noding nearly quadratic (a 100000-vertex ring took 2 s and 1 GB).
+    /// </summary>
+    private static void Retract(Coordinate[] ring, int first, int count, Envelope2D r, List<Coordinate> result)
+    {
+        int segments = ring.Length - 1;
+        double w = r.MaxX - r.MinX, h = r.MaxY - r.MinY, perimeter = 2 * (w + h);
+        var a = Clamp(ring[first], r);
+        double s0 = Position(a, r), previous = s0, travelled = 0;
+        for (int k = 0; k < count; k++)
+        {
+            double next = Position(Clamp(ring[(first + k + 1) % segments], r), r);
+            double delta = next - previous;
+            if (delta > perimeter / 2) delta -= perimeter;
+            else if (delta < -perimeter / 2) delta += perimeter;
+            travelled += delta;
+            previous = next;
+        }
+
+        var b = Clamp(ring[(first + count) % segments], r);
+        // exact end position: the end's own position plus the whole loops travelled
+        double s1 = perimeter > 0 ? previous + perimeter * Math.Round((s0 + travelled - previous) / perimeter) : s0;
+
+        Add(result, a);
+        if (s1 != s0)
+        {
+            double lo = Math.Min(s0, s1), hi = Math.Max(s0, s1);
+            long m0 = (long)Math.Floor(lo / perimeter), m1 = (long)Math.Floor(hi / perimeter);
+            var passed = new List<(double Value, int Corner)>();
+            for (long m = m0; m <= m1; m++)
+            {
+                for (int c = 0; c < 4; c++)
+                {
+                    double v = Corner(c, w, h) + m * perimeter;
+                    if (v > lo && v < hi) passed.Add((v, c));
+                }
+            }
+
+            if (s1 < s0) passed.Reverse();
+            foreach (var (_, c) in passed)
+            {
+                Add(result, c switch
+                {
+                    0 => new Coordinate(r.MinX, r.MinY),
+                    1 => new Coordinate(r.MaxX, r.MinY),
+                    2 => new Coordinate(r.MaxX, r.MaxY),
+                    _ => new Coordinate(r.MinX, r.MaxY),
+                });
+            }
+        }
+
+        Add(result, b);
+    }
+
+    private static double Corner(int c, double w, double h) => c switch { 0 => 0, 1 => w, 2 => w + h, _ => 2 * w + h };
+
+    /// <summary>Position of a border point along the perimeter, counter-clockwise from (MinX, MinY).</summary>
+    private static double Position(Coordinate c, Envelope2D r)
+    {
+        double w = r.MaxX - r.MinX, h = r.MaxY - r.MinY;
+        if (c.Y == r.MinY) return c.X - r.MinX;
+        if (c.X == r.MaxX) return w + (c.Y - r.MinY);
+        if (c.Y == r.MaxY) return w + h + (r.MaxX - c.X);
+        return 2 * w + h + (r.MaxY - c.Y);
     }
 
     /// <summary>Whether the segment can touch the closed rectangle (envelope test, conservative).</summary>
@@ -78,42 +147,6 @@ internal static class RingClipper
 
     private static Coordinate Clamp(Coordinate c, Envelope2D r) =>
         new(Math.Clamp(c.X, r.MinX, r.MaxX), Math.Clamp(c.Y, r.MinY, r.MaxY));
-
-    /// <summary>
-    /// Projection r(a→b) of a segment completely outside: the segment lies entirely beyond a rectangle edge
-    /// (envelope test), so r(a→b) lies on its line, and the segment r(a)→r(b) is exactly r(a→b) –
-    /// kinks at the corners coincide with the end points or are collinear. Both points lie exactly on the boundary.
-    /// <c>run</c> is the index of the first point of the outer run in the result (original points precede it).
-    /// </summary>
-    private static void Retract(Coordinate a, Coordinate b, Envelope2D r, List<Coordinate> result, int run)
-    {
-        AddOnBoundary(result, Clamp(a, r), run);
-        AddOnBoundary(result, Clamp(b, r), run);
-    }
-
-    /// <summary>
-    /// Like <see cref="Add"/>, but removes a clamped predecessor that lies on the same axis-parallel line
-    /// between its neighbors (same path). Otherwise long outer runs would yield thousands of collinear
-    /// boundary segments of both operands on the same lines, which make the noding expensive.
-    /// </summary>
-    private static void AddOnBoundary(List<Coordinate> result, Coordinate c, int run)
-    {
-        int n = result.Count;
-        if (n >= 2 && n - 1 >= run)
-        {
-            var a = result[n - 2];
-            var b = result[n - 1];
-            bool between =
-                (a.X == b.X && b.X == c.X && Math.Min(a.Y, c.Y) <= b.Y && b.Y <= Math.Max(a.Y, c.Y)) ||
-                (a.Y == b.Y && b.Y == c.Y && Math.Min(a.X, c.X) <= b.X && b.X <= Math.Max(a.X, c.X));
-            if (between)
-            {
-                result.RemoveAt(n - 1);
-            }
-        }
-
-        Add(result, c);
-    }
 
     private static void Add(List<Coordinate> result, Coordinate c)
     {

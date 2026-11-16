@@ -375,6 +375,25 @@ public sealed class PolylabelAlgorithm() : PlaygroundAlgorithm("polylabel", "Pol
     [In.A(In.Areas, "Polygon")], [new("tolerance", "Tolerance (empty = auto)", "number", null, "kbs")],
     (i, p, _, _) => ((IPolygon2D)i["a"]).Polylabel(p.OptionalNumber("tolerance")));
 
+public sealed class FastPolygonLabelAlgorithm() : PlaygroundAlgorithm("fastPolygonLabel", "FastPolygonLabel", "Measures",
+    [In.A(In.Areas, "Polygon")], [],
+    (i, _, _, _) => ((IPolygon2D)i["a"]).FastPolygonLabel());
+
+public sealed class FastAlternativePolygonLabelsAlgorithm() : PlaygroundAlgorithm("fastAlternativePolygonLabelsLazy", "FastAlternativePolygonLabelsLazy", "Measures",
+    [In.A(In.Areas, "Polygon")],
+    [new("separation", "Least distance between points", "number", 1.0), new("minClearance", "Least distance to the boundary", "number", 0.0),
+     new("maxCount", "Most points", "int", 16)],
+    (i, p, f, _) =>
+    {
+        var polygon = (IPolygon2D)i["a"];
+        if (polygon.FastPolygonLabel() is not { } seed) return f.CreateMultiPoint([], null);
+        var options = new AlternativeLabelOptions
+        {
+            Separation = p.Number("separation"), MinClearance = p.Number("minClearance"), MaxCount = (int)p.Number("maxCount"),
+        };
+        return f.CreateMultiPoint(polygon.FastAlternativePolygonLabelsLazy(seed, options).ToArray(), null);
+    });
+
 // ---------- Clean-up (ADR 0027) ----------
 
 public sealed class RemoveHolesAlgorithm() : PlaygroundAlgorithm("removeHoles", "RemoveHoles", "Construction",

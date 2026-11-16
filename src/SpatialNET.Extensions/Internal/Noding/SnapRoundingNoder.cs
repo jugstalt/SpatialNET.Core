@@ -54,15 +54,18 @@ internal static class SnapRoundingNoder
 
         var pixels = hotPixels.ToArray();
         Array.Sort(pixels);
+        // second order (by y, then x): a segment scans whichever of the two orders has the shorter candidate range
+        var pixelsByY = (GridPoint[])pixels.Clone();
+        Array.Sort(pixelsByY, static (a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
 
         var result = new List<NodedEdge>(segments.Count + 2 * crossings.Values.Sum(c => c.Count));
         var hits = new List<(double T, GridPoint Pixel)>();
         foreach (var seg in segments)
         {
             hits.Clear();
-            CollectPixels(seg, pixels, hits);
+            CollectPixels(seg, pixels, pixelsByY, hits);
             AddCrossingPixels(seg, crossings, hits);
-            hits.Sort((a, b) => a.T.CompareTo(b.T));
+            hits.Sort(static (a, b) => { int c = a.T.CompareTo(b.T); return c != 0 ? c : a.Pixel.CompareTo(b.Pixel); });
 
             var source = seg.Source.Points;
             var p = source[seg.Index];
@@ -214,7 +217,7 @@ internal static class SnapRoundingNoder
     }
 
     /// <summary>All hot pixels (half-open unit squares around grid points) that the segment touches, with parameter t.</summary>
-    private static void CollectPixels(Segment seg, GridPoint[] pixels, List<(double, GridPoint)> hits)
+    private static void CollectPixels(Segment seg, GridPoint[] pixels, GridPoint[] pixelsByY, List<(double, GridPoint)> hits)
     {
         long minX = (long)Math.Floor(seg.MinX - 0.5) - 1, maxX = (long)Math.Ceiling(seg.MaxX + 0.5) + 1;
         long minY = (long)Math.Floor(seg.MinY - 0.5) - 1, maxY = (long)Math.Ceiling(seg.MaxY + 0.5) + 1;
@@ -227,12 +230,21 @@ internal static class SnapRoundingNoder
         hits.Add((double.NegativeInfinity, startPixel));
         hits.Add((double.PositiveInfinity, endPixel));
 
-        int start = LowerBound(pixels, new GridPoint(minX, long.MinValue));
+        // Candidate ranges: the pixels in the x range of the segment (sorted by x) or in its y range (sorted by y). A long
+        // segment of a smooth outline is steep or flat, so one of the two ranges is short; scanning only the x range made
+        // clipping a large ring quadratic.
+        int xStart = LowerBound(pixels, new GridPoint(minX, long.MinValue));
+        int xEnd = LowerBound(pixels, new GridPoint(maxX + 1, long.MinValue));
+        int yStart = LowerByY(pixelsByY, minY);
+        int yEnd = LowerByY(pixelsByY, maxY + 1);
         double dx = seg.X1 - seg.X0, dy = seg.Y1 - seg.Y0, len2 = dx * dx + dy * dy;
-        for (int i = start; i < pixels.Length && pixels[i].X <= maxX; i++)
+        bool byX = xEnd - xStart <= yEnd - yStart;
+        var candidates = byX ? pixels : pixelsByY;
+        int from = byX ? xStart : yStart, to = byX ? xEnd : yEnd;
+        for (int i = from; i < to; i++)
         {
-            var pixel = pixels[i];
-            if (pixel.Y < minY || pixel.Y > maxY || pixel == startPixel || pixel == endPixel || !Touches(seg, pixel))
+            var pixel = candidates[i];
+            if (pixel.X < minX || pixel.X > maxX || pixel.Y < minY || pixel.Y > maxY || pixel == startPixel || pixel == endPixel || !Touches(seg, pixel))
             {
                 continue;
             }
@@ -285,6 +297,19 @@ internal static class SnapRoundingNoder
         }
 
         return true;
+    }
+
+    private static int LowerByY(GridPoint[] sortedByY, long y)
+    {
+        int lo = 0, hi = sortedByY.Length;
+        while (lo < hi)
+        {
+            int mid = (lo + hi) >>> 1;
+            if (sortedByY[mid].Y < y) lo = mid + 1;
+            else hi = mid;
+        }
+
+        return lo;
     }
 
     private static int LowerBound(GridPoint[] sorted, GridPoint value)
