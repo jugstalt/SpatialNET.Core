@@ -46,10 +46,12 @@ Hosts implementieren die Interfaces an ihren eigenen Geometrieklassen und stelle
 
 ## Dokumentation
 
+Die Dokumentation ist online unter **[jugstalt.github.io/SpatialNET.Core](https://jugstalt.github.io/SpatialNET.Core/de/)**, mit der [API-Referenz](https://jugstalt.github.io/SpatialNET.Core/en/api/SpatialNET.html). Dieselben Seiten als Markdown in diesem Repository:
+
 - [Erste Schritte](docs/de/getting-started.md) und [Host-Anbindung](docs/de/host-integration.md)
 - [Konzepte](docs/de/concepts/geometry-model.md): Geometriemodell, [Overlays und Gitter](docs/de/concepts/overlay-and-grid.md), [Prädikate](docs/de/concepts/predicates.md), [Buffer und Offset](docs/de/concepts/buffer-and-offset.md), [Vereinfachen und Validieren](docs/de/concepts/simplify-and-validation.md), [Cut](docs/de/concepts/cut.md), [Räumlicher Index](docs/de/concepts/spatial-index.md), [Lineare Referenzierung](docs/de/concepts/linear-referencing.md), [Ereignistabellen](docs/de/concepts/event-tables.md), [Triangulierung, Voronoi und Gelände](docs/de/concepts/triangulation-and-voronoi.md), [Maße und Konstruktionen](docs/de/concepts/measures-and-constructions.md)
 - [Glossar](docs/de/glossary.md) (Begriffe Deutsch ↔ Englisch)
-- API-Referenz: aus den XML-Kommentaren mit DocFX generiert (nur Englisch), Build mit `docs/build.ps1` (siehe [docs/de/getting-started.md](docs/de/getting-started.md#die-dokumentation-bauen))
+- [API-Referenz](https://jugstalt.github.io/SpatialNET.Core/en/api/SpatialNET.html): aus den XML-Kommentaren mit DocFX generiert (nur Englisch); lokal bauen mit `docs/build.ps1` (siehe [docs/de/getting-started.md](docs/de/getting-started.md#die-dokumentation-bauen))
 - [Architekturentscheidungen (ADRs)](docs/adr/) – die Begründungen hinter dem Design (Englisch, mit deutschen Fassungen)
 - [Recherche](research/) zur Algorithmenwahl
 
