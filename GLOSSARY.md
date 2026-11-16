@@ -163,6 +163,10 @@ _Avoid_: Umkreis, Bounding Circle
 Der Punkt im Inneren eines Polygons mit dem größten Abstand zum Rand, ein guter Ort für eine Beschriftung (`Polylabel`).
 _Avoid_: Labelpunkt, Schwerpunkt (der kann außerhalb liegen)
 
+**Schneller Beschriftungspunkt**:
+Ein billiger Punkt im Inneren eines Polygons für eine Beschriftung: der Schwerpunkt, wenn er innen liegt, sonst die Mitte des breitesten Innenstücks einer waagerechten Linie (`FastPolygonLabel`); weitere lazy auf Scanlinien (`FastAlternativePolygonLabelsLazy`).
+_Avoid_: Labelpunkt, Pol der Unzugänglichkeit (das ist `Polylabel`)
+
 **Auf das Raster legen**:
 Das Runden jeder Koordinate auf den nächsten Rasterpunkt und sonst nichts; kann ein Polygon ungültig machen (`SnapToGrid`).
 _Avoid_: Quantisieren, Snappen (das ist das Fangen an ein Ziel)

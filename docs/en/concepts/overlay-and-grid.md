@@ -116,6 +116,7 @@ IMultiPoint2D hits = points.Clip(tile);   // filtered, never rounded
 ```
 
 - A geometry that lies **completely in the rectangle** is returned as a copy **without rounding** (a polygon as a normalised copy), and one that **does not meet it** gives an empty geometry. Only where the border cuts, the overlay runs and **only those results lie on the grid**.
+- **Cost grows with the vertices, not with their square.** Ring parts outside the rectangle are reduced to their path along the border before the overlay ([ADR 0053](../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.md)): a noisy polygon of 100,000 vertices cut in half takes about 0.1 s and 66 MB.
 - Z and M are carried like in `Intersection`; the corners of the rectangle that become vertices have none.
 - A rectangle without area (zero width or height) gives an empty polygon or polyline; an invalid envelope (not finite, or `Min > Max`) throws.
 

@@ -105,7 +105,7 @@ Vektorkacheln (Mapbox Vector Tiles) für jedes Kachelgitter beschreibt [Vektorka
 | Ereignistabellen (Routenereignisse, ohne Geometrie) | `LineEvents` (`Intersect`, `Union`, `Difference`, `Dissolve`, `Clip`, `At`), `PointEvents` (`Between`, `Within`, `Outside`) |
 | Triangulierung, Voronoi und Gelände | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate` und die Klasse `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`, `InterpolateNaturalNeighbour`, `Resample`, `Refine`, `SlopeZones`, `ContourBands`, `LineOfSight`, `Viewshed`) |
 | Gültigkeit | `IsValid`, `Validate`, `MakeValid` |
-| Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
+| Maße | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel`, `FastPolygonLabel`, `FastAlternativePolygonLabelsLazy` |
 | Konstruktionen | `Boundary`, `Densify`, `Smooth`, `SmoothToTolerance`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio` |
 | Bereinigen | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
 | Formprüfungen | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |

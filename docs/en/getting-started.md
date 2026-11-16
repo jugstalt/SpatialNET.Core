@@ -105,7 +105,7 @@ For vector tiles (Mapbox Vector Tiles) of any tile grid see [Vector tiles (MVT)]
 | Event tables (route events, no geometry) | `LineEvents` (`Intersect`, `Union`, `Difference`, `Dissolve`, `Clip`, `At`), `PointEvents` (`Between`, `Within`, `Outside`) |
 | Triangulation, Voronoi and terrain | `DelaunayTriangles`, `DelaunayEdges`, `VoronoiDiagram`, `VoronoiEdges`, `Triangulate`, and the class `Triangulation` (`FromPoints`, `FromPointsAndLines`, `FromPolygon`, `Locate`, `InterpolateZ`, `Contour`, `Slope`, `Aspect`, `SurfaceArea`, `Volume`, `Drape`, `InterpolateNaturalNeighbour`, `Resample`, `Refine`, `SlopeZones`, `ContourBands`, `LineOfSight`, `Viewshed`) |
 | Validity | `IsValid`, `Validate`, `MakeValid` |
-| Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel` |
+| Measures | `Area`, `Length`, `Envelope`, `Centroid`, `Distance`, `NearestPoints`, `IsWithinDistance`, `PointOnSurface`, `HausdorffDistance`, `Polylabel`, `FastPolygonLabel`, `FastAlternativePolygonLabelsLazy` |
 | Constructions | `Boundary`, `Densify`, `Smooth`, `SmoothToTolerance`, `Reverse`, `LineMerge`, `Translate`, `Scale`, `Rotate`, `Transform`, `MinimumRotatedRectangle`, `MinimumBoundingCircle`, `ConcaveHull`, `ConcaveHullByRatio` |
 | Clean-up | `RemoveHoles`, `RemoveSmallParts`, `SnapToGrid`, `ReducePrecision` |
 | Checks | `IsSimple`, `IsClosed`, `IsRing`, `EqualsExact` |

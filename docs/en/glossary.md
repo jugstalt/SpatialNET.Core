@@ -56,6 +56,7 @@ The terms of SpatialNET with their German counterparts. The normative definition
 | minimum rotated rectangle | kleinstes umschließendes Rechteck | The rectangle of least area that contains a geometry, at any angle (`MinimumRotatedRectangle`) |
 | minimum bounding circle | kleinster umschließender Kreis | The smallest circle that contains a geometry (`MinimumBoundingCircle`) |
 | pole of inaccessibility | Pol der Unzugänglichkeit | The point inside a polygon that is farthest from its boundary, a good place for a label (`Polylabel`) |
+| fast label point | schneller Beschriftungspunkt | A cheap interior point for a label: the centroid if inside, else the widest stretch of a horizontal line (`FastPolygonLabel`); further ones lazily (`FastAlternativePolygonLabelsLazy`) |
 | snap to grid | auf das Raster legen | Rounding every coordinate to the nearest grid point and nothing else; may make a polygon invalid (`SnapToGrid`) |
 | reduce precision | Genauigkeit reduzieren | Snap rounding to a grid with a valid result (`ReducePrecision`) |
 | snap to a target | fangen | Moving the vertices of a geometry that lie within a tolerance of another geometry onto it, a corner of the target before an edge; for lines by default only the loose ends (`SnapTo`). Not snap rounding, not snapping to the grid |

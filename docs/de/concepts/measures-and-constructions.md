@@ -66,6 +66,22 @@ Coordinate? label = lot.Polylabel();               // innen und möglichst weit 
 - **`MinimumBoundingCircle`** liefert einen `Circle` (Mitte und Radius), `null` bei leerer Geometrie. `ToPolygon(factory, quadrantSegments)` macht daraus ein einbeschriebenes Polygon.
 - **`Polylabel(polygon, tolerance?)`** ist der Pol der Unzugänglichkeit: der Punkt im Inneren mit dem größten Abstand zum Rand, Löcher eingeschlossen, innerhalb der Toleranz (Standard ein Tausendstel der größeren Seite der Envelope). Bei einem Polygon aus mehreren Teilen ist es der Pol des Teils mit dem größten Kreis.
 
+### Schnelle Beschriftungspunkte
+
+Wenn viele Karten pro Sekunde beschriftet werden, zählt ein billiger Innenpunkt mehr als der schönste ([ADR 0053](../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.de.md)):
+
+```csharp
+Coordinate? first = lot.FastPolygonLabel();        // Schwerpunkt, wenn innen, sonst das breiteste Stück der Linie durch ihn
+var options = new AlternativeLabelOptions { Separation = 20, MinClearance = 5 };   // aufheben und wiederverwenden
+foreach (var p in lot.FastAlternativePolygonLabelsLazy(first!.Value, options))
+{
+    if (Fits(p)) break;                             // beim ersten Punkt ohne Kollision aufhören
+}
+```
+
+- **`FastPolygonLabel`** braucht zwei Durchläufe über die Stützpunkte und allokiert nichts: den Flächenschwerpunkt und die Schnittpunkte der waagerechten Linie durch ihn, die sagen, ob er innen liegt (Even-Odd über alle Ringe, untypisierte Ringe sind in Ordnung), und das breiteste Innenstück als Rückfall liefern. Danach `PointOnSurface` und `Polylabel`. Etwa 400 µs bei 100.000 Stützpunkten, wo `Polylabel` etwa 130 ms braucht.
+- **`FastAlternativePolygonLabelsLazy`** berechnet nichts, bevor der erste Punkt gefragt wird. Es geht waagerechte Scanlinien ab, zuerst die durch den Seed, dann Linien, die die Envelope halbieren (½, ¼, ¾, …), und liefert die Punkte nächst dem Seed zuerst. Jeder Punkt liegt echt innen, hält `Separation` zum Seed und zu den Punkten davor und `MinClearance` zum Rand; `MaxCount`, `MaxScanlines` und ein `CancellationToken` begrenzen die Arbeit. Ein leeres Polygon gibt eine leere Folge.
+
 ## Triangulierung und konkave Hülle
 
 Die Delaunay-Triangulierung der Stützpunkte einer Geometrie und eine Hülle, die sie enger umschließt als die konvexe Hülle ([ADR 0029](../../adr/0029-delaunay-und-konkave-huelle.de.md)):

@@ -66,6 +66,22 @@ Coordinate? label = lot.Polylabel();               // inside, and as far from th
 - **`MinimumBoundingCircle`** returns a `Circle` (centre and radius), `null` if the geometry is empty. `ToPolygon(factory, quadrantSegments)` makes an inscribed polygon from it.
 - **`Polylabel(polygon, tolerance?)`** is the pole of inaccessibility: the point inside that is farthest from the boundary, holes included, within the tolerance (default a thousandth of the larger side of the envelope). For a polygon of several parts it is the pole of the part with the largest circle.
 
+### Fast label points
+
+When many maps are labelled per second, a cheap interior point matters more than the nicest one ([ADR 0053](../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.md)):
+
+```csharp
+Coordinate? first = lot.FastPolygonLabel();        // centroid if inside, else the widest stretch of the line through it
+var options = new AlternativeLabelOptions { Separation = 20, MinClearance = 5 };   // keep and reuse
+foreach (var p in lot.FastAlternativePolygonLabelsLazy(first!.Value, options))
+{
+    if (Fits(p)) break;                             // stop at the first point that does not collide
+}
+```
+
+- **`FastPolygonLabel`** needs two passes over the vertices and allocates nothing: the area centroid, and the crossings of the horizontal line through it, which tell whether it is inside (even-odd over all rings, untyped rings are fine) and give the widest inside stretch as the fallback. Then `PointOnSurface` and `Polylabel`. About 400 µs for 100,000 vertices, where `Polylabel` takes about 130 ms.
+- **`FastAlternativePolygonLabelsLazy`** computes nothing before the first point is asked for. It walks horizontal scanlines, first the one through the seed, then lines halving the envelope (½, ¼, ¾, …), and yields the points nearest to the seed first. Every point is strictly inside, keeps `Separation` from the seed and the points before and `MinClearance` from the boundary; `MaxCount`, `MaxScanlines` and a `CancellationToken` bound the work. An empty polygon gives an empty sequence.
+
 ## Triangulation and concave hull
 
 The Delaunay triangulation of the vertices of a geometry, and a hull that wraps them more tightly than the convex hull ([ADR 0029](../../adr/0029-delaunay-und-konkave-huelle.md)):

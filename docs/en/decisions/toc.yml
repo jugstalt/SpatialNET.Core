@@ -102,3 +102,5 @@
   href: ../../adr/0051-tracing-pro-quelle-versorgung.md
 - name: "0052 Network rules: counting the neighbours of an element"
   href: ../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md
+- name: "0053 Fast label points, and the net path of the clip prefilter"
+  href: ../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.md
