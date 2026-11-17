@@ -104,3 +104,5 @@
   href: ../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md
 - name: "0053 Fast label points, and the net path of the clip prefilter"
   href: ../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.md
+- name: "0054 Coincident real nodes: the host may choose a winner"
+  href: ../../adr/0054-zusammenfallende-echte-knoten.md

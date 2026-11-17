@@ -4,6 +4,10 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- Coincident real nodes (ADR 0054): `NetworkBuilder.ResolveCoincidentNodes` lets the host decide about real nodes within the tolerance of each other, once per group and before the first write: the index of the node that stays, or -1 for the `RealNodesTooClose` conflict of ADR 0050 (still the default without a resolver). The other nodes are merged into the winner: not written, no splits, no `IsolatedNode` note, listed in the new `BuiltNode.Merged` (`CoincidentNode`: id, type, location, source) so the host can keep them as aliases, with one `NodesMerged` diagnostic per group.
+
 ## [0.10.0-preview.4] - 2026-11-16
 
 ### Changed

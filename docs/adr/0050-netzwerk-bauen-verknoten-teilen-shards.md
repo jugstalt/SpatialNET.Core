@@ -77,7 +77,7 @@ A network (ADR 0049) comes from the host's lines and points: cables, overhead li
 - Joining an end to the nearest node already placed, in input order (rejected: the result would depend on the order of the input)
 - Moving the vertices onto each other, as `SnapTo` does (rejected: the network would change the geometry the host owns; a node only records which ends belong together)
 - Nodes at every crossing by default (rejected: in a utility network an overhead line over a cable or two cables in one trench do not connect; for street networks it is an option)
-- Taking the first of two real nodes at the same place and dropping the other (rejected: two boxes at one place are a data error that would otherwise vanish silently)
+- Taking the first of two real nodes at the same place and dropping the other (rejected: two boxes at one place are a data error that would otherwise vanish silently) — amended by ADR 0054: the host may choose a winner through a resolver
 - Edge ids derived by the library, for example source id and part (rejected: `TEdgeId` is the host's type; the factory gets source and part and can do exactly that)
 - Shards from a key per input object (rejected: helper nodes have no object, and at the border of two local networks the lines would disagree; a polygon decides by the node's own location)
 - A generic shard id (rejected for now: one more type parameter on every signature)

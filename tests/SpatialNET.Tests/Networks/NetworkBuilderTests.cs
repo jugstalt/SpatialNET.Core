@@ -85,6 +85,78 @@ public class NetworkBuilderTests
     }
 
     [Fact]
+    public void A_resolver_merges_coincident_real_nodes_into_its_winner()
+    {
+        // a box with a customer drawn on it, and a box beside a switch; the resolver keeps the box (type 15)
+        var builder = Builder(0.01);
+        builder.AddNode("Kunde.1", "C1", new Coordinate(0, 0), typeId: 16);
+        builder.AddNode("Kasten.1", "K1", new Coordinate(0.004, 0), typeId: 15);
+        builder.AddNode("Kasten.2", "K2", new Coordinate(50, 0), typeId: 15);
+        builder.AddNode("Kunde.2", "C2", new Coordinate(50, 0.002), typeId: 16);
+        builder.AddLine("NS.1", Line((0, 0), (50, 0)), typeId: 11);
+        var groups = new List<IReadOnlyList<CoincidentNode<string, string>>>();
+        builder.ResolveCoincidentNodes = group =>
+        {
+            groups.Add(group);
+            return group.ToList().FindIndex(n => n.TypeId == 15);
+        };
+        var writer = new RecordingWriter();
+
+        var result = builder.Build(writer);
+
+        Assert.Equal(2, groups.Count);
+        Assert.Equal(["K1", "K2"], writer.Nodes.Where(n => !n.IsHelper).Select(n => n.Node.Id));
+        Assert.Equal(["C1"], writer.Nodes.Single(n => n.Node.Id == "K1").Merged!.Select(m => m.Id));
+        Assert.Equal(["Kunde.2"], writer.Nodes.Single(n => n.Node.Id == "K2").Merged!.Select(m => m.Source));
+        Assert.Equal(2, result.NodeCount);
+        Assert.Equal(1, result.EdgeCount);
+        Assert.Equal(("K1", "K2"), (writer.Edges[0].Edge.From, writer.Edges[0].Edge.To));
+        Assert.Equal(2, result.Diagnostics.Count(d => d.Kind == BuildDiagnosticKind.NodesMerged));
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.IsolatedNode);
+    }
+
+    [Fact]
+    public void A_merged_node_in_the_middle_of_a_line_does_not_split_it()
+    {
+        var builder = Builder(0.01);
+        builder.AddNode("Kasten.1", "K1", new Coordinate(25, 0), typeId: 15);
+        builder.AddNode("Kunde.1", "C1", new Coordinate(25, 0.003), typeId: 16);
+        builder.AddLine("NS.1", Line((0, 0), (50, 0)), typeId: 11);
+        builder.ResolveCoincidentNodes = group => group.ToList().FindIndex(n => n.TypeId == 15);
+        var writer = new RecordingWriter();
+
+        builder.Build(writer);
+
+        Assert.Equal(2, writer.Edges.Count);
+        Assert.All(writer.Edges, e => Assert.True(e.Edge.From == "K1" || e.Edge.To == "K1"));
+        Assert.DoesNotContain(writer.Edges, e => e.Edge.From == "C1" || e.Edge.To == "C1");
+    }
+
+    [Fact]
+    public void A_resolver_returning_minus_one_keeps_the_conflict()
+    {
+        var builder = Builder(0.01);
+        builder.AddNode("Kasten.1", "K1", new Coordinate(0, 0), typeId: 15);
+        builder.AddNode("Muffe.1", "M1", new Coordinate(0.005, 0), typeId: 18);
+        builder.ResolveCoincidentNodes = _ => -1;
+
+        var error = Assert.Throws<NetworkBuildException>(() => builder.Build(new RecordingWriter()));
+
+        Assert.Equal(["Kasten.1", "Muffe.1"], error.Conflicts.Single().Sources);
+    }
+
+    [Fact]
+    public void A_resolver_returning_an_index_out_of_range_throws()
+    {
+        var builder = Builder(0.01);
+        builder.AddNode("Kasten.1", "K1", new Coordinate(0, 0), typeId: 15);
+        builder.AddNode("Muffe.1", "M1", new Coordinate(0.005, 0), typeId: 18);
+        builder.ResolveCoincidentNodes = _ => 2;
+
+        Assert.Throws<InvalidOperationException>(() => builder.Build(new RecordingWriter()));
+    }
+
+    [Fact]
     public void A_chain_of_ends_wider_than_the_tolerance_is_one_node_and_reported()
     {
         var builder = Builder(1);

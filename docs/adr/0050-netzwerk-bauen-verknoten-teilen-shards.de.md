@@ -77,7 +77,7 @@ Ein Netzwerk (ADR 0049) entsteht aus den Linien und Punkten des Hosts: Kabel, Fr
 - Ein Ende mit dem nächsten schon gesetzten Knoten verbinden, in Eingabereihenfolge (verworfen: Das Ergebnis hinge von der Reihenfolge der Eingabe ab)
 - Die Stützpunkte aufeinander verschieben, wie `SnapTo` es tut (verworfen: Das Netzwerk änderte die Geometrie, die dem Host gehört; ein Knoten hält nur fest, welche Enden zusammengehören)
 - Knoten an jeder Kreuzung als Standard (verworfen: In einem Leitungsnetz sind eine Freileitung über einem Kabel oder zwei Kabel in einem Graben nicht verbunden; für Straßennetze ist es eine Option)
-- Von zwei echten Knoten an derselben Stelle den ersten nehmen und den anderen weglassen (verworfen: Zwei Kästen an einer Stelle sind ein Datenfehler, der sonst still verschwände)
+- Von zwei echten Knoten an derselben Stelle den ersten nehmen und den anderen weglassen (verworfen: Zwei Kästen an einer Stelle sind ein Datenfehler, der sonst still verschwände) — ergänzt durch ADR 0054: Der Host darf über einen Resolver einen Gewinner wählen
 - Von der Bibliothek abgeleitete Kanten-IDs, z. B. Quell-ID und Teil (verworfen: `TEdgeId` ist der Typ des Hosts; die Fabrik bekommt Quelle und Teil und kann genau das tun)
 - Shards aus einem Schlüssel pro Eingabeobjekt (verworfen: Hilfsknoten haben kein Objekt, und an der Grenze zweier Ortsnetze wären sich die Linien uneinig; ein Polygon entscheidet nach der eigenen Lage des Knotens)
 - Eine generische Shard-ID (vorerst verworfen: ein weiterer Typparameter an jeder Signatur)

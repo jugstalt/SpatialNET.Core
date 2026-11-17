@@ -67,6 +67,15 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         _ids = ids;
     }
 
+    /// <summary>
+    /// Decides about real nodes within the tolerance of each other (ADR 0054): called once per group before the first write,
+    /// it returns the node that stays (the others are merged into it and written as
+    /// <see cref="BuiltNode{TNodeId, TSource}.Merged"/>) or -1. Without it, or on -1, the group is a
+    /// <see cref="NodeConflictKind.RealNodesTooClose"/> conflict (ADR 0050). A resolver that decides by the nodes, not by
+    /// their order, keeps the result independent of the input order.
+    /// </summary>
+    public CoincidentNodesResolver<TNodeId, TSource>? ResolveCoincidentNodes { get; set; }
+
     /// <summary>Adds a real node: a box, a transformer, a switch, a customer.</summary>
     /// <param name="source">The host's reference to the point.</param>
     /// <param name="id">The node id; unique.</param>
@@ -253,6 +262,11 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         private readonly List<Coordinate> _location = [];
         private readonly List<bool> _hasLineEnd = [];
         private int[] _partStart = [], _partEnd = [];
+
+        // real nodes merged into another one (not written), and the merged nodes of each winner
+        private bool[] _lost = [];
+        private int _lostCount;
+        private readonly Dictionary<int, List<CoincidentNode<TNodeId, TSource>>> _merged = [];
         private readonly List<PartSplit> _splits = [];
         private readonly List<EdgePlan> _edges = [];
 
@@ -274,6 +288,8 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         }
 
         private int RealCount => builder._realNodes.Count;
+
+        private bool IsLost(int node) => node < RealCount && _lost[node];
 
         private void CollectParts()
         {
@@ -319,6 +335,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 y[realCount + 2 * p + 1] = xy[^1];
             }
 
+            _lost = new bool[realCount];
             var sets = new UnionFind(count);
             var grid = new PointGrid(_tolerance, count);
             double tolerance2 = _tolerance * _tolerance;
@@ -399,17 +416,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 int node;
                 if (reals > 0)
                 {
-                    node = members[0];
-                    if (reals > 1)
-                    {
-                        var sources = new List<object?>(reals);
-                        for (int r = 0; r < reals; r++)
-                        {
-                            sources.Add(builder._realNodes[members[r]].Source);
-                        }
-
-                        _conflicts.Add(new NodeConflict(_location[node], NodeConflictKind.RealNodesTooClose, sources));
-                    }
+                    node = reals > 1 ? ResolveReals(members[..reals]) : members[0];
                 }
                 else
                 {
@@ -466,6 +473,52 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             }
         }
 
+        /// <summary>The node that stays of real nodes within the tolerance: the host's choice, or the first one and a conflict.</summary>
+        private int ResolveReals(ReadOnlySpan<int> reals)
+        {
+            var group = new CoincidentNode<TNodeId, TSource>[reals.Length];
+            for (int r = 0; r < reals.Length; r++)
+            {
+                var real = builder._realNodes[reals[r]];
+                group[r] = new CoincidentNode<TNodeId, TSource>(real.Id, real.TypeId, real.Location, real.Source);
+            }
+
+            int winner = builder.ResolveCoincidentNodes?.Invoke(group) ?? -1;
+            if (winner < -1 || winner >= reals.Length)
+            {
+                throw new InvalidOperationException($"The resolver of coincident nodes returned {winner} for a group of {reals.Length}.");
+            }
+
+            if (winner < 0)
+            {
+                var sources = new List<object?>(group.Length);
+                foreach (var g in group)
+                {
+                    sources.Add(g.Source);
+                }
+
+                _conflicts.Add(new NodeConflict(_location[reals[0]], NodeConflictKind.RealNodesTooClose, sources));
+                return reals[0];
+            }
+
+            int node = reals[winner];
+            var merged = new List<CoincidentNode<TNodeId, TSource>>(reals.Length - 1);
+            for (int r = 0; r < reals.Length; r++)
+            {
+                if (r != winner)
+                {
+                    _lost[reals[r]] = true;
+                    _lostCount++;
+                    merged.Add(group[r]);
+                }
+            }
+
+            _merged[node] = merged;
+            _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.NodesMerged, _location[node],
+                $"{merged.Count} node(s) merged into the node {group[winner].Id}: {string.Join(", ", merged.Select(m => m.Id))}."));
+            return node;
+        }
+
         /// <summary>Whether two members of a group lie further apart than the tolerance (a chain); by the envelope for large groups.</summary>
         private static bool Wide(ReadOnlySpan<int> members, double[] x, double[] y, double tolerance2)
         {
@@ -514,6 +567,11 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             for (int node = 0; node < _location.Count; node++)
             {
                 bool real = node < RealCount;
+                if (real && _lost[node])
+                {
+                    continue;
+                }
+
                 if ((options.SplitAtNodes && real) || (options.SplitAtLineEnds && _hasLineEnd[node]))
                 {
                     candidates.Add(node);
@@ -579,7 +637,10 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             var nodes = new PointGrid(_tolerance, _location.Count);
             for (int n = 0; n < _location.Count; n++)
             {
-                nodes.Add(n, _location[n].X, _location[n].Y);
+                if (!IsLost(n))
+                {
+                    nodes.Add(n, _location[n].X, _location[n].Y);
+                }
             }
 
             double tolerance2 = _tolerance * _tolerance;
@@ -742,7 +803,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
             for (int n = 0; n < RealCount; n++)
             {
-                if (degree[n] == 0)
+                if (degree[n] == 0 && !_lost[n])
                 {
                     _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.IsolatedNode, _location[n], $"The node {builder._realNodes[n].Id} has no line."));
                 }
@@ -834,7 +895,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             var outside = new Dictionary<long, (Coordinate First, int Count)>();
             var overlaps = new HashSet<(int, int)>();
             var hits = new List<int>();
-            var nodes = Enumerable.Range(0, RealCount).Concat(_helpers).ToArray();
+            var nodes = Enumerable.Range(0, RealCount).Where(n => !_lost[n]).Concat(_helpers).ToArray();
             for (int k = 0; k < nodes.Length; k++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -910,14 +971,22 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
         private BuildResult Write(INetworkWriter<TNodeId, TEdgeId, TSource> writer, TNodeId[] ids, long[] shard)
         {
-            int nodeCount = RealCount + _helpers.Length;
+            int realsWritten = RealCount - _lostCount, nodeCount = realsWritten + _helpers.Length, written = 0;
             for (int n = 0; n < RealCount; n++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                if (_lost[n])
+                {
+                    continue;
+                }
+
                 var real = builder._realNodes[n];
                 writer.WriteNode(new BuiltNode<TNodeId, TSource>(
-                    new GraphNode<TNodeId>(real.Id, real.TypeId, real.Location, real.Blocked), shard[n], false, real.Source));
-                reporter.Report(BuildPhase.WritingNodes, n + 1, nodeCount);
+                    new GraphNode<TNodeId>(real.Id, real.TypeId, real.Location, real.Blocked), shard[n], false, real.Source)
+                {
+                    Merged = _merged.TryGetValue(n, out var merged) ? merged : null,
+                });
+                reporter.Report(BuildPhase.WritingNodes, ++written, nodeCount);
             }
 
             for (int h = 0; h < _helpers.Length; h++)
@@ -925,7 +994,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 cancellationToken.ThrowIfCancellationRequested();
                 int n = _helpers[h];
                 writer.WriteNode(new BuiltNode<TNodeId, TSource>(new GraphNode<TNodeId>(ids[n], 0, _location[n]), shard[n], true, default));
-                reporter.Report(BuildPhase.WritingNodes, RealCount + h + 1, nodeCount);
+                reporter.Report(BuildPhase.WritingNodes, realsWritten + h + 1, nodeCount);
             }
 
             reporter.Report(BuildPhase.WritingNodes, nodeCount, nodeCount);

@@ -104,3 +104,5 @@
   href: ../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md
 - name: "0053 Schnelle Beschriftungspunkte und der Netto-Weg des Clip-Vorfilters"
   href: ../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.de.md
+- name: "0054 Zusammenfallende echte Knoten: Der Host darf einen Gewinner wählen"
+  href: ../../adr/0054-zusammenfallende-echte-knoten.de.md

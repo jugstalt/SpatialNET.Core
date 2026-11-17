@@ -6,6 +6,21 @@ namespace SpatialNET.Network;
 /// <param name="IsHelper">Whether it is a helper node, created where line ends meet without a point of the host.</param>
 /// <param name="Source">The host's reference to the point it came from; the default value for a helper node.</param>
 public readonly record struct BuiltNode<TNodeId, TSource>(GraphNode<TNodeId> Node, long Shard, bool IsHelper, TSource? Source)
+    where TNodeId : notnull, IEquatable<TNodeId>
+{
+    /// <summary>
+    /// The real nodes merged into this one: they lay within the tolerance of it and the host chose this node to stay
+    /// (ADR 0054). <c>null</c> when there are none. The merged nodes are not written themselves.
+    /// </summary>
+    public IReadOnlyList<CoincidentNode<TNodeId, TSource>>? Merged { get; init; }
+}
+
+/// <summary>A real node of the host in a group of real nodes within the tolerance of each other (ADR 0054).</summary>
+/// <param name="Id">The node id.</param>
+/// <param name="TypeId">The node type.</param>
+/// <param name="Location">Where the point lies.</param>
+/// <param name="Source">The host's reference to the point.</param>
+public readonly record struct CoincidentNode<TNodeId, TSource>(TNodeId Id, int TypeId, Coordinate Location, TSource Source)
     where TNodeId : notnull, IEquatable<TNodeId>;
 
 /// <summary>An edge as the network builder writes it (ADR 0050).</summary>

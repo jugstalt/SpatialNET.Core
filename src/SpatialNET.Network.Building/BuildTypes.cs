@@ -112,7 +112,19 @@ public enum BuildDiagnosticKind
 
     /// <summary>A part of a line shorter than the tolerance whose ends join the same node was left out.</summary>
     ShortPartDropped,
+
+    /// <summary>Real nodes within the tolerance of each other were merged into the one the host chose; one report per group (ADR 0054).</summary>
+    NodesMerged,
 }
+
+/// <summary>
+/// Decides about a group of real nodes within the tolerance of each other (ADR 0054): returns the index of the node that
+/// stays, the others are merged into it, or -1 for a <see cref="NodeConflictKind.RealNodesTooClose"/> conflict.
+/// </summary>
+/// <param name="nodes">The group, two or more nodes in the order they were added.</param>
+/// <returns>The index of the winner in <paramref name="nodes"/>, or -1.</returns>
+public delegate int CoincidentNodesResolver<TNodeId, TSource>(IReadOnlyList<CoincidentNode<TNodeId, TSource>> nodes)
+    where TNodeId : notnull, IEquatable<TNodeId>;
 
 /// <summary>A note about the input that did not stop the build.</summary>
 /// <param name="Kind">What is reported.</param>

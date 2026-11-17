@@ -1,1 +1,14 @@
 #nullable enable
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Merged.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.CoincidentNode<TNodeId, TSource>>?
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Merged.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.CoincidentNode() -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.CoincidentNode(TNodeId Id, int TypeId, SpatialNET.Coordinate Location, TSource Source) -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Id.get -> TNodeId
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Id.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Location.get -> SpatialNET.Coordinate
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Location.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Source.get -> TSource
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Source.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.TypeId.get -> int
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.TypeId.init -> void
