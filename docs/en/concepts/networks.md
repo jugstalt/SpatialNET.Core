@@ -195,6 +195,7 @@ var options = new TraversalOptions<int, int> { EdgeTypes = low };
 | `Low.*` | `Low` and everything below it; a trailing `*` means any value for all remaining facets |
 | `*` / `untyped` | every type of the kind, but not the helper nodes / only the helper nodes (type 0) |
 | `a \| b` | either |
+| `!a \| b` | every type of the kind except a and b; a leading `!` negates the whole pattern (helper nodes stay out, as with `*`) |
 
 The facets are a vector, not a tree: the value of a facet means the same under every other facet, which is why `[*, BoxConnector, *]` finds the connectors on every level. A pattern that matches nothing is an error, because it is usually a typo.
 

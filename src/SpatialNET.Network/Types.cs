@@ -144,7 +144,7 @@ public sealed class TypeRegistry
 
                 if (!IsValidValueName(name))
                 {
-                    throw new ArgumentException($"The facet '{facet.Name}' has the value name '{name}'; a name must not be empty and must not contain [ ] , | . * or start or end with a space.", nameof(facets));
+                    throw new ArgumentException($"The facet '{facet.Name}' has the value name '{name}'; a name must not be empty and must not contain [ ] , | . *, start with ! or start or end with a space.", nameof(facets));
                 }
 
                 if (string.Equals(name, UntypedKeyword, StringComparison.OrdinalIgnoreCase))
@@ -272,12 +272,18 @@ public sealed class TypeRegistry
             type.Facets[f] == 0 ? "0" : _facets[f].Values[type.Facets[f]]));
     }
 
-    /// <summary>The node types that match one of the patterns (OR); a pattern may hold alternatives separated by <c>|</c>.</summary>
+    /// <summary>
+    /// The node types that match one of the patterns (OR); a pattern may hold alternatives separated by <c>|</c>.
+    /// A leading <c>!</c> negates the whole pattern: <c>!a | b</c> is every node type except a and b (not the helper nodes).
+    /// </summary>
     /// <exception cref="ArgumentNullException">An argument is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">No pattern is given, a pattern cannot be read, or it matches no node type.</exception>
     public TypeSet Nodes(params string[] patterns) => Resolve(ElementKind.Node, patterns);
 
-    /// <summary>The edge types that match one of the patterns (OR); a pattern may hold alternatives separated by <c>|</c>.</summary>
+    /// <summary>
+    /// The edge types that match one of the patterns (OR); a pattern may hold alternatives separated by <c>|</c>.
+    /// A leading <c>!</c> negates the whole pattern: <c>!a | b</c> is every edge type except a and b.
+    /// </summary>
     /// <exception cref="ArgumentNullException">An argument is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">No pattern is given, a pattern cannot be read, or it matches no edge type.</exception>
     public TypeSet Edges(params string[] patterns) => Resolve(ElementKind.Edge, patterns);
@@ -294,10 +300,33 @@ public sealed class TypeRegistry
         foreach (var text in patterns)
         {
             ArgumentNullException.ThrowIfNull(text, nameof(patterns));
-            foreach (var alternative in text.Split('|'))
+            var body = text.TrimStart();
+            bool negated = body.StartsWith('!');
+            if (negated)
             {
-                ids.AddRange(ResolveOne(kind, alternative.Trim(), text));
+                body = body[1..];
             }
+
+            var matched = new HashSet<int>();
+            foreach (var alternative in body.Split('|'))
+            {
+                matched.UnionWith(ResolveOne(kind, alternative.Trim(), text));
+            }
+
+            if (!negated)
+            {
+                ids.AddRange(matched);
+                continue;
+            }
+
+            // "!a | b": every type of the kind except a and b; like "*" without the helper nodes
+            var rest = _ordered.Where(t => t.Kind == kind && !matched.Contains(t.Id)).Select(t => t.Id).ToList();
+            if (rest.Count == 0)
+            {
+                throw new ArgumentException($"The pattern '{text}' excludes every {(kind == ElementKind.Node ? "node" : "edge")} type.", nameof(patterns));
+            }
+
+            ids.AddRange(rest);
         }
 
         return TypeSet.FromPattern(ids, string.Join(" | ", patterns));
@@ -420,5 +449,5 @@ public sealed class TypeRegistry
     }
 
     private static bool IsValidValueName(string? name) =>
-        !string.IsNullOrEmpty(name) && name.Trim().Length == name.Length && name.IndexOfAny(['[', ']', ',', '|', '.', '*']) < 0;
+        !string.IsNullOrEmpty(name) && name.Trim().Length == name.Length && name.IndexOfAny(['[', ']', ',', '|', '.', '*']) < 0 && !name.StartsWith('!');
 }

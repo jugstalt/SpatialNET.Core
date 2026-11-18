@@ -195,6 +195,7 @@ var options = new TraversalOptions<int, int> { EdgeTypes = low };
 | `Low.*` | `Low` und alles darunter; ein abschließendes `*` heißt beliebiger Wert für alle restlichen Facetten |
 | `*` / `untyped` | jeden Typ der Art, aber keine Hilfsknoten / nur die Hilfsknoten (Typ 0) |
 | `a \| b` | eines von beiden |
+| `!a \| b` | jeden Typ der Art außer a und b; ein führendes `!` verneint das ganze Muster (Hilfsknoten bleiben wie bei `*` draußen) |
 
 Die Facetten sind ein Vektor, kein Baum: Der Wert einer Facette bedeutet unter jeder anderen Facette dasselbe, deshalb findet `[*, BoxConnector, *]` die Kastenverbinder auf jeder Ebene. Ein Muster ohne Treffer ist ein Fehler, weil es meist ein Tippfehler ist.
 

@@ -1,4 +1,4 @@
-using SpatialNET.Network;
+﻿using SpatialNET.Network;
 
 namespace SpatialNET.Tests.Networks;
 
@@ -45,6 +45,9 @@ public class TypeRegistryTests
     [InlineData("[1, 2, 0]", new[] { 13 })]
     [InlineData("*", new[] { 11, 12, 13, 14, 21, 22, 23, 24 })]
     [InlineData("[*, Kastenverbinder, *] | [*, Anlagenverbinder, *]", new[] { 13, 14, 23, 24 })]
+    [InlineData("![*, Anlagenverbinder, *]", new[] { 11, 12, 13, 21, 22, 23 })]
+    [InlineData(" ! [*, Anlagenverbinder, *] | Mittelspannung.*", new[] { 11, 12, 13 })]
+    [InlineData("!Niederspannung.Leitung.*", new[] { 13, 14, 21, 22, 23, 24 })]
     public void Edge_patterns_resolve_to_type_ids(string pattern, int[] expected)
     {
         Assert.Equal(expected, Registry.Edges(pattern).TypeIds);
@@ -60,6 +63,9 @@ public class TypeRegistryTests
         Assert.Equal([0], Registry.Nodes("untyped").TypeIds);
         Assert.Equal([0, 17, 26], Registry.Nodes("UNTYPED | [*, Schalter, *]").TypeIds);
         Assert.Equal(Registry.Nodes("*").TypeIds, Registry.AllNodes.TypeIds);
+        // die Verneinung meint die Typen der Art wie "*", also ohne die Hilfsknoten
+        Assert.Equal([15, 16, 25], Registry.Nodes("![*, Schalter, *]").TypeIds);
+        Assert.Equal([16, 17, 26], Registry.Nodes("![*, Kasten, *] | [*, Trafo, *]", "[*, Schalter, *]").TypeIds);
         Assert.Equal(Registry.Edges("*").TypeIds, Registry.AllEdges.TypeIds);
     }
 
@@ -73,6 +79,9 @@ public class TypeRegistryTests
     [InlineData("[*, Leitung, *")]
     [InlineData("untyped")]
     [InlineData("[*, Leitung, *] | ")]
+    [InlineData("!*")]                           // schliesst alles aus
+    [InlineData("![*, Unbekannt, *]")]
+    [InlineData("!")]
     public void Edge_patterns_that_are_errors(string pattern)
     {
         Assert.Throws<ArgumentException>(() => Registry.Edges(pattern));

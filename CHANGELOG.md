@@ -6,6 +6,7 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ### Added
 
+- Type patterns can be negated: a leading `!` means every type of the kind except the ones the pattern matches, for example `![*, BoxConnector, *]` or `!a | b` (every type except a and b; helper nodes stay out, as with `*`). A pattern that excludes every type is an error. Value names must not start with `!` any more.
 - Coincident real nodes (ADR 0054): `NetworkBuilder.ResolveCoincidentNodes` lets the host decide about real nodes within the tolerance of each other, once per group and before the first write: the index of the node that stays, or -1 for the `RealNodesTooClose` conflict of ADR 0050 (still the default without a resolver). The other nodes are merged into the winner: not written, no splits, no `IsolatedNode` note, listed in the new `BuiltNode.Merged` (`CoincidentNode`: id, type, location, source) so the host can keep them as aliases, with one `NodesMerged` diagnostic per group.
 
 ## [0.10.0-preview.4] - 2026-11-16
