@@ -1,5 +1,1 @@
 #nullable enable
-SpatialNET.Network.Building.BuildDiagnosticKind.NodesMerged = 5 -> SpatialNET.Network.Building.BuildDiagnosticKind
-SpatialNET.Network.Building.CoincidentNodesResolver<TNodeId, TSource>
-SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.ResolveCoincidentNodes.get -> SpatialNET.Network.Building.CoincidentNodesResolver<TNodeId, TSource>?
-SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.ResolveCoincidentNodes.set -> void

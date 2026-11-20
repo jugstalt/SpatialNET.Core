@@ -19,12 +19,25 @@ SpatialNET.Network.BuiltNode<TNodeId, TSource>.BuiltNode() -> void
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.BuiltNode(SpatialNET.Network.GraphNode<TNodeId> Node, long Shard, bool IsHelper, TSource? Source) -> void
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.IsHelper.get -> bool
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.IsHelper.init -> void
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Merged.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.CoincidentNode<TNodeId, TSource>>?
+SpatialNET.Network.BuiltNode<TNodeId, TSource>.Merged.init -> void
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.Node.get -> SpatialNET.Network.GraphNode<TNodeId>
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.Node.init -> void
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.Shard.get -> long
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.Shard.init -> void
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.Source.get -> TSource?
 SpatialNET.Network.BuiltNode<TNodeId, TSource>.Source.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.CoincidentNode() -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.CoincidentNode(TNodeId Id, int TypeId, SpatialNET.Coordinate Location, TSource Source) -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Id.get -> TNodeId
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Id.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Location.get -> SpatialNET.Coordinate
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Location.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Source.get -> TSource
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.Source.init -> void
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.TypeId.get -> int
+SpatialNET.Network.CoincidentNode<TNodeId, TSource>.TypeId.init -> void
 SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Backward = 2 -> SpatialNET.Network.EdgeDirection
 SpatialNET.Network.EdgeDirection.Both = 0 -> SpatialNET.Network.EdgeDirection

@@ -11,6 +11,7 @@ SpatialNET.Network.Building.BuildDiagnostic.Message.init -> void
 SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.ClusterWiderThanTolerance = 2 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.IsolatedNode = 3 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.NodesMerged = 5 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.OutsideShardRegions = 0 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.OverlappingShardRegions = 1 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.ShortPartDropped = 4 -> SpatialNET.Network.Building.BuildDiagnosticKind
@@ -38,6 +39,7 @@ SpatialNET.Network.Building.BuildResult.EdgeCount.get -> int
 SpatialNET.Network.Building.BuildResult.EdgeCount.init -> void
 SpatialNET.Network.Building.BuildResult.NodeCount.get -> int
 SpatialNET.Network.Building.BuildResult.NodeCount.init -> void
+SpatialNET.Network.Building.CoincidentNodesResolver<TNodeId, TSource>
 SpatialNET.Network.Building.EdgeShape
 SpatialNET.Network.Building.EdgeShape.EdgeShape() -> void
 SpatialNET.Network.Building.EdgeShape.EdgeShape(SpatialNET.IPolyline2D! Line, double FromMeasure, double ToMeasure) -> void
@@ -86,6 +88,8 @@ SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.AddNode(TS
 SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.AddNode(TSource source, TNodeId id, SpatialNET.IPoint2D! point, int typeId, bool blocked = false) -> void
 SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.Build(SpatialNET.Network.INetworkWriter<TNodeId, TEdgeId, TSource>! writer, System.IProgress<SpatialNET.Network.Building.BuildProgress>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> SpatialNET.Network.Building.BuildResult!
 SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.NetworkBuilder(SpatialNET.Network.Building.NetworkBuildOptions! options, SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>! ids) -> void
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.ResolveCoincidentNodes.get -> SpatialNET.Network.Building.CoincidentNodesResolver<TNodeId, TSource>?
+SpatialNET.Network.Building.NetworkBuilder<TNodeId, TEdgeId, TSource>.ResolveCoincidentNodes.set -> void
 SpatialNET.Network.Building.NetworkPathGeometry
 SpatialNET.Network.Building.NodeConflict
 SpatialNET.Network.Building.NodeConflict.Kind.get -> SpatialNET.Network.Building.NodeConflictKind

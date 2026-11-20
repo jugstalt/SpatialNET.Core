@@ -4,6 +4,14 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+## [0.10.0-preview.7] - 2026-11-20
+
+### Added
+
+- Type patterns combine terms with `&` (and): `Mittelspannung.* & !Mittelspannung.Freileitung | Niederspannung.*`. `&` binds tighter than `|`, `!` negates a single term. A leading `!` in a pattern without `&` and without another `!` still negates the whole pattern as before (`!a | b` is every type except a and b). A pattern that matches no type is an error.
+
+## [0.10.0-preview.6] - 2026-11-18
+
 ### Added
 
 - Type patterns can be negated: a leading `!` means every type of the kind except the ones the pattern matches, for example `![*, BoxConnector, *]` or `!a | b` (every type except a and b; helper nodes stay out, as with `*`). A pattern that excludes every type is an error. Value names must not start with `!` any more.
