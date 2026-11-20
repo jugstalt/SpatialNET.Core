@@ -53,6 +53,37 @@ public class TypeRegistryTests
         Assert.Equal(expected, Registry.Edges(pattern).TypeIds);
     }
 
+    [Theory]
+    [InlineData("Niederspannung.* & [*, Leitung, *]", new[] { 11, 12 })]
+    [InlineData("Niederspannung.* & !Niederspannung.Leitung.*", new[] { 13, 14 })]
+    [InlineData("!Niederspannung.Leitung.* & Niederspannung.*", new[] { 13, 14 })]
+    [InlineData("[*, Leitung, *] & Mittelspannung.* | Niederspannung.Kastenverbinder", new[] { 13, 21, 22 })]
+    [InlineData("Niederspannung.* | !Niederspannung.*", new[] { 11, 12, 13, 14, 21, 22, 23, 24 })]
+    [InlineData("Niederspannung.* | !Mittelspannung.* & [*, Anlagenverbinder, *]", new[] { 11, 12, 13, 14 })]
+    [InlineData("!Niederspannung.* & !Mittelspannung.Leitung.*", new[] { 23, 24 })]
+    public void Edge_patterns_combine_with_and_and_per_term_not(string pattern, int[] expected)
+    {
+        Assert.Equal(expected, Registry.Edges(pattern).TypeIds);
+    }
+
+    [Theory]
+    [InlineData("Niederspannung.* & Mittelspannung.*")]      // leerer Schnitt
+    [InlineData("Niederspannung.* & ")]
+    [InlineData("& Niederspannung.*")]
+    [InlineData("Niederspannung.* & !*")]
+    public void Edge_patterns_with_and_that_are_errors(string pattern)
+    {
+        Assert.Throws<ArgumentException>(() => Registry.Edges(pattern));
+    }
+
+    [Fact]
+    public void Node_patterns_combine_with_and_without_the_helper_nodes()
+    {
+        Assert.Equal([17], Registry.Nodes("[*, Schalter, *] & Niederspannung.*").TypeIds);
+        Assert.Equal([16, 25], Registry.Nodes("!Mittelspannung.* & [*, Kunde, *] | [*, Trafo, *]").TypeIds);
+        Assert.False(Registry.Nodes("![*, Kasten, *] & *").Contains(0));
+    }
+
     [Fact]
     public void Node_patterns_and_the_untyped_helper_nodes()
     {

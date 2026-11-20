@@ -96,6 +96,9 @@ public sealed class TypeSet
 /// <item><c>Niederspannung.*</c>: a trailing <c>*</c> means any value for all remaining facets, so it contains <c>Niederspannung</c> itself.</item>
 /// <item><c>*</c>: every type of the kind, but not the untyped helper nodes; <c>untyped</c>: only the helper nodes.</item>
 /// </list>
+/// <para>Combining: <c>&amp;</c> (AND, binds tighter than <c>|</c>) and <c>!</c> in front of a single term (NOT):
+/// <c>Mittelspannung.* &amp; !Mittelspannung.Freileitung | Niederspannung.*</c>. A leading <c>!</c> in a pattern without
+/// <c>&amp;</c> and without further <c>!</c> negates the whole pattern (<c>!a | b</c> is everything except a and b).</para>
 /// <para>Value names are compared ignoring case. A pattern that matches no type of the asked kind is an error.</para>
 /// </remarks>
 public sealed class TypeRegistry
@@ -296,13 +299,17 @@ public sealed class TypeRegistry
             throw new ArgumentException("At least one pattern is needed.", nameof(patterns));
         }
 
+        string kindName = kind == ElementKind.Node ? "node" : "edge";
+        var universe = _ordered.Where(t => t.Kind == kind).Select(t => t.Id).ToHashSet();
         var ids = new List<int>();
         foreach (var text in patterns)
         {
             ArgumentNullException.ThrowIfNull(text, nameof(patterns));
             var body = text.TrimStart();
-            bool negated = body.StartsWith('!');
-            if (negated)
+
+            // legacy form: a leading '!' without '&' and without further '!' negates the whole pattern
+            bool wholeNegated = body.StartsWith('!') && !body.Contains('&') && body.IndexOf('!', 1) < 0;
+            if (wholeNegated)
             {
                 body = body[1..];
             }
@@ -310,23 +317,56 @@ public sealed class TypeRegistry
             var matched = new HashSet<int>();
             foreach (var alternative in body.Split('|'))
             {
-                matched.UnionWith(ResolveOne(kind, alternative.Trim(), text));
+                if (alternative.Trim().Length == 0)
+                {
+                    throw new ArgumentException($"The pattern '{text}' has an empty alternative.", nameof(patterns));
+                }
+
+                HashSet<int>? conjunction = null;
+                foreach (var termText in alternative.Split('&'))
+                {
+                    var term = termText.Trim();
+                    bool negated = !wholeNegated && term.StartsWith('!');
+                    if (negated)
+                    {
+                        term = term[1..].Trim();
+                    }
+
+                    var termIds = ResolveOne(kind, term, text).ToHashSet();
+                    if (negated)
+                    {
+                        // like "*", the complement does not contain the untyped helper nodes
+                        termIds = universe.Where(id => !termIds.Contains(id)).ToHashSet();
+                    }
+
+                    if (conjunction is null)
+                    {
+                        conjunction = termIds;
+                    }
+                    else
+                    {
+                        conjunction.IntersectWith(termIds);
+                    }
+                }
+
+                matched.UnionWith(conjunction!);
             }
 
-            if (!negated)
+            if (wholeNegated)
             {
-                ids.AddRange(matched);
-                continue;
+                // "!a | b": every type of the kind except a and b
+                matched = universe.Where(id => !matched.Contains(id)).ToHashSet();
+                if (matched.Count == 0)
+                {
+                    throw new ArgumentException($"The pattern '{text}' excludes every {kindName} type.", nameof(patterns));
+                }
             }
-
-            // "!a | b": every type of the kind except a and b; like "*" without the helper nodes
-            var rest = _ordered.Where(t => t.Kind == kind && !matched.Contains(t.Id)).Select(t => t.Id).ToList();
-            if (rest.Count == 0)
+            else if (matched.Count == 0)
             {
-                throw new ArgumentException($"The pattern '{text}' excludes every {(kind == ElementKind.Node ? "node" : "edge")} type.", nameof(patterns));
+                throw new ArgumentException($"The pattern '{text}' matches no {kindName} type.", nameof(patterns));
             }
 
-            ids.AddRange(rest);
+            ids.AddRange(matched);
         }
 
         return TypeSet.FromPattern(ids, string.Join(" | ", patterns));
