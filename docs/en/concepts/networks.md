@@ -196,8 +196,10 @@ var options = new TraversalOptions<int, int> { EdgeTypes = low };
 | `*` / `untyped` | every type of the kind, but not the helper nodes / only the helper nodes (type 0) |
 | `a \| b` | either |
 | `!a \| b` | every type of the kind except a and b; a leading `!` negates the whole pattern (helper nodes stay out, as with `*`) |
+| `a & b` | the types that match both; `&` binds tighter than `\|`, so `a & b \| c` is `(a & b) \| c` |
+| `a & !b` | the types that match a but not b; a `!` in front of one term negates only that term |
 
-The facets are a vector, not a tree: the value of a facet means the same under every other facet, which is why `[*, BoxConnector, *]` finds the connectors on every level. A pattern that matches nothing is an error, because it is usually a typo.
+The facets are a vector, not a tree: the value of a facet means the same under every other facet, which is why `[*, BoxConnector, *]` finds the connectors on every level. A pattern that matches nothing is an error, because it is usually a typo; this includes a combination such as `a & b` where no type matches both. A leading `!` negates the whole pattern only when the pattern has no `&` and no other `!`; otherwise `!` negates the single term after it.
 
 ## Weights
 

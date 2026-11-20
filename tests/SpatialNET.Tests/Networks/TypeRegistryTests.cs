@@ -67,7 +67,7 @@ public class TypeRegistryTests
     }
 
     [Theory]
-    [InlineData("Niederspannung.* & Mittelspannung.*")]      // leerer Schnitt
+    [InlineData("Niederspannung.* & Mittelspannung.*")]      // empty intersection
     [InlineData("Niederspannung.* & ")]
     [InlineData("& Niederspannung.*")]
     [InlineData("Niederspannung.* & !*")]
@@ -94,7 +94,7 @@ public class TypeRegistryTests
         Assert.Equal([0], Registry.Nodes("untyped").TypeIds);
         Assert.Equal([0, 17, 26], Registry.Nodes("UNTYPED | [*, Schalter, *]").TypeIds);
         Assert.Equal(Registry.Nodes("*").TypeIds, Registry.AllNodes.TypeIds);
-        // die Verneinung meint die Typen der Art wie "*", also ohne die Hilfsknoten
+        // the negation means the types of the kind like "*", so without the helper nodes
         Assert.Equal([15, 16, 25], Registry.Nodes("![*, Schalter, *]").TypeIds);
         Assert.Equal([16, 17, 26], Registry.Nodes("![*, Kasten, *] | [*, Trafo, *]", "[*, Schalter, *]").TypeIds);
         Assert.Equal(Registry.Edges("*").TypeIds, Registry.AllEdges.TypeIds);
@@ -110,7 +110,7 @@ public class TypeRegistryTests
     [InlineData("[*, Leitung, *")]
     [InlineData("untyped")]
     [InlineData("[*, Leitung, *] | ")]
-    [InlineData("!*")]                           // schliesst alles aus
+    [InlineData("!*")]                           // excludes everything
     [InlineData("![*, Unbekannt, *]")]
     [InlineData("!")]
     public void Edge_patterns_that_are_errors(string pattern)

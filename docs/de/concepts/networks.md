@@ -196,8 +196,10 @@ var options = new TraversalOptions<int, int> { EdgeTypes = low };
 | `*` / `untyped` | jeden Typ der Art, aber keine Hilfsknoten / nur die Hilfsknoten (Typ 0) |
 | `a \| b` | eines von beiden |
 | `!a \| b` | jeden Typ der Art außer a und b; ein führendes `!` verneint das ganze Muster (Hilfsknoten bleiben wie bei `*` draußen) |
+| `a & b` | die Typen, die beide treffen; `&` bindet stärker als `\|`, also ist `a & b \| c` dasselbe wie `(a & b) \| c` |
+| `a & !b` | die Typen, die a treffen, aber b nicht; ein `!` vor einem Term verneint nur diesen Term |
 
-Die Facetten sind ein Vektor, kein Baum: Der Wert einer Facette bedeutet unter jeder anderen Facette dasselbe, deshalb findet `[*, BoxConnector, *]` die Kastenverbinder auf jeder Ebene. Ein Muster ohne Treffer ist ein Fehler, weil es meist ein Tippfehler ist.
+Die Facetten sind ein Vektor, kein Baum: Der Wert einer Facette bedeutet unter jeder anderen Facette dasselbe, deshalb findet `[*, BoxConnector, *]` die Kastenverbinder auf jeder Ebene. Ein Muster ohne Treffer ist ein Fehler, weil es meist ein Tippfehler ist; das gilt auch für eine Verknüpfung wie `a & b`, die kein Typ erfüllt. Ein führendes `!` verneint nur dann das ganze Muster, wenn das Muster kein `&` und kein weiteres `!` enthält; sonst verneint `!` den einen Term dahinter.
 
 ## Gewichte
 
