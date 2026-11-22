@@ -162,6 +162,8 @@ SpatialNET.Network.NetworkState<TNodeId, TEdgeId>.Unblock(TNodeId node) -> Spati
 SpatialNET.Network.NetworkType
 SpatialNET.Network.NetworkType.Facets.get -> System.Collections.Generic.IReadOnlyList<int>!
 SpatialNET.Network.NetworkType.Facets.init -> void
+SpatialNET.Network.NetworkType.Helper.get -> bool
+SpatialNET.Network.NetworkType.Helper.init -> void
 SpatialNET.Network.NetworkType.Id.get -> int
 SpatialNET.Network.NetworkType.Id.init -> void
 SpatialNET.Network.NetworkType.Kind.get -> SpatialNET.Network.ElementKind

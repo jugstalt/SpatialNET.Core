@@ -8,13 +8,17 @@ SpatialNET.Network.Building.BuildDiagnostic.Location.get -> SpatialNET.Coordinat
 SpatialNET.Network.Building.BuildDiagnostic.Location.init -> void
 SpatialNET.Network.Building.BuildDiagnostic.Message.get -> string!
 SpatialNET.Network.Building.BuildDiagnostic.Message.init -> void
+SpatialNET.Network.Building.BuildDiagnostic.Sources.get -> System.Collections.Generic.IReadOnlyList<object?>?
+SpatialNET.Network.Building.BuildDiagnostic.Sources.init -> void
 SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.ClusterWiderThanTolerance = 2 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.ConnectionRefused = 6 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.IsolatedNode = 3 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.NodesMerged = 5 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.OutsideShardRegions = 0 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.OverlappingShardRegions = 1 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildDiagnosticKind.ShortPartDropped = 4 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.SplitRefused = 7 -> SpatialNET.Network.Building.BuildDiagnosticKind
 SpatialNET.Network.Building.BuildPhase
 SpatialNET.Network.Building.BuildPhase.AssigningShards = 2 -> SpatialNET.Network.Building.BuildPhase
 SpatialNET.Network.Building.BuildPhase.Checking = 3 -> SpatialNET.Network.Building.BuildPhase
@@ -40,6 +44,11 @@ SpatialNET.Network.Building.BuildResult.EdgeCount.init -> void
 SpatialNET.Network.Building.BuildResult.NodeCount.get -> int
 SpatialNET.Network.Building.BuildResult.NodeCount.init -> void
 SpatialNET.Network.Building.CoincidentNodesResolver<TNodeId, TSource>
+SpatialNET.Network.Building.ConnectionDecision
+SpatialNET.Network.Building.ConnectionDecision.Connect = 0 -> SpatialNET.Network.Building.ConnectionDecision
+SpatialNET.Network.Building.ConnectionDecision.Ignore = 1 -> SpatialNET.Network.Building.ConnectionDecision
+SpatialNET.Network.Building.ConnectionDecision.Report = 2 -> SpatialNET.Network.Building.ConnectionDecision
+SpatialNET.Network.Building.ConnectionRule
 SpatialNET.Network.Building.EdgeShape
 SpatialNET.Network.Building.EdgeShape.EdgeShape() -> void
 SpatialNET.Network.Building.EdgeShape.EdgeShape(SpatialNET.IPolyline2D! Line, double FromMeasure, double ToMeasure) -> void
@@ -51,7 +60,7 @@ SpatialNET.Network.Building.EdgeShape.ToMeasure.get -> double
 SpatialNET.Network.Building.EdgeShape.ToMeasure.init -> void
 SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>
 SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>.NewEdge(TSource source, int part, int partCount) -> TEdgeId
-SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>.NewHelperNode(SpatialNET.Coordinate location) -> TNodeId
+SpatialNET.Network.Building.INetworkIdFactory<TNodeId, TEdgeId, TSource>.NewHelperNode(SpatialNET.Coordinate location, int typeId) -> TNodeId
 SpatialNET.Network.Building.LineAttributes
 SpatialNET.Network.Building.LineAttributes.Direction.get -> SpatialNET.Network.EdgeDirection
 SpatialNET.Network.Building.LineAttributes.Direction.init -> void
@@ -66,14 +75,22 @@ SpatialNET.Network.Building.NetworkBuildException
 SpatialNET.Network.Building.NetworkBuildException.Conflicts.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.NodeConflict>!
 SpatialNET.Network.Building.NetworkBuildException.NetworkBuildException(System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.NodeConflict>! conflicts) -> void
 SpatialNET.Network.Building.NetworkBuildOptions
+SpatialNET.Network.Building.NetworkBuildOptions.Connect.get -> SpatialNET.Network.Building.ConnectionRule?
+SpatialNET.Network.Building.NetworkBuildOptions.Connect.init -> void
 SpatialNET.Network.Building.NetworkBuildOptions.DefaultShard.get -> long?
 SpatialNET.Network.Building.NetworkBuildOptions.DefaultShard.init -> void
 SpatialNET.Network.Building.NetworkBuildOptions.FallbackShardCellSize.get -> double
 SpatialNET.Network.Building.NetworkBuildOptions.FallbackShardCellSize.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.HelperNodeType.get -> System.Func<int, int>?
+SpatialNET.Network.Building.NetworkBuildOptions.HelperNodeType.init -> void
 SpatialNET.Network.Building.NetworkBuildOptions.NodeAtCrossings.get -> bool
 SpatialNET.Network.Building.NetworkBuildOptions.NodeAtCrossings.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.Partition.get -> System.Func<int, int>?
+SpatialNET.Network.Building.NetworkBuildOptions.Partition.init -> void
 SpatialNET.Network.Building.NetworkBuildOptions.ShardRegions.get -> System.Collections.Generic.IReadOnlyList<SpatialNET.Network.Building.ShardRegion!>!
 SpatialNET.Network.Building.NetworkBuildOptions.ShardRegions.init -> void
+SpatialNET.Network.Building.NetworkBuildOptions.Split.get -> SpatialNET.Network.Building.ConnectionRule?
+SpatialNET.Network.Building.NetworkBuildOptions.Split.init -> void
 SpatialNET.Network.Building.NetworkBuildOptions.SplitAtLineEnds.get -> bool
 SpatialNET.Network.Building.NetworkBuildOptions.SplitAtLineEnds.init -> void
 SpatialNET.Network.Building.NetworkBuildOptions.SplitAtNodes.get -> bool
