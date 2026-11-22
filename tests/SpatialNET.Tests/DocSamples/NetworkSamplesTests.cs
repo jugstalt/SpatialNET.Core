@@ -177,10 +177,11 @@ public sealed class NetworkSamplesTests
     }
 
     // --- snippet: network-ids
-    // The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
+    // The host's ids: a helper node from its location and type (stable between builds), an edge from its line and part.
     private sealed class GisIds : INetworkIdFactory<string, string, string>
     {
-        public string NewHelperNode(Coordinate at, int typeId) => FormattableString.Invariant($"H({at.X},{at.Y})");
+        public string NewHelperNode(Coordinate at, int typeId) =>
+            FormattableString.Invariant($"H({at.X},{at.Y})") + (typeId == 0 ? "" : $":{typeId}");
 
         public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
     }
@@ -220,5 +221,46 @@ public sealed class NetworkSamplesTests
             return $"{e.Id}: {e.From} -> {e.To}, {from} to {to} m";
         });
         Assert.Equal(["Cable.210#0: T -> S, 0 to 30 m", "Cable.210#1: S -> H(50,0.004), 30 to 50 m", "Cable.210#2: H(50,0.004) -> H(100,0), 50 to 100 m"], cable);
+    }
+
+    [Fact]
+    public void Connecting()
+    {
+        // --- snippet: network-connect
+        IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);
+
+        // Two tiers, medium voltage (21 cable, 25 transformer) and low voltage (11 cable, 15 box), kept apart but at the transformer.
+        int Tier(int type) => type is 21 or 25 or 91 ? 2 : 1;
+        var options = new NetworkBuildOptions
+        {
+            Tolerance = 0.01,
+            HelperNodeType = edge => Tier(edge) == 2 ? 91 : 92,  // line ends join only with ends of their tier
+            Partition = Tier,                                     // a box and a transformer of two tiers may share a place
+            Connect = (node, edge) => Tier(node) == Tier(edge) || node == 25 ? ConnectionDecision.Connect : ConnectionDecision.Ignore,
+            Split = (node, edge) => Tier(node) == Tier(edge) ? ConnectionDecision.Connect : ConnectionDecision.Report,
+        };
+
+        var builder = new NetworkBuilder<string, string, string>(options, new GisIds());
+        builder.AddNode("Trafo.1", "T", new Coordinate(100, 0), typeId: 25);
+        builder.AddNode("Box.7", "B", new Coordinate(50, 0), typeId: 15);            // on a vertex of the medium voltage cable
+        builder.AddLine("MV.1", Line("LINESTRING(0 0, 50 0, 100 0)"), typeId: 21);
+        builder.AddLine("LV.1", Line("LINESTRING(100 0, 150 0)"), typeId: 11);       // from the transformer
+        builder.AddLine("LV.2", Line("LINESTRING(50 0, 50 40)"), typeId: 11);        // from the box
+
+        var graph = new InMemoryGraph<string, string, string>();
+        BuildResult result = builder.Build(graph);
+        foreach (var edge in graph.Edges)
+            Console.WriteLine($"{edge.Id}: {edge.From} -> {edge.To}");
+        // MV.1#0: H(0,0):91 -> T        the box does not split the medium voltage cable ...
+        // LV.1#0: T -> H(150,0):92      ... the transformer joins both tiers
+        // LV.2#0: B -> H(50,40):92
+        foreach (var note in result.Diagnostics.Where(d => d.Kind == BuildDiagnosticKind.SplitRefused))
+            Console.WriteLine($"{note.Kind}: {string.Join(" on ", note.Sources!)}"); // SplitRefused: Box.7 on MV.1
+        // --- end
+
+        Assert.Equal(["MV.1#0: H(0,0):91 -> T", "LV.1#0: T -> H(150,0):92", "LV.2#0: B -> H(50,40):92"],
+            graph.Edges.Select(e => $"{e.Id}: {e.From} -> {e.To}"));
+        var refused = Assert.Single(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.SplitRefused);
+        Assert.Equal("Box.7 on MV.1", string.Join(" on ", refused.Sources!));
     }
 }

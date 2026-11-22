@@ -2,7 +2,7 @@
 
 Ein Netzwerk ist ein Graph aus **Knoten** und **Kanten**, gebildet aus den Linien und Punkten eines Leitungsnetzes (Kabel, Verbinder, Kästen, Trafos, Kunden) oder eines Straßennetzes. SpatialNET durchsucht es; **gespeichert wird es beim Host**. Das Paket `SpatialNET.Network` enthält das Modell, das Interface `IGraph` und die Suchen; `SpatialNET.Imp` ergänzt einen Graphen im Speicher und einen Cache für Hosts, die ihr Netzwerk in einer Datenbank halten ([ADR 0049](../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.de.md)).
 
-Diese Seite beschreibt das Modell, Typen, Gewichte, den Schaltzustand, `Reach` und `ShortestPath`, das Bauen eines Netzwerks aus Linien und Punkten mit `SpatialNET.Network.Building`, das Tracing der Versorgung von Kunden und die Prüfung von Regeln ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.de.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md)).
+Diese Seite beschreibt das Modell, Typen, Gewichte, den Schaltzustand, `Reach` und `ShortestPath`, das Bauen eines Netzwerks aus Linien und Punkten mit `SpatialNET.Network.Building`, das Tracing der Versorgung von Kunden und die Prüfung von Regeln ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.de.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.de.md)), zusammenfallende echte Knoten und die Regeln des Hosts für Verbinden und Teilen ([ADR 0054](../../adr/0054-zusammenfallende-echte-knoten.de.md), [ADR 0055](../../adr/0055-verbinden-und-teilen-nach-regeln-des-hosts.de.md)).
 
 ## Der Host hält den Graphen
 
@@ -32,17 +32,18 @@ public interface IGraph<TNodeId, TEdgeId>
 
 `NetworkBuilder` im Paket `SpatialNET.Network.Building` macht aus den Punkten und Linien des Hosts die Knoten und Kanten ([ADR 0050](../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.de.md)):
 
-- **Verknoten.** Linienenden und Punkte, die näher als die `Tolerance` beieinanderliegen, werden ein Knoten. Eine Gruppe mit einem Punkt des Hosts wird dieser **echte Knoten** mit seiner ID und seinem Typ; eine Gruppe nur aus Linienenden wird ein **Hilfsknoten** (Typ 0) im Mittel der Enden. Kein Stützpunkt bewegt sich: Das Netzwerk sagt, welche Enden zusammengehören, die Geometrie bleibt die des Hosts. Zwei Punkte des Hosts innerhalb der Toleranz sind ein Fehler in den Daten.
+- **Verknoten.** Linienenden und Punkte, die näher als die `Tolerance` beieinanderliegen, werden ein Knoten. Eine Gruppe mit einem Punkt des Hosts wird dieser **echte Knoten** mit seiner ID und seinem Typ; eine Gruppe nur aus Linienenden wird ein **Hilfsknoten** (Typ 0 oder ein Hilfstyp des Hosts, siehe unten) im Mittel der Enden. Kein Stützpunkt bewegt sich: Das Netzwerk sagt, welche Enden zusammengehören, die Geometrie bleibt die des Hosts. Zwei Punkte des Hosts innerhalb der Toleranz sind ein Fehler in den Daten, außer der Host führt sie zusammen (siehe unten).
 - **Teilen.** Ein echter Knoten im Inneren einer Linie teilt sie (ein Schalter in einem Kabel), ebenso ein Linienende im Inneren einer anderen Linie (ein T-Anschluss). Linien, die sich ohne gemeinsamen Punkt kreuzen, bleiben getrennt, außer `NodeAtCrossings` ist an (für Straßennetze).
 - **Kanten.** Jeder Teil wird eine Kante mit seinem Bereich auf der Quelllinie (`FromMeasure`, `ToMeasure`, für `Substring`), der geometrischen Länge oder einem Anteil einer Aufmaßlänge und den Gewichten der Linie; Werte der Art `Absolute` werden anteilig nach Länge geteilt.
 - **IDs** kommen aus der `INetworkIdFactory` des Hosts: Aus Lage, Linie und Teil abgeleitet, bleiben sie von einem nächtlichen Bau zum nächsten gleich. **Shards** kommen aus den `ShardRegions`, Polygonen wie den Ortsnetzen; die erste Region, die einen Knoten überdeckt, gewinnt.
 - **Schreiben.** Der Builder prüft zuerst alles, was scheitern kann, und wirft eine `NetworkBuildException` mit allen Konflikten, bevor etwas geschrieben ist. Dann schreibt er alle Knoten und danach alle Kanten an einen `INetworkWriter`: die Datenbank des Hosts oder einen `InMemoryGraph`.
 
 ```csharp
-// The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
+// The host's ids: a helper node from its location and type (stable between builds), an edge from its line and part.
 sealed class GisIds : INetworkIdFactory<string, string, string>
 {
-    public string NewHelperNode(Coordinate at, int typeId) => FormattableString.Invariant($"H({at.X},{at.Y})");
+    public string NewHelperNode(Coordinate at, int typeId) =>
+        FormattableString.Invariant($"H({at.X},{at.Y})") + (typeId == 0 ? "" : $":{typeId}");
 
     public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
 }
@@ -75,6 +76,57 @@ foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
 `Build` nimmt optional ein `IProgress<BuildProgress>` (die Phase, erledigte und gesamte Einträge), gemeldet höchstens alle 250 ms, und ein `CancellationToken`. Das `BuildResult` listet Hinweise, die den Bau nicht angehalten haben: Knoten außerhalb jeder Region, überlappende Regionen, Ketten von Enden breiter als die Toleranz, Punkte ohne Linie, weggelassene winzige Teile. Das Verknoten nutzt ein Hash-Raster, das Teilen einen räumlichen Index über die Linien; an einem synthetischen Netzwerk aus radialen Ortsnetzen braucht der Builder für 3 Mio. Linien etwa 13 Sekunden (`--quick-build` in den Benchmarks).
 
 Um einen Weg zu zeichnen, schneidet `path.ToPolyline(edge => new EdgeShape(line, from, to))` den Bereich jeder Kante aus ihrer Quelllinie, dreht Stücke um, die der Weg gegen ihre Richtung durchläuft, und fügt sie zusammen.
+
+### Zusammenfallende echte Knoten
+
+Echte Leitungsdaten zeichnen eine Stelle absichtlich doppelt: einen Kunden auf den Kasten, aus dem er versorgt wird, einen Endpunkt auf den Knoten, an dem die Linie endet. Mit `NetworkBuilder.ResolveCoincidentNodes` entscheidet der Host über echte Knoten innerhalb der Toleranz ([ADR 0054](../../adr/0054-zusammenfallende-echte-knoten.de.md)): einmal pro Gruppe und vor dem ersten Schreiben aufgerufen, liefert er den Index des Knotens, der bleibt, oder -1 für den Konflikt wie ohne Resolver. Die anderen werden in den Gewinner zusammengeführt: Sie werden nicht geschrieben und teilen nichts, der Gewinner führt sie in `BuiltNode.Merged` (ID, Typ, Lage, Quelle), damit der Host sie als Aliase behalten kann, und jede Gruppe ergibt einen Hinweis `NodesMerged`. Ein Resolver, der nach den Knoten entscheidet (z. B.: der Layer weiter oben im Inhaltsverzeichnis gewinnt) und nicht nach ihrer Reihenfolge in der Liste, hält den Bau unabhängig von der Eingabereihenfolge.
+
+### Verbinden und Teilen nach Regeln des Hosts
+
+Ohne weitere Angaben verbindet sich alles innerhalb der Toleranz. Pflegen verschiedene Abteilungen die Ebenen eines Netzes, liegen Elemente zufällig aufeinander: Ein Niederspannungskasten auf einem Stützpunkt eines Mittelspannungskabels würde das Kabel teilen und die Ebenen verbinden. Vier optionale Callbacks in `NetworkBuildOptions` lassen den Host entscheiden, nach Typ-IDs ([ADR 0055](../../adr/0055-verbinden-und-teilen-nach-regeln-des-hosts.de.md)):
+
+| Callback | Gefragt mit | Entscheidet |
+|---|---|---|
+| `HelperNodeType` | Kantentyp | den Typ des Hilfsknotens am Ende einer Linie; Enden fassen sich nur mit Enden desselben Hilfstyps zusammen, Enden zweier Ebenen an einer Stelle ergeben also zwei Hilfsknoten |
+| `Connect` | Knotentyp, Kantentyp | ob ein Linienende innerhalb der Toleranz eines echten Knotens an ihn anschließt; die übrigen Enden bilden den Hilfsknoten |
+| `Split` | Knotentyp, Kantentyp | ob ein Knoten das Innere einer Linie teilt: ein echter Knoten oder der Hilfstyp eines T-Stoßes |
+| `Partition` | Knotentyp | echte Knoten verschiedener Partitionen an einer Stelle sind kein Konflikt; darf ein Linienende an mehrere von ihnen anschließen, werden sie eine Gruppe für den Resolver |
+
+`Connect` und `Split` antworten mit einer `ConnectionDecision`: `Connect`, `Ignore` (still nicht) oder `Report` (nicht, und ein Hinweis `ConnectionRefused` oder `SplitRefused`, der in `BuildDiagnostic.Sources` beide Quellen nennt, für das, was wahrscheinlich ein Datenfehler ist). Jede Antwort wird einmal pro Typpaar erfragt. Ohne die Callbacks baut der Builder wie oben. `SplitAtNodes`, `SplitAtLineEnds` und `NodeAtCrossings` bleiben als grobe Schalter; Hilfsknoten an Kreuzungen werden nicht gefragt.
+
+```csharp
+IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);
+
+// Two tiers, medium voltage (21 cable, 25 transformer) and low voltage (11 cable, 15 box), kept apart but at the transformer.
+int Tier(int type) => type is 21 or 25 or 91 ? 2 : 1;
+var options = new NetworkBuildOptions
+{
+    Tolerance = 0.01,
+    HelperNodeType = edge => Tier(edge) == 2 ? 91 : 92,  // line ends join only with ends of their tier
+    Partition = Tier,                                     // a box and a transformer of two tiers may share a place
+    Connect = (node, edge) => Tier(node) == Tier(edge) || node == 25 ? ConnectionDecision.Connect : ConnectionDecision.Ignore,
+    Split = (node, edge) => Tier(node) == Tier(edge) ? ConnectionDecision.Connect : ConnectionDecision.Report,
+};
+
+var builder = new NetworkBuilder<string, string, string>(options, new GisIds());
+builder.AddNode("Trafo.1", "T", new Coordinate(100, 0), typeId: 25);
+builder.AddNode("Box.7", "B", new Coordinate(50, 0), typeId: 15);            // on a vertex of the medium voltage cable
+builder.AddLine("MV.1", Line("LINESTRING(0 0, 50 0, 100 0)"), typeId: 21);
+builder.AddLine("LV.1", Line("LINESTRING(100 0, 150 0)"), typeId: 11);       // from the transformer
+builder.AddLine("LV.2", Line("LINESTRING(50 0, 50 40)"), typeId: 11);        // from the box
+
+var graph = new InMemoryGraph<string, string, string>();
+BuildResult result = builder.Build(graph);
+foreach (var edge in graph.Edges)
+    Console.WriteLine($"{edge.Id}: {edge.From} -> {edge.To}");
+// MV.1#0: H(0,0):91 -> T        the box does not split the medium voltage cable ...
+// LV.1#0: T -> H(150,0):92      ... the transformer joins both tiers
+// LV.2#0: B -> H(50,40):92
+foreach (var note in result.Diagnostics.Where(d => d.Kind == BuildDiagnosticKind.SplitRefused))
+    Console.WriteLine($"{note.Kind}: {string.Join(" on ", note.Sources!)}"); // SplitRefused: Box.7 on MV.1
+```
+
+Hilfstypen sind Knotentypen der Typentabelle des Hosts mit `NetworkType.Helper`, zum Beispiel einer je Ebene. Wie Typ 0 trifft sie `untyped`, nicht aber `*` oder ein Muster ohne `untyped`: `untyped & [Low, *, *]` ist der Hilfstyp der Ebene Low. Weil Hilfsknoten verschiedener Typen am selben Ort liegen können, bekommt `INetworkIdFactory.NewHelperNode` den Typ, damit die IDs verschieden sind.
 
 ## Suchen
 
@@ -193,7 +245,7 @@ var options = new TraversalOptions<int, int> { EdgeTypes = low };
 | `[Low, *, Cable]` | ein Eintrag pro Facette: ein Wertname, eine Zahl oder `*` |
 | `Low.Line` | die angegebenen Facetten; die Facetten danach müssen „nicht belegt“ sein |
 | `Low.*` | `Low` und alles darunter; ein abschließendes `*` heißt beliebiger Wert für alle restlichen Facetten |
-| `*` / `untyped` | jeden Typ der Art, aber keine Hilfsknoten / nur die Hilfsknoten (Typ 0) |
+| `*` / `untyped` | jeden Typ der Art, aber keine Hilfsknoten / nur die Hilfsknoten (Typ 0 und die Hilfstypen) |
 | `a \| b` | eines von beiden |
 | `!a \| b` | jeden Typ der Art außer a und b; ein führendes `!` verneint das ganze Muster (Hilfsknoten bleiben wie bei `*` draußen) |
 | `a & b` | die Typen, die beide treffen; `&` bindet stärker als `\|`, also ist `a & b \| c` dasselbe wie `(a & b) \| c` |

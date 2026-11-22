@@ -2,7 +2,7 @@
 
 A network is a graph of **nodes** and **edges** made from the lines and points of a utility network (cables, connectors, boxes, transformers, customers) or of a street network. SpatialNET searches it; the **host stores it**. The package `SpatialNET.Network` holds the model, the interface `IGraph` and the searches; `SpatialNET.Imp` adds a graph in memory and a cache for hosts that keep their network in a database ([ADR 0049](../../adr/0049-netzwerk-graph-beim-host-hinter-igraph.md)).
 
-This page covers the model, types, weights, the switching state, `Reach` and `ShortestPath`, building a network from lines and points with `SpatialNET.Network.Building`, tracing the supply of customers and checking rules ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md)).
+This page covers the model, types, weights, the switching state, `Reach` and `ShortestPath`, building a network from lines and points with `SpatialNET.Network.Building`, tracing the supply of customers and checking rules ([ADR 0051](../../adr/0051-tracing-pro-quelle-versorgung.md), [ADR 0052](../../adr/0052-netzwerkregeln-nachbarn-zaehlen.md)), coincident real nodes and the host's rules for connecting and splitting ([ADR 0054](../../adr/0054-zusammenfallende-echte-knoten.md), [ADR 0055](../../adr/0055-verbinden-und-teilen-nach-regeln-des-hosts.md)).
 
 ## The host holds the graph
 
@@ -32,17 +32,18 @@ Two implementations come with `SpatialNET.Imp`:
 
 `NetworkBuilder` in the package `SpatialNET.Network.Building` makes the nodes and edges from the host's points and lines ([ADR 0050](../../adr/0050-netzwerk-bauen-verknoten-teilen-shards.md)):
 
-- **Joining.** Line ends and points closer than the `Tolerance` become one node. A group with a point of the host becomes that **real node** with its id and type; a group of line ends only becomes a **helper node** (type 0) at the mean of the ends. No vertex moves: the network says which ends belong together, the geometry stays the host's. Two points of the host within the tolerance are an error in the data.
+- **Joining.** Line ends and points closer than the `Tolerance` become one node. A group with a point of the host becomes that **real node** with its id and type; a group of line ends only becomes a **helper node** (type 0, or a helper type of the host, see below) at the mean of the ends. No vertex moves: the network says which ends belong together, the geometry stays the host's. Two points of the host within the tolerance are an error in the data, unless the host merges them (see below).
 - **Splitting.** A real node on the inside of a line splits it (a switch in a cable), and so does a line end on the inside of another line (a T junction). Lines that cross without a common point stay apart, unless `NodeAtCrossings` is on (for street networks).
 - **Edges.** Every part becomes an edge with its range on the source line (`FromMeasure`, `ToMeasure`, for `Substring`), the geometric length or a share of a surveyed length, and the weights of the line; values of kind `Absolute` are split in proportion to length.
 - **Ids** come from the host's `INetworkIdFactory`: deriving them from location, line and part keeps them the same from one nightly build to the next. **Shards** come from `ShardRegions`, polygons such as the local networks; the first region that covers a node wins.
 - **Writing.** The builder checks everything that can fail first and throws a `NetworkBuildException` with all conflicts before anything is written. Then it writes all nodes and then all edges to an `INetworkWriter`: the host's database, or an `InMemoryGraph`.
 
 ```csharp
-// The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
+// The host's ids: a helper node from its location and type (stable between builds), an edge from its line and part.
 sealed class GisIds : INetworkIdFactory<string, string, string>
 {
-    public string NewHelperNode(Coordinate at, int typeId) => FormattableString.Invariant($"H({at.X},{at.Y})");
+    public string NewHelperNode(Coordinate at, int typeId) =>
+        FormattableString.Invariant($"H({at.X},{at.Y})") + (typeId == 0 ? "" : $":{typeId}");
 
     public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
 }
@@ -75,6 +76,57 @@ foreach (var edge in graph.Edges.Where(e => e.Id.StartsWith("Cable.210")))
 `Build` takes an optional `IProgress<BuildProgress>` (the phase, items done and total), reported at most every 250 ms, and a `CancellationToken`. The `BuildResult` lists notes that did not stop the build: nodes outside every region, overlapping regions, chains of ends wider than the tolerance, points without a line, tiny parts left out. The join uses a hash grid, the splitting a spatial index over the lines; on a synthetic network of radial local networks the builder needs about 13 seconds for 3 million lines (`--quick-build` in the benchmarks).
 
 To draw a way, `path.ToPolyline(edge => new EdgeShape(line, from, to))` cuts the range of every edge from its source line, turns pieces round where the way runs against them and joins them.
+
+### Coincident real nodes
+
+Real utility data draws one place twice on purpose: a customer on the box it is supplied from, a line end marker on the node that ends the line. `NetworkBuilder.ResolveCoincidentNodes` lets the host decide about real nodes within the tolerance of each other ([ADR 0054](../../adr/0054-zusammenfallende-echte-knoten.md)): called once per group before the first write, it returns the index of the node that stays, or -1 for the conflict of the default. The others are merged into the winner: they are not written and split nothing, the winner lists them in `BuiltNode.Merged` (id, type, location, source) so the host can keep them as aliases, and every group gives one `NodesMerged` note. A resolver that decides by the nodes (for example: the layer higher in the table of contents wins), not by their order in the list, keeps the build independent of the input order.
+
+### Connecting and splitting by the host's rules
+
+By default everything within the tolerance connects. When the tiers of a network are kept by different departments, elements lie on top of each other by chance: a low voltage box on a vertex of a medium voltage cable would split the cable and join the tiers. Four optional callbacks of `NetworkBuildOptions` let the host decide, by type ids ([ADR 0055](../../adr/0055-verbinden-und-teilen-nach-regeln-des-hosts.md)):
+
+| Callback | Asked with | Decides |
+|---|---|---|
+| `HelperNodeType` | edge type | the type of the helper node at the end of a line; ends join only with ends of the same helper type, so the ends of two tiers at one place give two helper nodes |
+| `Connect` | node type, edge type | whether a line end within the tolerance of a real node connects to it; the other ends form the helper node |
+| `Split` | node type, edge type | whether a node splits the inside of a line: a real node, or the helper type of a T junction |
+| `Partition` | node type | real nodes of different partitions at one place are no conflict; when a line end may connect to several of them, they become one group for the resolver |
+
+`Connect` and `Split` answer with a `ConnectionDecision`: `Connect`, `Ignore` (silently not), or `Report` (not, and a `ConnectionRefused` or `SplitRefused` note naming both sources in `BuildDiagnostic.Sources`, for what is probably a data error). Every answer is asked once per pair of types. Without the callbacks the build is the one above. `SplitAtNodes`, `SplitAtLineEnds` and `NodeAtCrossings` stay as coarse switches; helper nodes at crossings are not asked.
+
+```csharp
+IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);
+
+// Two tiers, medium voltage (21 cable, 25 transformer) and low voltage (11 cable, 15 box), kept apart but at the transformer.
+int Tier(int type) => type is 21 or 25 or 91 ? 2 : 1;
+var options = new NetworkBuildOptions
+{
+    Tolerance = 0.01,
+    HelperNodeType = edge => Tier(edge) == 2 ? 91 : 92,  // line ends join only with ends of their tier
+    Partition = Tier,                                     // a box and a transformer of two tiers may share a place
+    Connect = (node, edge) => Tier(node) == Tier(edge) || node == 25 ? ConnectionDecision.Connect : ConnectionDecision.Ignore,
+    Split = (node, edge) => Tier(node) == Tier(edge) ? ConnectionDecision.Connect : ConnectionDecision.Report,
+};
+
+var builder = new NetworkBuilder<string, string, string>(options, new GisIds());
+builder.AddNode("Trafo.1", "T", new Coordinate(100, 0), typeId: 25);
+builder.AddNode("Box.7", "B", new Coordinate(50, 0), typeId: 15);            // on a vertex of the medium voltage cable
+builder.AddLine("MV.1", Line("LINESTRING(0 0, 50 0, 100 0)"), typeId: 21);
+builder.AddLine("LV.1", Line("LINESTRING(100 0, 150 0)"), typeId: 11);       // from the transformer
+builder.AddLine("LV.2", Line("LINESTRING(50 0, 50 40)"), typeId: 11);        // from the box
+
+var graph = new InMemoryGraph<string, string, string>();
+BuildResult result = builder.Build(graph);
+foreach (var edge in graph.Edges)
+    Console.WriteLine($"{edge.Id}: {edge.From} -> {edge.To}");
+// MV.1#0: H(0,0):91 -> T        the box does not split the medium voltage cable ...
+// LV.1#0: T -> H(150,0):92      ... the transformer joins both tiers
+// LV.2#0: B -> H(50,40):92
+foreach (var note in result.Diagnostics.Where(d => d.Kind == BuildDiagnosticKind.SplitRefused))
+    Console.WriteLine($"{note.Kind}: {string.Join(" on ", note.Sources!)}"); // SplitRefused: Box.7 on MV.1
+```
+
+Helper types are node types of the host's registry marked `NetworkType.Helper`, for example one per tier. Like type 0 they are matched by `untyped` and not by `*` or by a pattern without `untyped`: `untyped & [Low, *, *]` is the helper type of the tier Low. Since helper nodes of different types may share a location, `INetworkIdFactory.NewHelperNode` gets the type, so that the ids differ.
 
 ## Searches
 
@@ -193,7 +245,7 @@ var options = new TraversalOptions<int, int> { EdgeTypes = low };
 | `[Low, *, Cable]` | one entry per facet: a value name, a number or `*` |
 | `Low.Line` | the given facets; the facets after them must be "not set" |
 | `Low.*` | `Low` and everything below it; a trailing `*` means any value for all remaining facets |
-| `*` / `untyped` | every type of the kind, but not the helper nodes / only the helper nodes (type 0) |
+| `*` / `untyped` | every type of the kind, but not the helper nodes / only the helper nodes (type 0 and the helper types) |
 | `a \| b` | either |
 | `!a \| b` | every type of the kind except a and b; a leading `!` negates the whole pattern (helper nodes stay out, as with `*`) |
 | `a & b` | the types that match both; `&` binds tighter than `\|`, so `a & b \| c` is `(a & b) \| c` |
