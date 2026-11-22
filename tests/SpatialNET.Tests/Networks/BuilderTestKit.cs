@@ -28,8 +28,8 @@ internal static class BuilderTestKit
     /// <summary>Ids that follow from their arguments: helper nodes from the rounded location, edges from source and part.</summary>
     internal sealed class StableIds : INetworkIdFactory<string, string, string>
     {
-        public string NewHelperNode(Coordinate location) =>
-            string.Create(CultureInfo.InvariantCulture, $"H({Math.Round(location.X, 6)},{Math.Round(location.Y, 6)})");
+        public string NewHelperNode(Coordinate location, int typeId) =>
+            string.Create(CultureInfo.InvariantCulture, $"H({Math.Round(location.X, 6)},{Math.Round(location.Y, 6)})") + (typeId == 0 ? "" : $":{typeId}");
 
         public string NewEdge(string source, int part, int partCount) => $"{source}#{part}/{partCount}";
     }
@@ -93,10 +93,15 @@ internal static class BuilderTestKit
             return new RandomInput(nodes, lines, tolerance);
         }
 
-        public (RecordingWriter Writer, BuildResult Result) Build(bool shuffle = false, int seed = 0, bool crossings = false)
+        public (RecordingWriter Writer, BuildResult Result) Build(
+            bool shuffle = false, int seed = 0, bool crossings = false, Func<NetworkBuildOptions, NetworkBuildOptions>? configure = null)
         {
             var absolute = new WeightDefinition(7, "fixed", WeightKind.Absolute);
-            var builder = Builder(Tolerance, o => o with { NodeAtCrossings = crossings, Weights = [absolute] });
+            var builder = Builder(Tolerance, o =>
+            {
+                o = o with { NodeAtCrossings = crossings, Weights = [absolute] };
+                return configure?.Invoke(o) ?? o;
+            });
             var nodes = Nodes.ToList();
             var lines = Lines.ToList();
             if (shuffle)

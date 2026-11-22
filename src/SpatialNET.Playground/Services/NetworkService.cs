@@ -463,8 +463,8 @@ public sealed class NetworkService
     /// <summary>The ids of nodes and edges; a helper node is named after its place, so the same input builds the same ids.</summary>
     private sealed class PlaygroundIds : INetworkIdFactory<string, string, string>
     {
-        public string NewHelperNode(Coordinate location) =>
-            string.Create(CultureInfo.InvariantCulture, $"H({location.X:0.###},{location.Y:0.###})");
+        public string NewHelperNode(Coordinate location, int typeId) =>
+            string.Create(CultureInfo.InvariantCulture, $"H({location.X:0.###},{location.Y:0.###})") + (typeId == 0 ? "" : $":{typeId}");
 
         public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
     }

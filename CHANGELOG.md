@@ -4,6 +4,15 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- Connecting and splitting by the host's rules (ADR 0055): `NetworkBuildOptions` gets `HelperNodeType` (the helper type at the end of a line; ends join only with ends of the same helper type), `Connect` (whether a line end connects to a real node), `Split` (whether a node splits the inside of a line) and `Partition` (real nodes of different partitions at one place are no conflict). `Connect` and `Split` answer with `ConnectionDecision` (`Connect`, `Ignore`, `Report`) and are asked once per pair of types; `Report` adds a `ConnectionRefused` or `SplitRefused` diagnostic. `BuildDiagnostic.Sources` names the sources involved. Without the callbacks the build is unchanged.
+- `NetworkType.Helper` marks node types of helper nodes, for example one per tier: matched by `untyped` (`untyped & [Low, *, *]`), not by `*` or a pattern without `untyped`.
+
+### Changed
+
+- Breaking: `INetworkIdFactory.NewHelperNode(Coordinate location, int typeId)` gets the type of the helper node, since helper nodes of different types may share a location.
+
 ## [0.10.0-preview.7] - 2026-11-20
 
 ### Added

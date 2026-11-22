@@ -106,3 +106,5 @@
   href: ../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.md
 - name: "0054 Coincident real nodes: the host may choose a winner"
   href: ../../adr/0054-zusammenfallende-echte-knoten.md
+- name: "0055 Connecting and splitting by the host's rules"
+  href: ../../adr/0055-verbinden-und-teilen-nach-regeln-des-hosts.md

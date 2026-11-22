@@ -334,7 +334,7 @@ public sealed class SyntheticBuildInput
     {
         private long _next = 1L << 40;
 
-        public long NewHelperNode(Coordinate location) => _next++;
+        public long NewHelperNode(Coordinate location, int typeId) => _next++;
 
         public long NewEdge(long source, int part, int partCount) => source * 16 + part;
     }

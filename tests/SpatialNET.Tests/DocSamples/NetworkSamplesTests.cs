@@ -180,7 +180,7 @@ public sealed class NetworkSamplesTests
     // The host's ids: a helper node from its location (stable between builds), an edge from its line and part.
     private sealed class GisIds : INetworkIdFactory<string, string, string>
     {
-        public string NewHelperNode(Coordinate at) => FormattableString.Invariant($"H({at.X},{at.Y})");
+        public string NewHelperNode(Coordinate at, int typeId) => FormattableString.Invariant($"H({at.X},{at.Y})");
 
         public string NewEdge(string source, int part, int partCount) => $"{source}#{part}";
     }

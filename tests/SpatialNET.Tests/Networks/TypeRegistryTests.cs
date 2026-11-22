@@ -85,6 +85,25 @@ public class TypeRegistryTests
     }
 
     [Fact]
+    public void Helper_types_are_matched_only_with_untyped()
+    {
+        // one helper type per tier (ADR 0055)
+        var registry = new TypeRegistry(Facets, [.. Types, new(91, ElementKind.Node, [1]) { Helper = true }, new(92, ElementKind.Node, [2]) { Helper = true }]);
+
+        Assert.Equal([0, 91, 92], registry.Nodes("untyped").TypeIds);
+        Assert.Equal([91], registry.Nodes("untyped & [Niederspannung, *, *]").TypeIds);
+        Assert.Equal([0, 92], registry.Nodes("untyped & ![Niederspannung, *, *]").TypeIds);
+        Assert.Equal([15, 16, 17], registry.Nodes("[Niederspannung, *, *]").TypeIds);
+        Assert.Equal([15, 16, 17, 25, 26], registry.Nodes("*").TypeIds);
+        Assert.Equal(registry.Nodes("*").TypeIds, registry.AllNodes.TypeIds);
+        Assert.Equal([15, 16, 25], registry.Nodes("![*, Schalter, *]").TypeIds);
+        Assert.Equal([15, 16, 17, 91], registry.Nodes("[Niederspannung, *, *] | untyped & [Niederspannung, *, *]").TypeIds);
+        Assert.Equal("Niederspannung (untyped)", registry.Display(91));
+        Assert.Throws<ArgumentException>(() => registry.Nodes("Niederspannung"));
+        Assert.Throws<ArgumentException>(() => new TypeRegistry(Facets, [new(91, ElementKind.Edge, [1]) { Helper = true }]));
+    }
+
+    [Fact]
     public void Node_patterns_and_the_untyped_helper_nodes()
     {
         Assert.Equal([15], Registry.Nodes("[*, Kasten, *]").TypeIds);

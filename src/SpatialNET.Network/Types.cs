@@ -16,7 +16,15 @@ public sealed record Facet(string Name, IReadOnlyDictionary<int, string> Values)
 /// <param name="Kind">Whether it is a node type or an edge type.</param>
 /// <param name="Facets">One value per facet, in the order of the facets; missing trailing values are 0 ("not set").</param>
 /// <param name="Name">An optional display name; by default the names of the values joined with dots.</param>
-public sealed record NetworkType(int Id, ElementKind Kind, IReadOnlyList<int> Facets, string? Name = null);
+public sealed record NetworkType(int Id, ElementKind Kind, IReadOnlyList<int> Facets, string? Name = null)
+{
+    /// <summary>
+    /// Whether it is a type of helper nodes, for example the helper nodes of one tier (ADR 0055); only for node types.
+    /// Like type 0 it is matched by <c>untyped</c>, not by <c>*</c> or by a pattern without <c>untyped</c>
+    /// (<c>untyped &amp; [Low, *, *]</c> is the helper type of the tier Low).
+    /// </summary>
+    public bool Helper { get; init; }
+}
 
 /// <summary>
 /// A set of type ids, the result of resolving type patterns once (ADR 0049). Searches and rules compare integers only.
@@ -94,11 +102,14 @@ public sealed class TypeSet
 /// <item><c>[Niederspannung, *, Kabel]</c>: one entry per facet, a value name, a number or <c>*</c> (any value, also "not set").</item>
 /// <item><c>Niederspannung.Leitung</c>: the values from the first facet on; the facets after them must be "not set".</item>
 /// <item><c>Niederspannung.*</c>: a trailing <c>*</c> means any value for all remaining facets, so it contains <c>Niederspannung</c> itself.</item>
-/// <item><c>*</c>: every type of the kind, but not the untyped helper nodes; <c>untyped</c>: only the helper nodes.</item>
+/// <item><c>*</c>: every type of the kind, but not the untyped helper nodes; <c>untyped</c>: only the helper nodes (type 0 and
+/// every type marked <see cref="NetworkType.Helper"/>).</item>
 /// </list>
 /// <para>Combining: <c>&amp;</c> (AND, binds tighter than <c>|</c>) and <c>!</c> in front of a single term (NOT):
 /// <c>Mittelspannung.* &amp; !Mittelspannung.Freileitung | Niederspannung.*</c>. A leading <c>!</c> in a pattern without
 /// <c>&amp;</c> and without further <c>!</c> negates the whole pattern (<c>!a | b</c> is everything except a and b).</para>
+/// <para>Helper types (<see cref="NetworkType.Helper"/>) are only matched by an alternative with the term <c>untyped</c>:
+/// <c>untyped &amp; [Low, *, *]</c> is the helper type of the tier Low, <c>[Low, *, *]</c> alone does not contain it.</para>
 /// <para>Value names are compared ignoring case. A pattern that matches no type of the asked kind is an error.</para>
 /// </remarks>
 public sealed class TypeRegistry
@@ -111,6 +122,7 @@ public sealed class TypeRegistry
     private readonly Dictionary<int, NetworkType> _types;
     private readonly NetworkType[] _ordered;
     private readonly int[][] _vectors; // per type in _ordered, one value per facet
+    private readonly HashSet<int> _helpers; // 0 and the helper types
 
     /// <summary>Builds the registry and checks the table.</summary>
     /// <param name="facets">The facets, at least one.</param>
@@ -178,6 +190,11 @@ public sealed class TypeRegistry
                 throw new ArgumentException($"The type {type.Id} has the unknown kind {type.Kind}.", nameof(types));
             }
 
+            if (type.Helper && type.Kind != ElementKind.Node)
+            {
+                throw new ArgumentException($"The type {type.Id} is a helper type but no node type.", nameof(types));
+            }
+
             ArgumentNullException.ThrowIfNull(type.Facets, nameof(types));
             if (type.Facets.Count > _facets.Length)
             {
@@ -219,7 +236,8 @@ public sealed class TypeRegistry
             return vector;
         }).ToArray();
 
-        AllNodes = TypeSet.FromPattern(_ordered.Where(t => t.Kind == ElementKind.Node).Select(t => t.Id), "*");
+        AllNodes = TypeSet.FromPattern(_ordered.Where(t => t.Kind == ElementKind.Node && !t.Helper).Select(t => t.Id), "*");
+        _helpers = _ordered.Where(t => t.Helper).Select(t => t.Id).Prepend(0).ToHashSet();
         AllEdges = TypeSet.FromPattern(_ordered.Where(t => t.Kind == ElementKind.Edge).Select(t => t.Id), "*");
     }
 
@@ -229,7 +247,7 @@ public sealed class TypeRegistry
     /// <summary>The types, by ascending id.</summary>
     public IReadOnlyList<NetworkType> Types => _ordered;
 
-    /// <summary>Every node type (not the untyped helper nodes).</summary>
+    /// <summary>Every node type (not the helper nodes: type 0 and the types marked <see cref="NetworkType.Helper"/>).</summary>
     public TypeSet AllNodes { get; }
 
     /// <summary>Every edge type.</summary>
@@ -271,8 +289,9 @@ public sealed class TypeRegistry
             last--;
         }
 
-        return string.Join('.', Enumerable.Range(0, last + 1).Select(f =>
+        var dotted = string.Join('.', Enumerable.Range(0, last + 1).Select(f =>
             type.Facets[f] == 0 ? "0" : _facets[f].Values[type.Facets[f]]));
+        return type.Helper ? $"{dotted} ({UntypedKeyword})" : dotted;
     }
 
     /// <summary>
@@ -300,7 +319,15 @@ public sealed class TypeRegistry
         }
 
         string kindName = kind == ElementKind.Node ? "node" : "edge";
+        // the complement of a term is taken among all types of the kind, helper types included; an alternative keeps
+        // helper types only when one of its terms is "untyped"
         var universe = _ordered.Where(t => t.Kind == kind).Select(t => t.Id).ToHashSet();
+        if (kind == ElementKind.Node)
+        {
+            universe.Add(0);
+        }
+
+        var nonHelpers = universe.Where(id => !_helpers.Contains(id)).ToHashSet();
         var ids = new List<int>();
         foreach (var text in patterns)
         {
@@ -323,6 +350,7 @@ public sealed class TypeRegistry
                 }
 
                 HashSet<int>? conjunction = null;
+                bool helpersAsked = false;
                 foreach (var termText in alternative.Split('&'))
                 {
                     var term = termText.Trim();
@@ -332,10 +360,10 @@ public sealed class TypeRegistry
                         term = term[1..].Trim();
                     }
 
+                    helpersAsked |= !negated && string.Equals(term, UntypedKeyword, StringComparison.OrdinalIgnoreCase);
                     var termIds = ResolveOne(kind, term, text).ToHashSet();
                     if (negated)
                     {
-                        // like "*", the complement does not contain the untyped helper nodes
                         termIds = universe.Where(id => !termIds.Contains(id)).ToHashSet();
                     }
 
@@ -349,13 +377,19 @@ public sealed class TypeRegistry
                     }
                 }
 
+                if (!helpersAsked)
+                {
+                    // like "*", a pattern without "untyped" does not contain the helper nodes
+                    conjunction!.IntersectWith(nonHelpers);
+                }
+
                 matched.UnionWith(conjunction!);
             }
 
             if (wholeNegated)
             {
                 // "!a | b": every type of the kind except a and b
-                matched = universe.Where(id => !matched.Contains(id)).ToHashSet();
+                matched = nonHelpers.Where(id => !matched.Contains(id)).ToHashSet();
                 if (matched.Count == 0)
                 {
                     throw new ArgumentException($"The pattern '{text}' excludes every {kindName} type.", nameof(patterns));
@@ -386,7 +420,7 @@ public sealed class TypeRegistry
                 throw new ArgumentException($"The pattern '{UntypedKeyword}' only applies to nodes.", "patterns");
             }
 
-            return [0];
+            return _helpers;
         }
 
         var vector = pattern == "*" ? AnyVector() : pattern.StartsWith('[') ? ParseBrackets(pattern) : ParseDotted(pattern);

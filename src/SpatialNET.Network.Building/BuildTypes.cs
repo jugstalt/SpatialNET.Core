@@ -22,6 +22,35 @@ public sealed record NetworkBuildOptions
     /// </summary>
     public bool NodeAtCrossings { get; init; }
 
+    /// <summary>
+    /// The type of the helper node at the end of a line of the given edge type (ADR 0055). Line ends join into one helper
+    /// node only with ends of the same helper type, so the ends of different tiers at one place stay apart. <c>null</c>
+    /// (the default) gives every helper node the type 0. A type other than 0 must be a node type of the host's registry,
+    /// usually one marked <see cref="NetworkType.Helper"/>.
+    /// </summary>
+    public Func<int, int>? HelperNodeType { get; init; }
+
+    /// <summary>
+    /// Whether a line end within the tolerance of a real node connects to it (ADR 0055), asked with the node type and the
+    /// edge type. Ends that connect to no real node form a helper node. <c>null</c> (the default) connects every end.
+    /// </summary>
+    public ConnectionRule? Connect { get; init; }
+
+    /// <summary>
+    /// Whether a node within the tolerance of the inside of a line splits it (ADR 0055), asked with the node type (the type
+    /// of the real node, or the helper type of a T junction) and the edge type. <c>null</c> (the default) splits always,
+    /// within <see cref="SplitAtNodes"/> and <see cref="SplitAtLineEnds"/>. Helper nodes at crossings are not asked.
+    /// </summary>
+    public ConnectionRule? Split { get; init; }
+
+    /// <summary>
+    /// The partition of a real node by its type (ADR 0055): real nodes of different partitions within the tolerance of
+    /// each other are not a conflict and stay two nodes, unless a line end connects to both; then they are one group for
+    /// <see cref="NetworkBuilder{TNodeId, TEdgeId, TSource}.ResolveCoincidentNodes"/>. <c>null</c> (the default) puts every
+    /// real node into one partition.
+    /// </summary>
+    public Func<int, int>? Partition { get; init; }
+
     /// <summary>The polygons that assign shards; the first region in the list that covers a node and applies to it wins.</summary>
     public IReadOnlyList<ShardRegion> ShardRegions { get; init; } = [];
 
@@ -63,8 +92,11 @@ public interface INetworkIdFactory<TNodeId, TEdgeId, TSource>
     where TNodeId : notnull, IEquatable<TNodeId>
     where TEdgeId : notnull, IEquatable<TEdgeId>
 {
-    /// <summary>The id of a helper node at the location, the mean of the line ends joined there.</summary>
-    TNodeId NewHelperNode(Coordinate location);
+    /// <summary>
+    /// The id of a helper node at the location, the mean of the line ends joined there, with its type (0, or the type from
+    /// <see cref="NetworkBuildOptions.HelperNodeType"/>): helper nodes of different types may share a location.
+    /// </summary>
+    TNodeId NewHelperNode(Coordinate location, int typeId);
 
     /// <summary>The id of part <paramref name="part"/> (0 .. <paramref name="partCount"/> - 1) of the line from <paramref name="source"/>.</summary>
     TEdgeId NewEdge(TSource source, int part, int partCount);
@@ -115,7 +147,40 @@ public enum BuildDiagnosticKind
 
     /// <summary>Real nodes within the tolerance of each other were merged into the one the host chose; one report per group (ADR 0054).</summary>
     NodesMerged,
+
+    /// <summary>
+    /// A line end within the tolerance of a real node did not connect to it because <see cref="NetworkBuildOptions.Connect"/>
+    /// answered <see cref="ConnectionDecision.Report"/>; the sources are the node's and the line's (ADR 0055).
+    /// </summary>
+    ConnectionRefused,
+
+    /// <summary>
+    /// A node within the tolerance of the inside of a line did not split it because <see cref="NetworkBuildOptions.Split"/>
+    /// answered <see cref="ConnectionDecision.Report"/>; the sources are the node's (null for a helper node) and the line's (ADR 0055).
+    /// </summary>
+    SplitRefused,
 }
+
+/// <summary>The answer of a <see cref="ConnectionRule"/> (ADR 0055).</summary>
+public enum ConnectionDecision
+{
+    /// <summary>Connect the line end to the node, or split the line at the node.</summary>
+    Connect,
+
+    /// <summary>Do not connect or split; no note.</summary>
+    Ignore,
+
+    /// <summary>Do not connect or split, and add a note (<see cref="BuildDiagnosticKind.ConnectionRefused"/> or <see cref="BuildDiagnosticKind.SplitRefused"/>): probably a data error.</summary>
+    Report,
+}
+
+/// <summary>
+/// Decides by types whether a line meets a node (ADR 0055); called at most once per pair of types in a build, so it
+/// must give the same answer for the same pair.
+/// </summary>
+/// <param name="nodeTypeId">The node type: of a real node, or the helper type of line ends.</param>
+/// <param name="edgeTypeId">The edge type of the line.</param>
+public delegate ConnectionDecision ConnectionRule(int nodeTypeId, int edgeTypeId);
 
 /// <summary>
 /// Decides about a group of real nodes within the tolerance of each other (ADR 0054): returns the index of the node that
@@ -130,7 +195,11 @@ public delegate int CoincidentNodesResolver<TNodeId, TSource>(IReadOnlyList<Coin
 /// <param name="Kind">What is reported.</param>
 /// <param name="Location">Where.</param>
 /// <param name="Message">A message for people.</param>
-public readonly record struct BuildDiagnostic(BuildDiagnosticKind Kind, Coordinate Location, string Message);
+public readonly record struct BuildDiagnostic(BuildDiagnosticKind Kind, Coordinate Location, string Message)
+{
+    /// <summary>The host's references involved, where the kind names them (the node first, then the line); otherwise <c>null</c>.</summary>
+    public IReadOnlyList<object?>? Sources { get; init; }
+}
 
 /// <summary>The result of a build.</summary>
 /// <param name="NodeCount">The number of nodes written.</param>

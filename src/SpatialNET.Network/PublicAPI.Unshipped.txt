@@ -1,1 +1,3 @@
 #nullable enable
+SpatialNET.Network.NetworkType.Helper.get -> bool
+SpatialNET.Network.NetworkType.Helper.init -> void

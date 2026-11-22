@@ -322,7 +322,7 @@ public class NetworkBuilderTests
 
     private sealed class ConstantIds : INetworkIdFactory<string, string, string>
     {
-        public string NewHelperNode(Coordinate location) => "X";
+        public string NewHelperNode(Coordinate location, int typeId) => "X";
 
         public string NewEdge(string source, int part, int partCount) => "E";
     }

@@ -106,3 +106,5 @@
   href: ../../adr/0053-schnelle-beschriftungspunkte-und-clip-vorfilter.de.md
 - name: "0054 Zusammenfallende echte Knoten: Der Host darf einen Gewinner wählen"
   href: ../../adr/0054-zusammenfallende-echte-knoten.de.md
+- name: "0055 Verbinden und Teilen nach Regeln des Hosts"
+  href: ../../adr/0055-verbinden-und-teilen-nach-regeln-des-hosts.de.md

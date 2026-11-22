@@ -261,7 +261,11 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         // nodes: the real nodes first (index = position in builder._realNodes), then the helper nodes
         private readonly List<Coordinate> _location = [];
         private readonly List<bool> _hasLineEnd = [];
+        private readonly List<int> _helperType = []; // per helper node (index - RealCount)
         private int[] _partStart = [], _partEnd = [];
+
+        // the host's answers per pair of node type and edge type (ADR 0055)
+        private readonly Dictionary<long, ConnectionDecision> _connectDecisions = [], _splitDecisions = [];
 
         // real nodes merged into another one (not written), and the merged nodes of each winner
         private bool[] _lost = [];
@@ -317,7 +321,8 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
         private void JoinEnds()
         {
             // points: the real nodes, then start and end of every part
-            int realCount = RealCount, count = realCount + 2 * _parts.Count;
+            var options = builder._options;
+            int realCount = RealCount, endCount = 2 * _parts.Count, count = realCount + endCount;
             var x = new double[count];
             var y = new double[count];
             for (int i = 0; i < realCount; i++)
@@ -326,6 +331,10 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 y[i] = builder._realNodes[i].Location.Y;
             }
 
+            // per end the edge type of its line and the helper type it joins with (ADR 0055)
+            var endEdgeType = new int[endCount];
+            var endHelperType = new int[endCount];
+            var helperTypeOf = new Dictionary<int, int>();
             for (int p = 0; p < _parts.Count; p++)
             {
                 var xy = _parts[p].XY;
@@ -333,10 +342,41 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 y[realCount + 2 * p] = xy[1];
                 x[realCount + 2 * p + 1] = xy[^2];
                 y[realCount + 2 * p + 1] = xy[^1];
+
+                int edgeType = builder._lines[_parts[p].Line].TypeId;
+                if (!helperTypeOf.TryGetValue(edgeType, out int helperType))
+                {
+                    helperType = helperTypeOf[edgeType] = options.HelperNodeType?.Invoke(edgeType) ?? 0;
+                    if (helperType < 0)
+                    {
+                        throw new InvalidOperationException($"The helper node type of the edge type {edgeType} is {helperType}; types are not negative.");
+                    }
+                }
+
+                endEdgeType[2 * p] = endEdgeType[2 * p + 1] = edgeType;
+                endHelperType[2 * p] = endHelperType[2 * p + 1] = helperType;
             }
 
+            var partition = new int[realCount];
+            if (options.Partition is { } partitionOf)
+            {
+                var byType = new Dictionary<int, int>();
+                for (int r = 0; r < realCount; r++)
+                {
+                    int type = builder._realNodes[r].TypeId;
+                    if (!byType.TryGetValue(type, out partition[r]))
+                    {
+                        partition[r] = byType[type] = partitionOf(type);
+                    }
+                }
+            }
+
+            // real nodes join real nodes of their partition, ends join ends of their helper type; an end near a real node
+            // is a contact, decided below
             _lost = new bool[realCount];
-            var sets = new UnionFind(count);
+            var reals = new UnionFind(realCount);
+            var ends = new UnionFind(endCount);
+            var contacts = new List<(int End, int Real)>();
             var grid = new PointGrid(_tolerance, count);
             double tolerance2 = _tolerance * _tolerance;
             for (int i = 0; i < count; i++)
@@ -344,9 +384,26 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 cancellationToken.ThrowIfCancellationRequested();
                 foreach (int j in grid.Near(x[i], y[i]))
                 {
-                    if (Square(x[i] - x[j]) + Square(y[i] - y[j]) <= tolerance2)
+                    if (Square(x[i] - x[j]) + Square(y[i] - y[j]) > tolerance2)
                     {
-                        sets.Union(i, j);
+                        continue;
+                    }
+
+                    // j was added before i, and the real nodes come first
+                    if (j < realCount)
+                    {
+                        if (i >= realCount)
+                        {
+                            contacts.Add((i - realCount, j));
+                        }
+                        else if (partition[i] == partition[j])
+                        {
+                            reals.Union(i, j);
+                        }
+                    }
+                    else if (endHelperType[i - realCount] == endHelperType[j - realCount])
+                    {
+                        ends.Union(i - realCount, j - realCount);
                     }
                 }
 
@@ -356,43 +413,75 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
             reporter.Report(BuildPhase.JoiningEnds, count, count);
 
-            // the groups, in the order of their first point
-            // (a counting sort of the points by group, so no list per group; the points stay ascending inside a group)
-            var groupOfRoot = new int[count];
-            Array.Fill(groupOfRoot, -1);
-            var groupOfPoint = new int[count];
-            var sizes = new List<int>();
-            for (int i = 0; i < count; i++)
+            // the place of a group of ends: the groups of real nodes any of its ends is near; every end of the group connects
+            // to the first of them that its type may connect to, and an end that may connect to several joins them
+            var attachedTo = new int[endCount];
+            Array.Fill(attachedTo, -1);
+            if (contacts.Count > 0)
             {
-                int root = sets.Find(i);
-                int g = groupOfRoot[root];
-                if (g < 0)
+                var cluster = new int[realCount];
+                for (int r = 0; r < realCount; r++)
                 {
-                    g = groupOfRoot[root] = sizes.Count;
-                    sizes.Add(0);
+                    cluster[r] = reals.Find(r);
                 }
 
-                groupOfPoint[i] = g;
-                sizes[g]++;
+                var (clusterFirst, clusterItems, clusterGroup) = GroupBy(cluster, realCount);
+                var places = new Dictionary<int, List<int>>();
+                foreach (var (e, r) in contacts)
+                {
+                    int g = ends.Find(e);
+                    if (!places.TryGetValue(g, out var place))
+                    {
+                        places[g] = place = [];
+                    }
+
+                    if (!place.Contains(cluster[r]))
+                    {
+                        place.Add(cluster[r]);
+                    }
+                }
+
+                foreach (var place in places.Values)
+                {
+                    place.Sort();
+                }
+
+                for (int e = 0; e < endCount; e++)
+                {
+                    if (!places.TryGetValue(ends.Find(e), out var place))
+                    {
+                        continue;
+                    }
+
+                    foreach (int c in place)
+                    {
+                        int g = clusterGroup[c];
+                        bool connects = false;
+                        for (int k = clusterFirst[g]; k < clusterFirst[g + 1] && !connects; k++)
+                        {
+                            connects = Decide(options.Connect, _connectDecisions, builder._realNodes[clusterItems[k]].TypeId, endEdgeType[e]) == ConnectionDecision.Connect;
+                        }
+
+                        if (!connects)
+                        {
+                            continue;
+                        }
+
+                        if (attachedTo[e] < 0)
+                        {
+                            attachedTo[e] = c;
+                        }
+                        else
+                        {
+                            reals.Union(attachedTo[e], c);
+                        }
+                    }
+                }
             }
 
-            int groups = sizes.Count;
-            var firstOf = new int[groups + 1];
-            for (int g = 0; g < groups; g++)
-            {
-                firstOf[g + 1] = firstOf[g] + sizes[g];
-            }
-
-            var sortedPoints = new int[count];
-            var filled = new int[groups];
-            for (int i = 0; i < count; i++)
-            {
-                int g = groupOfPoint[i];
-                sortedPoints[firstOf[g] + filled[g]++] = i;
-            }
-
-            _location.Capacity = realCount + groups;
-            _hasLineEnd.Capacity = realCount + groups;
+            // the real nodes, then one node per group of real nodes (the host may merge a group)
+            _location.Capacity = realCount + endCount;
+            _hasLineEnd.Capacity = realCount + endCount;
             for (int i = 0; i < realCount; i++)
             {
                 _location.Add(builder._realNodes[i].Location);
@@ -400,66 +489,101 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             }
 
             var nodeOfPoint = new int[count];
-            int[] buffer = [];
-            var byCoordinates = Comparer<int>.Create((a, b) => x[a] != x[b] ? x[a].CompareTo(x[b]) : y[a].CompareTo(y[b]));
-            for (int g = 0; g < groups; g++)
+            var realGroup = new int[realCount];
+            for (int r = 0; r < realCount; r++)
             {
-                var members = new ReadOnlySpan<int>(sortedPoints, firstOf[g], sizes[g]);
+                realGroup[r] = reals.Find(r);
+            }
 
-                // the real nodes come first: the points are ascending and the real nodes have the lowest indices
-                int reals = 0;
-                while (reals < members.Length && members[reals] < realCount)
-                {
-                    reals++;
-                }
-
-                int node;
-                if (reals > 0)
-                {
-                    node = reals > 1 ? ResolveReals(members[..reals]) : members[0];
-                }
-                else
-                {
-                    // the mean of the ends, summed in an order of the coordinates, so that it does not depend on the input order
-                    double sx = 0, sy = 0;
-                    if (members.Length == 1)
-                    {
-                        sx = x[members[0]];
-                        sy = y[members[0]];
-                    }
-                    else
-                    {
-                        if (buffer.Length < members.Length)
-                        {
-                            buffer = new int[Math.Max(members.Length, 2 * buffer.Length)];
-                        }
-
-                        members.CopyTo(buffer);
-                        Array.Sort(buffer, 0, members.Length, byCoordinates);
-                        for (int k = 0; k < members.Length; k++)
-                        {
-                            sx += x[buffer[k]];
-                            sy += y[buffer[k]];
-                        }
-                    }
-
-                    node = _location.Count;
-                    _location.Add(new Coordinate(sx / members.Length, sy / members.Length));
-                    _hasLineEnd.Add(false);
-                }
-
+            var (realFirst, realItems, _) = GroupBy(realGroup, realCount);
+            for (int g = 0; g + 1 < realFirst.Length; g++)
+            {
+                var members = new ReadOnlySpan<int>(realItems, realFirst[g], realFirst[g + 1] - realFirst[g]);
+                int node = members.Length > 1 ? ResolveReals(members) : members[0];
                 foreach (int m in members)
                 {
                     nodeOfPoint[m] = node;
-                    if (m >= realCount)
-                    {
-                        _hasLineEnd[node] = true;
-                    }
+                }
+            }
+
+            // ends at a real node, and the other ends: one helper node per group at the mean of its ends
+            var restGroup = new int[endCount];
+            for (int e = 0; e < endCount; e++)
+            {
+                if (attachedTo[e] >= 0)
+                {
+                    int node = nodeOfPoint[attachedTo[e]];
+                    nodeOfPoint[realCount + e] = node;
+                    _hasLineEnd[node] = true;
+                    restGroup[e] = -1;
+                }
+                else
+                {
+                    restGroup[e] = ends.Find(e);
+                }
+            }
+
+            var (restFirst, restItems, _) = GroupBy(restGroup, endCount);
+            int[] buffer = [];
+            var byCoordinates = Comparer<int>.Create((a, b) => x[a] != x[b] ? x[a].CompareTo(x[b]) : y[a].CompareTo(y[b]));
+            for (int g = 0; g + 1 < restFirst.Length; g++)
+            {
+                int size = restFirst[g + 1] - restFirst[g];
+                if (buffer.Length < size)
+                {
+                    buffer = new int[Math.Max(size, 2 * buffer.Length)];
                 }
 
-                if (Wide(members, x, y, tolerance2))
+                // the mean of the ends, summed in an order of the coordinates, so that it does not depend on the input order
+                for (int k = 0; k < size; k++)
                 {
-                    _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.ClusterWiderThanTolerance, _location[node],
+                    buffer[k] = realCount + restItems[restFirst[g] + k];
+                }
+
+                if (size > 1)
+                {
+                    Array.Sort(buffer, 0, size, byCoordinates);
+                }
+
+                double sx = 0, sy = 0;
+                for (int k = 0; k < size; k++)
+                {
+                    sx += x[buffer[k]];
+                    sy += y[buffer[k]];
+                }
+
+                int node = AddHelper(size == 1 ? new Coordinate(sx, sy) : new Coordinate(sx / size, sy / size), endHelperType[restItems[restFirst[g]]]);
+                _hasLineEnd[node] = true;
+                for (int k = 0; k < size; k++)
+                {
+                    nodeOfPoint[buffer[k]] = node;
+                }
+            }
+
+            // ends near a real node that do not connect to it and that the host wants to hear about
+            foreach (var (e, r) in contacts)
+            {
+                if (nodeOfPoint[realCount + e] != nodeOfPoint[r]
+                    && Decide(options.Connect, _connectDecisions, builder._realNodes[r].TypeId, endEdgeType[e]) == ConnectionDecision.Report)
+                {
+                    var real = builder._realNodes[r];
+                    var line = builder._lines[_parts[e / 2].Line];
+                    _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.ConnectionRefused, real.Location,
+                        $"A line end of type {line.TypeId} within the tolerance of the node {real.Id} (type {real.TypeId}) does not connect to it.")
+                    {
+                        Sources = [real.Source, line.Source],
+                    });
+                }
+            }
+
+            // nodes joined over more than the tolerance
+            var (nodeFirst, nodeItems, _) = GroupBy(nodeOfPoint, _location.Count);
+            for (int g = 0; g + 1 < nodeFirst.Length; g++)
+            {
+                var members = new ReadOnlySpan<int>(nodeItems, nodeFirst[g], nodeFirst[g + 1] - nodeFirst[g]);
+                if (members.Length > 1 && Wide(members, x, y, tolerance2))
+                {
+                    _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.ClusterWiderThanTolerance, _location[nodeOfPoint[members[0]]],
                         $"{members.Length} line ends and points were joined into one node over more than the tolerance {_tolerance.ToString(CultureInfo.InvariantCulture)}."));
                 }
             }
@@ -471,6 +595,93 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 _partStart[p] = nodeOfPoint[realCount + 2 * p];
                 _partEnd[p] = nodeOfPoint[realCount + 2 * p + 1];
             }
+        }
+
+        /// <summary>A new helper node; its index.</summary>
+        private int AddHelper(Coordinate location, int typeId)
+        {
+            int node = _location.Count;
+            _location.Add(location);
+            _hasLineEnd.Add(false);
+            _helperType.Add(typeId);
+            return node;
+        }
+
+        /// <summary>The type of a node: of the real node, or the helper type.</summary>
+        private int NodeType(int node) => node < RealCount ? builder._realNodes[node].TypeId : _helperType[node - RealCount];
+
+        /// <summary>The host's answer for a pair of types, asked once per pair; <see cref="ConnectionDecision.Connect"/> without a rule.</summary>
+        private static ConnectionDecision Decide(ConnectionRule? rule, Dictionary<long, ConnectionDecision> asked, int nodeType, int edgeType)
+        {
+            if (rule is null)
+            {
+                return ConnectionDecision.Connect;
+            }
+
+            long key = ((long)nodeType << 32) | (uint)edgeType;
+            if (!asked.TryGetValue(key, out var decision))
+            {
+                decision = rule(nodeType, edgeType);
+                if (decision is not (ConnectionDecision.Connect or ConnectionDecision.Ignore or ConnectionDecision.Report))
+                {
+                    throw new InvalidOperationException($"The connection rule returned {decision} for the node type {nodeType} and the edge type {edgeType}.");
+                }
+
+                asked[key] = decision;
+            }
+
+            return decision;
+        }
+
+        /// <summary>
+        /// Sorts the items 0 .. n - 1 into groups by their key (0 .. <paramref name="keyCount"/> - 1, or -1 to leave an item
+        /// out): a counting sort, the groups in the order of their first item, the items ascending inside a group.
+        /// </summary>
+        /// <returns>The start of each group in <c>Items</c> (one more entry than groups), the items, and the group of each key (-1 for none).</returns>
+        private static (int[] First, int[] Items, int[] GroupOfKey) GroupBy(int[] keyOfItem, int keyCount)
+        {
+            var groupOfKey = new int[keyCount];
+            Array.Fill(groupOfKey, -1);
+            var groupOfItem = new int[keyOfItem.Length];
+            var sizes = new List<int>();
+            for (int i = 0; i < keyOfItem.Length; i++)
+            {
+                int key = keyOfItem[i];
+                if (key < 0)
+                {
+                    groupOfItem[i] = -1;
+                    continue;
+                }
+
+                int g = groupOfKey[key];
+                if (g < 0)
+                {
+                    g = groupOfKey[key] = sizes.Count;
+                    sizes.Add(0);
+                }
+
+                groupOfItem[i] = g;
+                sizes[g]++;
+            }
+
+            var first = new int[sizes.Count + 1];
+            for (int g = 0; g < sizes.Count; g++)
+            {
+                first[g + 1] = first[g] + sizes[g];
+            }
+
+            var items = new int[first[^1]];
+            var filled = new int[sizes.Count];
+            for (int i = 0; i < keyOfItem.Length; i++)
+            {
+                int g = groupOfItem[i];
+                if (g >= 0)
+                {
+                    items[first[g] + filled[g]++] = i;
+                }
+            }
+
+            return (first, items, groupOfKey);
         }
 
         /// <summary>The node that stays of real nodes within the tolerance: the host's choice, or the first one and a conflict.</summary>
@@ -580,10 +791,12 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
             long total = candidates.Count + (options.NodeAtCrossings ? _parts.Count : 0), done = 0;
             var hits = new List<int>();
+            var refused = new HashSet<(int Node, int Line)>();
             foreach (int node in candidates)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var at = _location[node];
+                int nodeType = NodeType(node);
                 hits.Clear();
                 index.Query(new Envelope2D(at.X - _tolerance, at.Y - _tolerance, at.X + _tolerance, at.Y + _tolerance), hits);
                 foreach (int p in hits)
@@ -596,7 +809,21 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                     var (distance, measure) = _parts[p].Project(at);
                     if (distance <= _tolerance && measure > 0 && measure < _parts[p].Length)
                     {
-                        AddSplit(p, measure, node);
+                        var line = builder._lines[_parts[p].Line];
+                        switch (Decide(options.Split, _splitDecisions, nodeType, line.TypeId))
+                        {
+                            case ConnectionDecision.Connect:
+                                AddSplit(p, measure, node);
+                                break;
+                            case ConnectionDecision.Report when refused.Add((node, _parts[p].Line)):
+                                object? nodeSource = node < RealCount ? builder._realNodes[node].Source : null;
+                                _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.SplitRefused, at,
+                                    $"A node of type {nodeType} within the tolerance of the inside of a line of type {line.TypeId} does not split it.")
+                                {
+                                    Sources = [nodeSource, line.Source],
+                                });
+                                break;
+                        }
                     }
                 }
 
@@ -682,10 +909,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             foreach (var group in Enumerable.Range(0, crossings.Count).Where(c => existing[c] < 0).GroupBy(sets.Find))
             {
                 var sorted = group.OrderBy(c => crossings[c].X).ThenBy(c => crossings[c].Y).ToList();
-                int node = _location.Count;
-                _location.Add(new Coordinate(sorted.Average(c => crossings[c].X), sorted.Average(c => crossings[c].Y)));
-                _hasLineEnd.Add(false);
-                helperOf[group.Key] = node;
+                helperOf[group.Key] = AddHelper(new Coordinate(sorted.Average(c => crossings[c].X), sorted.Average(c => crossings[c].Y)), 0);
             }
 
             for (int c = 0; c < crossings.Count; c++)
@@ -811,7 +1035,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
             _helpers = Enumerable.Range(RealCount, _location.Count - RealCount)
                 .Where(n => degree[n] > 0)
-                .OrderBy(n => _location[n].X).ThenBy(n => _location[n].Y)
+                .OrderBy(n => _location[n].X).ThenBy(n => _location[n].Y).ThenBy(NodeType)
                 .ToArray();
         }
 
@@ -827,7 +1051,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
 
             foreach (int n in _helpers)
             {
-                ids[n] = builder._ids.NewHelperNode(_location[n]);
+                ids[n] = builder._ids.NewHelperNode(_location[n], NodeType(n));
                 if (ids[n] is null)
                 {
                     throw new InvalidOperationException("The id factory returned null for a helper node.");
@@ -993,7 +1217,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 int n = _helpers[h];
-                writer.WriteNode(new BuiltNode<TNodeId, TSource>(new GraphNode<TNodeId>(ids[n], 0, _location[n]), shard[n], true, default));
+                writer.WriteNode(new BuiltNode<TNodeId, TSource>(new GraphNode<TNodeId>(ids[n], NodeType(n), _location[n]), shard[n], true, default));
                 reporter.Report(BuildPhase.WritingNodes, realsWritten + h + 1, nodeCount);
             }
 
