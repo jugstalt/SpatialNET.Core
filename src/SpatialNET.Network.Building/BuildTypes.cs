@@ -159,6 +159,18 @@ public enum BuildDiagnosticKind
     /// answered <see cref="ConnectionDecision.Report"/>; the sources are the node's (null for a helper node) and the line's (ADR 0055).
     /// </summary>
     SplitRefused,
+
+    /// <summary>
+    /// A line end within the tolerance of a real node connected to it because <see cref="NetworkBuildOptions.Connect"/>
+    /// answered <see cref="ConnectionDecision.ConnectAndReport"/>; the sources are the node's and the line's (ADR 0055).
+    /// </summary>
+    ConnectionReported,
+
+    /// <summary>
+    /// A node within the tolerance of the inside of a line split it because <see cref="NetworkBuildOptions.Split"/>
+    /// answered <see cref="ConnectionDecision.ConnectAndReport"/>; the sources are the node's (null for a helper node) and the line's (ADR 0055).
+    /// </summary>
+    SplitReported,
 }
 
 /// <summary>The answer of a <see cref="ConnectionRule"/> (ADR 0055).</summary>
@@ -172,6 +184,13 @@ public enum ConnectionDecision
 
     /// <summary>Do not connect or split, and add a note (<see cref="BuildDiagnosticKind.ConnectionRefused"/> or <see cref="BuildDiagnosticKind.SplitRefused"/>): probably a data error.</summary>
     Report,
+
+    /// <summary>
+    /// Connect or split as with <see cref="Connect"/>, and add a note (<see cref="BuildDiagnosticKind.ConnectionReported"/> or
+    /// <see cref="BuildDiagnosticKind.SplitReported"/>): a data error the network should not wait for, e.g. a line that is
+    /// not broken up at a joint as the rules of the network want; the notes are the list of places to fix.
+    /// </summary>
+    ConnectAndReport,
 }
 
 /// <summary>
@@ -199,6 +218,15 @@ public readonly record struct BuildDiagnostic(BuildDiagnosticKind Kind, Coordina
 {
     /// <summary>The host's references involved, where the kind names them (the node first, then the line); otherwise <c>null</c>.</summary>
     public IReadOnlyList<object?>? Sources { get; init; }
+
+    /// <summary>
+    /// The connection kinds (refused and reported): the node type the host's rule was asked with (of the real node, or the
+    /// helper type of line ends), so the host can name the rule that decided; otherwise <c>null</c>.
+    /// </summary>
+    public int? NodeTypeId { get; init; }
+
+    /// <summary>The connection kinds (refused and reported): the edge type of the line the host's rule was asked with; otherwise <c>null</c>.</summary>
+    public int? EdgeTypeId { get; init; }
 }
 
 /// <summary>The result of a build.</summary>

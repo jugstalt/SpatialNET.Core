@@ -1,1 +1,8 @@
 #nullable enable
+SpatialNET.Network.Building.BuildDiagnostic.EdgeTypeId.get -> int?
+SpatialNET.Network.Building.BuildDiagnostic.EdgeTypeId.init -> void
+SpatialNET.Network.Building.BuildDiagnostic.NodeTypeId.get -> int?
+SpatialNET.Network.Building.BuildDiagnostic.NodeTypeId.init -> void
+SpatialNET.Network.Building.BuildDiagnosticKind.ConnectionReported = 8 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.BuildDiagnosticKind.SplitReported = 9 -> SpatialNET.Network.Building.BuildDiagnosticKind
+SpatialNET.Network.Building.ConnectionDecision.ConnectAndReport = 3 -> SpatialNET.Network.Building.ConnectionDecision

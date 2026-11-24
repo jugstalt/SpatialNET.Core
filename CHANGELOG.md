@@ -4,6 +4,11 @@ All notable changes to SpatialNET are documented in this file. The format follow
 
 ## [Unreleased]
 
+### Added
+
+- `ConnectionDecision.ConnectAndReport` (ADR 0055): connect or split as with `Connect` and add a `ConnectionReported` or `SplitReported` diagnostic, for data errors the network should not wait for (the notes are the list of places to fix).
+- `BuildDiagnostic.NodeTypeId` and `EdgeTypeId`: the pair of types the host's rule was asked with, for the refused and reported connections, so the host can name the rule that decided.
+
 ## [0.10.0-preview.8] - 2026-11-22
 
 ### Added

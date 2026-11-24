@@ -95,6 +95,64 @@ public class ConnectionRuleTests
     }
 
     [Fact]
+    public void Refused_connections_name_the_types_the_rule_was_asked_with()
+    {
+        var builder = Builder(0.01, o => Tiers(o));
+        builder.AddNode("Muffe.1", "M", new Coordinate(10, 0), NsJoint);
+        builder.AddNode("Muffe.2", "M2", new Coordinate(50, 0), NsJoint);
+        builder.AddLine("NS.1", Line((0, 0), (10, 0)), NsCable);
+        builder.AddLine("MS.1", Line((10, 0), (10, 10)), MsCable);
+        builder.AddLine("MS.2", Line((40, 0), (50, 0), (60, 0)), MsCable);
+
+        var result = builder.Build(new RecordingWriter());
+
+        var connection = Assert.Single(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.ConnectionRefused);
+        Assert.Equal((NsJoint, MsCable), (connection.NodeTypeId, connection.EdgeTypeId));
+        var split = Assert.Single(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.SplitRefused);
+        Assert.Equal((NsJoint, MsCable), (split.NodeTypeId, split.EdgeTypeId));
+    }
+
+    [Fact]
+    public void ConnectAndReport_connects_the_line_end_and_is_reported()
+    {
+        var builder = Builder(0.01, o => Tiers(o) with
+        {
+            Connect = (node, edge) => Tier(node) == Tier(edge) ? ConnectionDecision.Connect : ConnectionDecision.ConnectAndReport,
+        });
+        builder.AddNode("Muffe.1", "M", new Coordinate(10, 0), NsJoint);
+        builder.AddLine("NS.1", Line((0, 0), (10, 0)), NsCable);
+        builder.AddLine("MS.1", Line((10, 0), (10, 10)), MsCable);
+        var writer = new RecordingWriter();
+
+        var result = builder.Build(writer);
+
+        Assert.Equal("M", writer.Edge("MS.1#0/1").Edge.From);
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.ConnectionRefused);
+        var reported = Assert.Single(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.ConnectionReported);
+        Assert.Equal(["Muffe.1", "MS.1"], reported.Sources!);
+        Assert.Equal((NsJoint, MsCable), (reported.NodeTypeId, reported.EdgeTypeId));
+        Assert.Equal(new Coordinate(10, 0), reported.Location);
+    }
+
+    [Fact]
+    public void ConnectAndReport_splits_the_line_and_is_reported_once()
+    {
+        var builder = Builder(0.01, o => Tiers(o, split: (node, edge) => Tier(node) == Tier(edge) ? ConnectionDecision.Connect : ConnectionDecision.ConnectAndReport));
+        builder.AddNode("Muffe.4435", "M", new Coordinate(50, 0), NsJoint);
+        builder.AddLine("Leitung.4576", Line((0, 0), (50, 0), (100, 0)), MsCable);
+        var writer = new RecordingWriter();
+
+        var result = builder.Build(writer);
+
+        Assert.Equal(2, writer.Edges.Count(e => e.Source == "Leitung.4576"));
+        Assert.Equal("M", writer.Edge("Leitung.4576#0/2").Edge.To);
+        Assert.DoesNotContain(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.SplitRefused);
+        var reported = Assert.Single(result.Diagnostics, d => d.Kind == BuildDiagnosticKind.SplitReported);
+        Assert.Equal(["Muffe.4435", "Leitung.4576"], reported.Sources!);
+        Assert.Equal((NsJoint, MsCable), (reported.NodeTypeId, reported.EdgeTypeId));
+    }
+
+    [Fact]
     public void A_transformer_connects_both_tiers()
     {
         var builder = Builder(0.01, o => Tiers(o));

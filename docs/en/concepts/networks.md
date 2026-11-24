@@ -92,7 +92,7 @@ By default everything within the tolerance connects. When the tiers of a network
 | `Split` | node type, edge type | whether a node splits the inside of a line: a real node, or the helper type of a T junction |
 | `Partition` | node type | real nodes of different partitions at one place are no conflict; when a line end may connect to several of them, they become one group for the resolver |
 
-`Connect` and `Split` answer with a `ConnectionDecision`: `Connect`, `Ignore` (silently not), or `Report` (not, and a `ConnectionRefused` or `SplitRefused` note naming both sources in `BuildDiagnostic.Sources`, for what is probably a data error). Every answer is asked once per pair of types. Without the callbacks the build is the one above. `SplitAtNodes`, `SplitAtLineEnds` and `NodeAtCrossings` stay as coarse switches; helper nodes at crossings are not asked.
+`Connect` and `Split` answer with a `ConnectionDecision`: `Connect`, `Ignore` (silently not), or `Report` (not, and a `ConnectionRefused` or `SplitRefused` note naming both sources in `BuildDiagnostic.Sources`, for what is probably a data error), or `ConnectAndReport` (connect or split anyway, and a `ConnectionReported` or `SplitReported` note: a data error the network should not wait for). The notes of connections also carry the pair of types the rule was asked with (`NodeTypeId`, `EdgeTypeId`). Every answer is asked once per pair of types. Without the callbacks the build is the one above. `SplitAtNodes`, `SplitAtLineEnds` and `NodeAtCrossings` stay as coarse switches; helper nodes at crossings are not asked.
 
 ```csharp
 IPolyline2D Line(string wkt) => Wkt.Read<IPolyline2D>(wkt, ImpGeometryFactory.Instance);

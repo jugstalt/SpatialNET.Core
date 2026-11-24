@@ -459,7 +459,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                         bool connects = false;
                         for (int k = clusterFirst[g]; k < clusterFirst[g + 1] && !connects; k++)
                         {
-                            connects = Decide(options.Connect, _connectDecisions, builder._realNodes[clusterItems[k]].TypeId, endEdgeType[e]) == ConnectionDecision.Connect;
+                            connects = Decide(options.Connect, _connectDecisions, builder._realNodes[clusterItems[k]].TypeId, endEdgeType[e]) is ConnectionDecision.Connect or ConnectionDecision.ConnectAndReport;
                         }
 
                         if (!connects)
@@ -560,18 +560,23 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                 }
             }
 
-            // ends near a real node that do not connect to it and that the host wants to hear about
+            // ends near a real node the host wants to hear about: not connected to it (Report), or connected to it (ConnectAndReport)
             foreach (var (e, r) in contacts)
             {
-                if (nodeOfPoint[realCount + e] != nodeOfPoint[r]
-                    && Decide(options.Connect, _connectDecisions, builder._realNodes[r].TypeId, endEdgeType[e]) == ConnectionDecision.Report)
+                bool connected = nodeOfPoint[realCount + e] == nodeOfPoint[r];
+                var decision = Decide(options.Connect, _connectDecisions, builder._realNodes[r].TypeId, endEdgeType[e]);
+                if ((!connected && decision == ConnectionDecision.Report) || (connected && decision == ConnectionDecision.ConnectAndReport))
                 {
                     var real = builder._realNodes[r];
                     var line = builder._lines[_parts[e / 2].Line];
-                    _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.ConnectionRefused, real.Location,
-                        $"A line end of type {line.TypeId} within the tolerance of the node {real.Id} (type {real.TypeId}) does not connect to it.")
+                    var message = connected
+                        ? $"A line end of type {line.TypeId} within the tolerance of the node {real.Id} (type {real.TypeId}) connects to it, reported by the rule."
+                        : $"A line end of type {line.TypeId} within the tolerance of the node {real.Id} (type {real.TypeId}) does not connect to it.";
+                    _diagnostics.Add(new BuildDiagnostic(connected ? BuildDiagnosticKind.ConnectionReported : BuildDiagnosticKind.ConnectionRefused, real.Location, message)
                     {
                         Sources = [real.Source, line.Source],
+                        NodeTypeId = real.TypeId,
+                        EdgeTypeId = endEdgeType[e],
                     });
                 }
             }
@@ -622,7 +627,7 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
             if (!asked.TryGetValue(key, out var decision))
             {
                 decision = rule(nodeType, edgeType);
-                if (decision is not (ConnectionDecision.Connect or ConnectionDecision.Ignore or ConnectionDecision.Report))
+                if (decision is not (ConnectionDecision.Connect or ConnectionDecision.Ignore or ConnectionDecision.Report or ConnectionDecision.ConnectAndReport))
                 {
                     throw new InvalidOperationException($"The connection rule returned {decision} for the node type {nodeType} and the edge type {edgeType}.");
                 }
@@ -816,12 +821,26 @@ public sealed class NetworkBuilder<TNodeId, TEdgeId, TSource>
                                 AddSplit(p, measure, node);
                                 break;
                             case ConnectionDecision.Report when refused.Add((node, _parts[p].Line)):
-                                object? nodeSource = node < RealCount ? builder._realNodes[node].Source : null;
                                 _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.SplitRefused, at,
                                     $"A node of type {nodeType} within the tolerance of the inside of a line of type {line.TypeId} does not split it.")
                                 {
-                                    Sources = [nodeSource, line.Source],
+                                    Sources = [node < RealCount ? builder._realNodes[node].Source : null, line.Source],
+                                    NodeTypeId = nodeType,
+                                    EdgeTypeId = line.TypeId,
                                 });
+                                break;
+                            case ConnectionDecision.ConnectAndReport:
+                                AddSplit(p, measure, node);
+                                if (refused.Add((node, _parts[p].Line)))
+                                {
+                                    _diagnostics.Add(new BuildDiagnostic(BuildDiagnosticKind.SplitReported, at,
+                                        $"A node of type {nodeType} within the tolerance of the inside of a line of type {line.TypeId} splits it, reported by the rule.")
+                                    {
+                                        Sources = [node < RealCount ? builder._realNodes[node].Source : null, line.Source],
+                                        NodeTypeId = nodeType,
+                                        EdgeTypeId = line.TypeId,
+                                    });
+                                }
                                 break;
                         }
                     }
